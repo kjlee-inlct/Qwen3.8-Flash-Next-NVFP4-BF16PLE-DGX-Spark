@@ -1,0 +1,290 @@
+# SESSION-HANDOFF-PROMPT.md
+
+> 기준: **2026-10-26 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다.  
+> 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
+> **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
+
+---
+
+## 0. 새 세션에서 사용할 최상위 지시
+
+당신은 **단일 NVIDIA DGX Spark(GB10)**에서 실행하는 Qwen3.8-Flash-Next NVFP4/BF16 PLE + BF16 MTP 레시피의 **개인 Fork 설치·제거 위자드/운영 관리 프로젝트**를 이어받은 엔지니어링 보조자다. **한국어**로 기술 분석, 코드, 설명, 보고를 작성한다.
+
+**제1원칙은 현재 운영 중인 기존 YSLAB 서비스, Docker 이미지/컨테이너, HF 캐시, recipe views, 모델 가중치, 로컬 상태 파일, 포트 8000, 다른 Ollama/OpenWebUI 및 네트워크 서비스를 변경하지 않는 것이다.** GitHub 소스 변경과 운영 서버에 대한 변경은 서로 다르다.
+
+연결된 **GitHub 플러그인/앱 도구**를 활용하면 저장소 파일 조회, 코드/문서 수정, 신규 스크립트 생성, blob/tree/commit 생성, 브랜치/PR 생성, diff 리뷰, PR 머지와 결과 재검증을 **직접 수행할 수 있다**. 사용자에게 불필요하게 수동 UI 작업을 시키지 말라. 단, 실제 연결 가능 여부를 매 세션 확인하고, 실행하지 않은 작업을 완료했다고 주장하지 말라. GitHub 작업 권한이 있다고 해서 실제 DGX Docker 서비스 변경 권한이 생기는 것은 아니다.
+
+**실제 코드와 최신 GitHub `main`을 진실의 기준으로 삼는다.** 과거 계획서의 '미구현', 오래된 README의 'NOT TESTED' 표기는 나중에 수집된 DGX 로그·Git HEAD와 대조한다. 모순은 시점/출처를 밝혀 해결하고 문서에 반영한다. 이전 채팅이 끊겨도 이 문서의 우선순위/검증 방법을 따르도록 한다.
+
+### 다음 세션 시작용 사용자 메시지 예시
+
+> 개인 GitHub 저장소 `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`의 최신 `main`에서 `docs/SESSION-HANDOFF-PROMPT.md`를 먼저 읽으세요. 확정된 구현, 보류된 일, DGX 기존 서비스 보호 규칙을 기준으로 프로젝트를 이어서 진행하세요. 매번 코드·스크립트·문서·테스트를 필요한 만큼 업데이트/신규 작성하고 소스 Manifest를 동기화하세요. 연결된 GitHub 플러그인으로 커밋, PR, 머지까지 직접 처리할 수 있습니다. 실제 Docker/모델 파일은 건드리지 말고 읽기 전용 검증부터 시작하세요.
+
+---
+
+## 1. 프로젝트 및 확정된 Git 이력
+
+| 대상 | 확인한 사실 |
+| --- | --- |
+| 개인 Fork | `https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` |
+| YSLAB 원본 upstream | `https://github.com/YSLAB-ai/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` |
+| 원본 PIN | `9492b78c6bc04638587b42f2ffeb0680b0fcb3ef` |
+| 기능 브랜치 | `feature/install-uninstall-wizard-20261026` |
+| 마지막 기능 브랜치 SHA | `25949fd7fb16ff62f8c6bdfc6f9fe9ab74fd0f8a` |
+| [PR #1](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/1) | **MERGED / CLOSED**, 일반 merge commit(8개 기능 커밋 유지) |
+| PR #1 merge SHA | `bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6` |
+| 인수인계 문서 작업 시작 직전 `main` | `bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6` |
+| PR #1 병합 후 Git tree | `78ced78bb0c4381d3dd52c84b8d0f7f1082b3e9d` |
+| 당시 Source Manifest | 111개 추적 파일 + Manifest 자체 blob SHA 일치 |
+| GitHub Actions | 마지막 조회에서 workflow run/check run **0건**(CI PASS라고 주장 금지) |
+| 이 문서 반영 이후 | **새 commit/PR가 생길 수 있으므로 반드시 원격 HEAD를 다시 확인** |
+
+PR #1 병합 직후 개인 Fork `main`과 기능 브랜치의 **Git tree가 동일**함을 GitHub 도구로 확인했다. 이는 소스 통합의 성공 증거다. 사용자의 DGX 마지막 로그는 기능 브랜치 `25949fd7...`의 실행 결과로, **로컬 DGX가 `main`으로 전환되었다는 로그는 아직 없다**. GitHub PR 머지는 DGX 컨테이너를 재실행하거나 가중치를 변경하지 않는다.
+
+---
+
+## 2. 운영 중인 DGX — 바뀌면 안 되는 자산
+
+사용자는 단일 NVIDIA DGX Spark를 운영하고 있다. 원래 YSLAB 설치로 모델을 실행했지만 설치 당시 repo 경로의 현재 Git origin이 **개인 Fork로 변경**되었다. **디렉터리 이름이 'yslab'이라고 해서 Git origin이 YSLAB이라고 판단하지 않는다.**
+
+| 구분 | 사용자 DGX 로그에서 확인한 상태 |
+| --- | --- |
+| 호스트 checkout | `$HOME/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark` |
+| 원격 origin | `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark.git` |
+| 레거시 Docker 이미지 | `yslab-qwen38-bf16ple:9492b78c` |
+| 레거시 컨테이너 | `qwen38-flash-orca-uncensored-bf16-mtp` — `running` |
+| API 바인딩 | `0.0.0.0:8000`; 방화벽/외부 접근 정책 보존 |
+| 모델 alias | `qwen3.8-flash-next-orca-uncensored-bf16-mtp` |
+| 모델 context 보고값 | `262144` — API 메타데이터, 최신 회차 장문 추론 시험은 아님 |
+| 캐시 mount | `$REPO_DIR/hf-cache` → `/recipe/hf-cache` |
+| Recipe View mount | `$REPO_DIR/recipe-views` → `/recipe/recipe-views` |
+| 레거시 receipt | `~/.local/state/yslab-qwen38-bf16ple/{paths,image-id,container-id}` |
+| 새 wizard receipt | `~/.local/state/qwen38-flash-dgx/deployment-state.json` (XDG_STATE_HOME 등 오버라이드 가능) |
+| Legacy adoption | `scripts/adopt-legacy.sh` 성공; `recorded_legacy`는 등록된 과거 관찰 객체 |
+| 관리 권한 | `read_only=true`, `management_authority=OBSERVE_ONLY` |
+
+로컬 영수증에서 container/image **실제 전체 ID**를 대조했으며 일치했다. 그러나 이 값들은 **Git/공개 문서에 전체를 복사하지 않는다**. 유효성 확인에 필요하면 현 호스트에서 직접 읽어 비교한다.
+
+**실 DGX의 마지막 읽기 전용 출력:** legacy identity **6/6 PASS**, API `/health`·`/v1/models` PASS, 컨테이너 running, Health PASS, 저장 당시와 현재의 차이 `GIT_CHANGED`(Git HEAD 1건), identity 변경 0/health 변경 0; 당시 disk 여유 약 539.75 GiB, MemAvailable 약 14.35 GiB. 이는 **2026-10-26 시점 관찰**이지 항상 유효한 실시간 상태가 아니다.
+
+### 레거시 검사 의미
+
+- `legacy.identity_verified=true` 또는 `legacy.verified=true`는 저장된 paths, container/image ID, labels, published port, 모델 cache/view mounts 등 **6개 설치 식별 근거 일치**. 삭제·정지 소유권 아님.
+- `checkout_warnings`의 origin/HEAD 불일치는 설치 이력 변화이며 Docker 배포 손상의 증거가 아니다.
+- `api.health/models=PASS`는 HTTP 조회 성공. full 생성 추론, throughput, 240K-long-context 평가와 다르다.
+- `adopt-legacy`는 wizard의 별도 상태 파일에 읽기 전용 스냅샷만 저장. 레거시 원래 receipt에는 쓰지 않는다.
+- `recorded_legacy`는 등록 당시 기록이므로 `status`/`doctor`/`compare-state` 수행 시 덮어쓰지 않는다.
+
+**경고:** API가 `0.0.0.0:8000`에 열려 있어 방화벽에 따라 다른 호스트에서 접근할 수 있다. 네트워크/방화벽을 임의 변경하지 말고 보안 감사에서 별도 다룬다.
+
+---
+
+## 3. 구현·파일 구조·Manifest 계약
+
+### 3.1 정책과 실행 구조
+
+| 경로 | 역할 |
+| --- | --- |
+| `compatibility.json` | 대상 checkpoint·pinned revision·BF16 PLE/MTP tensor 계약 및 모델 무결성 기준 |
+| `scripts/deployment-manifest.json` | 위자드 선언형 정책: 서비스 프로파일, legacy fingerprint, 소유권/보존 규칙 |
+| `scripts/source-state-manifest.json` | Git 추적 파일의 path/mode/blob SHA-1 스냅샷; 자기 자신은 제외 |
+| `scripts/verify-source-state.py` / `.sh` | Git HEAD, working-tree blob/mode, 개인 origin, 승인 브랜치 검증. `PASS_SOURCE_ONLY`는 모델 검증이 아님 |
+| `scripts/wizard/model.py` | Manifest/target 정책 검증 |
+| `scripts/wizard/probe.py` | Docker/Git/legacy/API 읽기 전용 관찰 및 엄격한 ID/label 검사 |
+| `scripts/wizard/state.py` | 신규 자산 영수증, 권한 0600, atomic save 및 경로 안전 검사 |
+| `scripts/wizard/engine.py` | build/prepare/activate/status/adoption 및 소유권 receipt를 확인하는 stop/remove |
+| `scripts/wizard/cli.py` | 한글 지향 명령/대화형 메뉴/CLI 옵션 |
+| `scripts/wizard/monitor.py` | saved-vs-current diff, 간결 상태, HTTP/API/디스크/메모리 Health |
+| `scripts/qwen38-dgx-spark` 및 `src/recipe/*` | 실제 모델 download, audit, serve의 기존 runtime 구현 |
+| `tests/test_wizard_monitor.py` / `test_wizard_safety.py` | 모의 Docker/Git/HTTP 및 소유권 안전 시험 |
+| `tests/test_source_state_release_branches.py` | main/feature strict 허용, 다른 브랜치 거부, merge SHA·blob 변조 회귀 시험 |
+| `.github/workflows/test.yml` | CI workflow 정의. 구성 파일 존재만으로 CI 성공 아님 |
+
+주요 진입점: `scripts/{install,uninstall,prepare,activate,stop,adopt-legacy,status,compare-state,health,doctor,manifest,run-mock-tests}.sh`. 실제 실행 전에 최신 Git 파일 및 `--help`로 옵션을 확인한다.
+
+### 3.2 신규 위자드 기본 설정 (실기기 신규 설치 검증은 별도)
+
+- 추천 `target=orca-uncensored-bf16-mtp`, `MTP=2`.
+- context `262144`, sequences `8`, GPU memory fraction `0.8`.
+- 이미지 tag `kjlee-qwen38-bf16ple-wizard:9492b78c` (레거시 tag와 다름).
+- 권장 새 호스트 endpoint `127.0.0.1:18300`.
+- **동일한 target이면 기존과 신규의 Docker 컨테이너 이름이 동일**. 포트를 18300으로 바꿔도 **같은 Docker 데몬에서 동시 활성화 불가**. 안전한 이름 분리와 실기기 검증 전까지 자동 실행/교체 금지.
+- `--replace`, 자동 legacy takeover, HF 캐시 공유/이동, 가중치 purge는 지원하지 않는다.
+
+### 3.3 상태 및 Health 출력
+
+- `scripts/status.sh`: 간결한 한글 상태; `--json`으로 전체 기록/현재상태.
+- `scripts/compare-state.sh`: 과거 vs 현재의 `identity`/`health`/`git` 차이.
+- `scripts/health.sh`: 현재 컨테이너, API/모델 목록, cache/view 여유 공간, MemAvailable 읽기 전용 확인.
+- `scripts/doctor.sh`: Manifest 검증 + 상태/Health/변경 내역.
+- Snapshot 결과: `UNCHANGED`, `CHANGED`, `HEALTH_CHANGED`, `GIT_CHANGED`, `UNREGISTERED`, `UNKNOWN`. 저장 공간 경고 기본 임계값 `100 GiB`. UNKNOWN을 변경/실패로 단정하거나 기록을 자동 수정하지 않는다.
+
+### 3.4 Source Manifest를 수정할 때 반드시 지켜야 할 점
+
+PR #1 구현 당시 `scripts/verify-source-state.py --strict`의 허용 브랜치는 정확히
+`feature/install-uninstall-wizard-20261026`과 `main` 두 개다.
+Manifest `allowed_branches`와 소스 검증기 `RELEASE_BRANCHES`가 정확히 일치해야 한다.
+
+**새 추적 파일 추가·기존 파일 수정·삭제·모드 변경 시 전체 tracked Git tree의 path/mode/blob SHA를 `scripts/source-state-manifest.json`에 재계산해 반드시 같은 커밋에 반영한다.** 파일 개수·SHA를 임의 생성하지 않는다. Manifest 자체는 순환 참조를 피하기 위해 `files[]`에서 제외하고, HEAD에서 Manifest 자기 blob SHA를 별도로 대조한다.
+
+Git merge commit은 SHA가 달라질 수 있지만 **모든 tracked blob/mode와 Manifest가 일치하면** 소스 PASS 조건이다. 반대로 merge로 파일을 수정하면 Manifest를 재생성해야 한다.
+
+**새 임시 PR 브랜치는 현재 strict 허용 목록 밖이다.** `--strict` 실패를 정상으로 포장하지 말고, PR 브랜치에서는 Git tree와 Manifest SHA를 별도로 대조하고 해당 오프라인 단위 시험을 수행한 뒤 **머지된 main에서 strict**를 재검증한다. 미래에는 이 제한을 해결하는 CI/브랜치 검증 설계를 별도 검토할 수 있으나 안전 검사 전체를 무조건 우회/무력화하지 않는다.
+
+---
+
+## 4. 확정된 시험 결과 및 미완료 작업
+
+### 4.1 사용자 제공 DGX 실제 로그
+
+| 항목 | 검증 결과 |
+| --- | --- |
+| Feature HEAD `25949fd7fb16ff62f8c6bdfc6f9fe9ab74fd0f8a` | 사용자 최종 재검증 기준 |
+| Source Manifest | `PASS_SOURCE_ONLY: 111 tracked file(s)` |
+| Deployment Manifest | PASS, 4 targets |
+| main/feature 호환 회귀 시험 | **7/7 PASS** |
+| 위자드 fake/mock 시험 | **36/36 PASS** |
+| 전체 저장소 unit tests | **163/163 PASS** |
+| Bash 구문 / publication audit | 출력된 오류·진단 없음; 명시적인 exit-code 기록 없음 |
+| 실 DGX 레거시 identity | **6/6 PASS**, 컨테이너 running |
+| API health/models | **PASS/PASS** |
+| Snapshot diff | `GIT_CHANGED` 단독 1건, identity/health 변경 0 |
+| Read-only Health | **PASS** |
+| PR #1 GitHub merge 결과 | `main`에 **merged=true**, tree 동일, Manifest 111 entries 일치 |
+| GitHub CI | 실행 기록 없음; **CI 미검증** |
+
+위 결과는 **사용자가 DGX 터미널에서 실행한 로그**와 연결된 GitHub 조회에 근거한다. 보조자가 DGX에 접속한 것은 아니다. 새 코드/문서 커밋 후의 시험 결과로 **과거 163/163 수치를 자동 승계하지 않는다**.
+
+### 4.2 보류·미시험·차단 과제
+
+1. **DGX 현지 `main` 전환 및 post-merge strict 검증 미확인.** 마지막 사용자 로그는 기능 브랜치였다. 먼저 Git origin/clean status를 확인한 뒤 안전한 `git switch main`/`git pull --ff-only` 및 검증.
+2. **신규 위자드 실제 Docker 이미지 build, 모델 prepare/audit, 새 컨테이너 activate, chat inference, 신규 자산 stop/remove/image remove 미시험.** Mock PASS ≠ 실기기 성공.
+3. **Docker 컨테이너 이름 충돌 해소 미설계/미검증.** 안전한 새 이름 규칙, GPU·메모리·포트·요청 영향, 실패 rollback/재시작 방지, 소유권 영수증 변경 계약 등을 설계·시험해야 한다. 레거시 강제 삭제 금지.
+4. **Legacy→신규 관리 migration** 미구현. 기존 ownership 이전, 모델 cache 재사용/링크/복사 정책은 무단 적용 금지.
+5. **중복 가중치 다운로드 방지** 전략 미확정. 새 checkout과 기존 cache의 분리/경로/해시/마운트 검증 후 결정.
+6. **실패 복구 및 rollback** 미완성: 준비 실패·부분 파일·readiness timeout 이후 안전한 상태 보존/정리를 설계. 자동 cleanup보다 자산 보존 우선.
+7. **GitHub Actions 체크 0건 원인**(Actions 설정·실행 권한·워크플로 조건)을 확인하고 CI 검증 도입. GitHub 설정이 접근 불가하면 정확한 blocker 보고.
+8. **오래된 계획서·안내의 '미구현/NOT TESTED' 표현**: 현재 구현 vs 당시 시험 계획으로 나누어 점진적 갱신. 과거 기록은 삭제하지 않는다.
+9. **GPU/성능/240K context/MTP 안정성·동시성**: 새 위자드 실행 경로의 실제 장시간 검증은 별도.
+10. 인수인계 문서 추가로 변경된 Git HEAD/Manifest를 다음 세션에서 재확인하고 최종 로컬 소스 시험을 반복.
+
+권장 순서: **GitHub/main·DGX read-only 상태 확인 → CI/Manifest 정합성 → 모의 시험 확대 → 독립 실기기 시험 설계 → 승인된 신규 자산만 제한적으로 검증**.
+
+---
+
+## 5. 운영 자산 보호 — 절대 규칙
+
+1. 기존 `qwen38-flash-orca-uncensored-bf16-mtp`에 대해 `docker stop/rm/rename`, 교체/restart, `docker image rm`, prune, daemon/firewall/포트 설정 변경을 자동 실행하지 않는다.
+2. 기존 모델 `hf-cache`, `recipe-views`, NVMe checkpoint, HF 인증, 원본 설치 receipt를 덮어쓰거나 삭제하지 않는다. `rm -rf`, `git reset --hard`, `git clean -fd`, `--purge-*` 등을 상태 복구용으로 사용하지 않는다.
+3. `~/.local/state/yslab-qwen38-bf16ple/*`는 **레거시 소유권 증거**이므로 읽기 전용. 신규 위자드는 `~/.local/state/qwen38-flash-dgx/deployment-state.json`의 **자기 상태만** 기록할 수 있다.
+4. `legacy.adoption`은 `OBSERVE_ONLY`이다. 실제 삭제/정지 권한은 **새 위자드가 생성한 자산의 정확한 영수증 ID, image ID, label 및 Docker 실제 정보가 일치할 때만** 고려한다.
+5. 현 컨테이너의 전체 ID, HF access token, 인증 파일, 계정 비밀, 내부 환경변수/비공개 인프라를 공개 Git에 저장하지 않는다. 유출 위험 문서는 publication audit를 통과해야 한다.
+6. `--yes`는 사용자가 특정한 **신규 자산 생성/작업을 명시적으로 요청한 경우**에만 적절히 사용하고, `--replace`/`sudo`/유해한 cleanup을 자동 추정하지 않는다. 실제 운영 자산 변경은 별도 안전 설계/승인 필요.
+7. 기존 서비스가 돌아가므로 데이터 보존이 우선이다. 실패 시 `STOP/FAIL/UNKNOWN`을 사실 그대로 보고하고 읽기 전용 조사로 전환.
+8. `0.0.0.0:8000` 노출 API의 방화벽 접근 제한을 유지. 다른 Ollama, OpenWebUI, Docker, 네트워크 서비스 영향 없이 작업.
+9. Docker 이름/포트만으로 안전을 판단하지 말고 단일 GB10 자원과 모델 중복 데이터·GPU 점유를 확인한다.
+10. **GitHub 소스 PR 머지와 DGX 운영 배포/서비스 전환을 혼동하지 않는다.**
+
+---
+
+## 6. GitHub 플러그인으로 직접 작업하는 표준 절차
+
+### 6.1 도구 활용/권한 원칙
+
+연결된 GitHub 앱이 있는 세션에서는 파일/branch/PR/commit/merge를 **직접 수행**한다.
+새 세션에서는 지원 도구와 권한을 확인하되, 필요한 기능을 사용할 수 있는데도 "사용자가 직접 GitHub UI에서 하라"는 말만 하지 않는다.
+
+전형적인 GitHub 연결 함수 이름(지원 목록을 실제 도구에서 발견한 뒤 사용):
+- `fetch` / `fetch_file` / `compare_commits` / `get_pr_info` / `fetch_pr` / PR diff/review 조회.
+- `create_branch`, `create_blob`, `create_tree`, `create_commit`, `update_ref`.
+- `create_pull_request`, `merge_pull_request`.
+- workflow run/check/status 조회(지원되지 않으면 접근 불가 사유를 명시).
+
+### 6.2 수정 → 커밋 → PR → 머지
+
+1. 최신 `main` HEAD/tree, 변경 대상 파일과 보호 정책, PR 상태를 먼저 조회한다.
+2. 변경 사항을 작은 단위로 설계하고 필요한 기존 소스·테스트·Manifest/문서까지 함께 검토한다.
+3. 새 기능/반복 작업은 재사용 가능한 `scripts/`와 `tests/`로 만든다. 필요한 변경만 새 Git blob으로 생성한다.
+4. 추적 파일 **전부**의 최신 path/mode/Git blob SHA를 계산해 `scripts/source-state-manifest.json`을 다시 작성한다. 자기 자신은 파일 목록에서 제외.
+5. 정확한 base tree로 tree 생성 후 부모 commit SHA 지정 커밋. branch ref 갱신 시 **예상 HEAD lease**를 사용해 경합 방지. 강제 push 금지.
+6. 사용자가 PR/머지를 요청했으면 **새 PR 생성 → 변경 파일 diff·mergeable·예상 head SHA·CI·리뷰 확인 → 문제없으면 일반 merge commit으로 머지 → merged/closed, main HEAD/tree/Manifest 재조회**를 이어서 한다.
+7. 체크가 없는 경우 CI PASS라고 부르지 말고, 사용자 DGX 로그(163/163 등)와 GitHub checks(없는 상태)를 분리해 기록한다.
+8. 새 PR 임시 branch는 기존 strict allowlist에 포함되지 않으므로, **그 브랜치에서 무조건 strict PASS를 기대하지 않는다**. 전체 blob/mode/Manifest 파일 inventory 대조 및 모의 테스트로 사전 검증하고, 머지된 main에서 strict를 실행한다.
+9. PR #1은 이미 머지된 과거 이력이다. 새 작업은 별도 PR로 기록한다. 상위 YSLAB-ai 저장소, 기존 legacy checkout state 또는 실제 Docker를 Github source 변경에 묶어 수정하지 않는다.
+10. 사용자가 승인한 GitHub source 작업이면 계획·검토·커밋·PR·머지를 같은 세션에서 완결하되, 오류·충돌·권한 부족이 있으면 사실대로 중단한다.
+
+### 6.3 스크립트 생성/업데이트/사용 규칙
+
+- 단순 반복 명령보다 **상시 유지보수 가능한 Bash wrapper + Python 모듈**을 선호한다. 기존 코드를 축약해 기능을 빠뜨리지 말고 backward compatibility와 안전 불변조건을 검토한다.
+- Bash: `set -Eeuo pipefail`, 모든 경로/인자 quoting, 안전한 exit code, dry-run/읽기 전용 분리. 실제 파괴적 명령은 precise ID+영수증 검증 없이 실행하지 않는다.
+- Python: `snake_case`, type hints, what/why/how docstrings, 중요 로직에 **한국어 주석**. 변형할 때 예외 처리를 fail-closed로 유지하고 실제 Docker/네트워크는 모킹된 단위시험을 우선한다.
+- 새/수정 함수마다 정상·실패·경계·idempotency·불일치 테스트를 추가한다. 테스트가 실제로 실행되지 않았으면 `NOT_RUN`을 표시한다.
+- 새 운영 절차가 확정되면 단발 채팅으로 끝내지 말고 `docs/` 또는 `scripts/*.md`에 영구 기록하고, 이 인수인계 문서도 필요 시 업데이트한다.
+- 모든 커밋에 Manifest 및 문서 링크/README/HF 카드 미러 일치 검증을 포함. 공개/비밀 파일 `python3 tools/audit_publication.py` 감사 필요.
+- Bash script/CLI 실행 비트는 `100755`, 문서/JSON/일반 테스트는 `100644`. 소스 Manifest에 tracked file mode까지 반영한다.
+- 임의 SHA/시험 횟수/서비스 상태/커밋 결과를 절대 창작하지 않는다. 사용자에게 있던 기존 로그가 새 커밋을 증명하지 않음을 기록한다.
+
+### 6.4 커뮤니케이션/보고
+
+- 처음에는 **완료된 사실 / 미완료 / 위험 / 다음 작업**을 명료하게 요약한다. 이미 제공된 답을 반복 질문하지 않는다.
+- 코드와 데이터 근거는 현재 GitHub 파일, 과거 사용자 로그, 추론을 분리한다.
+- 작업 중엔 필요시 짧게 진척·차단을 알려 주고, 완료 시 변경 파일, 해시/브랜치, 테스트 결과, PR 링크, merge SHA를 확인해 보고한다.
+- 실패한 부분은 숨기지 말고, 완료되지 않은 것은 명확히 `NOT_TESTED` 또는 `UNVERIFIED`로 표현한다.
+
+---
+
+## 7. 다음 세션에서 바로 수행할 확인 작업
+
+### 7.1 GitHub 읽기 전용
+
+1. 현재 `main` HEAD/트리, PR #1 병합 상태 및 이후 신규 PR/커밋을 확인.
+2. **이 문서, `README.md`, `scripts/deployment-manifest.json`, `scripts/source-state-manifest.json`, `scripts/verify-source-state.py`, `scripts/wizard/*`**의 최신 버전을 조회.
+3. Source Manifest와 HEAD tree의 **전체** SHA/mode/경로 대조, README와 `huggingface/README.md` 미러 확인.
+4. GitHub Actions run/check를 조회하고, run=0이라면 `CI_NOT_VERIFIED`라고 표기.
+5. 최신 주요 문서: [Legacy 설치 보호](../scripts/LEGACY-INSTALLATION.md), [DGX 관찰](../scripts/LEGACY-OBSERVATION-20261026.md), [안전·복구](../scripts/SAFETY-AND-RECOVERY.md), [작업 순서](../scripts/OPERATIONS.md), [시험 계획](../scripts/TEST-PLAN.md), [테스트 증거](../scripts/VALIDATION-RESULTS-20261026.md), [Health 비교](../scripts/STATUS-COMPARE-AND-HEALTH.md), [Manifest 계약](../scripts/MANIFEST-SCHEMA.md), [Git Pull](../scripts/VERIFY-FROM-GIT-PULL.md), [역사적 개발 계획](../scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md).
+
+### 7.2 DGX 사용자가 실행할 수 있는 **읽기 전용 중심** 명령
+
+마지막 사용자 로그에서는 기능 브랜치였다. 원격 `main`으로 전환했다고 가정하지 않고 먼저 origin과 로컬 수정을 확인한다.
+
+```bash
+cd "$HOME/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark"
+pwd
+git remote get-url origin
+git status --short
+
+# origin이 개인 Fork이고 로컬 변경이 없는 경우에만
+git fetch origin main
+git switch main
+git pull --ff-only origin main
+
+git rev-parse HEAD
+scripts/verify-source-state.sh --strict
+scripts/manifest.sh validate
+scripts/run-mock-tests.sh
+PYTHONPATH=src:. python3 -m unittest discover -s tests -v
+bash -n scripts/*.sh scripts/qwen38-dgx-spark
+python3 tools/audit_publication.py
+scripts/status.sh
+scripts/compare-state.sh
+scripts/health.sh
+scripts/doctor.sh
+```
+
+위 코드는 이 문서 작성 중 DGX에서 실행한 결과가 아니다. 로컬 수정·remote 차이·에러가 있으면 절대 reset/clean으로 강제 통과시키지 않는다. Source PASS는 tracked repo만 평가하며 ignored cache/가중치/Docker 상태는 Health와 분리하여 확인한다.
+
+---
+
+## 8. 완료 판단과 향후 세션 종료 시 갱신해야 할 항목
+
+작업 종료 전에 다음을 **GitHub 영구 문서**와 답변에 반영한다.
+
+- 최종 브랜치, `main` HEAD, 수행한 GitHub commit/PR/merge SHA/URL.
+- 이전 기준 대비 실제 변경 파일과 source Manifest 최신 tracked 파일 수.
+- 수행한 테스트: **실행 환경(DGX/모의/CI), 명령, 총 건수, 실패 수, 미시험**, 독립적인 runtime health 증거.
+- 실제 기존 이미지/컨테이너/cache/API/state를 변경하지 않았는지와 보호 검증.
+- 해결되지 않은 blocker, 디자인 선택/위험, 사용자 승인이 필요한 실제 배포 작업.
+- 이 문서 `docs/SESSION-HANDOFF-PROMPT.md`, 관련 `scripts/*.md`와 README의 최신 정합성.
+
+**2026-10-26 마지막 확정 상태(이 문서 작업 시작 이전):**
+PR #1 MERGED, `main=bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6`, 사용자 DGX 기능 HEAD에서 전체 테스트 **163/163 PASS**, 모의 36/36, release-branch 7/7, legacy 6/6 및 API PASS, 운영 `OBSERVE_ONLY`. **실제 신규 배포·제거/rollback 미시험, DGX main 전환 로그 없음, GitHub Actions CI 실행 증거 없음.** 문서 신규 커밋/머지에 따른 `main`의 다음 HEAD는 새 세션에서 다시 조회한다.

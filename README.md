@@ -2,6 +2,15 @@
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
+## Session handoff for continuing development
+
+For a new ChatGPT or engineering session, **start with**
+[SESSION-HANDOFF-PROMPT.md](docs/SESSION-HANDOFF-PROMPT.md).
+It records the merged PR #1, observed DGX service state, validated tests,
+pending deployment/rollback work, protected legacy assets, and the required
+GitHub commit/PR/merge plus source-manifest update workflow.
+It is a historical snapshot: **verify current `main` and local DGX status before acting**.
+
 ## Fork-specific installation and management wizards (deployment NOT TESTED)
 
 ### Source snapshot on feature branch AND main
