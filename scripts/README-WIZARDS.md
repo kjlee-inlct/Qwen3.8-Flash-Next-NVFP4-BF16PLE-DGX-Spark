@@ -18,6 +18,29 @@
 **검증기 성공 문구 `PASS_SOURCE_ONLY`는 실제 설치/모델 테스트 성공이 아닙니다.**
 기존 YSLAB checkout에서 pull/checkout/레포지터리 재설정을 수행하지 않습니다.
 
+## 현재 실 DGX 확인 사항 (레거시 설치 유지)
+
+[2026-10-26 사용자 제공 DGX 출력](LEGACY-OBSERVATION-20261026.md)에 따르면
+기존 YSLAB 설치와 현재 Fork는 **동일한 checkout 경로**를 사용합니다.
+컨테이너/이미지 ID, label, 마운트, port 8000은 legacy 기록과 일치하고,
+현재 origin/HEAD는 설치 당시와 다릅니다.
+
+업데이트한 `scripts/status.sh`는 Docker ID·port·mount 기반
+`identity_verified`와 Git checkout drift를 별도 필드로 보고합니다.
+변경된 origin/HEAD를 원래대로 돌리려고 `git reset`,
+`git checkout --detach`, 재다운로드 또는 레거시 이미지 재빌드를 하지 마세요.
+
+다음 명령만 사용해 현재 상태를 읽기 전용으로 확인하세요.
+
+```bash
+git pull --ff-only origin feature/install-uninstall-wizard-20261026
+scripts/verify-source-state.sh --strict
+scripts/status.sh
+scripts/doctor.sh
+```
+
+**현재 모델 컨테이너와 모델 캐시는 그대로 보존됩니다.**
+
 ## 먼저 알아야 할 점
 
 1. Git에 추적되는 선언형 구성은 `scripts/deployment-manifest.json`이고, 모델 출처/텐서 호환성의 유일한 기준은 기존 `compatibility.json`이다.

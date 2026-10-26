@@ -42,7 +42,9 @@ def policy() -> dict[str, Any]:
             raise ValueError("unqualified default MTP")
         for flag in ("preserve_cache", "preserve_existing_service", "never_purge_repo",
                      "never_purge_hf_auth", "legacy_adoption_read_only",
-                     "uninstall_requires_owned_receipt", "public_bind_requires_external_review"):
+                     "uninstall_requires_owned_receipt", "public_bind_requires_external_review",
+                     "legacy_identity_requires_mount_match", "legacy_checkout_drift_is_informational",
+                     "legacy_api_health_not_ownership_proof"):
             if rules[flag] is not True:
                 raise ValueError(f"required policy disabled: {flag}")
         if service["image"] == legacy["image"] or service["host_port"] == legacy["port"]:

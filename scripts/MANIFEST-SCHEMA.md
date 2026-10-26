@@ -73,3 +73,25 @@ Manifest에 Docker 리소스의 **현재 소유권을 고정 기록하면 안 �
 - **커밋으로 파일이 바뀌면 Manifest를 재생성해 함께 검토해야 합니다.**
   이를 회피하려고 Git 태그/force push/reset으로 변경 이력을 덮어쓰지 않습니다.
 - 명령과 안전 가이드는 [Git pull부터 검증까지](VERIFY-FROM-GIT-PULL.md)를 따릅니다.
+
+
+## 6. 설치 이력 변경과 Docker 소유권의 분리
+
+2026-10-26 운영자 DGX 출력에서 **기존 참조 스크립트가 설치한 동일 디렉터리**의
+Git origin/HEAD만 변경된 사례를 확인했습니다. 이 경우:
+
+- `legacy.checks.recorded_paths/image_identity/container_identity/docker_labels/port_binding/model_mounts`
+  모두 일치해야 `identity_verified`가 true입니다.
+- `legacy.checkout.origin_matches_install` 및
+  `legacy.checkout.head_matches_install_pin`은 false일 수 있으며
+  `checkout_warnings`으로 보고됩니다.
+- `legacy.checkout.install_pin_available`은 예전 commit이 로컬 Git에 남아 있는지
+  나타냅니다. 이미지가 그 소스에서 만들어졌다는 암호학적 증거는 아닙니다.
+- `legacy.api.health/models`는 read-only localhost HTTP 확인일 뿐,
+  실제 생성 추론 또는 파괴적 조작 권한과 무관합니다.
+- `legacy.management_authority=OBSERVE_ONLY`와
+  `legacy.read_only=true`는 이 모든 조건에서 유지됩니다.
+- 기존 container/image ID는 **로컬 상태 파일에만 유지**, Git Manifest에는
+  개인 환경의 실제 Docker ID를 추가하지 않습니다.
+
+자세한 근거는 [운영자 관찰 기록](LEGACY-OBSERVATION-20261026.md)입니다.

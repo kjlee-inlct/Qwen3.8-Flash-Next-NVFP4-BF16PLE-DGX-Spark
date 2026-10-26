@@ -4,6 +4,23 @@ A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory
 
 ## Fork-specific installation and management wizards (NOT TESTED)
 
+### Existing YSLAB deployment: same checkout, changed Git history
+
+The operator's 2026-10-26 DGX outputs show that an existing legacy YSLAB
+model is still running from the **same** directory now tracking the personal
+fork's feature branch. Image/container receipt IDs, target labels, port
+`0.0.0.0:8000`, and Docker mounts for `hf-cache` and `recipe-views`
+matched the original deployment record. The old pinned source commit still
+exists as a Git object. `/health` and `/v1/models` responded, but no
+new generation inference test was performed.
+
+The updated wizard separates `legacy.identity_verified` (strict recorded
+Docker IDs, labels, port and both mount sources) from Git origin/HEAD drift
+(`legacy.checkout_warnings`). **Existing Docker resources remain
+observation-only: no automatic takeover, stop, remove or replace.**
+See [DGX evidence and limits](scripts/LEGACY-OBSERVATION-20261026.md).
+The code change itself has not been exercised on the DGX or through tests.
+
 ### Pull and verify the exact source snapshot (read-only)
 
 After checking out the personal fork's `feature/install-uninstall-wizard-20261026`

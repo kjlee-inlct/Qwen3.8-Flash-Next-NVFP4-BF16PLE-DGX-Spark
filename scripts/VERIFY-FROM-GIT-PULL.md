@@ -112,6 +112,17 @@ PY
 
 ## 4. 기존 YSLAB 설치 읽기 전용 조회
 
+현재 작업 경로가 처음 설치한 YSLAB 디렉터리여도 origin이 개인 Fork로
+바뀌어 있을 수 있습니다. 2026-10-26 운영자 로그에서 이 상태가 확인되었습니다.
+이 경우 ID/mount/port가 일치하면
+`legacy.identity_verified=true`이고 `checkout_warnings`에는
+Git origin/HEAD 변경이 별도 보고될 수 있습니다.
+
+기존 컨테이너를 살리려고 과거 PIN으로 checkout을 강제 되돌리지 마세요.
+이전 PIN 객체가 Git에 남아 있는지 여부는 읽기 전용 검사 항목입니다.
+
+
+
 ```bash
 # 선언형 정책 + 현재 호스트 관찰 정보를 조회
 scripts/status.sh

@@ -1,3 +1,17 @@
+# Legacy identity reconciliation — 2026-10-26
+
+- 사용자가 제공한 DGX 출력에서 Git origin/HEAD가 변경됐지만,
+  legacy image/container ID, 라벨, 모델 캐시/view 마운트, 포트가
+  기존 reference install state와 일치함을 확인.
+- legacy `verified` 의미를 런타임 설치 정체성으로 명확히 제한.
+  현재 Git origin/HEAD 변경은 `checkout_warnings`으로 분리.
+- 새 확인 항목: `checks.model_mounts`, `checks.port_binding`,
+  `checkout.install_pin_available`, `api.health/models`.
+- 기존 YSLAB 설치는 READ_ONLY, takeover/replace/delete 불가를 유지.
+- 신규 구현은 **테스트 미실행**. 배포 컨테이너·이미지·모델 변경 없음.
+
+---
+
 # Source snapshot update — 2026-10-26
 
 - 전체 추적 Git 파일의 blob SHA/모드와 원격 Fork 브랜치를 증명하는

@@ -38,6 +38,9 @@
     "never_purge_hf_auth": true,
     "legacy_adoption_read_only": true,
     "uninstall_requires_owned_receipt": true,
-    "public_bind_requires_external_review": true
+    "public_bind_requires_external_review": true,
+    "legacy_identity_requires_mount_match": true,
+    "legacy_checkout_drift_is_informational": true,
+    "legacy_api_health_not_ownership_proof": true
   }
 }

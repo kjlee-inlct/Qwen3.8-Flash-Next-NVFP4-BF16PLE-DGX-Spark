@@ -3,6 +3,16 @@
 > 신규: [git pull부터 검증 명령 전체](VERIFY-FROM-GIT-PULL.md). 기존 YSLAB 저장소에서 git pull을 실행하지 않고, 소스 해시 검증을 먼저 수행합니다.
 
 
+## 현재 실환경: 같은 checkout의 origin/HEAD 변경
+
+[DGX 사용자 관찰 결과](LEGACY-OBSERVATION-20261026.md):
+모델 cache·recipe-views Docker 마운트/레거시 ID 기록 일치,
+port `0.0.0.0:8000`, 현재 checkout origin/HEAD 변경.
+이제 `identity_verified`는 Docker ID/mount/port 기반으로,
+checkout drift는 별도 `checkout_warnings`으로 표시합니다.
+현재 서빙 유지가 최우선이므로 uninstall/purge/rebuild/replace 명령을
+기존 설치 대상으로 실행하지 않습니다.
+
 ## A. 현재 운용 중인 YSLAB 모델을 그대로 관리하기 시작
 
 ```bash

@@ -23,6 +23,21 @@ scripts/manifest.sh validate
 - `PYTHONPATH=src:. python3 -m unittest discover -s tests -v`
 - 변경된 README/상위 README 간 문서 계약 및 Git diff 확인
 
+## 신규 레거시 재검증 시험 계획 (미실행)
+
+- 설치 당시 PIN이 Git에 남아 있고 origin/HEAD가 개인 Fork로 변경되었지만,
+  레거시 `paths`, image/container IDs, labels, port 및 mount가 일치하는 경우
+  **`identity_verified=true`, checkout drift 경고, `read_only=true`**.
+- image ID 또는 container ID 불일치: `identity_verified=false`.
+- 모델 cache 또는 recipe-view bind mount 출처 불일치: 실패, 자동 경로 변경 없음.
+- `0.0.0.0:8000`과 다른 publish HostIp/HostPort: 실패.
+- `/health` 또는 `/v1/models` API 실패: status에 건강 상태만 별도 보고,
+  일치하는 Docker 소유권 증거를 강제로 무효화하지 않음.
+- `adopt-legacy`는 완전 일치와 64자리 ID 확인 시 새 local receipt에
+  **읽기 전용 observation만 기록**하며 Docker stop/rm/change 0회.
+- 같은 container name의 새 wizard activation은 계속 거부.
+- 개발자가 사용자 DGX의 실제 Container ID를 source Manifest나 Git에 커밋하지 않음.
+
 ## Fake Docker/Git runner 단위 시험
 
 | 그룹 | 테스트 벡터 | 기대 결과 |
