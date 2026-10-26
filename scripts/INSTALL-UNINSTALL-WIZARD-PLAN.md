@@ -1,3 +1,52 @@
+# Implementation update — 2026-10-26 (feature branch only)
+
+> **Source written; NO tests run, NO real DGX operations run.**
+> The earlier plan below is historical design guidance. This implementation follows a
+> *more restrictive, fail-closed* legacy compatibility rule to protect the user's
+> already-running installation.
+
+### Delivered in this feature branch
+
+- Declarative policy manifest: `scripts/deployment-manifest.json`, intentionally
+  distinct from pinned `compatibility.json`.
+- Bash entrypoints: `install.sh`, `uninstall.sh`, `status.sh`,
+  `adopt-legacy.sh`, `manifest.sh`, `doctor.sh`, `prepare.sh`,
+  `activate.sh`, and `stop.sh`.
+- Python implementation: `scripts/wizard/{model,state,probe,engine,cli}.py`.
+- Documents: `README-WIZARDS.md`, `LEGACY-INSTALLATION.md`,
+  `MANIFEST-SCHEMA.md`, `SAFETY-AND-RECOVERY.md`, `OPERATIONS.md`,
+  `TEST-PLAN.md`; root `README.md` updated.
+
+### Deliberate differences from the original plan
+
+1. The user's existing YSLAB deployment was installed by an older reference
+   script. It uses `yslab-qwen38-bf16ple:9492b78c`, the container name
+   `qwen38-flash-orca-uncensored-bf16-mtp`, host port 8000, and state files under
+   `~/.local/state/yslab-qwen38-bf16ple`. The wizard **only observes** this
+   installation. Explicit adoption creates a read-only *observation* receipt,
+   not destructive ownership.
+2. A new deployment uses a different image tag and port 18300. The same target
+   still maps to the same container name in upstream runtime, so activation must
+   refuse while the legacy container exists. No automatic stop/replace/migration.
+3. `--replace` is recognized but intentionally blocked; there is no qualified
+   rollback yet. Data purge and repository deletion are completely absent.
+4. The default wizard operates in the **already checked-out fork** without
+   cloning/resetting another repo. Default cache is this checkout's `hf-cache`
+   and it will **not** silently reuse/modify legacy model storage.
+5. The installer records new image/container IDs in a **private local receipt**
+   and checks Docker IDs+labels before deletion. `manifest` is policy, not a
+   claim of actual Docker ownership.
+
+### Outstanding
+
+- This branch is **NOT TESTED**. Run static checks, mock tests, DGX inventory,
+  image build, and real readiness checks in separate approved validation work.
+- Rollback, cross-checkout cache sharing, container name namespace changes,
+  legacy takeover, and general data purge are deferred.
+- Do not merge to `main` or describe this as safe for production until verified.
+
+---
+
 # DGX Spark 설치·제거 위자드 구현 계획
 
 > **상태: PLAN ONLY — 미구현**
