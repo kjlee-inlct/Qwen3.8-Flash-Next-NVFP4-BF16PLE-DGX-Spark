@@ -3,12 +3,12 @@
   "manifest_id": "kjlee-qwen38-wizard-source-snapshot",
   "repository": "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark",
   "branch": "feature/install-uninstall-wizard-20261026",
-  "source_creation_parent_commit": "513b39f7fffdfc6f051f1663bb8d2f65bf5b857b",
+  "source_creation_parent_commit": "3522190192da605c17709bede32a0df98d0ed406",
   "base_main_commit_at_creation": "9492b78c6bc04638587b42f2ffeb0680b0fcb3ef",
   "scope": "complete tracked repository source tree except this self-referential manifest",
   "self_validation": "Git HEAD scripts/source-state-manifest.json blob SHA vs working-tree bytes",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 102,
+  "tracked_file_count": 108,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -39,7 +39,8 @@
     "installer_runtime": "NOT_RUN",
     "model_audit": "NOT_RUN",
     "api_inference": "NOT_RUN",
-    "legacy_dgx_evidence": "USER_PROVIDED_SHELL_OUTPUT_NOT_INDEPENDENTLY_RUN"
+    "legacy_dgx_evidence": "USER_PROVIDED_SHELL_OUTPUT_NOT_INDEPENDENTLY_RUN",
+    "offline_mock_tests": "ADDED_NOT_YET_VERIFIED"
   },
   "verification_entrypoints": {
     "source": "scripts/verify-source-state.sh --strict",
@@ -53,7 +54,10 @@
     "Source PASS only proves tracked file integrity/branch/origin; it does not test code functionality or host state.",
     "Running reference legacy deployment and its state files must not be modified by verification.",
     "Legacy Docker source ownership checks are separated from checkout origin/HEAD drift; see scripts/LEGACY-OBSERVATION-20261026.md.",
-    "Observed legacy bind mounts /recipe/hf-cache and /recipe/recipe-views and host port 0.0.0.0:8000 are from user-provided output; host is not modified or tested by this commit."
+    "Observed legacy bind mounts /recipe/hf-cache and /recipe/recipe-views and host port 0.0.0.0:8000 are from user-provided output; host is not modified or tested by this commit.",
+    "Snapshot/status comparison and read-only host health: scripts/wizard/monitor.py; state receipts remain immutable during query.",
+    "tests/test_wizard_monitor.py and tests/test_wizard_safety.py simulate Docker/Git/HTTP without modifying actual services.",
+    "User-provided DGX logs confirm read-only legacy adoption success, not production testing of new monitor/installer/uninstaller."
   ],
   "files": [
     {
@@ -64,7 +68,7 @@
     {
       "path": ".github/workflows/test.yml",
       "mode": "100644",
-      "blob_sha": "b8b68ebc09c0ebc60bd4dbe3c93a99f63180b58a"
+      "blob_sha": "f5c29b67dab2137834627279a8c68abbac40b260"
     },
     {
       "path": ".gitignore",
@@ -134,7 +138,7 @@
     {
       "path": "huggingface/README.md",
       "mode": "100644",
-      "blob_sha": "a0b45083448b7de3902346bd2b6b6aae7f6ff010"
+      "blob_sha": "5fb5b3df2a6c50942ca77f777c74ca4d500ff086"
     },
     {
       "path": "LICENSE",
@@ -149,7 +153,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "blob_sha": "ea1c5a048881f84885dca054e8668857283d600a"
+      "blob_sha": "1ddf3f1c6ae038b49728aa7da72eceee396ad443"
     },
     {
       "path": "results/orcarouter/checkpoint-audit.json",
@@ -262,6 +266,11 @@
       "blob_sha": "488f4d2d475949dc0cfff30d94433110fef776a7"
     },
     {
+      "path": "scripts/compare-state.sh",
+      "mode": "100755",
+      "blob_sha": "e286180f06a791ebff013e5b66fabd42d2c25736"
+    },
+    {
       "path": "scripts/deployment-manifest.json",
       "mode": "100644",
       "blob_sha": "e92612c9ee19ef9895c5ae94d731e157db94ee07"
@@ -269,7 +278,7 @@
     {
       "path": "scripts/doctor.sh",
       "mode": "100755",
-      "blob_sha": "10d91e6d1ffa670bfacd9629c98f248fd7bd0805"
+      "blob_sha": "da0f8276f2c55f3a0021c758d6095906af9dae3b"
     },
     {
       "path": "scripts/download-weights.sh",
@@ -277,9 +286,14 @@
       "blob_sha": "ef64eba3dcdaa89f0e3aa0b94960a4d47d389b35"
     },
     {
+      "path": "scripts/health.sh",
+      "mode": "100755",
+      "blob_sha": "fcd061abe117b23eb179b703a1a5f3fe7bdf7e30"
+    },
+    {
       "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
       "mode": "100644",
-      "blob_sha": "1d52d864834accd1e942da6232cfd9f21d305a14"
+      "blob_sha": "a0051595781ca30a20392dada1ae043b2b16ca49"
     },
     {
       "path": "scripts/install.sh",
@@ -294,12 +308,12 @@
     {
       "path": "scripts/LEGACY-OBSERVATION-20261026.md",
       "mode": "100644",
-      "blob_sha": "0481b1c61d82c7c1c73aa67d4b5c8b83dff96ba6"
+      "blob_sha": "16adf4fb34a4f145f1735b56fc820806a3e4652f"
     },
     {
       "path": "scripts/MANIFEST-SCHEMA.md",
       "mode": "100644",
-      "blob_sha": "2ac97bcad4ce1ba00e8fc62d149e9d6ca5e58642"
+      "blob_sha": "8e5db2b1eda0a1d7a31b837801f882725ff6b6d9"
     },
     {
       "path": "scripts/manifest.sh",
@@ -309,7 +323,7 @@
     {
       "path": "scripts/OPERATIONS.md",
       "mode": "100644",
-      "blob_sha": "a0eedafb06ffcd0c167f47925cbeec00eb52d232"
+      "blob_sha": "2e310c07117a802cf29fc4dd1d52ca8b68e4d07d"
     },
     {
       "path": "scripts/prepare.sh",
@@ -324,7 +338,7 @@
     {
       "path": "scripts/README-WIZARDS.md",
       "mode": "100644",
-      "blob_sha": "df8dfc2b41666929fe4e283131b060798fa42784"
+      "blob_sha": "e7908377ccdf0caacb196ee55aecb6724f56a2b3"
     },
     {
       "path": "scripts/SAFETY-AND-RECOVERY.md",
@@ -340,6 +354,11 @@
       "path": "scripts/smoke-test.sh",
       "mode": "100755",
       "blob_sha": "3dddf35081239b564dca0e2032957be4febe707a"
+    },
+    {
+      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
+      "mode": "100644",
+      "blob_sha": "2445c87a2cc9404bfb099cad32c2146aab64a754"
     },
     {
       "path": "scripts/status.sh",
@@ -359,7 +378,7 @@
     {
       "path": "scripts/TEST-PLAN.md",
       "mode": "100644",
-      "blob_sha": "eae5df862db856450511c7ea1d4facf9600b93ff"
+      "blob_sha": "e73418037b596750b2aea05b287911619959a7ea"
     },
     {
       "path": "scripts/uninstall.sh",
@@ -369,7 +388,7 @@
     {
       "path": "scripts/VERIFY-FROM-GIT-PULL.md",
       "mode": "100644",
-      "blob_sha": "1fc69f6e95f70af73471d210d54f84c135a564a0"
+      "blob_sha": "caf3fe40d10d6397ea953dc80398c1d22a32cfed"
     },
     {
       "path": "scripts/verify-source-state.py",
@@ -389,7 +408,7 @@
     {
       "path": "scripts/wizard/cli.py",
       "mode": "100755",
-      "blob_sha": "ab0f30882e19e30c7127bded38affaa83766493a"
+      "blob_sha": "9adafbed19265e5dd65bd8366a7a434ed5729745"
     },
     {
       "path": "scripts/wizard/engine.py",
@@ -400,6 +419,11 @@
       "path": "scripts/wizard/model.py",
       "mode": "100644",
       "blob_sha": "eb3168862e82da20d31d390687c31ecc5321adfa"
+    },
+    {
+      "path": "scripts/wizard/monitor.py",
+      "mode": "100644",
+      "blob_sha": "6513ea2ee052a2d10d520f3b252b5feec080aa41"
     },
     {
       "path": "scripts/wizard/probe.py",
@@ -555,6 +579,16 @@
       "path": "tests/test_sanitize_results.py",
       "mode": "100644",
       "blob_sha": "5f75949a3f84f72a8ea34bae72e78b7cf38108c2"
+    },
+    {
+      "path": "tests/test_wizard_monitor.py",
+      "mode": "100644",
+      "blob_sha": "2ae28e868bfd213190ac0c2076362a782fe37dd8"
+    },
+    {
+      "path": "tests/test_wizard_safety.py",
+      "mode": "100644",
+      "blob_sha": "4039507d00f5bc04186d99969336f149d0e2918a"
     },
     {
       "path": "tools/audit_publication.py",

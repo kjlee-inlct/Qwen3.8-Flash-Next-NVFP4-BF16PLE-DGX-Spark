@@ -12,6 +12,7 @@ from engine import (WizardError, activate, adopt_legacy, build_image,
 from model import PolicyError, policy, targets
 from probe import ProbeError, container
 from state import StateError
+from monitor import status_report, summary_lines
 
 
 def _manifest_default(name: str) -> Any:
@@ -23,7 +24,11 @@ def _parser() -> argparse.ArgumentParser:
         prog="DGX-Spark-wizard",
         description="Pinned BF16 PLE/MTP deployment; existing YSLAB services are protected")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("status", help="Read-only inventory, including the legacy installation")
+    status = sub.add_parser("status", help="간결한 상태·스냅샷 비교 (읽기 전용)")
+    status.add_argument("--json", action="store_true", help="전체 상태와 비교 결과 JSON")
+    status.add_argument("--health", action="store_true", help="저장공간·메모리 포함 조회")
+    status.add_argument("--compare", action="store_true", help="등록 당시 대비 변경 필드 표시")
+    status.add_argument("--strict", action="store_true", help="식별 실패/변경/건강 실패 시 exit 1")
     manifest = sub.add_parser("manifest", help="Inspect or validate declarative deployment policy")
     manifest.add_argument("operation", choices=["show", "validate"])
     adopt = sub.add_parser("adopt-legacy", help="Record verified legacy deployment for READ-ONLY monitoring")
@@ -181,7 +186,30 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(incoming)
     try:
         if args.command == "status":
-            _print_json(deployment_status())
+            report = status_report(include_health=args.health)
+            if args.json:
+                _print_json(report)
+            else:
+                print("\n".join(summary_lines(report)))
+                if args.compare:
+                    comparison = report["comparison"]
+                    for item in comparison["differences"]:
+                        # Full local Docker IDs remain in --json, not the normal terminal summary.
+                        def compact(value: Any) -> str:
+                            if isinstance(value, str) and len(value) > 56:
+                                return value[:16] + "..."
+                            return str(value)
+                        print(f"  [{item['group']}] {item['field']}: "
+                              f"{compact(item['recorded'])} -> {compact(item['current'])}")
+                    for name in comparison["unknown"]:
+                        print("  [UNKNOWN] " + name)
+            if args.strict and (
+                report["comparison"]["status"] in ("CHANGED", "UNKNOWN")
+                or not isinstance(report.get("legacy"), dict)
+                or report["legacy"].get("identity_verified") is not True
+                or (args.health and report["health"]["status"] in ("FAIL", "UNKNOWN"))
+            ):
+                return 1
         elif args.command == "manifest":
             data = policy()
             if args.operation == "show":

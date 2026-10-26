@@ -4,6 +4,29 @@ A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory
 
 ## Fork-specific installation and management wizards (NOT TESTED)
 
+### Read-only state comparison, compact status and host Health (2026-10-26)
+
+After successful legacy observation registration on the DGX Spark, the feature
+branch now includes snapshot-versus-live comparisons, concise Korean status
+output, host disk/memory advisories, and offline mock-based protection tests.
+The saved legacy receipt is **never changed by status, compare or health**.
+
+```bash
+# Only after safe git pull --ff-only in the existing personal-fork checkout
+scripts/status.sh                    # compact
+scripts/status.sh --json             # full JSON and diff
+scripts/compare-state.sh             # saved vs current changes
+scripts/health.sh                    # Docker/API/model/disk/memory (read-only)
+scripts/doctor.sh                    # policy + comparison + health
+```
+
+[Detailed guide](scripts/STATUS-COMPARE-AND-HEALTH.md) ·
+[Saved legacy adoption evidence](scripts/LEGACY-OBSERVATION-20261026.md).
+
+**Testing scope:** offline unit tests with simulated Docker/Git/HTTP;
+no actual DGX install/uninstall, Docker build, data cleanup or inference
+evaluation is part of this change. CI results must be checked independently.
+
 ### Existing YSLAB deployment: same checkout, changed Git history
 
 The operator's 2026-10-26 DGX outputs show that an existing legacy YSLAB

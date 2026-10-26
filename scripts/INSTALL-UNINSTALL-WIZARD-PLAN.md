@@ -1,3 +1,20 @@
+# Operational monitoring + offline mock tests — 2026-10-26
+
+- `scripts/wizard/monitor.py`에서 saved legacy observation과 live legacy를
+  설치 정체성/Health/Git 그룹으로 비교.
+- `scripts/status.sh` 간결 출력; `--json`, `--compare`, `--health`,
+  `--strict` 옵션. `scripts/compare-state.sh`, `scripts/health.sh`,
+  `scripts/doctor.sh`에서 전용 조회.
+- `tests/test_wizard_monitor.py`, `tests/test_wizard_safety.py`:
+  가짜 Docker/Git/HTTP와 임시 receipt로 오프라인 시험.
+- 로컬 legacy receipt의 관찰 등록 성공은 사용자의 DGX 쉘 로그로 확인.
+  신규 모의 시험과 운영 중인 컨테이너 신규 설치·제거 테스트는 구분.
+- 기존 YSLAB image/container/cache/view/port 8000, 레거시 상태 파일,
+  Git `main`을 변경하지 않는 방향 유지.
+- 세부: [STATUS-COMPARE-AND-HEALTH.md](STATUS-COMPARE-AND-HEALTH.md).
+
+---
+
 # Legacy identity reconciliation — 2026-10-26
 
 - 사용자가 제공한 DGX 출력에서 Git origin/HEAD가 변경됐지만,

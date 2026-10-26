@@ -63,3 +63,20 @@ reported failed check.
 **Security:** legacy API binds to 0.0.0.0:8000 and has no implicit authentication
 guarantee. Keep firewall/authorized-network restrictions in place. Wizard code
 does not modify firewall rules or the existing bind.
+
+
+## 운영자 제공: 읽기 전용 legacy adoption 성공
+
+2026-10-26 추가 쉘 로그에 `scripts/adopt-legacy.sh --confirm-container-id ... --yes`
+실행 후 `읽기 전용 등록 완료`가 출력되고,
+`scripts/status.sh`의 `recorded_legacy`가 null에서 저장 당시 관찰
+객체로 변경된 것을 확인했습니다. 저장 객체와 즉시 조회한 live legacy는
+컨테이너 ID·이미지 ID·마운트·포트·6개 신원 검사·API health/model PASS에서
+일치했습니다.
+
+이는 **사용자가 제공한 실행 결과**이며, GitHub connector가 자체적으로
+DGX에 접속해 명령을 수행한 증거는 아닙니다. 기존 Docker 서비스의
+stop/rm/rebuild 없이 모니터링 대상이 로컬 wizard-state에 관찰자로
+등록되었고, 관리 권한은 `OBSERVE_ONLY`입니다.
+
+새 상태 비교 기능과 모의 테스트: [STATUS-COMPARE-AND-HEALTH.md](STATUS-COMPARE-AND-HEALTH.md).

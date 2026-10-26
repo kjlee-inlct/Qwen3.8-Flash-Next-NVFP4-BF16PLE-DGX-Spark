@@ -12,6 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: PYTHONPATH=src:. python3 -m unittest discover -s tests -p 'test_wizard_*.py' -v
       - run: PYTHONPATH=src:. python3 -m unittest discover -s tests -v
       - run: bash -n scripts/*.sh scripts/qwen38-dgx-spark
       - run: python3 tools/audit_publication.py

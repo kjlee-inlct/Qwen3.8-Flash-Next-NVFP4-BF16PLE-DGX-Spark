@@ -151,7 +151,20 @@ ID, Git HEAD 또는 포트가 참조 기준과 다를 수 있습니다. **자동
 기존 설치를 신규 관리 상태로 *등록*하는 `adopt-legacy.sh`는 로컬
 wizard state에 기록하므로 위의 읽기 전용 단계에 포함하지 않았습니다.
 
-## 5. 선택적 안전 계획 확인 (위자드 호출; Docker 변경 없음)
+## 5. 등록 기록 비교와 읽기 전용 Health 확인
+
+```bash
+scripts/status.sh                 # 기본은 요약; 상세 JSON은 --json
+scripts/compare-state.sh          # snapshot vs current
+scripts/health.sh                 # 컨테이너·API·모델·저장공간·메모리
+scripts/doctor.sh                 # 선언형 Manifest + 비교 + Health
+```
+
+기존 문서의 status 예시 JSON 필드는 이제 `scripts/status.sh --json`에서
+그대로 확인할 수 있습니다.
+[출력 상태 및 경고 해석](STATUS-COMPARE-AND-HEALTH.md).
+
+## 6. 선택적 안전 계획 확인 (위자드 호출; Docker 변경 없음)
 
 ```bash
 scripts/install.sh --target orca-uncensored-bf16-mtp --mtp 2 --dry-run

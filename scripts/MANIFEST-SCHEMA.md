@@ -95,3 +95,23 @@ Git origin/HEAD만 변경된 사례를 확인했습니다. 이 경우:
   개인 환경의 실제 Docker ID를 추가하지 않습니다.
 
 자세한 근거는 [운영자 관찰 기록](LEGACY-OBSERVATION-20261026.md)입니다.
+
+
+## 7. 저장된 관찰 기록 대조 및 Health
+
+`legacy_observation`은 로컬 상태 파일에 저장된 **과거 관찰**입니다.
+새로 읽은 Docker/HTTP/checkout 값을 덮어쓰지 않고
+`scripts/wizard/monitor.py`에서 명시된 필드만 비교합니다.
+
+- `comparison.status`: UNCHANGED / CHANGED / HEALTH_CHANGED /
+  GIT_CHANGED / UNREGISTERED / UNKNOWN.
+- `comparison.counts`: identity, health, git 각 변경 개수.
+- `comparison.differences[]`: 변경 필드의 기록값/현재값.
+- `comparison.unknown[]`: 이전 스키마에 없거나 조회 불가한 필드.
+- `health`: 요청 시에만 container/API/model/disk/memory 별도 조회 결과.
+- `--json`은 전체 관찰을 제공하고 기본 status는 개인정보 및 전체 Docker
+  ID를 반복 출력하지 않는 요약을 표시합니다.
+
+소스 Manifest는 변경한 모든 추적 파일 SHA를 새로운 커밋에서 다시
+갱신해야 하며, 이 단계의 mock 시험 결과와 DGX 실기기 검증 결과는
+별도 기록합니다. [운영 가이드](STATUS-COMPARE-AND-HEALTH.md).

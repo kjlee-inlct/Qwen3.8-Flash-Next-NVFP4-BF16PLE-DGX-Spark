@@ -3,6 +3,22 @@
 > 신규: [git pull부터 검증 명령 전체](VERIFY-FROM-GIT-PULL.md). 기존 YSLAB 저장소에서 git pull을 실행하지 않고, 소스 해시 검증을 먼저 수행합니다.
 
 
+## 저장된 관찰 기록과 현재 상태 비교 (신규)
+
+```bash
+scripts/status.sh
+scripts/compare-state.sh
+scripts/health.sh
+scripts/doctor.sh
+scripts/status.sh --json --health
+```
+
+`UNCHANGED`, `CHANGED`, `HEALTH_CHANGED`, `GIT_CHANGED`,
+`UNREGISTERED`, `UNKNOWN`을 구분합니다.
+Docker ID/mount/port 변화는 Git HEAD 변화보다 우선하며,
+저장 공간 부족은 경고로 표시하고 자동 삭제하지 않습니다.
+[검증 순서와 결과 해석](STATUS-COMPARE-AND-HEALTH.md).
+
 ## 현재 실환경: 같은 checkout의 origin/HEAD 변경
 
 [DGX 사용자 관찰 결과](LEGACY-OBSERVATION-20261026.md):

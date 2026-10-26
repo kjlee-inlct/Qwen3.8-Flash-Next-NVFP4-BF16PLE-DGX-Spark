@@ -41,6 +41,19 @@ scripts/doctor.sh
 
 **현재 모델 컨테이너와 모델 캐시는 그대로 보존됩니다.**
 
+## 운영 상태 비교 및 Health (신규)
+
+[상태 비교·읽기 전용 Health 상세 지침](STATUS-COMPARE-AND-HEALTH.md):
+`scripts/status.sh`는 간결한 요약을 기본으로 출력하고 `--json`으로
+전체 JSON을 표시합니다. 저장된 legacy snapshot과 현재 상태의 차이는
+`scripts/compare-state.sh`, disk/memory 및 API 상태는
+`scripts/health.sh`, 종합은 `scripts/doctor.sh`로 확인합니다.
+상태 조회만으로 Docker·가중치·legacy 또는 wizard receipt가 변경되지는 않습니다.
+
+사용자가 제공한 DGX 결과에 따르면 2026-10-26에 legacy 읽기 전용
+등록에 성공했으며, 등록 당시 Docker 신원 6/6 PASS와 API Health/Model PASS를
+확인했습니다. **신규 모의 테스트는 실제 DGX 배포 시험과 구별합니다.**
+
 ## 먼저 알아야 할 점
 
 1. Git에 추적되는 선언형 구성은 `scripts/deployment-manifest.json`이고, 모델 출처/텐서 호환성의 유일한 기준은 기존 `compatibility.json`이다.

@@ -23,6 +23,18 @@ scripts/manifest.sh validate
 - `PYTHONPATH=src:. python3 -m unittest discover -s tests -v`
 - 변경된 README/상위 README 간 문서 계약 및 Git diff 확인
 
+## 오프라인 모의 시험 코드 추가
+
+- `tests/test_wizard_monitor.py`: 이전 snapshot 비교, identity/Git/Health 변화,
+  누락된 snapshot, 간결한 상태/JSON/strict 상태 코드 및 storage 경고.
+- `tests/test_wizard_safety.py`: 임시 레거시 state, 가짜 Docker inspect/Git,
+  정확한 ID/마운트/포트 증거, 읽기 전용 등록, 보호 대상 삭제 및
+  동일 이름 컨테이너 활성화 거부.
+- `PYTHONPATH=src:. python3 -m unittest discover -s tests -p 'test_wizard_*.py' -v`
+  실행 시 실제 Docker·HTTP·HF를 호출하지 않습니다.
+- `.github/workflows/test.yml`에 이 모의 테스트 단계를 추가합니다.
+- **실 DGX 신규 설치·제거 테스트는 별도**이며 모의 시험 성공과 동일시하지 않습니다.
+
 ## 신규 레거시 재검증 시험 계획 (미실행)
 
 - 설치 당시 PIN이 Git에 남아 있고 origin/HEAD가 개인 Fork로 변경되었지만,
