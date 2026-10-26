@@ -1,11 +1,61 @@
-# 2026-10-26 DGX Spark 검증 증거 및 PR 준비 상태
+# 2026-10-26 DGX Spark 검증 증거 및 PR 기록 (시점별)
 
 > **출처:** 사용자가 전달한 DGX Spark 터미널 로그. GPT/GitHub 연결은
 > DGX에 원격 로그인하여 이 명령들을 직접 실행하지 않았습니다.
 > 아래 수치는 **당시 커밋** `3b00eafc44ebf5fa6e16134f30fb4be2679c0978`
 > 의 운영자 실행 결과이며, 이후 수정된 커밋에 대한 재실행 결과가 아닙니다.
 
-## 실행한 명령과 확인한 결과
+
+## 최신 DGX main 검증 — 2026-10-26 (PR #3 병합 이후)
+
+> **출처:** 사용자 제공 `scripts/verify-main-readonly.sh` 전체 281줄 실행 로그.
+> 실제 DGX를 사용자가 조작했으며 ChatGPT/GitHub는 서버에서 명령을 직접 실행하지 않았다.
+> 이 증거는 `main` **`66051cdcd4b2c5766de55421579867c195fe4084`** 한 커밋에 한정된다.
+> 그 뒤 문서 커밋 및 PR merge SHA에는 자동 승계하지 않는다.
+
+| 검증 항목 | 실제 DGX 실행 결과 |
+| --- | --- |
+| HEAD/브랜치 | `main`, `66051cdcd4b2c5766de55421579867c195fe4084`, local `origin/main` 일치 |
+| Source state | `scripts/verify-source-state.sh --strict` → **PASS_SOURCE_ONLY: 114 tracked file(s)** |
+| Deployment policy | **PASS**, 4 target(s) |
+| Wizard offline mock | `scripts/run-mock-tests.sh` → **38/38 PASS**, 실패 0 |
+| Full unit | `PYTHONPATH=src:. python3 -m unittest discover -s tests -v` → **172/172 PASS**, 실패 0 |
+| Static/publish | wrapper의 Bash syntax 및 `tools/audit_publication.py` 단계 통과; 실행 전체가 마지막 PASS까지 종료 |
+| Legacy identity | **PASS**, 불일치 0, 컨테이너 running |
+| Legacy API | Health PASS, 모델 목록 PASS |
+| Saved vs current | `GIT_CHANGED`: 설치정체성 0, 서비스 0, Git HEAD 1 |
+| Git drift | recorded `3522190192da605c17709bede32a0df98d0ed406` → current `66051cdcd4b2c5766de55421579867c195fe4084`; 2건 informational warning |
+| Read-only Health | **PASS**, cache/view 여유 공간 각 539.74 GiB |
+| MemAvailable | 약 14.24~14.30 GiB (관찰 시점별 변동) |
+| Legacy authority | `OBSERVE_ONLY`, 신규 설치·제거 **미실행** |
+| Wrapper terminal result | `PASS: local source/tests/observations; real new deployment NOT_TESTED` |
+| GitHub CI | GitHub Actions workflow runs=0, commit check runs=0 — **CI_NOT_VERIFIED / 사용자 결정으로 보류** |
+
+### 판단
+
+1. **P0-3 완료:** DGX 실호스트의 `main` 전환 및 후속 읽기 전용 검증은 위
+   SHA에서 성공. 소스 manifest, 정책, offline mock, unit, 상태 조회 증거가 있다.
+2. **P0-2 코드/Mock 단계 완료:** 신규 Wizard 별도 이름, 전용 owner marker, strict receipt,
+   레거시 running일 때 GPU 기동 차단 회귀시험이 위 38/38·172/172에 포함됨.
+   실제 새 컨테이너 start/stop/remove나 장시간 inference 시험은 수행하지 않음.
+3. **P0-1 의도적 연기:** Actions run/check 0건 원인 조사 및 CI 정상화는
+   사용자 요청에 따라 **별도 차후 과제**, 이번 docs-only PR 범위에 포함하지 않음.
+4. **기존 서비스 보호:** ID/상태/Health 변경 0건, `GIT_CHANGED`는 Git checkout drift다.
+   저장공간은 양호하지만 메모리 약 14 GiB로 **단일 GB10 추가 GPU 배포 금지**를 유지.
+5. 이번 결과 기록은 **문서만 수정**하고 PR/merge한다. 새로운 merge SHA에 대한
+   DGX source strict/full tests/Health 재실행 증거는 아직 별도로 필요하다.
+
+### 누락된 실기기 시험
+
+신규 위자드 Docker build, checkpoint prepare/audit, cache 재사용,
+신규 activate 및 chat completions, 오너 자산 stop/remove/image rm, 복구·rollback,
+240K/MTP 성능/동시성, 모델 파일 무결성의 신규 전체 검사는 **NOT_TESTED**.
+이전 기능 SHA `3b00eaf...`의 156/156 및 `25949fd...`의 163/163은
+**과거 증거로만 유지**한다.
+
+---
+
+## 과거 실행한 명령과 확인한 결과
 
 | 대상 | 명령 | 사용자 제공 로그의 결과 |
 | --- | --- | --- |
@@ -52,7 +102,7 @@
 - 체크아웃은 `main`/기능 브랜치 중 하나이며 origin은 반드시 개인 Fork여야 합니다.
   기존 YSLAB 자산의 소유권/삭제 권한은 바뀌지 않습니다.
 
-## 재검증 (모델 및 Docker 변경 없이)
+## 과거 재검증 예시 (기능 브랜치 당시 명령, 최신 권장 경로 아님)
 
 ```bash
 git status --short
@@ -69,3 +119,10 @@ scripts/doctor.sh
 
 실제 `main` 병합 전에는 PR diff/상태 검사, 이 검증기 테스트의 실제 실행과
 기존 설치 Health의 변화가 없는지 재확인하세요. **PR 생성·머지는 별도 작업**입니다.
+
+## 신규 `main` 검증 표준 명령
+
+개인 Fork origin, 깨끗한 작업 트리, 최신 `main` 및 local `origin/main`
+일치를 확인한 후 `scripts/verify-main-readonly.sh`를 사용한다.
+기존 컨테이너 및 모델을 변경하지 않으며, 새 커밋이 생길 때마다 최신
+소스 SHA/Health를 재확인한다. CI는 사용자 재개 요청 전 보류한다.

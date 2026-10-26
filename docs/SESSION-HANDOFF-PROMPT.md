@@ -6,6 +6,49 @@
 
 ---
 
+## 최신 검증 기준: 2026-10-26 DGX `main` 실측 (PR #3 이후)
+
+> **현재 상태의 우선 기준.** 아래 오래된 PR #1/기능 브랜치 시험 및 보류 목록은
+> 작성 당시의 **과거 이력**이다. 항목이 충돌하면 이 최신 기록과 현 GitHub 소스/새 DGX 로그를 대조한다.
+> **이 문서를 포함한 다음 docs-only 머지 커밋은 DGX에서 다시 실행한 것이 아니다.**
+
+- 최종 검증 대상: GitHub [PR #3](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/3)
+  **MERGED**, `main=66051cdcd4b2c5766de55421579867c195fe4084`.
+- 사용자가 **실 DGX**의 `main`에서 `scripts/verify-main-readonly.sh` 실행 완료:
+  `SOURCE_HEAD`가 위 SHA 및 로컬 `origin/main`과 일치, 마지막
+  `PASS: local source/tests/observations; real new deployment NOT_TESTED` 출력.
+- Source `--strict` **PASS_SOURCE_ONLY 114 tracked files**,
+  deployment manifest PASS **4 targets**, wizard fake/mock **38/38 PASS**,
+  전체 unit **172/172 PASS**. 쉘 구문과 publication audit도 읽기 전용
+  일괄 스크립트가 오류 없이 통과했으나 별도 검사 로그는 분리되어 있지 않음.
+- 기존 YSLAB 레거시: 컨테이너 **running**, 설치 식별 **PASS**, API Health·모델 목록
+  **PASS/PASS**, Health **PASS**, **OBSERVE_ONLY**. Snapshot `GIT_CHANGED`
+  (설치 정체성 0 / 서비스 변경 0 / Git HEAD 1): stored
+  `3522190192da605c17709bede32a0df98d0ed406` →
+  `66051cdcd4b2c5766de55421579867c195fe4084`.
+  캐시·recipe-view 저장 여유 각 **539.74 GiB**, MemAvailable 약 **14.24~14.30 GiB**.
+- PR #3: 기능 브랜치 `feature/ci-wizard-isolation-main-readonly-20261026`에서
+  **2 commits**, 19 files changed, 일반 merge SHA 위의 `66051cdc...`.
+  신규 Wizard 전용 `qwen38-wizard-<target>` 이름, 전용 ownership label,
+  엄격한 영수증/ID 검증, 레거시 running 시 단일 GB10 동시 GPU 기동 차단.
+  해당 소스의 모의 회귀시험은 위 최신 DGX 172/172에 포함된다.
+- **P0-3 완료:** DGX 로컬 `main` 전환 및 병합 소스 검증 확인.
+  **P0-2 코드/모의 검증 완료, 실 신규 배포/제거 미시험.**
+  **P0-1 GitHub Actions 정상화는 사용자의 명시적인 결정으로 연기.**
+  GitHub Actions **run=0 / check run=0** (최신 조회 시점),
+  `CI_NOT_VERIFIED`; 원인 조사, 워크플로 수정, 설정 변경 및 재실행을
+  이번 문서 동기화 PR에서 진행하지 않는다.
+- 그 외 미완료: 신규 Wizard 이미지 빌드/가중치 준비/활성화/소유 자산 제거,
+  실패 rollback, 중복 다운로드 회피, 레거시→Wizard 소유권 이전, 단일 GB10
+  신규 GPU 및 240K/MTP 성능·안정성 실기기 검증. **현재 서비스 정지/교체 금지.**
+- **향후 우선순위:** 운영 자산 보호 → 원격 최신 HEAD/로컬 clean·Health 관찰 →
+  안전한 offline mock·rollback 설계 → 중복 다운로드 방지 설계 →
+  실기기 신규 배포는 별도 명시 승인. CI는 사용자가 재개를 요청할 때 다룬다.
+
+자세한 명령·로그별 구분: [2026-10-26 검증 증거](../scripts/VALIDATION-RESULTS-20261026.md).
+
+---
+
 ## 0. 새 세션에서 사용할 최상위 지시
 
 당신은 **단일 NVIDIA DGX Spark(GB10)**에서 실행하는 Qwen3.8-Flash-Next NVFP4/BF16 PLE + BF16 MTP 레시피의 **개인 Fork 설치·제거 위자드/운영 관리 프로젝트**를 이어받은 엔지니어링 보조자다. **한국어**로 기술 분석, 코드, 설명, 보고를 작성한다.
@@ -108,7 +151,7 @@ PR #1 병합 직후 개인 Fork `main`과 기능 브랜치의 **Git tree가 동�
 - context `262144`, sequences `8`, GPU memory fraction `0.8`.
 - 이미지 tag `kjlee-qwen38-bf16ple-wizard:9492b78c` (레거시 tag와 다름).
 - 권장 새 호스트 endpoint `127.0.0.1:18300`.
-- **동일한 target이면 기존과 신규의 Docker 컨테이너 이름이 동일**. 포트를 18300으로 바꿔도 **같은 Docker 데몬에서 동시 활성화 불가**. 안전한 이름 분리와 실기기 검증 전까지 자동 실행/교체 금지.
+- **PR #3 이후 이름 분리 완료:** 레거시는 `qwen38-flash-<target>`, 신규 Wizard는 `qwen38-wizard-<target>` 및 전용 소유권 라벨. 다만 단일 GB10에서 기존 레거시가 실행 중이면 새 GPU 활성화는 거부하고, 실기기 신규 설치·제거 검증은 별도로 필요하다.
 - `--replace`, 자동 legacy takeover, HF 캐시 공유/이동, 가중치 purge는 지원하지 않는다.
 
 ### 3.3 상태 및 Health 출력
@@ -157,18 +200,18 @@ Git merge commit은 SHA가 달라질 수 있지만 **모든 tracked blob/mode와
 
 ### 4.2 보류·미시험·차단 과제
 
-1. **DGX 현지 `main` 전환 및 post-merge strict 검증 미확인.** 마지막 사용자 로그는 기능 브랜치였다. 먼저 Git origin/clean status를 확인한 뒤 안전한 `git switch main`/`git pull --ff-only` 및 검증.
+1. **완료(2026-10-26): DGX 현지 `main` 및 post-merge strict 검증.** 사용자 최신 로그에서 `main=66051cdc...`, source 114/114, mock 38/38, 전체 unit 172/172, 기존 Health PASS. 향후 신규 커밋은 별도 검증 필요.
 2. **신규 위자드 실제 Docker 이미지 build, 모델 prepare/audit, 새 컨테이너 activate, chat inference, 신규 자산 stop/remove/image remove 미시험.** Mock PASS ≠ 실기기 성공.
-3. **Docker 컨테이너 이름 충돌 해소 미설계/미검증.** 안전한 새 이름 규칙, GPU·메모리·포트·요청 영향, 실패 rollback/재시작 방지, 소유권 영수증 변경 계약 등을 설계·시험해야 한다. 레거시 강제 삭제 금지.
+3. **이름/소유권 격리 코드 및 mock 검증 완료(PR #3).** 신규 `qwen38-wizard-<target>`·전용 라벨/영수증 검사, 레거시 running 상태의 GPU 기동 차단은 구현. 독립 컨테이너 실제 기동·중단·GPU 영향·rollback은 **미시험**; 레거시 강제 삭제 금지.
 4. **Legacy→신규 관리 migration** 미구현. 기존 ownership 이전, 모델 cache 재사용/링크/복사 정책은 무단 적용 금지.
 5. **중복 가중치 다운로드 방지** 전략 미확정. 새 checkout과 기존 cache의 분리/경로/해시/마운트 검증 후 결정.
 6. **실패 복구 및 rollback** 미완성: 준비 실패·부분 파일·readiness timeout 이후 안전한 상태 보존/정리를 설계. 자동 cleanup보다 자산 보존 우선.
-7. **GitHub Actions 체크 0건 원인**(Actions 설정·실행 권한·워크플로 조건)을 확인하고 CI 검증 도입. GitHub 설정이 접근 불가하면 정확한 blocker 보고.
+7. **GitHub Actions 체크 0건 원인 조사/CI 정상화는 사용자 결정으로 보류.** 워크플로 소스 보완은 PR #3에 반영됐으나 run/check 0건이며 `CI_NOT_VERIFIED`. 재개 지시 전 설정/워크플로 변경하지 않는다.
 8. **오래된 계획서·안내의 '미구현/NOT TESTED' 표현**: 현재 구현 vs 당시 시험 계획으로 나누어 점진적 갱신. 과거 기록은 삭제하지 않는다.
 9. **GPU/성능/240K context/MTP 안정성·동시성**: 새 위자드 실행 경로의 실제 장시간 검증은 별도.
 10. 인수인계 문서 추가로 변경된 Git HEAD/Manifest를 다음 세션에서 재확인하고 최종 로컬 소스 시험을 반복.
 
-권장 순서: **GitHub/main·DGX read-only 상태 확인 → CI/Manifest 정합성 → 모의 시험 확대 → 독립 실기기 시험 설계 → 승인된 신규 자산만 제한적으로 검증**.
+현재 권장 순서: **GitHub 최신 HEAD/Manifest 및 DGX read-only 상태 확인 → 모의시험과 실패 복구·중복 다운로드 설계 → 승인된 신규 자산만 별도 실기기 검증**. CI 정상화는 사용자 재개 지시 전 보류.
 
 ---
 
@@ -245,7 +288,7 @@ Git merge commit은 SHA가 달라질 수 있지만 **모든 tracked blob/mode와
 
 ### 7.2 DGX 사용자가 실행할 수 있는 **읽기 전용 중심** 명령
 
-마지막 사용자 로그에서는 기능 브랜치였다. 원격 `main`으로 전환했다고 가정하지 않고 먼저 origin과 로컬 수정을 확인한다.
+과거에는 기능 브랜치였으나 **2026-10-26 사용자 제공 최신 로그에서 `main=66051cdc...` 확인**. 향후 재실행 시에도 원격 origin/로컬 수정을 다시 확인한다.
 
 ```bash
 cd "$HOME/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark"
@@ -271,7 +314,7 @@ scripts/health.sh
 scripts/doctor.sh
 ```
 
-위 코드는 이 문서 작성 중 DGX에서 실행한 결과가 아니다. 로컬 수정·remote 차이·에러가 있으면 절대 reset/clean으로 강제 통과시키지 않는다. Source PASS는 tracked repo만 평가하며 ignored cache/가중치/Docker 상태는 Health와 분리하여 확인한다.
+위 수동 절차는 참고용이다. 사용자 DGX는 `66051cdc...`에서 새 wrapper를 실제 실행하여 PASS를 제공했다. **다음 문서 커밋/머지는 별개 Git HEAD**이므로 새 HEAD의 DGX 실행 결과라고 주장하지 않는다. 로컬 수정·remote 차이·에러 시 reset/clean 금지; Source PASS는 ignored cache/가중치/Docker를 검증하지 않는다.
 
 ---
 
@@ -286,7 +329,7 @@ scripts/doctor.sh
 - 해결되지 않은 blocker, 디자인 선택/위험, 사용자 승인이 필요한 실제 배포 작업.
 - 이 문서 `docs/SESSION-HANDOFF-PROMPT.md`, 관련 `scripts/*.md`와 README의 최신 정합성.
 
-**2026-10-26 마지막 확정 상태(이 문서 작업 시작 이전):**
+**과거 작업 시작 전 기록(최신 상태 아님):**
 PR #1 MERGED, `main=bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6`, 사용자 DGX 기능 HEAD에서 전체 테스트 **163/163 PASS**, 모의 36/36, release-branch 7/7, legacy 6/6 및 API PASS, 운영 `OBSERVE_ONLY`. **실제 신규 배포·제거/rollback 미시험, DGX main 전환 로그 없음, GitHub Actions CI 실행 증거 없음.** 문서 신규 커밋/머지에 따른 `main`의 다음 HEAD는 새 세션에서 다시 조회한다.
 
 ---
@@ -320,7 +363,7 @@ PR #1 MERGED, `main=bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6`, 사용자 DGX 기
 - `scripts/verify-main-readonly.sh`는 개인 Fork origin, `main`, 깨끗한 tracked/untracked working tree 및 **로컬** origin/main의 HEAD 일치를 요구한다.
 - 소스 strict, Manifest, offline mock, full unit, Bash 문법, 공개물 감사, 기존 legacy 상태·snapshot diff·Health·Doctor **조회만** 수행한다. 자체 `git fetch/switch/pull/reset/clean`, Docker lifecycle 및 모델 다운로드는 하지 않는다.
 - 로컬 origin/main의 참신성을 자동 확인하지 않는다. 먼저 DGX에서 `git remote get-url origin`, `git status --short`, `git branch -vv`를 확인하고 문제가 없을 때 별도 `git fetch origin main` 후 `git switch main` 및 `git merge --ff-only origin/main`을 수행한다. 로컬 main이 없으면 `git switch --track origin/main`; 충돌 시 중단한다.
-- 실제 DGX에서 위 절차가 실행되었다는 사용자 로그가 없다. **`DGX_MAIN_UNVERIFIED`**를 유지하며 새 배포 기능이 작동한다고 주장하지 않는다.
+- **2026-10-26 이후 사용자 DGX 로그로 위 절차의 완료를 확인했다.** 확인된 HEAD는 `66051cdc...`이며 source 114/114, mock 38/38, 전체 unit 172/172, legacy Health PASS. 이후 문서 커밋 HEAD의 검증 또는 신규 배포 기능 실동작을 뜻하지 않는다.
 
 ### 후속 작업 고정 운영 규칙
 
