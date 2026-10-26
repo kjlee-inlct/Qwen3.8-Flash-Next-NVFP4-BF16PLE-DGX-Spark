@@ -1,0 +1,43 @@
+{
+  "phase": "pre-blazux",
+  "created_utc": "2026-10-26T22:19:25.174968+00:00",
+  "result_timestamp_utc": "2026-10-26T22:34:42Z",
+  "tool": "eugr/llama-benchy",
+  "tool_git_sha": "e9be344578cec17745066b220798b80a0d2686d3",
+  "tool_version": "0.4.1.dev1+ge9be34457",
+  "served_model": "qwen3.8-flash-next-orca-uncensored-bf16-mtp",
+  "model_repository_git_sha": "66051cdcd4b2c5766de55421579867c195fe4084",
+  "legacy_image_tag": "yslab-qwen38-bf16ple:9492b78c",
+  "tokenizer_sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+  "prompt_rng_seed": 20261027,
+  "parameters": {
+    "pp": [
+      2048,
+      8192
+    ],
+    "tg": [
+      128,
+      256
+    ],
+    "depth": [
+      0,
+      4096,
+      16384
+    ],
+    "concurrency": [
+      1
+    ],
+    "runs": 3,
+    "warmup_runs": 1,
+    "exact_tg": true,
+    "latency_mode": "generation"
+  },
+  "original_environment_sha256": "76c94d48aa4597bd09e9973b6f5cba118db0009062f592e4a764398443f97eb6",
+  "original_result_sha256": "25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf",
+  "uploaded_evidence_hash_verification": "result.json and environment.json matched SHA256SUMS; 7 other files were not provided",
+  "notes": [
+    "Docker full identifiers intentionally omitted.",
+    "Gutenberg corpus hash and full sampling payload not retained in uploaded metadata.",
+    "This projection is distinct from the original private environment.json."
+  ]
+}
