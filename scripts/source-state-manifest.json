@@ -72,7 +72,8 @@
     "2026-10-26 user explicitly deferred investigating/normalizing GitHub Actions; 0 workflow/check runs is CI_NOT_VERIFIED, not CI PASS.",
     "Current documentation/Source Manifest refresh does not touch runtime code and does not establish fresh DGX testing on the resulting new Git merge SHA.",
     "2026-10-27: user-reported pre-blazux 12x3 llama-benchy baseline archived (raw result SHA256 verified against uploaded checksum) with public environment projection, re-run Bash script, and handoff. New script runtime/tests/CI/publication audit NOT_RUN at user's request; source snapshot only.",
-    "2026-10-27: planning-only blazux vLLM 0.32 evaluation branch forked from merged baseline PR #5 main 2847e39b4131eb8aff78bf86ffce98892401722a. Only adoption plan/handoff/source inventory changed; actual blazux code, build, runtime and A/B NOT_STARTED. Existing DGX service unchanged and no new tests executed."
+    "2026-10-27: planning-only blazux vLLM 0.32 evaluation branch forked from merged baseline PR #5 main 2847e39b4131eb8aff78bf86ffce98892401722a. Only adoption plan/handoff/source inventory changed; actual blazux code, build, runtime and A/B NOT_STARTED. Existing DGX service unchanged and no new tests executed.",
+    "2026-10-27: document-only Track A (preview engine) versus Track B (future independent vLLM 0.32) separation; priority P1/P2/P3, synthetic BF16 offline validation, default-OFF independent flags, rollback, isolated image/container/port/receipt/view paths, main protection caveat, and existing Baseline/script status. No new runtime implementation, DGX test, CI run, or GPU activation performed."
   ],
   "files": [
     {
@@ -148,7 +149,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "40328bda440814d4381f979917c4622d305f554f"
+      "blob_sha": "9cc2559e65a0c004a802aae92134cda2e250d0e0"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -163,7 +164,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "f096f0d79c8903f328bc6e87c6add2f8dbcdec7b"
+      "blob_sha": "c8f16bdbcf69aaa9c4b1f10429b5ad1dd8693143"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

@@ -424,3 +424,11 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 - **절대 보호:** 레거시 Docker stop/rm/restart/overwrite, HF cache/recipe views/mount/receipt 변경, 포트 8000/18300 무단 점유, 단일 GB10에서 레거시 실행 중 신규 대형 GPU 모델 병렬 기동 금지.
 - Baseline은 실행 및 원본 해시 2개 대조까지 완료됐지만 **재실행 Bash 신규 코드 자체의 테스트는 사용자 요청으로 NOT_RUN**. GitHub Actions 실행 0건/CI_NOT_VERIFIED, 다른 7개 로컬 로그 파일 해시 미대조, 입력 코퍼스/샘플링 세부 추가 확인 필요. 신규 브랜치 strict allowlist 제한은 변함없다.
 - 다음 세션은 현 최신 main/이 브랜치 HEAD를 확인하고 [계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md)의 **Gate 1 소스 함수/데이터 계약 비교**를 이어서 수행한다. 커밋·PR·머지·실 DGX 작업은 각각 수행/승인된 범위를 구별한다.
+
+### 11.1 2026-10-27 설계 보강 — Track A/B 분리 및 개발 Gate (문서만 변경)
+
+- **Track A:** 현행 vLLM preview 기반 선택적 개선만 `feature/blazux-vllm032-evaluation-20261027`에서 계속한다. P1(PLE 단계별 계측, Prefix Cache/SSM 정확성, Tool/Responses parser 회귀) → P2(MTP reduced draft vocab, BF16 PLE gather, QSA top-k 각각 독립 기본 OFF flag) → P3(YaRN/FP8 고위험 보류). 1:1 함수·데이터 계약 및 **합성 BF16 safetensors shard 오프라인 fixture**가 우선이다.
+- **Track B:** 공식 vLLM 0.32 전환은 `feature/vllm032-bf16ple-port`라는 **미생성·미착수 별도 장기 브랜치**로만 진행한다. 착수 Go/No-Go를 별도로 결정하고 새 base image digest/container/host loopback port/receipt/recipe-view/result 디렉터리와 ownership label을 사용한다. 레거시/위자드 자산 및 포트 점유·변경 금지, 단일 GB10에서 두 대형 GPU 모델 동시 가동 금지.
+- 공통 **기능별 독립 PR → default-OFF flag → 합성 fixture/회귀 증거 → rollback 및 Source Manifest 정합성 → 코드 리뷰 → 검증된 부분만 main**. 검증되지 않은 0.32 엔진 교체·ModelOpt hybrid/graft는 현재 엔진 최적화 PR에 혼합하지 않는다.
+- 기존 `main`의 GitHub branch protection은 2026-10-27 조회에서 **false**였다. 보호 규칙은 현재 문서/운영 정책이며 GitHub 설정이 자동 강제 중이라고 가정하지 않는다. CI 정상화는 여전히 보류된다. 이번 갱신은 **계획서·핸드오프·Source Manifest 문서/메타데이터 커밋만** 대상으로 하며 실제 DGX 코드/GPU/벤치 시험은 요청하지 않았고 수행하지 않는다.
+- 상세 정책 및 변경 제한은 [blazux 도입 계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md) §1.4, §3.1, Gate 2/3/6을 우선 참조한다.

@@ -32,6 +32,26 @@
 - 성능: 원본과 candidate 모두 동일 시험 조건에 대해 반복값·변동성·CPU/GPU/page-cache/KV 자원 자료를 보유; 최소 1회 run의 우연한 차이는 개선으로 간주하지 않음.
 - 운영 안전: 실제 구동은 새 소유 자산에서만 하며 레거시의 이미지/컨테이너/포트/mount/receipts에는 쓰기 없음.
 
+### 1.4 구현 전략: Track A와 Track B는 완전히 독립
+
+**Track A — 현행 vLLM preview 기반의 선택적 기능 개선 (현재 작업)**
+
+- 브랜치: `feature/blazux-vllm032-evaluation-20261027` (현재 존재하는 분석·계획 브랜치). 실제 포팅 시 기능별 소규모 추가 브랜치/커밋과 독립 PR로 분리한다.
+- 순서: 기존 코드와 외부 blazux pinned SHA의 함수·텐서 경로 1:1 비교 → 계측·정확성 우선 → 합성 데이터 기반 CPU 오프라인 검증 → **기능별 기본 OFF flag**를 가진 최소 수정 → 별도 성능·정확성 검증 → 승인된 부분만 `main` PR.
+- 이미 쓰는 preview 이미지, Orcarouter checkpoint, BF16 PLE mmap, MTP=2 overlay를 기준으로 비교한다. 패치가 vLLM v0.32 내부 구조를 전제로 한다면 **Track A에 강제로 포팅하지 않고 DEFER_TO_TRACK_B**.
+- 본 트랙 진행은 **vLLM 0.32 Docker base 변경·모델 교체·운영 서비스 전환의 승인으로 간주하지 않는다**.
+
+**Track B — 공식 vLLM 0.32 엔진 전환 (선택적 후속 장기 실험; 미생성·미착수)**
+
+- 전용 브랜치 **`feature/vllm032-bf16ple-port`**를 현재 브랜치와 **별도로**, 실제 착수 판단을 마친 최신 검증된 `main`에서 분기한다. 현재 브랜치에 vLLM 0.32 전체 엔진 변경을 쌓지 않는다.
+- 비교·검증 단위: `vllm/vllm-openai:v0.32.0` 기반 코드를 **정확한 image digest로 pin**하고, Qwen4Exp 모델 로더·quantization dispatch·BF16 PLE·MTP 31/31 overlay·KV/Mamba/SSM·CUDA graph·Tool/Responses parser의 API/ABI/결과 정합성을 확인한다.
+- Track B는 별도 Docker 이미지/컨테이너/receipt/모델 view/결과 디렉터리/포트를 예약·소유한다. **기존 runtime 자산을 이름만 바꿔 재사용하는 방식 금지**.
+- Track B를 시작할지 자체가 별도 **Go/No-Go**. 성공하더라도 Track A의 선택 기능 병합과 결합된 PR로 올리지 않는다.
+
+**검증 및 병합 절차:** 1:1 분석 결과 작성 → 기능별 변경 범위/flag/rollback 계약 → 오프라인 회귀 → 공개 안전 검토/Source Manifest 갱신 → 기능별 PR·코드 리뷰 → 실제 검증 완료 항목만 `main` 병합. 미완료 Track B는 장기 브랜치에 남기고 조기 병합하지 않는다.
+
+참고: `main`은 문서상 승인·리뷰된 운영 기준이지만 2026-10-27 GitHub 조회에서 **GitHub branch protection 자체는 false**였다. 따라서 **PR을 통한 병합을 운영 규칙으로 강제하며 보호 설정을 이미 활성화했다고 기록하지 않는다**. Repository Ruleset/Branch Protection 강화는 별도 승인·권한이 필요한 관리 작업이다.
+
 ## 2. 비교 대상 스냅샷(확정된 사실과 미검증 사항)
 
 | 대상 | 확인 기준 | 비고 |
@@ -49,6 +69,25 @@
 본 프로젝트는 자체 Fork와 배포 안전 계약을 유지한다. 모델 이름·체크포인트·가중치/텐서 index·quantization 형식·MTP overlay를 먼저 고정해 비교해야 한다.
 
 ## 3. blazux 기능별 기술 검토 매트릭스
+
+### 3.1 기능 우선순위와 선정 규칙
+
+| 우선순위 | 개별 단위 | 1차 목표 | 착수·완료 Gate |
+| --- | --- | --- | --- |
+| **P1 — 계측·정확성 선행** | PLE wait/dedup/gather/stage 단계별 계측 | 실제 BF16 PLE 병목 분해; 측정 오버헤드 포함 | 소스 비교 → 미개입 계측 → 재현성 확인 |
+| **P1 — 계측·정확성 선행** | Prefix caching / Mamba·SSM state 복원 | cold/cache-hit 출력·position 일치 | 합성 state fixture + 스트리밍 회귀 |
+| **P1 — 계측·정확성 선행** | Tool Calling·Responses parser | literal marker, 인자 스키마, SSE 조기 종료 검출 | API fixture·한국어/영어·모의 회귀 |
+| **P2 — 선택적 최적화** | MTP draft vocabulary 축소 | 메모리 대역폭/acceptance/품질 균형 | 기존 MTP=2/31텐서 guard 유지, 기본 OFF |
+| **P2 — 선택적 최적화** | PLE dedup/gather/pinned H2D | 동일 출력 확인 후 시간 감소 여부 판단 | BF16 합성 shard+기능별 개별 flag |
+| **P2 — 선택적 최적화** | QSA exact/deterministic top-k | 정확성·결정성/성능 조사 | 커널 SHA pin, output equivalence, 기본 OFF |
+| **P3 — 별도 실험·보류** | YaRN 500K, Hybrid FP8, FP8 KV / ModelOpt graft | native context·현 BF16 compatibility 이후 판단 | **별도 실험군/독립 PR**; 직접 적용 금지 |
+| **별도 Track B** | 공식 vLLM 0.32 전환 | 새 엔진 compatibility·운영성 검토 | 별도 `feature/vllm032-bf16ple-port`, Go/No-Go |
+
+- **P1 완료 전 P2 성능 최적화 기능을 묶어 도입하지 않는다.** P1은 우선 정확성·관측 가능성 확보이며 자동으로 성능 개선이라고 주장하지 않는다.
+- 각 P2 패치는 자체 결과·영향 범위·flag(default OFF)·rollback·시험 보고서를 가져야 한다. 서로 다른 최적화는 한 커밋/PR에 혼합하지 않는다.
+- 각 단계에서 판단값은 **KEEP / PORT / ADAPT / DEFER_TO_TRACK_B / REJECT**로 기록하고 원본 함수 경로 및 source SHA를 붙인다.
+
+### 3.2 후보 기능의 기술 검토 매트릭스
 
 아래 상태의 **분석 후보**는 곧 호환성이나 적용 완료를 뜻하지 않는다.
 
@@ -80,6 +119,8 @@
 
 ### Gate 1 — 1:1 정적 코드·데이터 계약 비교
 
+**이 Gate의 산출물:** 양측 함수·entry point·데이터 flow의 1:1 대조표(경로/함수/입력/출력/shape/dtype/오프셋/의존 라이브러리, 이미 구현된 기능·누락 기능, 재현 근거), 기능별 **KEEP/PORT/ADAPT/DEFER_TO_TRACK_B/REJECT** 결정표, patch provenance 및 테스트 fixture 정의. 원본을 통째로 merge하지 않는다.
+
 - 양측 PLE mmap 파일/의존 모듈의 init/load/forward/Gather 함수, dtype dispatch, alignment, missing tensor/duplicate 처리, page-cache/pinned staging 등을 **함수별 표**로 만들고 KEEP/PORT/ADAPT/REJECT를 결정한다.
 - MTP draft module과 model loader, fused experts, 31 overlay tensor 목록 및 정확한 BF16 tensor hash/load-guard를 비교한다.
 - vLLM preview ↔ 0.32 상속/등록/compile/graph break/op cache와 CPU↔GPU 전송 경계를 추적한다.
@@ -88,13 +129,41 @@
 
 ### Gate 2 — 오프라인/모의 회귀시험
 
+**작은 합성 데이터 우선(기존 운영 모델 가중치 불사용):**
+
+1. 소형 BF16 safetensors shard를 임시 독립 디렉터리에 만들고, 서로 다른 tensor 크기·offset·alignment·shard boundary·duplicate n-gram IDs·유효/무효 row index를 고정 fixture로 정의한다. FP8 scale 경로는 **별도 fixture**로 분리하며 BF16 결과와 혼합하지 않는다.
+2. 현 preview 경로와 후보 PLE의 CPU index/dedup/sort/gather/inverse-scatter를 **동일 입력으로 1:1 비교**한다. dtype 변환 없는 BF16 경로는 원본 tensor 값·출력 순서의 정확한 동일성을 우선하며, 불가피한 GPU 연산 오차는 사전 합의한 tolerance와 근거를 명시한다.
+3. page fault·mmap offset·Pinned H2D·비동기 copy stream 순서, 잘못된 header·비정렬 tensor·손상된 index에서 Fail-Closed 동작을 검사한다. 부하/시계열 계측은 실제 서버 실행과 분리한다.
+4. MTP는 BF16 31개 overlay tensor name/shape/dtype/load guard와 depth 0/2, acceptance·다국어·EOS/JSON/tool fixture를 독립 검증한다. Tool Parser/Responses와 prefix-cache/SSM state의 합성 회귀는 각각 독립 suites로 운영한다.
+5. 테스트 성공·실패와 환경, 단순 import/CPU mock과 실제 DGX GPU 검증을 별개의 상태로 기록한다. **사용자 승인 전 GPU 모델 기동 없음**.
+
+**기능 격리 계약:** 각 성능 패치는 독립 설정값을 갖고 기본값은 OFF(기존 경로), OFF 시 기존과 기능·결과가 같아야 한다. flag ON 단일 기능만 시험한다. 실패·불일치·메모리 한도 초과 시 **기존 코드 경로로 롤백 가능함을 확인하기 전 병합 금지**.
+
 - 기존 operational mock 및 전체 unit tests는 변경 전 증거로 유지하고, 새 코드 적용 후 새 commit에서 다시 실행한다.
 - 핵심 함수별 정상·실패·경계 조건: safetensors offsets/shards, BF16 vs FP8 scale, mmap page offsets, CPU dedup→GPU inverse permutation, async H2D ordering.
 - MTP load guard 31/31, draft off/on, unsupported quantization 실패 시 **Fail closed**. Draft vocab이 target logits의 범위를 잘못 축소하지 않는지 확인.
 - Stream parser / tool JSON / reasoning vs visible token clocks / prefix-cache state restore 검증.
 - 기존 모델/뷰·HF snapshot에 복구 불가능한 변경을 하는 테스트는 금지한다.
 
-### Gate 3 — 독립 실험용 빌드/배포 계약
+### Gate 3 — Track A 선택적 적용 및 Track B 독립 빌드 계약
+
+**Track A — 현행 엔진 우선:** PLE 계측/정확성 fixture처럼 기존 vLLM preview 이미지의 인터페이스에서 포팅 가능한 사항부터 독립적으로 검증한다. **이 Gate를 시작한다고 새 vLLM 0.32 이미지를 빌드하거나 운영 모델을 띄우지 않는다.** 새 GPU 실험은 별도 승인과 사전 자원 점검 후에만 한다.
+
+**Track B — 향후 독립 장기 브랜치에만 적용하는 자산 이름·소유권 계약(예시; 미생성):**
+
+| 자산 | 신규 실험 전용 규칙 | 금지되는 기존 자산 재사용 |
+| --- | --- | --- |
+| 브랜치 | `feature/vllm032-bf16ple-port`, 승인 후 별도 생성 | 현재 blazux evaluation 브랜치와 섞어 엔진 전체 교체 |
+| Docker image | `qwen38-vllm032-bf16ple:eval-<short-sha>` + pin된 base **digest** | `yslab-qwen38-bf16ple:9492b78c` 덮어쓰기 |
+| Container | `qwen38-vllm032-bf16ple-eval-<run-id>` 및 전용 ownership label/정확한 ID receipt | `qwen38-flash-orca-uncensored-bf16-mtp` 교체/삭제 |
+| API port | 실행 전에 실제 free port 확인 후 **127.0.0.1 바인딩만** 예약·기록 | 현 레거시 8000, Wizard 예약 18300 무단 점유 |
+| Receipt/state | `$HOME/.local/state/qwen38-vllm032-bf16ple-eval/<run-id>/` 신규 소유 경로 | 레거시·Wizard의 영수증/state |
+| Model view/cache | `$HOME/Workspace/llm/experiments/vllm032-bf16ple/<run-id>/` 내 전용 모델 view·읽기 정책 | 기존 HF cache/recipe-views/weight snapshots에 쓰기 |
+| Bench results | `$HOME/Workspace/llm/bench-results-staging/<UTC>-vllm032-eval/` | 원본 pre-blazux 결과·해시 덮어쓰기 |
+
+- 각 신규 실험 자산은 ownership label, 정확한 image/container ID 및 receipt가 **일치할 때만** 별도 소유 자산에 대한 정리/롤백을 검토한다. `docker rm -f` 같은 컨테이너 이름 기반 강제 삭제 금지. blazux `scripts/serve.sh` 직접 실행 금지.
+- 단일 GB10에서 기존 레거시 서비스가 운영 중인 동안 **또 다른 대형 GPU 모델의 병렬 기동 절대 금지**. 별도 포트/이름만으로 메모리 충돌은 막지 못하므로 GPU activation은 사전 가용성·점검 창·사용자 승인 확인이 전제다.
+- Docker base/코드/torch/triton/vLLM/patch/license digest와 model/overlay/Tokenizer 해시를 기록하고 신규 HF model download, FP8 conversion, 기존 경로 overwrite는 별도 명시적 승인 전 수행하지 않는다.
 
 - blazux scripts/serve.sh는 운영에서 **직접 실행 금지**. 현재 blazux serve.sh에 동일 컨테이너 이름으로 docker rm -f를 실행하는 경로가 존재한다. 별도 소유권 receipt, 정확한 ID/label 확인, replace 거부 및 dry-run이 없는 한 사용하지 않는다.
 - blazux 기본 PORT=18300과 본 저장소 Wizard 예약 127.0.0.1:18300의 충돌 여부를 확인하고 **임의로 덮어쓰지 않는다**.
@@ -122,6 +191,8 @@
 
 ### Gate 6 — 코드 리뷰와 통합 결정
 
+**Merge acceptance:** 기능별 최소 변경과 default-OFF feature flag, 종전 경로 동작 동일성, BF16 합성 fixture·negative cases·MTP 31/31 load guard, 리소스/정확성 및 Baseline 대응 결과, Source Manifest의 path/mode/blob SHA, 라이선스와 독립 롤백 절차를 PR마다 확인한다. 하나라도 증거가 없는 기능은 **계속 브랜치에서 실험**하고 \`main\`에 넣지 않는다.
+
 - 수집된 원시 결과가 Gate 0 Baseline과 연결되었고, patch provenance/라이선스/수정 영향 및 소유권 검사가 증명된 경우에만 선택적 병합을 검토한다.
 - 단계별 롤백 경로는 새 소유 자산 안에서만 검증한다. 기존 레거시 rollback을 핑계로 stop/rm/prune을 호출하지 않는다.
 - 전체 vLLM 0.32 포팅은 선택적 기능·계측 포팅과 별도 브랜치/PR로 유지한다.
@@ -131,10 +202,10 @@
 
 ~~~text
 docs/
-  blazux-VLLM032-ADOPTION-PLAN.md
+  BLAZUX-VLLM032-ADOPTION-PLAN.md    # 이 브랜치에서 이미 커밋된 계획서
   SESSION-HANDOFF-PROMPT.md
   benchmark/
-    LLAMA-BENCHY-METHODOLOGY.md           # Gate 0 완료 시 추가
+    LLAMA-BENCHY-BASELINE-20261027.md  # PR #5에서 main에 병합된 12x3 Baseline
     A-B-COMPARISON.md                    # 실측 이후 생성
 results/
   llama-benchy/
@@ -151,7 +222,7 @@ results/
 scripts/
   source-state-manifest.json             # 모든 변경 파일의 SHA/mode 동시 갱신
   benchmark/
-    run-llama-benchy.sh                  # 후속 구현 검토
+    run-llama-benchy.sh               # PR #5 main에 존재, 신규 스크립트 실실행 NOT_RUN
 ~~~
 
 중요: 경로는 **제안**이다. 현 DGX에 실제 생성됐거나 GitHub에 커밋된 경로로 단정하지 않는다. 공개 업로드 전 출력·요청 payload/프롬프트/토큰 스트림, 파일 경로, 환경변수, image/container full ID를 검사한다. 전체 원시 로그가 민감하면 개인 DGX에 보존하고 공개 Git에는 검증·정제 결과와 원본 해시만 보관한다.
@@ -160,11 +231,11 @@ scripts/
 
 - **Baseline 선행 PR #5는 2026-10-27 MERGED:** 새 `main` SHA **2847e39b4131eb8aff78bf86ffce98892401722a**. 정식 12×3 원본 `result.json`은 이제 `main`에 존재하며 다시 생성·덮어쓰기 금지.
 - **blazux 전용 독립 브랜치:** `feature/blazux-vllm032-evaluation-20261027`, PR #5 병합된 main에서 분기. 이번 첫 커밋은 **본 계획서, 핸드오프 상태 기록, Source Manifest만** 포함하며 vLLM/Docker/모델 적용 코드 변경 없음.
-- 나중에 실제 변경을 시작할 때는 blazux 고정 SHA, patch 단위 소스 비교, 라이선스/출처 기록, 오프라인 독립 시험과 함께 기능 단위 커밋·PR로 분리한다. 운영 서비스 변경은 GitHub merge와 무관한 승인 행위다.
+- 이후 실제 기능 변경은 **Track A만** 우선 진행하며 blazux 고정 SHA, patch 단위 소스 비교, 라이선스/출처 기록, 작은 BF16 합성 데이터 오프라인 시험, 독립 default-OFF flag 및 rollback 확인을 각각 PR로 분리한다. **Track B** `feature/vllm032-bf16ple-port`는 타당성 판단 뒤 별도로 생성하며 현 브랜치에서 vLLM 0.32 전체 이식을 시작하지 않는다. 운영 서비스 변경은 GitHub merge와 무관한 승인 행위다.
 - `scripts/source-state-manifest.json`은 모든 tracked 파일의 path/mode/Git blob SHA 스냅샷이다. PR #5 머지 직후 **manifest 제외 119개(전체 120개)**였고, 본 계획서 1개 추가 시 **manifest 제외 120개(전체 121개)**를 기록해야 한다. HEAD 이동 시 숫자와 실제 tree를 재확인한다.
 - Manifest 자기참조 제외, 실제 Git blob/mode 전수 비교를 요구한다. `--strict`는 현재 `main`과 기존 승인된 release feature만 허용하므로 이번 신규 feature 브랜치에서 strict PASS를 주장할 수 없다.
 - 기존 GitHub Actions **run=0**, `CI_NOT_VERIFIED`. CI 정상화는 사용자가 별도로 연기한 과제이고, 이번 문서 작업에서 재개하지 않는다.
-- 본 브랜치에 계획서를 최초 커밋하는 것이 **실 DGX test, vLLM 0.32 이미지 빌드, 호환성 확인 또는 서비스 교체 성공**을 의미하지 않는다.
+- 문서 변경 커밋은 **실 DGX test, vLLM 0.32 이미지 빌드, 호환성 확인 또는 서비스 교체 성공**을 의미하지 않는다. `main`의 검증·운영 보호는 정책적 보호이며 GitHub의 Branch Protection / Ruleset 활성 상태와 구별한다.
 
 ## 7. 위험 목록·중단 기준
 
@@ -198,4 +269,4 @@ scripts/
 - 별도 vLLM 0.32 이미지 빌드, 신규 소유 컨테이너 활성화·회수·rollback, 동시 GPU/메모리 영향 및 실제 A/B 데이터.
 - 실제 서빙 서비스 stop/replace/remove/이관 및 blazux 최적화 개선 주장. 단일 GB10 기존 서비스 보호는 계속 P0이다.
 
-**다음 단계:** (1) 이 계획서·증거·Manifest를 별도 브랜치에 고정 → (2) blazux↔현재 소스 계약 함수/텐서 단위 비교 → (3) compat gate와 오프라인 테스트 계획 확정 → (4) 승인된 새 이미지/격리 검증 → (5) 동일 조건 A/B 결과를 기준으로 도입 결정. **현재 실행 중인 레거시는 변경하지 않는다.**
+**다음 단계:** (1) **Track A** 1:1 함수·텐서 대조표 → (2) P1 계측·Prefix Cache/Parser 정확성 회귀와 합성 BF16 fixture 준비 → (3) P2 독립 default-OFF 기능별 오프라인 검증·최소 포팅 → (4) 별도 코드 리뷰/필요한 경우 허가된 DGX 평가·동일 조건 A/B → (5) 검증 기능만 `main` PR 병합. **Track B**는 별도 Go/No-Go 결정 후 `feature/vllm032-bf16ple-port`에서 독립 자산으로 착수한다. **현재 실행 중인 레거시는 변경하지 않는다.**
