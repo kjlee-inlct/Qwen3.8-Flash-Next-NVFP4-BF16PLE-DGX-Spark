@@ -3,16 +3,35 @@ name: test
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: PYTHONPATH=src:. python3 -m unittest discover -s tests -p 'test_wizard_*.py' -v
-      - run: PYTHONPATH=src:. python3 -m unittest discover -s tests -v
-      - run: bash -n scripts/*.sh scripts/qwen38-dgx-spark
-      - run: python3 tools/audit_publication.py
+      # PR에서는 비승인 임시 브랜치 strict를 피하되 SHA/모드 검사 유지.
+      - name: Full source inventory and origin
+        run: scripts/verify-source-state.sh
+      - name: Strict release branch
+        if: github.ref == 'refs/heads/main'
+        run: scripts/verify-source-state.sh --strict
+      - name: Manifest policy
+        run: scripts/manifest.sh validate
+      - name: Wizard fake services (no Docker)
+        run: scripts/run-mock-tests.sh
+      - name: All unit tests
+        run: PYTHONPATH=src:. python3 -m unittest discover -s tests -v
+      - name: Bash syntax
+        run: bash -n scripts/*.sh scripts/qwen38-dgx-spark
+      - name: Publication audit
+        run: python3 tools/audit_publication.py

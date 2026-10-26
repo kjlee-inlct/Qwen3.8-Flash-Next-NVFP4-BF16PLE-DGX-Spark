@@ -1,5 +1,9 @@
 # 안전 모델 / 실패 복구 가이드
 
+> 신규 Wizard Docker는 `qwen38-wizard-<target>` 이름/전용 ownership label을 사용한다.
+> 기존 `qwen38-flash-<target>`은 불변이며, 이름 충돌 해소와 GPU 동시 운용 승인은 다르다.
+> 레거시 running 상태에서 새로운 GPU 활성화는 거부한다.
+
 > 이번 커밋의 위자드는 **테스트 미실행** 상태다. 실제 DGX 서비스 교체나 삭제를 실행하기 전에 별도 검증이 필요하다.
 
 ## 사전 예방 규칙
@@ -45,3 +49,10 @@ docker logs --tail 120 qwen38-flash-orca-uncensored-bf16-mtp
 - 새 위자드는 기존 서비스를 제거한 상태에서 작업하지 않으므로 이전 서비스 rollback이 필요한 교체 경로 자체를 차단한다.
 - 이미지 빌드/다운로드 중간 실패와 임시 checkpoint view에 대한 완전한 자동 cleanup/rollback은 미구현이다. 정리보다 **데이터 보존**을 우선한다.
 - 복구와 서비스 전환은 GPU 실환경 시험 및 별도 승인 후 추가 구현한다.
+
+## 변경된 삭제 소유권 조건
+
+이름만 맞아도 삭제를 허용하지 않는다. Wizard가 관리하는 자산의
+전체 Docker ID, 이미지 ID, recipe/target label, Docker Name,
+`ai.kjlee.wizard` label, 전용 receipt가 일치할 때만 정지/삭제 요청을 허용한다.
+`legacy.adoption=OBSERVE_ONLY`은 삭제 권한이 아니며 신규 실기기 검증은 아직 미실행이다.

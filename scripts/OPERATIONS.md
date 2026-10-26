@@ -1,5 +1,9 @@
 # 운영 시나리오 / 체크리스트
 
+> 최신 신규 Wizard 전용 이름은 `qwen38-wizard-<target>`; owner marker와 정확한
+> Docker ID/image ID/receipt를 함께 확인한다. 레거시 컨테이너가 가동 중이면
+> 단일 GB10 신규 GPU 서비스는 동시 시작하지 않는다.
+
 > 신규: [git pull부터 검증 명령 전체](VERIFY-FROM-GIT-PULL.md). 기존 YSLAB 저장소에서 git pull을 실행하지 않고, 소스 해시 검증을 먼저 수행합니다.
 
 
@@ -82,3 +86,24 @@ scripts/uninstall.sh --remove-image --yes
 legacy 6/6 및 API Health PASS입니다. [검증 기록](VALIDATION-RESULTS-20261026.md).
 다만 새로운 소스 검증기 테스트는 재실행이 필요하며 실제 신규 설치·제거
 성공 및 성능은 미확인입니다.
+
+## main 로컬 소스/서비스 조회 전용 검증 (DGX 실행 후에만 유효)
+
+`scripts/verify-main-readonly.sh`는 포트 8000/기존 모델/컨테이너를 변경하지 않고
+main Fork origin·working tree·local origin/main 동일성을 먼저 확인한 뒤
+정적/모의/전체 테스트와 legacy status/health/doctor를 **조회만** 수행한다.
+
+```bash
+cd "$HOME/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark"
+git remote get-url origin
+git status --short
+git branch -vv
+# 원격과 clean 상태를 확인한 뒤 별도 작업:
+git fetch origin main
+git switch main  # 로컬 main이 없으면 git switch --track origin/main
+git merge --ff-only origin/main
+scripts/verify-main-readonly.sh
+```
+
+`git switch`/merge는 checkout을 실제로 바꾸므로 사전 확인 후 사용자가 DGX에서 수행한다.
+충돌/dirty/remote 불일치 시 중단하고 reset/clean/강제 교체를 하지 않는다.

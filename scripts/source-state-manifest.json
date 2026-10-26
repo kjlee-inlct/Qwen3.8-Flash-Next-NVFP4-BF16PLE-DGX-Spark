@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 112,
+  "tracked_file_count": 114,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -75,12 +75,32 @@
     {
       "path": ".github/workflows/test.yml",
       "mode": "100644",
-      "blob_sha": "f5c29b67dab2137834627279a8c68abbac40b260"
+      "blob_sha": "6c0280c64914ac34b285113ea966edfc8c51c5af"
     },
     {
       "path": ".gitignore",
       "mode": "100644",
       "blob_sha": "b65cdb70eda0da34458496bae7166202ed370db7"
+    },
+    {
+      "path": "Dockerfile",
+      "mode": "100644",
+      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
+    },
+    {
+      "path": "NOTICE",
+      "mode": "100644",
+      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "blob_sha": "7ec5f749659c893c805a458b678ed4571ad6af5d"
     },
     {
       "path": "benchmarks/common.py",
@@ -113,11 +133,6 @@
       "blob_sha": "267f122555cf6984d092f9aacf29e196128a0926"
     },
     {
-      "path": "Dockerfile",
-      "mode": "100644",
-      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
-    },
-    {
       "path": "docs/BENCHMARKS.md",
       "mode": "100644",
       "blob_sha": "0dfc6422823978049573fbc2058f1af785d1265e"
@@ -135,7 +150,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "6d3b4a9adff710ed4206bf99fbcd6e1fca7862d7"
+      "blob_sha": "8ec112ecc20305da5d856d0e8a23d86e6af7a376"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -151,21 +166,6 @@
       "path": "huggingface/README.md",
       "mode": "100644",
       "blob_sha": "819e8aca3e941f28d2e4b50907474b42444b211a"
-    },
-    {
-      "path": "LICENSE",
-      "mode": "100644",
-      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
-    },
-    {
-      "path": "NOTICE",
-      "mode": "100644",
-      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
-    },
-    {
-      "path": "README.md",
-      "mode": "100644",
-      "blob_sha": "7ec5f749659c893c805a458b678ed4571ad6af5d"
     },
     {
       "path": "results/orcarouter/checkpoint-audit.json",
@@ -268,49 +268,9 @@
       "blob_sha": "83e016be37d0b74a24ff2b907447338924ef3c5f"
     },
     {
-      "path": "scripts/activate.sh",
-      "mode": "100755",
-      "blob_sha": "56ad3f856021c88062ceb131f04cd67f5bc04a95"
-    },
-    {
-      "path": "scripts/adopt-legacy.sh",
-      "mode": "100755",
-      "blob_sha": "488f4d2d475949dc0cfff30d94433110fef776a7"
-    },
-    {
-      "path": "scripts/compare-state.sh",
-      "mode": "100755",
-      "blob_sha": "e286180f06a791ebff013e5b66fabd42d2c25736"
-    },
-    {
-      "path": "scripts/deployment-manifest.json",
-      "mode": "100644",
-      "blob_sha": "e92612c9ee19ef9895c5ae94d731e157db94ee07"
-    },
-    {
-      "path": "scripts/doctor.sh",
-      "mode": "100755",
-      "blob_sha": "da0f8276f2c55f3a0021c758d6095906af9dae3b"
-    },
-    {
-      "path": "scripts/download-weights.sh",
-      "mode": "100755",
-      "blob_sha": "ef64eba3dcdaa89f0e3aa0b94960a4d47d389b35"
-    },
-    {
-      "path": "scripts/health.sh",
-      "mode": "100755",
-      "blob_sha": "fcd061abe117b23eb179b703a1a5f3fe7bdf7e30"
-    },
-    {
       "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
       "mode": "100644",
       "blob_sha": "b0d0ea1cdeb21bb5496af49834e68a4a5223434f"
-    },
-    {
-      "path": "scripts/install.sh",
-      "mode": "100755",
-      "blob_sha": "e649b1adc0294a409410a7323402edde3f65d060"
     },
     {
       "path": "scripts/LEGACY-INSTALLATION.md",
@@ -328,14 +288,84 @@
       "blob_sha": "e965946505988326989a76fbec2f78ddcc2492c1"
     },
     {
+      "path": "scripts/OPERATIONS.md",
+      "mode": "100644",
+      "blob_sha": "71326f5971a271e1f8566a1c6bab1f8b192d45d0"
+    },
+    {
+      "path": "scripts/README-WIZARDS.md",
+      "mode": "100644",
+      "blob_sha": "b76fbc0cbf3f40cde4a3fed0b0d0468d01b2cea1"
+    },
+    {
+      "path": "scripts/SAFETY-AND-RECOVERY.md",
+      "mode": "100644",
+      "blob_sha": "1fd4cc6c1ea8522705ca951368c88863558d8d60"
+    },
+    {
+      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
+      "mode": "100644",
+      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
+    },
+    {
+      "path": "scripts/TEST-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "37c2eea261ecd5663827976956ab4137556d7d87"
+    },
+    {
+      "path": "scripts/VALIDATION-RESULTS-20261026.md",
+      "mode": "100644",
+      "blob_sha": "68a783f27a887d987aee25c2085dcbc93b770bb7"
+    },
+    {
+      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
+      "mode": "100644",
+      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
+    },
+    {
+      "path": "scripts/activate.sh",
+      "mode": "100755",
+      "blob_sha": "56ad3f856021c88062ceb131f04cd67f5bc04a95"
+    },
+    {
+      "path": "scripts/adopt-legacy.sh",
+      "mode": "100755",
+      "blob_sha": "488f4d2d475949dc0cfff30d94433110fef776a7"
+    },
+    {
+      "path": "scripts/compare-state.sh",
+      "mode": "100755",
+      "blob_sha": "e286180f06a791ebff013e5b66fabd42d2c25736"
+    },
+    {
+      "path": "scripts/deployment-manifest.json",
+      "mode": "100644",
+      "blob_sha": "24374b7a8db3a444dd480f1b9a6979277548a383"
+    },
+    {
+      "path": "scripts/doctor.sh",
+      "mode": "100755",
+      "blob_sha": "da0f8276f2c55f3a0021c758d6095906af9dae3b"
+    },
+    {
+      "path": "scripts/download-weights.sh",
+      "mode": "100755",
+      "blob_sha": "ef64eba3dcdaa89f0e3aa0b94960a4d47d389b35"
+    },
+    {
+      "path": "scripts/health.sh",
+      "mode": "100755",
+      "blob_sha": "fcd061abe117b23eb179b703a1a5f3fe7bdf7e30"
+    },
+    {
+      "path": "scripts/install.sh",
+      "mode": "100755",
+      "blob_sha": "e649b1adc0294a409410a7323402edde3f65d060"
+    },
+    {
       "path": "scripts/manifest.sh",
       "mode": "100755",
       "blob_sha": "de7afca67b1cf7f63ca363f070b79f7233c8d882"
-    },
-    {
-      "path": "scripts/OPERATIONS.md",
-      "mode": "100644",
-      "blob_sha": "82e4c94b05dd3cefe7f241d091395535018718eb"
     },
     {
       "path": "scripts/prepare.sh",
@@ -348,19 +378,9 @@
       "blob_sha": "f17888dd1bdd4b0e50a014529b6476b85fbeb7d4"
     },
     {
-      "path": "scripts/README-WIZARDS.md",
-      "mode": "100644",
-      "blob_sha": "b76fbc0cbf3f40cde4a3fed0b0d0468d01b2cea1"
-    },
-    {
       "path": "scripts/run-mock-tests.sh",
       "mode": "100755",
       "blob_sha": "d04288fc62a63da79b7d7c6bd28329602727aa6b"
-    },
-    {
-      "path": "scripts/SAFETY-AND-RECOVERY.md",
-      "mode": "100644",
-      "blob_sha": "b53f24b8ecf95ecf3278d8d4556196ef0f4d8640"
     },
     {
       "path": "scripts/serve.sh",
@@ -371,11 +391,6 @@
       "path": "scripts/smoke-test.sh",
       "mode": "100755",
       "blob_sha": "3dddf35081239b564dca0e2032957be4febe707a"
-    },
-    {
-      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
-      "mode": "100644",
-      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
     },
     {
       "path": "scripts/status.sh",
@@ -393,29 +408,19 @@
       "blob_sha": "8d7c657a111ed8df4d93c804470eba00621f4396"
     },
     {
-      "path": "scripts/TEST-PLAN.md",
-      "mode": "100644",
-      "blob_sha": "37c2eea261ecd5663827976956ab4137556d7d87"
-    },
-    {
       "path": "scripts/uninstall.sh",
       "mode": "100755",
       "blob_sha": "c9bc36d041899c5afccfd1c26f5d304a4b2eb6b0"
     },
     {
-      "path": "scripts/VALIDATION-RESULTS-20261026.md",
-      "mode": "100644",
-      "blob_sha": "68a783f27a887d987aee25c2085dcbc93b770bb7"
-    },
-    {
-      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
-      "mode": "100644",
-      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
+      "path": "scripts/verify-main-readonly.sh",
+      "mode": "100755",
+      "blob_sha": "1b18b20d077f7d97e322d6b64ff2f819f4c54b55"
     },
     {
       "path": "scripts/verify-source-state.py",
       "mode": "100755",
-      "blob_sha": "d1c9b804c5468d7cfc2c88faeea09023723a8274"
+      "blob_sha": "b0c04b4da7cc257427584745913c18eaf3af35d8"
     },
     {
       "path": "scripts/verify-source-state.sh",
@@ -430,17 +435,17 @@
     {
       "path": "scripts/wizard/cli.py",
       "mode": "100755",
-      "blob_sha": "8c27a1b456f07a60083e67652c9ad62207d45373"
+      "blob_sha": "26f88217fcfa69cac87dc88124e88f3061e89c6b"
     },
     {
       "path": "scripts/wizard/engine.py",
       "mode": "100644",
-      "blob_sha": "5228e2af751fb6feed4fbf31c3f988c2a3238773"
+      "blob_sha": "b950dd61c118727cc4717730708e205aba76af2c"
     },
     {
       "path": "scripts/wizard/model.py",
       "mode": "100644",
-      "blob_sha": "eb3168862e82da20d31d390687c31ecc5321adfa"
+      "blob_sha": "0c0e65bc877280e399de21d447acebcdef6f2ab8"
     },
     {
       "path": "scripts/wizard/monitor.py",
@@ -450,7 +455,7 @@
     {
       "path": "scripts/wizard/probe.py",
       "mode": "100644",
-      "blob_sha": "8ce28b393efff0fb53b205eb30a9ccd44df75b7f"
+      "blob_sha": "aa2d4fcea3f02124bc855b58babefbcee83f17c2"
     },
     {
       "path": "scripts/wizard/state.py",
@@ -495,7 +500,7 @@
     {
       "path": "src/recipe/cli.py",
       "mode": "100644",
-      "blob_sha": "cb1025be95ab39d45f0fa1324e7e7c5d4721bf1e"
+      "blob_sha": "8b8a40d5eca9ba468ca904ee05c9319ece3945aa"
     },
     {
       "path": "src/recipe/download.py",
@@ -520,7 +525,7 @@
     {
       "path": "src/recipe/runtime.py",
       "mode": "100644",
-      "blob_sha": "22a406a6484bee7fe86c7a01a76a948423e88468"
+      "blob_sha": "0ce55a3755a081d5aafdfb2f123eaa9ff9f1d9cf"
     },
     {
       "path": "src/recipe/safetensors.py",
@@ -543,9 +548,14 @@
       "blob_sha": "29553373e8916f99d2d772e021638afbb9ae2be3"
     },
     {
+      "path": "tests/test_ci_contract.py",
+      "mode": "100644",
+      "blob_sha": "06c303581179cf2a3ad9c773cb327468fb779fbd"
+    },
+    {
       "path": "tests/test_cli.py",
       "mode": "100644",
-      "blob_sha": "6cd0f50940ed4f145ceac34bf4bdab9c034e6959"
+      "blob_sha": "7feda0113802f41e386b68d758d4089401500c54"
     },
     {
       "path": "tests/test_download.py",
@@ -563,6 +573,11 @@
       "blob_sha": "7128f6527d5f473aa2ddc7b4af6973183d10784b"
     },
     {
+      "path": "tests/test_mtp.py",
+      "mode": "100644",
+      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
+    },
+    {
       "path": "tests/test_mtp_compressed_ignore_patch.py",
       "mode": "100644",
       "blob_sha": "8b8a044089b2a62fd2fba225df86332f2c099460"
@@ -571,11 +586,6 @@
       "path": "tests/test_mtp_load_guard_patch.py",
       "mode": "100644",
       "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
-    },
-    {
-      "path": "tests/test_mtp.py",
-      "mode": "100644",
-      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
     },
     {
       "path": "tests/test_publication_audit.py",
@@ -590,7 +600,7 @@
     {
       "path": "tests/test_runtime.py",
       "mode": "100644",
-      "blob_sha": "6cc13e8e5e93a702c97efc8d899488e1f9b5b0a2"
+      "blob_sha": "fdc64ccfbe93a9cb062218c33fcdde41bbe87a4e"
     },
     {
       "path": "tests/test_safetensors_audit.py",
@@ -605,7 +615,7 @@
     {
       "path": "tests/test_source_state_release_branches.py",
       "mode": "100644",
-      "blob_sha": "0cab78a0c1135201a4551bced47436c47740bda9"
+      "blob_sha": "bc8240a7299211ec34d112b272bc56a4500c3323"
     },
     {
       "path": "tests/test_wizard_monitor.py",
@@ -615,7 +625,7 @@
     {
       "path": "tests/test_wizard_safety.py",
       "mode": "100644",
-      "blob_sha": "17cf3a5c96fa5e6f0ff72926fcff4bac5b3fb75c"
+      "blob_sha": "82fee9e00a841c794aea551ed9533c58e957a20f"
     },
     {
       "path": "tools/audit_publication.py",
@@ -718,5 +728,14 @@
     "github_actions": "NO_RUN_EVIDENCE",
     "new_install_remove_runtime": "NOT_TESTED",
     "local_main_checkout": "NOT_YET_CONFIRMED"
+  },
+  "release_candidate": {
+    "source": "GitHub-only code proposal, based on main 2026-10-26",
+    "base_main": "8ab88bc13aee6400e32b488af65f0a43c1c34b05",
+    "source_inventory": "generated from exact GitHub Git tree and new blob SHAs",
+    "github_ci": "NOT_VERIFIED",
+    "dgx_main": "NOT_VERIFIED",
+    "new_wizard_runtime": "NOT_TESTED",
+    "new_code_unit_tests": "NOT_RUN_AT_COMMIT_CREATION"
   }
 }

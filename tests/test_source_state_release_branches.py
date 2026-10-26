@@ -75,6 +75,16 @@ class ReleaseBranchSnapshotTests(unittest.TestCase):
         result = verifier.source_report(strict=True)
         self.assertEqual(result["result"], "PASS_SOURCE_ONLY", result["errors"])
 
+    def test_detached_pr_head_allows_inventory_not_strict(self):
+        """Detached PR checkout verifies hashes; release strict remains fail-closed."""
+        self.git("switch", "--detach", "-q", "HEAD")
+        result = verifier.source_report(strict=False)
+        self.assertEqual(result["result"], "PASS_SOURCE_ONLY", result["errors"])
+        self.assertEqual(result["branch"], "(detached)")
+        strict = verifier.source_report(strict=True)
+        self.assertEqual(strict["result"], "FAIL")
+        self.assertTrue(any("wrong branch" in e for e in strict["errors"]))
+
     def test_unknown_branch_rejected_with_strict(self):
         self.git("switch", "-q", "-c", "unexpected-release")
         result = verifier.source_report(strict=True)

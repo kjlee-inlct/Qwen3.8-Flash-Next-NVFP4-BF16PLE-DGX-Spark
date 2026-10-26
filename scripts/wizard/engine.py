@@ -86,8 +86,9 @@ def _port_free(address: str, port: int) -> bool:
             return False
 
 
-def _container_name(target: str) -> str:
-    return f"qwen38-flash-{target}"
+def wizard_container_name(target: str) -> str:
+    """Use the reviewed new-only namespace, never the legacy container name."""
+    return f"{policy()['service']['container_prefix']}{target}"
 
 
 def deployment_status() -> dict[str, Any]:
@@ -113,7 +114,8 @@ def deployment_status() -> dict[str, Any]:
             if actual:
                 try:
                     validate_container(actual, expected_id=recorded["id"],
-                                       target=recorded["target"], image_id=recorded["image_id"])
+                                       target=recorded["target"], image_id=recorded["image_id"],
+                                       expected_name=name, wizard_owned=True)
                     item["verified"] = True
                 except (ProbeError, KeyError):
                     pass
@@ -234,16 +236,18 @@ def activate(*, target: str, mtp: int, dry_run: bool) -> str:
     target_info = _runtime_target(target, mtp)
     config = manifest["service"]
     tag, bind, port = config["image"], config["host_bind"], config["host_port"]
-    name = _container_name(target)
+    name = wizard_container_name(target)
     if dry_run:
         return f"PLAN: audit {target}; require vacant container name {name} and {bind}:{port}; run MTP={mtp}; verify health/models/chat"
     require_user()
     state = load()
     recorded_image_id = _image_owned(tag, state)
-    # Critical legacy collision: upstream uses the SAME container name. Always refuse.
     existing = container(name)
     if existing:
-        raise WizardError(f"container name occupied: {name}; legacy/existing service untouched. --replace is intentionally unsupported")
+        raise WizardError(f"container name occupied: {name}; no replacement permitted")
+    legacy = container(manifest["legacy"]["container"])
+    if legacy and (legacy.get("State") or {}).get("Status") == "running":
+        raise WizardError("legacy service running; single-GB10 concurrent GPU activation not qualified")
     if not _port_free(bind, port):
         raise WizardError(f"host port {bind}:{port} occupied; no service stopped")
     path = _model_path(target, tag)
@@ -251,12 +255,13 @@ def activate(*, target: str, mtp: int, dry_run: bool) -> str:
         raise WizardError("prepared checkpoint missing: use --prepare-only first")
     cli("audit", target, "--cache", str(cache_path()), "--image", tag)
     cli("serve", target, "--cache", str(cache_path()), "--image", tag,
-        "--mtp", str(mtp), "--port", str(port), "--bind", bind)
+        "--mtp", str(mtp), "--port", str(port), "--bind", bind,
+        "--container-name", name)
     current = container(name)
     if current is None:
         raise WizardError("serve command returned success but container is missing")
     validate_container(current, expected_id=current.get("Id", ""), target=target,
-                       image_id=recorded_image_id)
+                       image_id=recorded_image_id, expected_name=name, wizard_owned=True)
     # Save immediately: if readiness fails, an intentionally retained container is still tracked.
     state = load()
     state["containers"][name] = {
@@ -275,7 +280,7 @@ def activate(*, target: str, mtp: int, dry_run: bool) -> str:
 def stop_or_remove(*, target: str, operation: str, dry_run: bool) -> str:
     """Only wizard-owned *new* deployments; legacy observations never permit removal."""
     _runtime_target(target, 0)
-    name = _container_name(target)
+    name = wizard_container_name(target)
     state = load()
     recorded = state["containers"].get(name)
     if not isinstance(recorded, dict):
@@ -284,7 +289,7 @@ def stop_or_remove(*, target: str, operation: str, dry_run: bool) -> str:
     if not actual:
         raise WizardError("container no longer exists; refusing destructive action on stale receipt")
     validate_container(actual, expected_id=recorded["id"], target=target,
-                       image_id=recorded["image_id"])
+                       image_id=recorded["image_id"], expected_name=name, wizard_owned=True)
     if dry_run:
         return f"PLAN: docker {operation} {name} ({recorded['id']}) after ID and label check"
     require_user()

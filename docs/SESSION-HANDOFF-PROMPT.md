@@ -288,3 +288,56 @@ scripts/doctor.sh
 
 **2026-10-26 마지막 확정 상태(이 문서 작업 시작 이전):**
 PR #1 MERGED, `main=bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6`, 사용자 DGX 기능 HEAD에서 전체 테스트 **163/163 PASS**, 모의 36/36, release-branch 7/7, legacy 6/6 및 API PASS, 운영 `OBSERVE_ONLY`. **실제 신규 배포·제거/rollback 미시험, DGX main 전환 로그 없음, GitHub Actions CI 실행 증거 없음.** 문서 신규 커밋/머지에 따른 `main`의 다음 HEAD는 새 세션에서 다시 조회한다.
+
+---
+
+## 9. 후속 P0: CI, 컨테이너 격리 및 DGX main 읽기 전용 검증
+
+> 후속 기능 브랜치: `feature/ci-wizard-isolation-main-readonly-20261026`.
+> 작업 시작 기준 `main=8ab88bc13aee6400e32b488af65f0a43c1c34b05`.
+> 실제 새로운 merge SHA/CI 결과는 매 세션 **GitHub에서 새로 조회**해야 한다.
+> GitHub 코드 변경·PR 병합은 DGX 배포가 아니며 기존 Docker 서비스에 접근하지 않았다.
+
+### P0-1. GitHub Actions CI 계약
+
+- `.github/workflows/test.yml`는 push, pull_request, workflow_dispatch를 등록하고, 권한을 contents:read로 제한하며 실행 시간 상한을 설정한다.
+- 임시 PR 브랜치에서는 `scripts/verify-source-state.sh`로 전체 path/mode/blob/작업트리/origin 검증을 실행한다. 브랜치 strict allowlist는 바꾸지 않는다.
+- main에서만 추가로 `--strict`을 실행한다. Manifest policy, 오프라인 mock, 전체 unit, Bash 문법, publication audit도 수행한다.
+- 워크플로 코드가 있다는 사실은 CI 실행 증거가 **아니다**. 실제 Actions run/check가 없다면 `CI_NOT_VERIFIED`로 기록하고 GitHub Actions 활성화/권한/정책을 조사한다. 임의로 PASS라고 쓰지 않는다.
+- PR의 CI가 비어 있다면 요구되는 운영 정책에 따라 머지 전 리뷰하고, CI 미실행이라는 blocker를 명시한다.
+
+### P0-2. 레거시와 신규 Docker 컨테이너 격리
+
+- 레거시 이름 `qwen38-flash-<target>`은 그대로 보존한다. 일반 recipe CLI 호출은 기존 이름과 동작을 유지한다.
+- 신규 wizard 이름 `qwen38-wizard-<target>`, marker label `ai.kjlee.wizard=kjlee-qwen38-dgx-spark-wizard`를 사용한다. Docker inspect, receipt, stop/rm도 같은 이름을 사용한다.
+- 신규 컨테이너 삭제/정지에는 wizard 영수증 + 정확한 ID + image ID + recipe/target + Docker Name + marker가 전부 필요하다. 하나라도 불일치하면 중단하며 legacy observation은 관리/삭제 권한이 아니다.
+- wizard의 `--replace` 및 runtime CLI의 전용 이름에 대한 replace를 금지한다. 임의 이름 지정도 거부한다.
+- 동일 단일 GB10에서 기존 레거시가 `running`이면 **신규 GPU 활성화를 차단**한다. 포트/이름 격리만으로 GPU/메모리 중복 부하가 안전해지지 않는다.
+- 새로운 build/prepare/activate/stop/remove, 장시간 inference, rollback 실기기 시험은 **NOT_TESTED**. Mock을 실기기 검증으로 승격하지 않는다.
+
+### P0-3. DGX 로컬 main 전환 및 검증 절차
+
+- `scripts/verify-main-readonly.sh`는 개인 Fork origin, `main`, 깨끗한 tracked/untracked working tree 및 **로컬** origin/main의 HEAD 일치를 요구한다.
+- 소스 strict, Manifest, offline mock, full unit, Bash 문법, 공개물 감사, 기존 legacy 상태·snapshot diff·Health·Doctor **조회만** 수행한다. 자체 `git fetch/switch/pull/reset/clean`, Docker lifecycle 및 모델 다운로드는 하지 않는다.
+- 로컬 origin/main의 참신성을 자동 확인하지 않는다. 먼저 DGX에서 `git remote get-url origin`, `git status --short`, `git branch -vv`를 확인하고 문제가 없을 때 별도 `git fetch origin main` 후 `git switch main` 및 `git merge --ff-only origin/main`을 수행한다. 로컬 main이 없으면 `git switch --track origin/main`; 충돌 시 중단한다.
+- 실제 DGX에서 위 절차가 실행되었다는 사용자 로그가 없다. **`DGX_MAIN_UNVERIFIED`**를 유지하며 새 배포 기능이 작동한다고 주장하지 않는다.
+
+### 후속 작업 고정 운영 규칙
+
+1. 매번 최신 main HEAD/tree·PR·CI와 소스 Manifest 전체 path/mode/blob 및 README/HF 본문 미러부터 점검한다.
+2. 기존 운영 자산(레거시 이미지·컨테이너·recipe-views·hf-cache·HF 인증·YSLAB receipt·포트 8000·OpenWebUI·Ollama·네트워크) 불변을 최우선한다.
+3. 개발 작업은 기능 브랜치에서 수행하고 Python snake_case/type hints/what-why-how docstrings/한국어 중요 주석, Bash set -Eeuo pipefail/quoting/fail-closed 원칙을 적용한다.
+4. 정상·실패·경계·식별자 위조·이름 충돌·idempotency Mock을 추가하며 테스트 실패를 무시하지 않는다. 실제 DGX 가동 시험은 별도 승인 대상.
+5. **모든** 파일 추가/변경/삭제/모드 변경과 같은 커밋에 Source Manifest를 함께 동기화한다. 새 PR 브랜치는 strict 허용 목록 밖이다. 전체 inventory 검사와 main strict를 구분한다.
+6. GitHub 연결 도구를 사용해 직접 commit/PR/diff review/일반 merge 후 결과를 검증하되 CI 결과 없으면 `CI_NOT_VERIFIED`라고 기록한다. 비밀·Docker full ID를 공개 Git에 기록하지 않는다.
+7. 사용자 제공 DGX 기능 HEAD `25949fd7...`의 163/163, 36/36, 7/7, legacy 6/6, API PASS는 **과거 스냅샷**이다. 새 커밋과 실제 DGX에 결과를 자동 승계하지 않는다.
+8. UNKNOWN 또는 실패 시 임의 복구/강제 삭제 대신 원인별 읽기 전용 조사; status/health는 ownership 증거와 분리한다.
+9. 종료 시 새 브랜치·HEAD·tree·Manifest 추적 수·테스트 환경별 실제 결과·PR/merge/CI·DGX 미완료·blocker를 문서와 답변에 정확히 반영한다.
+
+### PR checkout detached HEAD 안전 검사
+
+GitHub Actions의 pull_request checkout은 detached HEAD일 수 있다.
+non-strict Source Manifest 검사는 이때 전체 blob/mode/origin/working-tree를
+계속 검증하고 브랜치 이름 검증만 하지 않는다. `--strict`에서는 detached
+HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두 경우를
+검증한다. CI 실행 결과를 확인하기 전까지 CI_NOT_VERIFIED다.

@@ -131,7 +131,13 @@ def source_report(*, strict: bool) -> dict[str, Any]:
         if not isinstance(files, list) or not files:
             raise ValueError("source manifest has no file inventory")
         manifest_head = git("rev-parse", "HEAD")
-        branch_name = git("symbolic-ref", "--quiet", "--short", "HEAD")
+        # PR checkout may have detached HEAD. Preserve full inventory validation.
+        try:
+            branch_name = git("symbolic-ref", "--quiet", "--short", "HEAD")
+        except ValueError:
+            branch_name = "(detached)"
+            if not strict:
+                warnings.append("detached HEAD: release branch is not asserted")
         if strict and branch_name not in branches:
             errors.append(f"wrong branch: {branch_name}; allowed: {', '.join(branches)}")
         origin = git("remote", "get-url", "origin")

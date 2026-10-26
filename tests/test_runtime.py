@@ -65,6 +65,34 @@ class RuntimeTests(unittest.TestCase):
         self.assertFalse(options.prewarm)
         self.assertEqual(options.bind, "127.0.0.1")
 
+    def test_dedicated_wizard_name_has_owner_label(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cache = Path(directory)
+            name = "qwen38-wizard-orca-uncensored"
+            argv = build_docker_command(orca_target(), model_path(cache),
+                                        cache, RuntimeOptions(), container_name=name)
+        self.assertEqual(argv[argv.index("--name") + 1], name)
+        self.assertIn("ai.kjlee.wizard=kjlee-qwen38-dgx-spark-wizard", argv)
+
+    def test_legacy_or_arbitrary_custom_name_is_denied(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cache = Path(directory)
+            with self.assertRaisesRegex(RuntimeConfigurationError, "unapproved wizard"):
+                build_docker_command(orca_target(), model_path(cache),
+                                     cache, RuntimeOptions(),
+                                     container_name="qwen38-flash-orca-uncensored")
+
+    def test_wizard_start_rejects_replace_without_docker(self):
+        from recipe.runtime import start_container
+        from unittest.mock import Mock
+        name = "qwen38-wizard-orca-uncensored"
+        runner = Mock()
+        with self.assertRaisesRegex(RuntimeConfigurationError, "replace denied"):
+            start_container(["docker", "run", "-d", "--name", name],
+                            orca_target(), replace=True,
+                            runner=runner, container_name=name)
+        runner.assert_not_called()
+
     def test_command_is_loopback_read_only_and_non_restarting(self):
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)

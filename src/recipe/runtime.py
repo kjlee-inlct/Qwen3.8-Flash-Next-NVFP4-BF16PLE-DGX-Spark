@@ -91,6 +91,7 @@ def build_docker_command(
     *,
     image: str = DEFAULT_IMAGE,
     unsafe_override: bool = False,
+    container_name: str | None = None,
 ) -> list[str]:
     """Return a Docker argv list for a pinned local model, without executing it."""
     allow_mtp = target.mode == "mtp_overlay"
@@ -110,7 +111,12 @@ def build_docker_command(
     model_in_container, extra_mounts = _model_mounts(
         model, cache, cache_in_container
     )
-    container_name = container_name_for(target)
+    # 전용 이름만 허용하고 레거시 recipe CLI의 기본 이름은 유지한다.
+    if container_name is not None and container_name != f"qwen38-wizard-{target.name}":
+        raise RuntimeConfigurationError("unapproved wizard container name")
+    resolved_name = container_name or container_name_for(target)
+    wizard_labels = (["--label", "ai.kjlee.wizard=kjlee-qwen38-dgx-spark-wizard"]
+                     if container_name is not None else [])
     speculative_args: list[str] = []
     if options.mtp > 0:
         speculative_args = [
@@ -131,13 +137,14 @@ def build_docker_command(
         "run",
         "-d",
         "--name",
-        container_name,
+        resolved_name,
         "--restart",
         "no",
         "--label",
         f"ai.yslab.recipe={RECIPE_LABEL}",
         "--label",
         f"ai.yslab.target={target.name}",
+        *wizard_labels,
         "--gpus",
         "all",
         "--ipc=host",
@@ -212,9 +219,16 @@ def start_container(
     replace: bool,
     runner: Callable[..., object] = subprocess.run,
     pre_start: Callable[[], object] | None = None,
+    container_name: str | None = None,
 ) -> None:
     """Start the command, replacing only an existing recipe-labelled container."""
-    name = container_name_for(target)
+    if container_name is not None:
+        # Wizard-owned 이름으로 recipe --replace를 우회할 수 없다.
+        if container_name != f"qwen38-wizard-{target.name}" or replace:
+            raise RuntimeConfigurationError("wizard container name or replace denied")
+    name = container_name or container_name_for(target)
+    if list(command)[:5] != ["docker", "run", "-d", "--name", name]:
+        raise RuntimeConfigurationError("Docker command name differs from guarded target")
     inspected = runner(
         ["docker", "container", "inspect", name],
         check=False,
