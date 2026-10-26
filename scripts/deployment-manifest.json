@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "policy_id": "kjlee-qwen38-dgx-spark-wizard",
+  "description": "Declarative deployment policy; runtime ownership receipts live outside Git. This file is not compatibility.json.",
+  "origin": {
+    "repo": "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark",
+    "upstream": "YSLAB-ai/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark",
+    "initial_pin": "9492b78c6bc04638587b42f2ffeb0680b0fcb3ef"
+  },
+  "service": {
+    "recommended_target": "orca-uncensored-bf16-mtp",
+    "recommended_mtp": 2,
+    "host_bind": "127.0.0.1",
+    "host_port": 18300,
+    "context": 262144,
+    "sequences": 8,
+    "gpu_memory": 0.8,
+    "readiness_seconds": 900,
+    "image": "kjlee-qwen38-bf16ple-wizard:9492b78c"
+  },
+  "legacy": {
+    "repo_relative": "Workspace/llm/yslab-qwen38-bf16ple-dgx-spark",
+    "state_relative": ".local/state/yslab-qwen38-bf16ple",
+    "origin_url": "https://github.com/YSLAB-ai/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark.git",
+    "pin": "9492b78c6bc04638587b42f2ffeb0680b0fcb3ef",
+    "cache_name": "hf-cache",
+    "target": "orca-uncensored-bf16-mtp",
+    "image": "yslab-qwen38-bf16ple:9492b78c",
+    "container": "qwen38-flash-orca-uncensored-bf16-mtp",
+    "port": 8000,
+    "bind": "0.0.0.0",
+    "legacy_recipe_label": "qwen38-flash-next-bf16-ple"
+  },
+  "policies": {
+    "preserve_cache": true,
+    "preserve_existing_service": true,
+    "never_purge_repo": true,
+    "never_purge_hf_auth": true,
+    "legacy_adoption_read_only": true,
+    "uninstall_requires_owned_receipt": true,
+    "public_bind_requires_external_review": true,
+    "legacy_identity_requires_mount_match": true,
+    "legacy_checkout_drift_is_informational": true,
+    "legacy_api_health_not_ownership_proof": true
+  }
+}

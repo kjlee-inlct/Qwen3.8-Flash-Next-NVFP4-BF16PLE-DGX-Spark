@@ -2,6 +2,138 @@
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
+## Fork-specific installation and management wizards (deployment NOT TESTED)
+
+### Source snapshot on feature branch AND main
+
+`scripts/verify-source-state.sh --strict` now accepts only the reviewed
+`feature/install-uninstall-wizard-20261026` and `main` branches on the
+personal fork. Full Git blob/mode/working-tree verification is **unchanged**.
+A merge/squash commit gets a different SHA, which is allowed **only if**
+its tracked source tree still exactly matches the committed source manifest.
+Any tracked additions/changes in `main` require regenerating the manifest.
+
+**Operator-provided DGX results (2026-10-26, HEAD
+`3b00eafc44ebf5fa6e16134f30fb4be2679c0978`):**
+wizard mock tests **36/36 PASS**, full suite **156/156 PASS**,
+legacy identity 6/6 PASS, API Health/Models PASS, read-only adoption.
+These successful runs cover the **previous commit**. The new source-verifier
+and its added regression tests need their own post-pull execution.
+They do **not** validate actual new wizard install/uninstall/rollback.
+
+[Validation evidence & merge conditions](scripts/VALIDATION-RESULTS-20261026.md) ·
+[Source/manifest workflow](scripts/VERIFY-FROM-GIT-PULL.md).
+
+### Read-only state comparison, compact status and host Health (2026-10-26)
+
+After successful legacy observation registration on the DGX Spark, the feature
+branch now includes snapshot-versus-live comparisons, concise Korean status
+output, host disk/memory advisories, and offline mock-based protection tests.
+The saved legacy receipt is **never changed by status, compare or health**.
+
+```bash
+# Only after safe git pull --ff-only in the existing personal-fork checkout
+scripts/status.sh                    # compact
+scripts/status.sh --json             # full JSON and diff
+scripts/compare-state.sh             # saved vs current changes
+scripts/health.sh                    # Docker/API/model/disk/memory (read-only)
+scripts/doctor.sh                    # policy + comparison + health
+```
+
+[Detailed guide](scripts/STATUS-COMPARE-AND-HEALTH.md) ·
+[Saved legacy adoption evidence](scripts/LEGACY-OBSERVATION-20261026.md).
+
+**Testing scope:** offline unit tests with simulated Docker/Git/HTTP;
+no actual DGX install/uninstall, Docker build, data cleanup or inference
+evaluation is part of this change. CI results must be checked independently.
+
+### Existing YSLAB deployment: same checkout, changed Git history
+
+The operator's 2026-10-26 DGX outputs show that an existing legacy YSLAB
+model is still running from the **same** directory now tracking the personal
+fork's feature branch. Image/container receipt IDs, target labels, port
+`0.0.0.0:8000`, and Docker mounts for `hf-cache` and `recipe-views`
+matched the original deployment record. The old pinned source commit still
+exists as a Git object. `/health` and `/v1/models` responded, but no
+new generation inference test was performed.
+
+The updated wizard separates `legacy.identity_verified` (strict recorded
+Docker IDs, labels, port and both mount sources) from Git origin/HEAD drift
+(`legacy.checkout_warnings`). **Existing Docker resources remain
+observation-only: no automatic takeover, stop, remove or replace.**
+See [DGX evidence and limits](scripts/LEGACY-OBSERVATION-20261026.md).
+The code change itself has not been exercised on the DGX or through tests.
+
+### Pull and verify the exact source snapshot (read-only)
+
+After checking out the personal fork's `feature/install-uninstall-wizard-20261026`
+branch, follow the complete, safety-guarded commands in
+[Git pull to verification](scripts/VERIFY-FROM-GIT-PULL.md).
+The tracked code/data/docs state is captured by
+[`scripts/source-state-manifest.json`](scripts/source-state-manifest.json);
+`scripts/verify-source-state.sh --strict` compares every tracked file's
+Git blob ID, working-tree bytes, file mode, expected branch and fork origin.
+It does not modify Docker, HF cache, either state directory or the running API.
+
+```bash
+# Run ONLY from the correct personal-fork checkout, AFTER a safe fast-forward pull:
+scripts/verify-source-state.sh --strict
+scripts/manifest.sh validate
+scripts/status.sh                   # read-only; real host evidence is separate
+```
+
+`PASS_SOURCE_ONLY` is **not** a test result for the wizard or its model.
+Do not run deployment/removal on the production Spark on the strength of
+a source integrity check alone.
+
+> **Existing YSLAB installations are protected.** This fork contains new, untested
+> wizard tooling. It must not be used to forcibly replace or uninstall an existing
+> model on a production DGX Spark. There has been **no actual DGX or CI test** of
+> the new wizard implementation in this change.
+
+The repository provides two distinct manifests:
+`compatibility.json` pins model/checkpoint revisions and PLE/MTP identities;
+`scripts/deployment-manifest.json` defines the wizard's deployment defaults,
+read-only legacy fingerprint, and safety policies. The wizard's Docker IDs and
+legacy observation are stored separately in a private local receipt and never in Git.
+
+**Already installed using the YSLAB reference scripts?** Keep its model cache,
+image, container, port `8000`, and legacy `~/.local/state/yslab-qwen38-bf16ple`
+untouched. From this **fork checkout**, inspect it first:
+
+```bash
+scripts/manifest.sh validate
+scripts/status.sh
+scripts/doctor.sh
+scripts/install.sh --dry-run
+```
+
+When a read-only legacy fingerprint is fully verified, the wizard can record it
+with `scripts/adopt-legacy.sh --confirm-container-id FULL_ID --yes`. Adoption
+**does not grant stop/remove permission** and does not alter legacy state.
+The upstream runtime uses the *same Docker container name* for the same target,
+so a new wizard activation will deliberately refuse to replace the legacy container
+even if the new service port is different.
+
+For a **new, separate** wizard-managed deployment, `scripts/install.sh` and
+`scripts/uninstall.sh` present a TTY menu; `--prepare-only`,
+`--activate-only`, `--build-only`, `--dry-run`, and explicit managed
+stop/removal modes are available for automation. The new default port is
+`127.0.0.1:18300`, not the reference script's host `0.0.0.0:8000`.
+No automatic `git clone`, model cache migration/purge, legacy takeover,
+or destructive `--replace` is implemented.
+
+**Documentation:** [Wizard guide](scripts/README-WIZARDS.md) ·
+[Legacy installation protection](scripts/LEGACY-INSTALLATION.md) ·
+[Manifest and ownership model](scripts/MANIFEST-SCHEMA.md) ·
+[Operations](scripts/OPERATIONS.md) ·
+[Safety and recovery](scripts/SAFETY-AND-RECOVERY.md) ·
+[Unexecuted test plan](scripts/TEST-PLAN.md) ·
+[Original implementation plan](scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md).
+
+The original upstream recipe instructions below are preserved for reference.
+They do **not** automatically adopt your existing deployment.
+
 ## What this recipe does
 
 The Parameter Lookup Embedding (PLE) is a lookup table. This recipe keeps the
