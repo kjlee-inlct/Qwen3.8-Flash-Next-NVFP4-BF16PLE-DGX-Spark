@@ -204,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
                     for name in comparison["unknown"]:
                         print("  [UNKNOWN] " + name)
             if args.strict and (
-                report["comparison"]["status"] in ("CHANGED", "UNKNOWN")
+                report["comparison"]["status"] in ("CHANGED", "HEALTH_CHANGED", "UNKNOWN", "UNREGISTERED")
                 or not isinstance(report.get("legacy"), dict)
                 or report["legacy"].get("identity_verified") is not True
                 or (args.health and report["health"]["status"] in ("FAIL", "UNKNOWN"))

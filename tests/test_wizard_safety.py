@@ -243,5 +243,55 @@ class FakeInstallerSafetyTests(unittest.TestCase):
         save.assert_not_called()
 
 
+    def test_owned_container_stop_uses_exact_id_only(self):
+        rec = state.empty()
+        rec["containers"][CONTAINER] = {
+            "id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET, "ready": True}
+        actual = fake_container(Path("/tmp/fake"))
+        with patch.object(engine, "_runtime_target"), \
+             patch.object(engine, "load", return_value=rec), \
+             patch.object(engine, "container", return_value=actual), \
+             patch.object(engine, "require_user"), \
+             patch.object(engine, "command") as command, \
+             patch.object(engine, "save") as save:
+            result = engine.stop_or_remove(
+                target=TARGET, operation="stop", dry_run=False)
+        command.assert_called_once_with(["docker", "stop", LEGACY_ID])
+        self.assertIn("DONE:", result)
+        self.assertFalse(save.call_args.args[0]["containers"][CONTAINER]["ready"])
+
+    def test_owned_container_removal_preserves_legacy_observation(self):
+        rec = state.empty()
+        rec["legacy_observation"] = {"read_only": True, "management_authority": "OBSERVE_ONLY"}
+        rec["containers"][CONTAINER] = {
+            "id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET}
+        actual = fake_container(Path("/tmp/fake"))
+        with patch.object(engine, "_runtime_target"), \
+             patch.object(engine, "load", return_value=rec), \
+             patch.object(engine, "container", return_value=actual), \
+             patch.object(engine, "require_user"), \
+             patch.object(engine, "command") as command, \
+             patch.object(engine, "save") as save:
+            engine.stop_or_remove(target=TARGET, operation="remove", dry_run=False)
+        command.assert_called_once_with(["docker", "rm", "-f", LEGACY_ID])
+        saved = save.call_args.args[0]
+        self.assertEqual(saved["containers"], {})
+        self.assertEqual(saved["legacy_observation"]["management_authority"], "OBSERVE_ONLY")
+
+    def test_unshared_wizard_image_removal_uses_recorded_tag(self):
+        rec = state.empty()
+        rec["image"] = {"tag": "wizard-image", "id": IMG_ID, "source": "wizard-build"}
+        with patch.object(engine, "policy", return_value={"service": {"image": "wizard-image"}}), \
+             patch.object(engine, "load", return_value=rec), \
+             patch.object(engine, "image", return_value={"Id": IMG_ID}), \
+             patch.object(engine, "image_in_use", return_value=False), \
+             patch.object(engine, "require_user"), \
+             patch.object(engine, "command") as command, \
+             patch.object(engine, "save") as save:
+            engine.remove_image(dry_run=False)
+        command.assert_called_once_with(["docker", "image", "rm", "wizard-image"])
+        self.assertIsNone(save.call_args.args[0]["image"])
+
+
 if __name__ == "__main__":
     unittest.main()

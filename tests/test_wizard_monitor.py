@@ -146,5 +146,35 @@ class SnapshotMonitorTests(unittest.TestCase):
             self.assertEqual(wizard_cli.main(["status", "--strict"]), 1)
 
 
+    def test_cli_strict_allows_git_only_history_change(self):
+        before = sample()
+        now = sample()
+        now["checkout"]["head"] = "d" * 40
+        report = {"legacy": now, "comparison":
+                  monitor.compare_observations(before, now), "warnings": []}
+        with patch.object(wizard_cli, "status_report", return_value=report), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(wizard_cli.main(["status", "--strict"]), 0)
+
+    def test_cli_strict_rejects_api_change(self):
+        before = sample()
+        now = sample()
+        now["api"]["models"] = "UNAVAILABLE"
+        report = {"legacy": now, "comparison":
+                  monitor.compare_observations(before, now), "warnings": []}
+        with patch.object(wizard_cli, "status_report", return_value=report), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(wizard_cli.main(["status", "--strict"]), 1)
+
+    def test_corrupt_saved_receipt_is_unknown(self):
+        snapshot = sample()
+        with patch.object(monitor.engine, "deployment_status", return_value={
+            "legacy": snapshot, "recorded_legacy": None,
+            "warnings": ["wizard inventory incomplete: unsafe state file"]}):
+            report = monitor.status_report()
+        self.assertEqual(report["comparison"]["status"], "UNKNOWN")
+
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -82,6 +82,7 @@ benchmark, 이미지/모델 무결성 전수감사를 수행하지 않습니다.
 
 ```bash
 # 모의 Docker/Git, tempfile 내 레거시 state, HTTP 응답 모킹
+scripts/run-mock-tests.sh    # offline fake Docker/Git/HTTP tests
 PYTHONPATH=src:. python3 -m unittest discover -s tests -p 'test_wizard_*.py' -v
 
 # 저장소 전체 기존 테스트도 실행

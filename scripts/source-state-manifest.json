@@ -3,12 +3,12 @@
   "manifest_id": "kjlee-qwen38-wizard-source-snapshot",
   "repository": "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark",
   "branch": "feature/install-uninstall-wizard-20261026",
-  "source_creation_parent_commit": "3522190192da605c17709bede32a0df98d0ed406",
+  "source_creation_parent_commit": "0c194b338afecdc3f737844e433409e49f8f0e14",
   "base_main_commit_at_creation": "9492b78c6bc04638587b42f2ffeb0680b0fcb3ef",
   "scope": "complete tracked repository source tree except this self-referential manifest",
   "self_validation": "Git HEAD scripts/source-state-manifest.json blob SHA vs working-tree bytes",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 108,
+  "tracked_file_count": 109,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -40,7 +40,7 @@
     "model_audit": "NOT_RUN",
     "api_inference": "NOT_RUN",
     "legacy_dgx_evidence": "USER_PROVIDED_SHELL_OUTPUT_NOT_INDEPENDENTLY_RUN",
-    "offline_mock_tests": "ADDED_NOT_YET_VERIFIED"
+    "offline_mock_tests": "SCRIPTS_ADDED_EXECUTION_NOT_CONFIRMED"
   },
   "verification_entrypoints": {
     "source": "scripts/verify-source-state.sh --strict",
@@ -57,7 +57,8 @@
     "Observed legacy bind mounts /recipe/hf-cache and /recipe/recipe-views and host port 0.0.0.0:8000 are from user-provided output; host is not modified or tested by this commit.",
     "Snapshot/status comparison and read-only host health: scripts/wizard/monitor.py; state receipts remain immutable during query.",
     "tests/test_wizard_monitor.py and tests/test_wizard_safety.py simulate Docker/Git/HTTP without modifying actual services.",
-    "User-provided DGX logs confirm read-only legacy adoption success, not production testing of new monitor/installer/uninstaller."
+    "User-provided DGX logs confirm read-only legacy adoption success, not production testing of new monitor/installer/uninstaller.",
+    "scripts/run-mock-tests.sh offers isolated fake Docker/Git/HTTP tests; no production Docker operations are performed."
   ],
   "files": [
     {
@@ -341,6 +342,11 @@
       "blob_sha": "e7908377ccdf0caacb196ee55aecb6724f56a2b3"
     },
     {
+      "path": "scripts/run-mock-tests.sh",
+      "mode": "100755",
+      "blob_sha": "d04288fc62a63da79b7d7c6bd28329602727aa6b"
+    },
+    {
       "path": "scripts/SAFETY-AND-RECOVERY.md",
       "mode": "100644",
       "blob_sha": "b53f24b8ecf95ecf3278d8d4556196ef0f4d8640"
@@ -358,7 +364,7 @@
     {
       "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
       "mode": "100644",
-      "blob_sha": "2445c87a2cc9404bfb099cad32c2146aab64a754"
+      "blob_sha": "e065815862c230a795656694aecda33a7e76d712"
     },
     {
       "path": "scripts/status.sh",
@@ -408,7 +414,7 @@
     {
       "path": "scripts/wizard/cli.py",
       "mode": "100755",
-      "blob_sha": "9adafbed19265e5dd65bd8366a7a434ed5729745"
+      "blob_sha": "8c27a1b456f07a60083e67652c9ad62207d45373"
     },
     {
       "path": "scripts/wizard/engine.py",
@@ -583,12 +589,12 @@
     {
       "path": "tests/test_wizard_monitor.py",
       "mode": "100644",
-      "blob_sha": "2ae28e868bfd213190ac0c2076362a782fe37dd8"
+      "blob_sha": "a020397b97b63e07534c792c83a07360f691a5e1"
     },
     {
       "path": "tests/test_wizard_safety.py",
       "mode": "100644",
-      "blob_sha": "4039507d00f5bc04186d99969336f149d0e2918a"
+      "blob_sha": "17cf3a5c96fa5e6f0ff72926fcff4bac5b3fb75c"
     },
     {
       "path": "tools/audit_publication.py",
