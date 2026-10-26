@@ -26,8 +26,11 @@
     "port": 18300,
     "target": "orca-uncensored-bf16-mtp",
     "mtp": 2,
-    "existing_container_collision": "refuse activation",
-    "replace": "unsupported until tested"
+    "existing_container_collision": "refuse wizard-name occupation; legacy-name unchanged",
+    "replace": "unsupported until tested",
+    "new_container_name_pattern": "qwen38-wizard-<target>",
+    "ownership_marker": "ai.kjlee.wizard=kjlee-qwen38-dgx-spark-wizard",
+    "legacy_running_gpu_activation": "REFUSE_ON_SINGLE_GB10"
   },
   "validation_at_creation": {
     "git_remote_metadata": "INSPECTED",
@@ -64,7 +67,10 @@
     "Merge, squash or fast-forward changes commit SHA; source snapshot validation intentionally depends on tracked Git tree, not a fixed commit SHA.",
     "After any tracked files change in main, recompute the manifest for the new tree; never bypass a mismatch.",
     "docs/SESSION-HANDOFF-PROMPT.md is the canonical 2026-10-26 handoff with main PR #1 merge history, protected legacy Docker operation, and future GitHub workflows.",
-    "Latest operator DGX transcript: release-branch regressions 7/7, wizard mock tests 36/36, full repository unit tests 163/163 passed on feature HEAD 25949fd7; newer docs-commit tests are NOT_RUN."
+    "Latest operator DGX transcript: release-branch regressions 7/7, wizard mock tests 36/36, full repository unit tests 163/163 passed on feature HEAD 25949fd7; newer docs-commit tests are NOT_RUN.",
+    "2026-10-26 operator next full DGX main test at 66051cdc: source 114/114, wizard 38/38, full 172/172 PASS; legacy runtime identity/API/health PASS, Git-only checkout drift.",
+    "2026-10-26 user explicitly deferred investigating/normalizing GitHub Actions; 0 workflow/check runs is CI_NOT_VERIFIED, not CI PASS.",
+    "Current documentation/Source Manifest refresh does not touch runtime code and does not establish fresh DGX testing on the resulting new Git merge SHA."
   ],
   "files": [
     {
@@ -150,7 +156,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "8ec112ecc20305da5d856d0e8a23d86e6af7a376"
+      "blob_sha": "523372085cb7f3ae6b786a3a471faf937a19b261"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -290,7 +296,7 @@
     {
       "path": "scripts/OPERATIONS.md",
       "mode": "100644",
-      "blob_sha": "71326f5971a271e1f8566a1c6bab1f8b192d45d0"
+      "blob_sha": "a1c64d68ddff8afa97b0eec58393c1a37b69717c"
     },
     {
       "path": "scripts/README-WIZARDS.md",
@@ -310,12 +316,12 @@
     {
       "path": "scripts/TEST-PLAN.md",
       "mode": "100644",
-      "blob_sha": "37c2eea261ecd5663827976956ab4137556d7d87"
+      "blob_sha": "1ac7a86c12016887657175c4b4fd361634f756d1"
     },
     {
       "path": "scripts/VALIDATION-RESULTS-20261026.md",
       "mode": "100644",
-      "blob_sha": "68a783f27a887d987aee25c2085dcbc93b770bb7"
+      "blob_sha": "50876f9f3bfecfc1415424b293f7e96f02d4614a"
     },
     {
       "path": "scripts/VERIFY-FROM-GIT-PULL.md",
@@ -686,56 +692,76 @@
     "new_wizard_install_uninstall_on_dgx": "NOT_TESTED"
   },
   "latest_operator_validation": {
-    "source": "user-provided DGX Spark terminal output dated 2026-10-26",
-    "tested_commit": "25949fd7fb16ff62f8c6bdfc6f9fe9ab74fd0f8a",
+    "source": "user-provided complete DGX Spark scripts/verify-main-readonly.sh terminal log dated 2026-10-26",
+    "tested_commit": "66051cdcd4b2c5766de55421579867c195fe4084",
+    "tested_branch": "main",
+    "origin_main_matches_local_head": true,
     "source_manifest": {
       "status": "PASS_SOURCE_ONLY",
-      "tracked_files": 111
+      "tracked_files": 114,
+      "strict": true
     },
     "deployment_manifest": {
       "status": "PASS",
       "target_count": 4
     },
-    "release_branch_tests": {
-      "status": "PASS",
-      "executed": 7,
-      "passed": 7
-    },
     "wizard_mock_tests": {
       "status": "PASS",
-      "executed": 36,
-      "passed": 36
+      "executed": 38,
+      "passed": 38,
+      "failed": 0
     },
     "full_repository_unit_tests": {
       "status": "PASS",
-      "executed": 163,
-      "passed": 163
+      "executed": 172,
+      "passed": 172,
+      "failed": 0
     },
+    "bash_syntax_and_publication_audit": "PASS_BY_READONLY_WRAPPER_EXIT",
     "legacy_identity": {
       "status": "PASS",
-      "checks": 6
+      "identity_mismatch_count": 0,
+      "container_status": "running"
     },
     "api_health": "PASS",
     "model_list": "PASS",
     "legacy_management": "OBSERVE_ONLY",
     "diff": "GIT_CHANGED_ONLY",
-    "check_scope": "User executed on DGX feature branch; not GitHub CI; not new documentation commit",
-    "main_merge": {
-      "pull_request": 1,
-      "merged": true,
-      "merge_sha": "bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6"
+    "recorded_git_head": "3522190192da605c17709bede32a0df98d0ed406",
+    "current_git_head": "66051cdcd4b2c5766de55421579867c195fe4084",
+    "identity_changes": 0,
+    "service_changes": 0,
+    "git_changes": 1,
+    "git_warnings": 2,
+    "health": "PASS",
+    "disk_free_gib": {
+      "hf_cache": 539.74,
+      "recipe_views": 539.74
     },
-    "github_actions": "NO_RUN_EVIDENCE",
+    "mem_available_gib_observed_range": [
+      14.24,
+      14.3
+    ],
+    "readonly_wrapper": "PASS",
+    "check_scope": "Operator-executed on DGX main at exact tested_commit. Not CI and not this later documentation commit.",
+    "main_merge": {
+      "pull_request": 3,
+      "merged": true,
+      "merge_sha": "66051cdcd4b2c5766de55421579867c195fe4084"
+    },
+    "github_actions": "NO_RUN_EVIDENCE_CI_NOT_VERIFIED_DEFERRED_BY_USER",
     "new_install_remove_runtime": "NOT_TESTED",
-    "local_main_checkout": "NOT_YET_CONFIRMED"
+    "local_main_checkout": "CONFIRMED_ON_TESTED_COMMIT"
   },
   "release_candidate": {
-    "source": "GitHub-only code proposal, based on main 2026-10-26",
-    "base_main": "8ab88bc13aee6400e32b488af65f0a43c1c34b05",
-    "source_inventory": "generated from exact GitHub Git tree and new blob SHAs",
-    "github_ci": "NOT_VERIFIED",
-    "dgx_main": "NOT_VERIFIED",
+    "source": "2026-10-26 post-PR3 operator DGX main validation; later docs-only PR is source-only",
+    "base_main": "66051cdcd4b2c5766de55421579867c195fe4084",
+    "source_inventory": "verified GitHub tree against all tracked path/mode/blob SHAs",
+    "github_ci": "DEFERRED_BY_USER_CI_NOT_VERIFIED_ACTIONS_RUNS_0",
+    "dgx_main": "USER_VERIFIED_AT_BASE_MAIN_SHA",
     "new_wizard_runtime": "NOT_TESTED",
-    "new_code_unit_tests": "NOT_RUN_AT_COMMIT_CREATION"
+    "new_code_unit_tests": "USER_REPORTED_DGX_PASS_172_OF_172_ON_BASE_MAIN_SHA",
+    "new_mock_tests": "USER_REPORTED_DGX_PASS_38_OF_38_ON_BASE_MAIN_SHA",
+    "post_documentation_merge_dgx_tests": "NOT_RUN"
   }
 }
