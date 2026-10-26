@@ -2,6 +2,19 @@
 
 > **NOT TESTED.** 사용자의 지시에 따라 이 변경에서는 테스트, Docker build, 다운로드, 실제 설치/제거 명령을 실행하지 않는다. GitHub의 자동 CI가 실행되더라도 결과를 확인하기 전에는 PASS로 기록하지 않는다.
 
+## 새로운 소스 상태 무결성 검사 (사용자 실행용 / 이번 커밋에서 미실행)
+
+```bash
+scripts/verify-source-state.sh --strict
+scripts/verify-source-state.sh --strict --json
+scripts/manifest.sh validate
+```
+
+`source-state-manifest.json`은 소스 파일 blob SHA/mode/branch/origin을 검증하며,
+**실 DGX 테스트 또는 Docker 동작을 실행하지 않습니다.**
+변경/누락/신규 Git 추적 파일이나 잘못된 Git origin을 fail로 판정하는 사례를
+추후 fake checkout에서 별도 시험합니다. [전체 순서](VERIFY-FROM-GIT-PULL.md).
+
 ## 정적 검사 예정
 
 - `python3 -m py_compile scripts/wizard/*.py`

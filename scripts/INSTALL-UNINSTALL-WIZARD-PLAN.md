@@ -1,3 +1,16 @@
+# Source snapshot update — 2026-10-26
+
+- 전체 추적 Git 파일의 blob SHA/모드와 원격 Fork 브랜치를 증명하는
+  `scripts/source-state-manifest.json`, `scripts/verify-source-state.py`,
+  `scripts/verify-source-state.sh` 추가.
+- `scripts/VERIFY-FROM-GIT-PULL.md`에 기존 설치를 보호하는 fetch/switch/pull,
+  무결성 검증, 정적 구문 점검, 읽기 전용 호스트 상태 확인 명령 작성.
+- 소스 상태 검증과 배포 정책 검증, 실 DGX/모델 시험을 명시적으로 분리.
+- 사용자 지시에 따라 이 커밋의 Python/Shell/단위/실 DGX 테스트는 **NOT RUN**.
+- 참조 legacy 이미지, 모델 cache, Docker, `main`은 변경하지 않음.
+
+---
+
 # Implementation update — 2026-10-26 (feature branch only)
 
 > **Source written; NO tests run, NO real DGX operations run.**

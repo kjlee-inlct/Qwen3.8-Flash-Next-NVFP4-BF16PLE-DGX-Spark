@@ -1,0 +1,562 @@
+{
+  "schema_version": 1,
+  "manifest_id": "kjlee-qwen38-wizard-source-snapshot",
+  "repository": "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark",
+  "branch": "feature/install-uninstall-wizard-20261026",
+  "source_creation_parent_commit": "c02565d929bd9ee4ae1647e90796856e0fec2852",
+  "base_main_commit_at_creation": "9492b78c6bc04638587b42f2ffeb0680b0fcb3ef",
+  "scope": "complete tracked repository source tree except this self-referential manifest",
+  "self_validation": "Git HEAD scripts/source-state-manifest.json blob SHA vs working-tree bytes",
+  "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
+  "tracked_file_count": 101,
+  "policy_manifest_path": "scripts/deployment-manifest.json",
+  "checkpoint_manifest_path": "compatibility.json",
+  "legacy_deployment": {
+    "source": "user supplied reference install/uninstall script",
+    "repo_dir_relative_to_home": "Workspace/llm/yslab-qwen38-bf16ple-dgx-spark",
+    "state_dir_relative_to_home": ".local/state/yslab-qwen38-bf16ple",
+    "port": 8000,
+    "image": "yslab-qwen38-bf16ple:9492b78c",
+    "container": "qwen38-flash-orca-uncensored-bf16-mtp",
+    "ownership": "read-only observation; no takeover or removal"
+  },
+  "wizard_profile": {
+    "image": "kjlee-qwen38-bf16ple-wizard:9492b78c",
+    "bind": "127.0.0.1",
+    "port": 18300,
+    "target": "orca-uncensored-bf16-mtp",
+    "mtp": 2,
+    "existing_container_collision": "refuse activation",
+    "replace": "unsupported until tested"
+  },
+  "validation_at_creation": {
+    "git_remote_metadata": "INSPECTED",
+    "github_tree_file_inventory": "INSPECTED",
+    "tests": "NOT_RUN",
+    "static_syntax_checks": "NOT_RUN",
+    "host_runtime": "NOT_OBSERVED",
+    "docker_build": "NOT_RUN",
+    "installer_runtime": "NOT_RUN",
+    "model_audit": "NOT_RUN",
+    "api_inference": "NOT_RUN"
+  },
+  "verification_entrypoints": {
+    "source": "scripts/verify-source-state.sh --strict",
+    "deployment_policy": "scripts/manifest.sh validate",
+    "legacy_runtime_observation": "scripts/status.sh",
+    "manual": "scripts/VERIFY-FROM-GIT-PULL.md"
+  },
+  "notes": [
+    "Each file SHA is a Git blob SHA-1, not a model checkpoint SHA-256.",
+    "Exact commit at manifest creation cannot be pinned in this file without self-reference; git rev-parse HEAD identifies the release commit.",
+    "Source PASS only proves tracked file integrity/branch/origin; it does not test code functionality or host state.",
+    "Running reference legacy deployment and its state files must not be modified by verification."
+  ],
+  "files": [
+    {
+      "path": ".dockerignore",
+      "mode": "100644",
+      "blob_sha": "542c076d7a07a936171700f9af1d2fef0e8f2c80"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "mode": "100644",
+      "blob_sha": "b8b68ebc09c0ebc60bd4dbe3c93a99f63180b58a"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "blob_sha": "b65cdb70eda0da34458496bae7166202ed370db7"
+    },
+    {
+      "path": "benchmarks/common.py",
+      "mode": "100644",
+      "blob_sha": "5d74efcca6022e3986c2d53fc709e5d16e08e76c"
+    },
+    {
+      "path": "benchmarks/concurrency.py",
+      "mode": "100644",
+      "blob_sha": "666806a698368ec1a40a232fd96fa5c6c53944ad"
+    },
+    {
+      "path": "benchmarks/functional.py",
+      "mode": "100644",
+      "blob_sha": "7acce7a845ecc7b7bc11068f66340d60c7d49a8e"
+    },
+    {
+      "path": "benchmarks/long_context.py",
+      "mode": "100644",
+      "blob_sha": "5af7ddb0432fca7b23ce23ffefebf47c2c99a539"
+    },
+    {
+      "path": "benchmarks/stability.py",
+      "mode": "100644",
+      "blob_sha": "3021543a3e2bb42860a6a274ce0b34f6c70a0506"
+    },
+    {
+      "path": "compatibility.json",
+      "mode": "100644",
+      "blob_sha": "267f122555cf6984d092f9aacf29e196128a0926"
+    },
+    {
+      "path": "Dockerfile",
+      "mode": "100644",
+      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
+    },
+    {
+      "path": "docs/BENCHMARKS.md",
+      "mode": "100644",
+      "blob_sha": "0dfc6422823978049573fbc2058f1af785d1265e"
+    },
+    {
+      "path": "docs/COMPATIBILITY.md",
+      "mode": "100644",
+      "blob_sha": "9760988ce61bc21f62667f3b003e78fa9fc7cca4"
+    },
+    {
+      "path": "docs/HOW-IT-WORKS.md",
+      "mode": "100644",
+      "blob_sha": "203a5cf1de74f91af11db2d036e0473197607775"
+    },
+    {
+      "path": "docs/SWE-BENCH-PILOT.md",
+      "mode": "100644",
+      "blob_sha": "36bd23a2abd210b107e3c9fe62615fd184e8699f"
+    },
+    {
+      "path": "docs/TROUBLESHOOTING.md",
+      "mode": "100644",
+      "blob_sha": "df7b597acf95a6d7ba83b0398559a5d38935c2a4"
+    },
+    {
+      "path": "huggingface/README.md",
+      "mode": "100644",
+      "blob_sha": "88445acaddd1f87d2a10112d615d2c43b32cadd7"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
+    },
+    {
+      "path": "NOTICE",
+      "mode": "100644",
+      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "blob_sha": "841d67a01f2dc581d48a96582a8937b28831cfdc"
+    },
+    {
+      "path": "results/orcarouter/checkpoint-audit.json",
+      "mode": "100644",
+      "blob_sha": "12e5ee277cb9876718be9b1b81060a851fb7623b"
+    },
+    {
+      "path": "results/orcarouter/concurrency-1.json",
+      "mode": "100644",
+      "blob_sha": "37958da9fbf2258dc18e2f7df990c3637ba79fd0"
+    },
+    {
+      "path": "results/orcarouter/concurrency-2.json",
+      "mode": "100644",
+      "blob_sha": "3f048c07a1a903adb0db217aeba87cb0ee4789fc"
+    },
+    {
+      "path": "results/orcarouter/concurrency-4.json",
+      "mode": "100644",
+      "blob_sha": "0b9826f7dee984d0697c4e15783da614f910e09b"
+    },
+    {
+      "path": "results/orcarouter/concurrency-8.json",
+      "mode": "100644",
+      "blob_sha": "e7cc05cf6bc681f1ffd36be67c7bf29d803c8e8e"
+    },
+    {
+      "path": "results/orcarouter/functional.json",
+      "mode": "100644",
+      "blob_sha": "569b8ff1a7108e64547272498de60a49a8799546"
+    },
+    {
+      "path": "results/orcarouter/mtp-bf16-sweep.json",
+      "mode": "100644",
+      "blob_sha": "3d75cf6e4cc31595fa7a57e858f8af92f8525cbc"
+    },
+    {
+      "path": "results/orcarouter/mtp0-code.json",
+      "mode": "100644",
+      "blob_sha": "c08aeeec4c6e09db042dc6187897747ea3239766"
+    },
+    {
+      "path": "results/orcarouter/mtp0-file-edit.json",
+      "mode": "100644",
+      "blob_sha": "4de1c26ba3e017ff94184fa2bbbc30835629bfa3"
+    },
+    {
+      "path": "results/orcarouter/mtp0-prose.json",
+      "mode": "100644",
+      "blob_sha": "119fb66b4adcde75cd1cf615fda3c8c2f737c870"
+    },
+    {
+      "path": "results/orcarouter/mtp0-reasoning.json",
+      "mode": "100644",
+      "blob_sha": "655ad6b7f2a2ccfb6d632bd34f12873323f2ee60"
+    },
+    {
+      "path": "results/orcarouter/mtp1-code.json",
+      "mode": "100644",
+      "blob_sha": "565814042b6472d27a398949652987696422690e"
+    },
+    {
+      "path": "results/orcarouter/mtp1-file-edit.json",
+      "mode": "100644",
+      "blob_sha": "066af127f4c86b85deb9eb523b75332b88f63c05"
+    },
+    {
+      "path": "results/orcarouter/mtp1-prose.json",
+      "mode": "100644",
+      "blob_sha": "0642ce15f56c5a2b6849bd8bdc5f538a7b693188"
+    },
+    {
+      "path": "results/orcarouter/mtp1-reasoning.json",
+      "mode": "100644",
+      "blob_sha": "f0f603549887c69340e7bb42c4f96c1a7e0d2e17"
+    },
+    {
+      "path": "results/orcarouter/native-240k.json",
+      "mode": "100644",
+      "blob_sha": "985862a6abfd87806fa2746131dd69be9b2dd125"
+    },
+    {
+      "path": "results/orcarouter/readiness.json",
+      "mode": "100644",
+      "blob_sha": "bed5b05a7562b519268853d6fb099d918ca6e7b0"
+    },
+    {
+      "path": "results/orcarouter/stability-2h.json",
+      "mode": "100644",
+      "blob_sha": "ffa16e9f284c6b72e72560774972fe7f7af1cbe6"
+    },
+    {
+      "path": "results/orcarouter/summary.json",
+      "mode": "100644",
+      "blob_sha": "c1e331e9d5b910a0c280b6357651122bfcced8f9"
+    },
+    {
+      "path": "results/orcarouter/vision-shapes.png",
+      "mode": "100644",
+      "blob_sha": "83e016be37d0b74a24ff2b907447338924ef3c5f"
+    },
+    {
+      "path": "scripts/activate.sh",
+      "mode": "100755",
+      "blob_sha": "56ad3f856021c88062ceb131f04cd67f5bc04a95"
+    },
+    {
+      "path": "scripts/adopt-legacy.sh",
+      "mode": "100755",
+      "blob_sha": "488f4d2d475949dc0cfff30d94433110fef776a7"
+    },
+    {
+      "path": "scripts/deployment-manifest.json",
+      "mode": "100644",
+      "blob_sha": "d0b0693446d9469efb29d03229047e4e4eeeb524"
+    },
+    {
+      "path": "scripts/doctor.sh",
+      "mode": "100755",
+      "blob_sha": "10d91e6d1ffa670bfacd9629c98f248fd7bd0805"
+    },
+    {
+      "path": "scripts/download-weights.sh",
+      "mode": "100755",
+      "blob_sha": "ef64eba3dcdaa89f0e3aa0b94960a4d47d389b35"
+    },
+    {
+      "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "275660e626799fe6721a81a8237bfcdfb250f281"
+    },
+    {
+      "path": "scripts/install.sh",
+      "mode": "100755",
+      "blob_sha": "e649b1adc0294a409410a7323402edde3f65d060"
+    },
+    {
+      "path": "scripts/LEGACY-INSTALLATION.md",
+      "mode": "100644",
+      "blob_sha": "674bdbf19cb3e177943e73bc52583bb98004b32a"
+    },
+    {
+      "path": "scripts/MANIFEST-SCHEMA.md",
+      "mode": "100644",
+      "blob_sha": "af266aa0ea245bd96a9980af1b93ffdeb3eec288"
+    },
+    {
+      "path": "scripts/manifest.sh",
+      "mode": "100755",
+      "blob_sha": "de7afca67b1cf7f63ca363f070b79f7233c8d882"
+    },
+    {
+      "path": "scripts/OPERATIONS.md",
+      "mode": "100644",
+      "blob_sha": "a22284467ae251b3013c996caaf50b186daa65ae"
+    },
+    {
+      "path": "scripts/prepare.sh",
+      "mode": "100755",
+      "blob_sha": "cdf820715a3869b87aad3559b209114748fe22b4"
+    },
+    {
+      "path": "scripts/qwen38-dgx-spark",
+      "mode": "100755",
+      "blob_sha": "f17888dd1bdd4b0e50a014529b6476b85fbeb7d4"
+    },
+    {
+      "path": "scripts/README-WIZARDS.md",
+      "mode": "100644",
+      "blob_sha": "ad89f5d0d9ffc98fc7184c8c8674d32445c5f439"
+    },
+    {
+      "path": "scripts/SAFETY-AND-RECOVERY.md",
+      "mode": "100644",
+      "blob_sha": "b53f24b8ecf95ecf3278d8d4556196ef0f4d8640"
+    },
+    {
+      "path": "scripts/serve.sh",
+      "mode": "100755",
+      "blob_sha": "8306a209e5fd5ff824a6f412a98753e168088d81"
+    },
+    {
+      "path": "scripts/smoke-test.sh",
+      "mode": "100755",
+      "blob_sha": "3dddf35081239b564dca0e2032957be4febe707a"
+    },
+    {
+      "path": "scripts/status.sh",
+      "mode": "100755",
+      "blob_sha": "466b530bcd4f329453cf1355efa74a7bfd797e52"
+    },
+    {
+      "path": "scripts/stop.sh",
+      "mode": "100755",
+      "blob_sha": "67836ed48ad40565e468beb3e7ce30faedf4ed24"
+    },
+    {
+      "path": "scripts/test-container.sh",
+      "mode": "100755",
+      "blob_sha": "8d7c657a111ed8df4d93c804470eba00621f4396"
+    },
+    {
+      "path": "scripts/TEST-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "470de1f268e43792f02c6eb458a2aa4f038610ea"
+    },
+    {
+      "path": "scripts/uninstall.sh",
+      "mode": "100755",
+      "blob_sha": "c9bc36d041899c5afccfd1c26f5d304a4b2eb6b0"
+    },
+    {
+      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
+      "mode": "100644",
+      "blob_sha": "847a6b3ecbfea2ded923c2dfc38b998db2e7d52b"
+    },
+    {
+      "path": "scripts/verify-source-state.py",
+      "mode": "100755",
+      "blob_sha": "37b0e7505acfe4f358bdddca30cd038f903a2be0"
+    },
+    {
+      "path": "scripts/verify-source-state.sh",
+      "mode": "100755",
+      "blob_sha": "9c85ae0e2183f645e66c6f46856e8bf665ed67d0"
+    },
+    {
+      "path": "scripts/wizard/__init__.py",
+      "mode": "100644",
+      "blob_sha": "6e25df69c878a2fb10464a401daaf93ba8754d6a"
+    },
+    {
+      "path": "scripts/wizard/cli.py",
+      "mode": "100755",
+      "blob_sha": "ab0f30882e19e30c7127bded38affaa83766493a"
+    },
+    {
+      "path": "scripts/wizard/engine.py",
+      "mode": "100644",
+      "blob_sha": "5228e2af751fb6feed4fbf31c3f988c2a3238773"
+    },
+    {
+      "path": "scripts/wizard/model.py",
+      "mode": "100644",
+      "blob_sha": "6394ef5bcdf689408a6dc20ea90c7cd043de0a48"
+    },
+    {
+      "path": "scripts/wizard/probe.py",
+      "mode": "100644",
+      "blob_sha": "ee689d4aa80104a8f2bc35989764d3d6ae507b07"
+    },
+    {
+      "path": "scripts/wizard/state.py",
+      "mode": "100644",
+      "blob_sha": "711cab1809240183102e069f8c057047e01285d8"
+    },
+    {
+      "path": "src/patch_parallel_lm_head_linear_attrs.py",
+      "mode": "100644",
+      "blob_sha": "df371083cffed02835f3a5066ad5071d89bb1a21"
+    },
+    {
+      "path": "src/patch_qwen4_exp_config.py",
+      "mode": "100644",
+      "blob_sha": "8d1c90a7ed1bd8cf24a2518411344faad744523e"
+    },
+    {
+      "path": "src/patch_qwen4_exp_mtp_compressed_ignore.py",
+      "mode": "100644",
+      "blob_sha": "96399d7415f3c7ac01e98aa2bb387c47402ff317"
+    },
+    {
+      "path": "src/patch_qwen4_exp_mtp_load_guard.py",
+      "mode": "100644",
+      "blob_sha": "d7b93e639daafd0acace3bf360a6d899f52104cd"
+    },
+    {
+      "path": "src/patch_qwen4_exp_quantized_lm_head.py",
+      "mode": "100644",
+      "blob_sha": "463638adc9be5a984927a7dca24626c8b515f800"
+    },
+    {
+      "path": "src/recipe/__init__.py",
+      "mode": "100644",
+      "blob_sha": "6dd1e25d5a5d1afbe11e8049b21c82223016b0e9"
+    },
+    {
+      "path": "src/recipe/audit.py",
+      "mode": "100644",
+      "blob_sha": "fd46d62420578b679cafd292a0bfd043dc6c5e48"
+    },
+    {
+      "path": "src/recipe/cli.py",
+      "mode": "100644",
+      "blob_sha": "cb1025be95ab39d45f0fa1324e7e7c5d4721bf1e"
+    },
+    {
+      "path": "src/recipe/download.py",
+      "mode": "100644",
+      "blob_sha": "e1c988982d649a55e78ffb182d8e4cfaaf720038"
+    },
+    {
+      "path": "src/recipe/hybrid.py",
+      "mode": "100644",
+      "blob_sha": "ee3854e1ecea14e05b58350bf9fa55b3be7037dc"
+    },
+    {
+      "path": "src/recipe/manifest.py",
+      "mode": "100644",
+      "blob_sha": "6e73960ea8895408c8beb75b1068d585ce098d30"
+    },
+    {
+      "path": "src/recipe/mtp.py",
+      "mode": "100644",
+      "blob_sha": "73141fa1000b50a3e75df936085462e6f85c5978"
+    },
+    {
+      "path": "src/recipe/runtime.py",
+      "mode": "100644",
+      "blob_sha": "22a406a6484bee7fe86c7a01a76a948423e88468"
+    },
+    {
+      "path": "src/recipe/safetensors.py",
+      "mode": "100644",
+      "blob_sha": "f52f8804c5899ea029302835089940ca6f4fb454"
+    },
+    {
+      "path": "src/test_ple_mmap_cpu.py",
+      "mode": "100644",
+      "blob_sha": "9322b89875f96c6343c1b153ca2d3a07a7abc0f3"
+    },
+    {
+      "path": "src/vllm_ple_mmap.py",
+      "mode": "100644",
+      "blob_sha": "8313aff03e1f50c1861c068a6a745b7b632c3d9d"
+    },
+    {
+      "path": "tests/test_benchmarks.py",
+      "mode": "100644",
+      "blob_sha": "29553373e8916f99d2d772e021638afbb9ae2be3"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "mode": "100644",
+      "blob_sha": "6cd0f50940ed4f145ceac34bf4bdab9c034e6959"
+    },
+    {
+      "path": "tests/test_download.py",
+      "mode": "100644",
+      "blob_sha": "a93e02e89256ec67a233009c7df6564ac0cd4390"
+    },
+    {
+      "path": "tests/test_hybrid.py",
+      "mode": "100644",
+      "blob_sha": "02b9c320701f74feda4ce65172da22faaa6eeec3"
+    },
+    {
+      "path": "tests/test_manifest.py",
+      "mode": "100644",
+      "blob_sha": "7128f6527d5f473aa2ddc7b4af6973183d10784b"
+    },
+    {
+      "path": "tests/test_mtp_compressed_ignore_patch.py",
+      "mode": "100644",
+      "blob_sha": "8b8a044089b2a62fd2fba225df86332f2c099460"
+    },
+    {
+      "path": "tests/test_mtp_load_guard_patch.py",
+      "mode": "100644",
+      "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
+    },
+    {
+      "path": "tests/test_mtp.py",
+      "mode": "100644",
+      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
+    },
+    {
+      "path": "tests/test_publication_audit.py",
+      "mode": "100644",
+      "blob_sha": "50bec34e81bd81c9b73e186d5a2fa2209e78f7fc"
+    },
+    {
+      "path": "tests/test_publication_docs.py",
+      "mode": "100644",
+      "blob_sha": "7627157fb8a37421ad013c84cff38dffa1ad9bd7"
+    },
+    {
+      "path": "tests/test_runtime.py",
+      "mode": "100644",
+      "blob_sha": "6cc13e8e5e93a702c97efc8d899488e1f9b5b0a2"
+    },
+    {
+      "path": "tests/test_safetensors_audit.py",
+      "mode": "100644",
+      "blob_sha": "fa4dfa3dde75396e296aa469513a943c58f2c2f9"
+    },
+    {
+      "path": "tests/test_sanitize_results.py",
+      "mode": "100644",
+      "blob_sha": "5f75949a3f84f72a8ea34bae72e78b7cf38108c2"
+    },
+    {
+      "path": "tools/audit_publication.py",
+      "mode": "100644",
+      "blob_sha": "18ddeff4212d2373f272641d4c0e60488957190f"
+    },
+    {
+      "path": "tools/sanitize_results.py",
+      "mode": "100644",
+      "blob_sha": "5b86ad512e199f07f6627dba0d11eb1d68e8adee"
+    }
+  ]
+}

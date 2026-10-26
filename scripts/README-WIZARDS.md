@@ -4,6 +4,20 @@
 > 대상: `feature/install-uninstall-wizard-20261026`. `main` 및 상위 YSLAB-ai 코드를 변경하지 않는다.
 > 위자드는 기존에 참조 `install.sh`로 설치한 YSLAB 서비스를 **자동 이관하거나 재설치하지 않는다**.
 
+## Git pull → 소스 상태 Manifest 검증
+
+**[실행 명령 전체 보기](VERIFY-FROM-GIT-PULL.md)**: 사용자 Fork origin 확인, 브랜치 pull
+(`--ff-only`), 모든 추적 파일의 blob SHA/mode 검증, 선언형 정책 검증,
+레거시 설치 읽기 전용 점검 순서로 실행합니다.
+
+- `scripts/source-state-manifest.json`: 현재 개발 브랜치에서 커밋한 **소스 파일 전체의 버전 지문**.
+- `scripts/verify-source-state.sh --strict`: Git HEAD 및 작업 디렉터리 파일 해시 검증.
+- `scripts/deployment-manifest.json`: 설치 기본값/정책.
+- `compatibility.json`: 모델 revision, PLE/MTP tensor 호환성.
+
+**검증기 성공 문구 `PASS_SOURCE_ONLY`는 실제 설치/모델 테스트 성공이 아닙니다.**
+기존 YSLAB checkout에서 pull/checkout/레포지터리 재설정을 수행하지 않습니다.
+
 ## 먼저 알아야 할 점
 
 1. Git에 추적되는 선언형 구성은 `scripts/deployment-manifest.json`이고, 모델 출처/텐서 호환성의 유일한 기준은 기존 `compatibility.json`이다.

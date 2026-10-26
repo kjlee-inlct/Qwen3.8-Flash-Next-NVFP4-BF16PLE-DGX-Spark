@@ -1,5 +1,8 @@
 # 운영 시나리오 / 체크리스트
 
+> 신규: [git pull부터 검증 명령 전체](VERIFY-FROM-GIT-PULL.md). 기존 YSLAB 저장소에서 git pull을 실행하지 않고, 소스 해시 검증을 먼저 수행합니다.
+
+
 ## A. 현재 운용 중인 YSLAB 모델을 그대로 관리하기 시작
 
 ```bash

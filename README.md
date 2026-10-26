@@ -4,6 +4,28 @@ A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory
 
 ## Fork-specific installation and management wizards (NOT TESTED)
 
+### Pull and verify the exact source snapshot (read-only)
+
+After checking out the personal fork's `feature/install-uninstall-wizard-20261026`
+branch, follow the complete, safety-guarded commands in
+[Git pull to verification](scripts/VERIFY-FROM-GIT-PULL.md).
+The tracked code/data/docs state is captured by
+[`scripts/source-state-manifest.json`](scripts/source-state-manifest.json);
+`scripts/verify-source-state.sh --strict` compares every tracked file's
+Git blob ID, working-tree bytes, file mode, expected branch and fork origin.
+It does not modify Docker, HF cache, either state directory or the running API.
+
+```bash
+# Run ONLY from the correct personal-fork checkout, AFTER a safe fast-forward pull:
+scripts/verify-source-state.sh --strict
+scripts/manifest.sh validate
+scripts/status.sh                   # read-only; real host evidence is separate
+```
+
+`PASS_SOURCE_ONLY` is **not** a test result for the wizard or its model.
+Do not run deployment/removal on the production Spark on the strength of
+a source integrity check alone.
+
 > **Existing YSLAB installations are protected.** This fork contains new, untested
 > wizard tooling. It must not be used to forcibly replace or uninstall an existing
 > model on a production DGX Spark. There has been **no actual DGX or CI test** of
