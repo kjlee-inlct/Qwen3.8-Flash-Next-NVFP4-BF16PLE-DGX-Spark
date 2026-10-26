@@ -38,6 +38,10 @@ def cache_path() -> Path:
 
 def cli(*args: str) -> str:
     entry = ROOT / "scripts" / "qwen38-dgx-spark"
+    if args and args[0] == "login":
+        # Interactive HF login must be visible on the user's terminal.
+        command([str(entry), *args], capture=False)
+        return ""
     result = command([str(entry), *args])
     return result.stdout.strip()
 

@@ -45,6 +45,8 @@ def policy() -> dict[str, Any]:
                      "uninstall_requires_owned_receipt", "public_bind_requires_external_review"):
             if rules[flag] is not True:
                 raise ValueError(f"required policy disabled: {flag}")
+        if service["image"] == legacy["image"] or service["host_port"] == legacy["port"]:
+            raise ValueError("new deployment must not reuse legacy image or port")
         if legacy["pin"] != origin["initial_pin"] or legacy["port"] != 8000:
             raise ValueError("legacy fingerprint changed")
         if legacy["container"] != "qwen38-flash-orca-uncensored-bf16-mtp":

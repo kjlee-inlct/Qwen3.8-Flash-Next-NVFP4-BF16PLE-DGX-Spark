@@ -13,6 +13,56 @@ tags:
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
+## Fork-specific installation and management wizards (NOT TESTED)
+
+> **Existing YSLAB installations are protected.** This fork contains new, untested
+> wizard tooling. It must not be used to forcibly replace or uninstall an existing
+> model on a production DGX Spark. There has been **no actual DGX or CI test** of
+> the new wizard implementation in this change.
+
+The repository provides two distinct manifests:
+`compatibility.json` pins model/checkpoint revisions and PLE/MTP identities;
+`scripts/deployment-manifest.json` defines the wizard's deployment defaults,
+read-only legacy fingerprint, and safety policies. The wizard's Docker IDs and
+legacy observation are stored separately in a private local receipt and never in Git.
+
+**Already installed using the YSLAB reference scripts?** Keep its model cache,
+image, container, port `8000`, and legacy `~/.local/state/yslab-qwen38-bf16ple`
+untouched. From this **fork checkout**, inspect it first:
+
+```bash
+scripts/manifest.sh validate
+scripts/status.sh
+scripts/doctor.sh
+scripts/install.sh --dry-run
+```
+
+When a read-only legacy fingerprint is fully verified, the wizard can record it
+with `scripts/adopt-legacy.sh --confirm-container-id FULL_ID --yes`. Adoption
+**does not grant stop/remove permission** and does not alter legacy state.
+The upstream runtime uses the *same Docker container name* for the same target,
+so a new wizard activation will deliberately refuse to replace the legacy container
+even if the new service port is different.
+
+For a **new, separate** wizard-managed deployment, `scripts/install.sh` and
+`scripts/uninstall.sh` present a TTY menu; `--prepare-only`,
+`--activate-only`, `--build-only`, `--dry-run`, and explicit managed
+stop/removal modes are available for automation. The new default port is
+`127.0.0.1:18300`, not the reference script's host `0.0.0.0:8000`.
+No automatic `git clone`, model cache migration/purge, legacy takeover,
+or destructive `--replace` is implemented.
+
+**Documentation:** [Wizard guide](scripts/README-WIZARDS.md) ·
+[Legacy installation protection](scripts/LEGACY-INSTALLATION.md) ·
+[Manifest and ownership model](scripts/MANIFEST-SCHEMA.md) ·
+[Operations](scripts/OPERATIONS.md) ·
+[Safety and recovery](scripts/SAFETY-AND-RECOVERY.md) ·
+[Unexecuted test plan](scripts/TEST-PLAN.md) ·
+[Original implementation plan](scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md).
+
+The original upstream recipe instructions below are preserved for reference.
+They do **not** automatically adopt your existing deployment.
+
 ## What this recipe does
 
 The Parameter Lookup Embedding (PLE) is a lookup table. This recipe keeps the
