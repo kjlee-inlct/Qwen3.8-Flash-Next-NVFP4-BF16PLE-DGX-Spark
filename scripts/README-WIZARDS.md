@@ -1,8 +1,18 @@
 # DGX Spark 설치·제거 위자드 사용 안내
 
-> **2026-10-26: 구현 작성 완료, 테스트 미실행(NOT TESTED).**
+> **2026-10-26 사용자 DGX 로그: 모의 36/36 및 전체 156/156 PASS (이전 HEAD).**
+> 실제 새 설치/제거/rollback은 **NOT TESTED**; `main` 브랜치용 새 검증기
+> 테스트는 새 커밋에서 재실행 필요. [검증 증거](VALIDATION-RESULTS-20261026.md).
 > 대상: `feature/install-uninstall-wizard-20261026`. `main` 및 상위 YSLAB-ai 코드를 변경하지 않는다.
 > 위자드는 기존에 참조 `install.sh`로 설치한 YSLAB 서비스를 **자동 이관하거나 재설치하지 않는다**.
+
+## feature/main 공통 소스 상태 검증
+
+`scripts/verify-source-state.sh --strict`는
+`feature/install-uninstall-wizard-20261026` 및 머지된 `main`에서
+작동하도록 검증 기준을 수정했습니다. 두 브랜치 모두 동일한 소스 트리
+blob/mode 일치를 요구하며, 그 밖의 브랜치는 거부합니다.
+머지 과정에서 파일 구성이 변경되면 Manifest를 다시 생성해야 합니다.
 
 ## Git pull → 소스 상태 Manifest 검증
 

@@ -80,3 +80,14 @@ stop/rm/rebuild 없이 모니터링 대상이 로컬 wizard-state에 관찰자�
 등록되었고, 관리 권한은 `OBSERVE_ONLY`입니다.
 
 새 상태 비교 기능과 모의 테스트: [STATUS-COMPARE-AND-HEALTH.md](STATUS-COMPARE-AND-HEALTH.md).
+
+## 2026-10-26 운영자 모의/전체 시험 결과
+
+기능 브랜치 HEAD `3b00eafc44ebf5fa6e16134f30fb4be2679c0978`에서
+사용자가 `scripts/run-mock-tests.sh` **36/36 PASS** 및 전체 단위시험
+**156/156 PASS**를 보고했습니다. 기존 legacy container의 Docker 신원
+6/6 PASS, API Health/Models PASS, 저장된 관찰 정보와의 실제 변동은
+Git HEAD 단독 1건으로 확인되었습니다. 신규 source verifier 회귀 시험은
+해당 실행 범위에 포함되지 않았습니다.
+
+[전체 검증 기록 및 한계](VALIDATION-RESULTS-20261026.md).

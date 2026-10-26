@@ -78,4 +78,7 @@ scripts/uninstall.sh --remove-image --yes
 
 매 작업마다 날짜, 대상 Fork commit SHA, `deployment-manifest.json` 버전, 호스트 Docker 및 드라이버 버전, 작업 명령, 실행 전후 실제 Docker ID, API readiness 결과, 오류 코드/복구 결과를 작성한다. 이 중 계정 토큰과 민감 환경변수는 수집하지 않는다.
 
-현재 브랜치 구현은 **테스트 미실행**, 성능 및 설치 성공 여부 **미확인**으로 기록한다.
+2026-10-26 사용자 제공 로그 기준 **기존 HEAD에서 모의 36/36·전체 156/156 PASS**,
+legacy 6/6 및 API Health PASS입니다. [검증 기록](VALIDATION-RESULTS-20261026.md).
+다만 새로운 소스 검증기 테스트는 재실행이 필요하며 실제 신규 설치·제거
+성공 및 성능은 미확인입니다.

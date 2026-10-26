@@ -1,3 +1,17 @@
+# PR preparation — source verifier on main + operator test evidence (2026-10-26)
+
+- `scripts/verify-source-state.py`: `--strict`는 기능 브랜치와
+  `main`만 허용하면서 source blob/mode 및 origin 검증 유지.
+- `source-state-manifest.json`: 허용 브랜치 명시, 추적 파일 hash 최신화.
+- `tests/test_source_state_release_branches.py`: 임시 Git repo에서
+  main/feature/다른 브랜치, SHA 변경, 내용 변조를 점검하는 회귀 시험 추가.
+- 사용자 제공 기존 HEAD 로그: mock 36/36, full 156/156 PASS. 이는 신규
+  회귀 테스트 실행을 의미하지 않으며, 새 commit에서 재실행 필요.
+- 신규 wizard 설치/제거/rollback 실기기 시험은 아직 미실행.
+- 문서: [VALIDATION-RESULTS-20261026.md](VALIDATION-RESULTS-20261026.md).
+
+---
+
 # Operational monitoring + offline mock tests — 2026-10-26
 
 - `scripts/wizard/monitor.py`에서 saved legacy observation과 live legacy를

@@ -1,8 +1,16 @@
-# 위자드 검증 계획 (아직 실행하지 않음)
+# 위자드 검증 계획 및 운영자 시험 결과 (2026-10-26)
 
-> **NOT TESTED.** 사용자의 지시에 따라 이 변경에서는 테스트, Docker build, 다운로드, 실제 설치/제거 명령을 실행하지 않는다. GitHub의 자동 CI가 실행되더라도 결과를 확인하기 전에는 PASS로 기록하지 않는다.
+> **사용자 제공 DGX 로그:** 이전 기능 브랜치 HEAD
+> `3b00eafc44ebf5fa6e16134f30fb4be2679c0978`에서
+> **위자드 모의 시험 36/36 PASS, 전체 저장소 단위 시험 156/156 PASS**.
+> Source Manifest 109개 파일 통과, Legacy 6/6, API/Health PASS.
+> [상세 검증 증거](VALIDATION-RESULTS-20261026.md).
+>
+> **별개:** 이번 소스 검증기(main 호환) 변경과 신규 회귀 테스트는
+> 아직 재실행 결과가 없으며, 실제 **신규 설치·제거·rollback** 시험은 미실행.
+> 자동 CI 결과도 개별 확인이 필요합니다.
 
-## 새로운 소스 상태 무결성 검사 (사용자 실행용 / 이번 커밋에서 미실행)
+## 소스 상태 무결성 검사 — feature/main 공통
 
 ```bash
 scripts/verify-source-state.sh --strict
@@ -13,9 +21,9 @@ scripts/manifest.sh validate
 `source-state-manifest.json`은 소스 파일 blob SHA/mode/branch/origin을 검증하며,
 **실 DGX 테스트 또는 Docker 동작을 실행하지 않습니다.**
 변경/누락/신규 Git 추적 파일이나 잘못된 Git origin을 fail로 판정하는 사례를
-추후 fake checkout에서 별도 시험합니다. [전체 순서](VERIFY-FROM-GIT-PULL.md).
+`tests/test_source_state_release_branches.py`에 임시 Git checkout 회귀 시험을 추가했습니다. 새 커밋에서 재실행이 필요합니다. [전체 순서](VERIFY-FROM-GIT-PULL.md).
 
-## 정적 검사 예정
+## 정적 검사 (사용자 로그에 문법/공개물 진단 출력 없음)
 
 - `python3 -m py_compile scripts/wizard/*.py`
 - `bash -n scripts/{install,uninstall,status,adopt-legacy,manifest,doctor,prepare,activate,stop}.sh`
@@ -23,7 +31,7 @@ scripts/manifest.sh validate
 - `PYTHONPATH=src:. python3 -m unittest discover -s tests -v`
 - 변경된 README/상위 README 간 문서 계약 및 Git diff 확인
 
-## 오프라인 모의 시험 코드 추가
+## 오프라인 모의 시험 코드 및 확인된 36/36 PASS (이전 HEAD)
 
 - `tests/test_wizard_monitor.py`: 이전 snapshot 비교, identity/Git/Health 변화,
   누락된 snapshot, 간결한 상태/JSON/strict 상태 코드 및 storage 경고.
@@ -35,7 +43,7 @@ scripts/manifest.sh validate
 - `.github/workflows/test.yml`에 이 모의 테스트 단계를 추가합니다.
 - **실 DGX 신규 설치·제거 테스트는 별도**이며 모의 시험 성공과 동일시하지 않습니다.
 
-## 신규 레거시 재검증 시험 계획 (미실행)
+## 신규 레거시 재검증 시험 항목 (기존 모의 시험 포함)
 
 - 설치 당시 PIN이 Git에 남아 있고 origin/HEAD가 개인 Fork로 변경되었지만,
   레거시 `paths`, image/container IDs, labels, port 및 mount가 일치하는 경우
@@ -70,7 +78,7 @@ scripts/manifest.sh validate
 | Readiness | health PASS, models 누락 또는 chat 실패 | READY 불가 |
 | Secrets | stderr/stdout/receipt | 토큰 노출 없음 |
 
-## DGX Spark 실기기 예정
+## DGX Spark 실기기 신규 배포·제거 시험 예정
 
 - 사전 snapshot: legacy state, Docker inspect IDs, port 8000 운영 여부 기록.
 - 읽기 전용 조회/adoption이 기존 API, OpenWebUI, Ollama, 네트워크 설정과 모델 파일을 변경하지 않는지 확인.
@@ -82,4 +90,4 @@ scripts/manifest.sh validate
 
 ## 합격 기준
 
-기존 서비스·가중치 파일 보존이 최우선이다. 테스트 모두 통과하고 실제 DGX의 안전한 신규 배포/제거 시나리오가 확인되기 전에는 `main` 병합 또는 운영 검증 완료로 표시하지 않는다.
+기존 서비스·가중치 파일 보존이 최우선입니다. **소스 코드의 PR 머지**는 변경된 소스 Manifest 및 단위/모의 테스트를 다시 검증한 후 별도로 판단할 수 있지만, 이를 **신규 배포·제거 기능의 실기기 운영 검증 완료**로 표시해서는 안 됩니다. 실제 운영 승인 전에는 신규 설치·제거/rollback 실기기 시험이 필요합니다.

@@ -1,17 +1,43 @@
 # Git Pull부터 상태 Manifest 검증까지 (DGX Spark / Bash)
 
-> 대상 브랜치: `feature/install-uninstall-wizard-20261026`  
+> 허용 브랜치: `feature/install-uninstall-wizard-20261026` 또는 머지 후 `main`  
 > **Git 소스 검증 ≠ 설치·Docker·GPU·모델 추론 검증.**  
-> 모든 명령은 새 **kjlee-inlct Fork checkout**에서 실행합니다. 기존
-> `$HOME/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark` YSLAB checkout에서는
-> `git switch` 또는 `git pull` 하지 마세요.
+> **origin이 개인 `kjlee-inlct` Fork인지 반드시 확인**하세요.
+> 기존 YSLAB 설치 당시 경로와 현재 개인 Fork checkout이 같은 사례가
+> 사용자 DGX에서 확인되었습니다. **폴더 이름만으로 금지/허용하지 말고
+> `git remote get-url origin`을 기준으로 판단**합니다.
+> YSLAB-ai origin checkout에 기능 브랜치를 강제로 적용하지 마세요.
 >
 > 여기에는 **실행 가능한 검증 절차**를 제공하지만, 이 문서 작성/커밋 과정에서
 > DGX 실기기 테스트, Docker 작업 및 위자드 실행은 **실시하지 않았습니다**.
 
+## 머지 후 main 브랜치의 --strict 검증
+
+`--strict`는 feature와 `main`을 **둘 다 허용**하지만,
+다른 브랜치 또는 원격 저장소는 계속 거부합니다.
+아래는 PR 머지가 완료되고 `main`이 갱신된 후에만 실행합니다.
+
+```bash
+git status --short
+git fetch origin main
+git switch main
+git pull --ff-only origin main
+scripts/verify-source-state.sh --strict
+scripts/manifest.sh validate
+```
+
+**주의:** merge/squash로 커밋 SHA만 달라지는 것은 허용되지만,
+`main`에 추적 파일이 추가·수정되면 Manifest가 실제 tree와 달라
+실패합니다. 이는 정상적인 무결성 보호 동작이며, 변경에 맞는
+Manifest를 검토·재생성해야 합니다.
+
+사용자 제공 이전 커밋의 모의 36/36, 전체 156/156 시험 기록은
+[검증 증거](VALIDATION-RESULTS-20261026.md)를 참고하세요.
+이번 새 검증기 테스트는 PR 전에 별도 재실행해야 합니다.
+
 ## 0. 작업 위치 확인 — 기존 설치 보호
 
-터미널에서 **이미 존재하는 Fork checkout**으로 이동하세요. 폴더가 없다면
+터미널에서 **현재 origin이 개인 Fork인 checkout**으로 이동하세요. 폴더가 없다면
 기존 YSLAB repo를 개조하지 말고 Fork를 별도 경로로 새로 clone하십시오.
 
 ```bash

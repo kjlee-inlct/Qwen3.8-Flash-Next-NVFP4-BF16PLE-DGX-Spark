@@ -25,6 +25,9 @@ MANIFEST_RELPATH = "scripts/source-state-manifest.json"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 EXPECTED_ID = "kjlee-qwen38-wizard-source-snapshot"
 EXPECTED_REPO = "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark"
+# Both named branches must retain the identical tracked source inventory.
+# Do not broaden this list to arbitrary branches without reviewed code changes.
+RELEASE_BRANCHES = ("feature/install-uninstall-wizard-20261026", "main")
 
 
 def git(*args: str) -> str:
@@ -89,6 +92,20 @@ def safe_path(name: str) -> Path:
     return path
 
 
+def verification_branches(manifest: dict[str, Any]) -> tuple[str, ...]:
+    """Require the reviewed feature/main release branch allowlist.
+
+    Strict mode checks the *branch*, never a creation-time commit SHA: merge
+    commits and squash merges have different commit IDs but identical content.
+    """
+    configured = manifest.get("allowed_branches")
+    if not isinstance(configured, list) or tuple(configured) != RELEASE_BRANCHES:
+        raise ValueError("source manifest release-branch allowlist mismatch")
+    if manifest.get("branch") != RELEASE_BRANCHES[0]:
+        raise ValueError("source snapshot provenance branch mismatch")
+    return tuple(configured)
+
+
 def source_report(*, strict: bool) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -109,13 +126,14 @@ def source_report(*, strict: bool) -> dict[str, Any]:
             raise ValueError("source manifest must not assert host verification")
         if data.get("validation_at_creation", {}).get("tests") != "NOT_RUN":
             raise ValueError("source manifest must not assert tests passed")
+        branches = verification_branches(data)
         files = data.get("files")
         if not isinstance(files, list) or not files:
             raise ValueError("source manifest has no file inventory")
         manifest_head = git("rev-parse", "HEAD")
         branch_name = git("symbolic-ref", "--quiet", "--short", "HEAD")
-        if strict and branch_name != data.get("branch"):
-            errors.append(f"wrong branch: {branch_name}; expected {data.get('branch')}")
+        if strict and branch_name not in branches:
+            errors.append(f"wrong branch: {branch_name}; allowed: {', '.join(branches)}")
         origin = git("remote", "get-url", "origin")
         clean_origin = origin.removesuffix(".git")
         repo_suffix = "/" + EXPECTED_REPO
@@ -163,8 +181,8 @@ def source_report(*, strict: bool) -> dict[str, Any]:
                 errors.append(str(exc))
         # Untracked cache, local state, logs are intentionally not inspected.
         warnings.append("Untracked/ignored files, model payload, Docker and runtime are NOT verified")
-        if manifest_head != data.get("source_creation_parent_commit"):
-            warnings.append("HEAD is not the original manifest creation parent (expected after commit)")
+        # A merge/squash results in a new commit SHA. Comparing that SHA to a
+        # creation parent is meaningless; source content and modes are checked above.
     except (OSError, ValueError, KeyError, TypeError) as exc:
         errors.append(str(exc))
     return {
@@ -178,7 +196,7 @@ def source_report(*, strict: bool) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--strict", action="store_true",
-                        help="Require the feature branch; always enforce file hashes and fork origin")
+                        help="Require approved feature/main branch; always enforce file hashes and fork origin")
     parser.add_argument("--json", action="store_true", help="Machine-readable report on stdout")
     options = parser.parse_args()
     result = source_report(strict=options.strict)

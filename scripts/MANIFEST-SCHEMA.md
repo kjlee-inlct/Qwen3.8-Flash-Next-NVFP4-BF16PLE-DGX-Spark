@@ -5,7 +5,7 @@
 | 파일 | 목적 | Git 추적 | 수정 주의 |
 | --- | --- | --- | --- |
 | `compatibility.json` | Hugging Face target/revision, PLE/MTP tensor shape/source hash | Yes | **원본 모델 계약. 위자드에서 수정하지 않음** |
-| `scripts/source-state-manifest.json` | Git 브랜치의 추적 파일 전체 blob SHA/mode 스냅샷, 검증기 버전 및 **미시험 상태** | Yes | 자체 해시는 HEAD Git object로 별도 검증. 배포 소유권을 표시하지 않음 |
+| `scripts/source-state-manifest.json` | 추적 파일 blob SHA/mode, feature/main 허용 브랜치와 **분리된 시험 증거** | Yes | 자체 해시는 HEAD Git object로 별도 검증. 배포 소유권을 표시하지 않음 |
 | `scripts/deployment-manifest.json` | 새 설치 기본 profile, image/port, legacy 감지 fingerprint, 안전 정책 | Yes | 코드 검토 후 변경 |
 | `~/.local/state/qwen38-flash-dgx/deployment-state.json` | 새 위자드가 생성한 실제 image/container ID와 legacy 관찰 기록 | **No** | 0600, atomic write, 백업 시 보안 검토 |
 | `~/.local/state/yslab-qwen38-bf16ple/*` | 기존 참조 설치 스크립트의 소유권 ID 기록 | **No** | **읽기 전용**, 새 위자드가 기록/수정 금지 |
@@ -57,6 +57,21 @@ Manifest에 Docker 리소스의 **현재 소유권을 고정 기록하면 안 �
 
 
 ## 5. source-state-manifest.json 운영 및 검증
+
+`branch`는 최초 스냅샷 생성 출처인 기능 브랜치를 유지합니다.
+`allowed_branches`는 `feature/install-uninstall-wizard-20261026` 및
+`main`만 허용하며, 검증기 Python 코드에 고정된 허용 목록과 정확히
+일치해야 합니다. `--strict`는 이 둘에서만 통과합니다.
+Git commit SHA는 merge/squash 시 변경되므로 고정 HEAD가 아닌
+**Git HEAD 트리의 tracked blobs / 파일 모드 / 실제 파일 내용**으로
+검사합니다. 추적 파일이 달라지면 새 Manifest 업데이트가 필요합니다.
+
+`operator_validation` 필드는 사용자가 제공한 **이전 커밋의 실 DGX
+테스트 기록**입니다. `validation_at_creation.tests=NOT_RUN`은
+Manifest 작성 시 GitHub 편집 환경에서 시험을 직접 실행하지 않았다는
+뜻이므로, 두 필드를 혼동하지 않습니다. [검증 기록](VALIDATION-RESULTS-20261026.md).
+
+
 
 `scripts/source-state-manifest.json`은 선언형 정책이 아니라
 **특정 Git source snapshot**을 보존하는 별도 파일입니다.

@@ -13,7 +13,27 @@ tags:
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
-## Fork-specific installation and management wizards (NOT TESTED)
+## Fork-specific installation and management wizards (deployment NOT TESTED)
+
+### Source snapshot on feature branch AND main
+
+`scripts/verify-source-state.sh --strict` now accepts only the reviewed
+`feature/install-uninstall-wizard-20261026` and `main` branches on the
+personal fork. Full Git blob/mode/working-tree verification is **unchanged**.
+A merge/squash commit gets a different SHA, which is allowed **only if**
+its tracked source tree still exactly matches the committed source manifest.
+Any tracked additions/changes in `main` require regenerating the manifest.
+
+**Operator-provided DGX results (2026-10-26, HEAD
+`3b00eafc44ebf5fa6e16134f30fb4be2679c0978`):**
+wizard mock tests **36/36 PASS**, full suite **156/156 PASS**,
+legacy identity 6/6 PASS, API Health/Models PASS, read-only adoption.
+These successful runs cover the **previous commit**. The new source-verifier
+and its added regression tests need their own post-pull execution.
+They do **not** validate actual new wizard install/uninstall/rollback.
+
+[Validation evidence & merge conditions](scripts/VALIDATION-RESULTS-20261026.md) ·
+[Source/manifest workflow](scripts/VERIFY-FROM-GIT-PULL.md).
 
 ### Read-only state comparison, compact status and host Health (2026-10-26)
 

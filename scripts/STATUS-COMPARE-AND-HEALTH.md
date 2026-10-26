@@ -5,6 +5,20 @@
 > HTTP health/models PASS, 읽기 전용 legacy adoption 성공을 확인했습니다.
 > 본 기능의 **모의 테스트 결과와 DGX 실기기 재확인 결과는 구분**해야 합니다.
 
+## 운영자 검증 결과 — 기존 커밋에서 확인됨
+
+2026-10-26 사용자 DGX 로그: 기존 HEAD
+`3b00eafc44ebf5fa6e16134f30fb4be2679c0978`에서
+모의 시험 **36/36 PASS**, 전체 시험 **156/156 PASS**,
+read-only status/Health/모델 목록 PASS. 저장된 snapshot과 변경된 항목은
+Git HEAD 한 개뿐이었으며, 신원/서비스 변경은 0건이었습니다.
+`hf-cache`/view 여유공간 539.75 GiB, MemAvailable 약 14.3 GiB가
+관찰되었습니다. [근거/한계](VALIDATION-RESULTS-20261026.md).
+
+이번 commit에서 추가한 source verifier의 `main` 호환 회귀 시험은
+신규 파일이므로 **이전 156개 시험 결과에 포함되지 않습니다.**
+최종 PR 전에 재실행해 주세요.
+
 ## 기존 checkout에서 업데이트
 
 ```bash
