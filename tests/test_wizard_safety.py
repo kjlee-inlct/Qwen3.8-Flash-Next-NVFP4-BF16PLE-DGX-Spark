@@ -21,7 +21,8 @@ import state
 LEGACY_ID = "a" * 64
 IMG_ID = "sha256:" + "b" * 64
 TARGET = "orca-uncensored-bf16-mtp"
-CONTAINER = "qwen38-flash-orca-uncensored-bf16-mtp"
+LEGACY_CONTAINER = "qwen38-flash-orca-uncensored-bf16-mtp"
+CONTAINER = "qwen38-wizard-orca-uncensored-bf16-mtp"
 
 
 def fake_container(repo: Path) -> dict:
@@ -36,6 +37,14 @@ def fake_container(repo: Path) -> dict:
             {"Source": str(repo / "hf-cache"), "Destination": "/recipe/hf-cache"},
             {"Source": str(repo / "recipe-views"), "Destination": "/recipe/recipe-views"}],
     }
+
+
+def fake_wizard_container(repo: Path) -> dict:
+    """New deployments require explicit name and owner label for deletion."""
+    item = fake_container(repo)
+    item["Name"] = "/" + CONTAINER
+    item["Config"]["Labels"]["ai.kjlee.wizard"] = "kjlee-qwen38-dgx-spark-wizard"
+    return item
 
 
 class FakeLegacyProbeTests(unittest.TestCase):
@@ -59,7 +68,7 @@ class FakeLegacyProbeTests(unittest.TestCase):
             "origin_url": "https://github.com/YSLAB-ai/old.git",
             "pin": "9" * 40, "cache_name": "hf-cache",
             "image": "yslab-qwen38-bf16ple:9492b78c",
-            "container": CONTAINER, "target": TARGET,
+            "container": LEGACY_CONTAINER, "target": TARGET,
             "port": 8000, "bind": "0.0.0.0",
         }}
         self.env = patch.dict(os.environ, {
@@ -156,7 +165,8 @@ class FakeLegacyProbeTests(unittest.TestCase):
 class FakeInstallerSafetyTests(unittest.TestCase):
     def test_install_activate_refuses_existing_legacy_name(self):
         with patch.object(engine, "policy", return_value={"service": {
-            "image": "wizard-image", "host_bind": "127.0.0.1", "host_port": 18300}}), \
+            "image": "wizard-image", "host_bind": "127.0.0.1", "host_port": 18300,
+            "container_prefix": "qwen38-wizard-"}, "legacy": {"container": LEGACY_CONTAINER}}), \
              patch.object(engine, "_runtime_target", return_value={"served_model_name": "qwen3.8"}), \
              patch.object(engine, "load", return_value=state.empty()), \
              patch.object(engine, "_image_owned", return_value=IMG_ID), \
@@ -167,6 +177,38 @@ class FakeInstallerSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(engine.WizardError, "name occupied"):
                 engine.activate(target=TARGET, mtp=2, dry_run=False)
         recipe_cli.assert_not_called()
+        docker_command.assert_not_called()
+
+
+    def test_running_legacy_refuses_second_gpu_instance_without_writes(self):
+        m = {"service": {"image": "wizard-image", "host_bind": "127.0.0.1",
+                         "host_port": 18300, "container_prefix": "qwen38-wizard-"},
+             "legacy": {"container": LEGACY_CONTAINER}}
+        def fake_inspect(name):
+            return {"State": {"Status": "running"}} if name == LEGACY_CONTAINER else None
+        with patch.object(engine, "policy", return_value=m), \
+             patch.object(engine, "_runtime_target", return_value={"served_model_name": "qwen3.8"}), \
+             patch.object(engine, "load", return_value=state.empty()), \
+             patch.object(engine, "_image_owned", return_value=IMG_ID), \
+             patch.object(engine, "container", side_effect=fake_inspect), \
+             patch.object(engine, "require_user"), \
+             patch.object(engine, "cli") as recipe_cli, \
+             patch.object(engine, "command") as docker_command:
+            with self.assertRaisesRegex(engine.WizardError, "legacy service running"):
+                engine.activate(target=TARGET, mtp=2, dry_run=False)
+        recipe_cli.assert_not_called()
+        docker_command.assert_not_called()
+
+    def test_forged_legacy_labels_cannot_authorize_wizard_removal(self):
+        record = state.empty()
+        record["containers"][CONTAINER] = {"id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET}
+        legacy = fake_container(Path("/tmp/fake"))
+        with patch.object(engine, "_runtime_target"), \
+             patch.object(engine, "load", return_value=record), \
+             patch.object(engine, "container", return_value=legacy), \
+             patch.object(engine, "command") as docker_command:
+            with self.assertRaisesRegex(probe.ProbeError, "wizard name/ownership"):
+                engine.stop_or_remove(target=TARGET, operation="remove", dry_run=False)
         docker_command.assert_not_called()
 
     def test_uninstall_requires_wizard_container_receipt(self):
@@ -181,7 +223,7 @@ class FakeInstallerSafetyTests(unittest.TestCase):
         rec = state.empty()
         rec["containers"][CONTAINER] = {
             "id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET}
-        actual = fake_container(Path("/tmp/fake"))
+        actual = fake_wizard_container(Path("/tmp/fake"))
         actual["Id"] = "d" * 64
         with patch.object(engine, "_runtime_target"), \
              patch.object(engine, "load", return_value=rec), \
@@ -247,7 +289,7 @@ class FakeInstallerSafetyTests(unittest.TestCase):
         rec = state.empty()
         rec["containers"][CONTAINER] = {
             "id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET, "ready": True}
-        actual = fake_container(Path("/tmp/fake"))
+        actual = fake_wizard_container(Path("/tmp/fake"))
         with patch.object(engine, "_runtime_target"), \
              patch.object(engine, "load", return_value=rec), \
              patch.object(engine, "container", return_value=actual), \
@@ -265,7 +307,7 @@ class FakeInstallerSafetyTests(unittest.TestCase):
         rec["legacy_observation"] = {"read_only": True, "management_authority": "OBSERVE_ONLY"}
         rec["containers"][CONTAINER] = {
             "id": LEGACY_ID, "image_id": IMG_ID, "target": TARGET}
-        actual = fake_container(Path("/tmp/fake"))
+        actual = fake_wizard_container(Path("/tmp/fake"))
         with patch.object(engine, "_runtime_target"), \
              patch.object(engine, "load", return_value=rec), \
              patch.object(engine, "container", return_value=actual), \

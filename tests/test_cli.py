@@ -224,6 +224,19 @@ class CliTests(unittest.TestCase):
             )
         self.assertEqual(exited.exception.code, 2)
 
+    def test_explicit_wizard_dry_run_name_and_label(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            result = main(
+                ["dry-run", "orca-uncensored",
+                 "--container-name", "qwen38-wizard-orca-uncensored"],
+                manifest_path=ROOT / "compatibility.json",
+            )
+        self.assertEqual(result, 0)
+        self.assertIn("--name qwen38-wizard-orca-uncensored", output.getvalue())
+        self.assertIn("ai.kjlee.wizard=kjlee-qwen38-dgx-spark-wizard",
+                      output.getvalue())
+
 
 class _Result:
     def __init__(self, returncode: int, stdout: str = ""):

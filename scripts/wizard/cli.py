@@ -8,7 +8,7 @@ import sys
 from typing import Any
 from engine import (WizardError, activate, adopt_legacy, build_image,
                     deployment_status, inspect_only, prepare, remove_image,
-                    stop_or_remove)
+                    stop_or_remove, wizard_container_name)
 from model import PolicyError, policy, targets
 from probe import ProbeError, container
 from state import StateError
@@ -92,12 +92,12 @@ def _install(args: argparse.Namespace) -> None:
             else "activate" if args.activate_only else "full")
     # Fail before any expensive build/download if existing target container is present.
     if mode in ("full", "activate") and not args.dry_run:
-        name = f"qwen38-flash-{args.target}"
+        name = wizard_container_name(args.target)
         if container(name) is not None:
-            raise WizardError(
-                f"{name} 컨테이너가 이미 존재합니다. 기존 YSLAB 설치일 수 있으므로 변경하지 않습니다. "
-                "scripts/status.sh / scripts/adopt-legacy.sh로 확인하세요"
-            )
+            raise WizardError(f"{name} 신규 이름이 사용 중입니다. 자동 교체 금지")
+        legacy = container(policy()["legacy"]["container"])
+        if legacy and (legacy.get("State") or {}).get("Status") == "running":
+            raise WizardError("기존 레거시 서비스 실행 중: 단일 GB10 동시 GPU 기동은 승인되지 않았습니다")
     print(f"대상: {args.target}, mode={mode}, MTP={mtp}, cache=현재 Fork/hf-cache")
     if item["mode"] != "mtp_overlay" or args.target != "orca-uncensored-bf16-mtp":
         print("주의: 선택한 프로파일은 기본 qualified MTP2 실행 프로파일이 아닙니다")

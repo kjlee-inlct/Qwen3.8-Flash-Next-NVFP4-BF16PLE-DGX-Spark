@@ -47,6 +47,8 @@ def policy() -> dict[str, Any]:
                      "legacy_api_health_not_ownership_proof"):
             if rules[flag] is not True:
                 raise ValueError(f"required policy disabled: {flag}")
+        if service.get("container_prefix") != "qwen38-wizard-":
+            raise ValueError("wizard namespace must remain isolated")
         if service["image"] == legacy["image"] or service["host_port"] == legacy["port"]:
             raise ValueError("new deployment must not reuse legacy image or port")
         if legacy["pin"] != origin["initial_pin"] or legacy["port"] != 8000:

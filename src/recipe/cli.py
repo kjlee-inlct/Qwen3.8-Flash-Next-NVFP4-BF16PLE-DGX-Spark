@@ -86,6 +86,7 @@ def main(
             options,
             image=args.image,
             unsafe_override=args.unsafe_override,
+            container_name=args.container_name,
         )
         if args.command == "dry-run":
             print(" ".join(command))
@@ -97,6 +98,7 @@ def main(
             target,
             replace=args.replace,
             runner=runner,
+            container_name=args.container_name,
             pre_start=lambda: validate_environment(
                 options,
                 args.unsafe_override,
@@ -136,6 +138,7 @@ def _build_parser() -> argparse.ArgumentParser:
     runtime_options.add_argument("--port", type=int, default=18_300)
     runtime_options.add_argument("--bind", default="127.0.0.1")
     runtime_options.add_argument("--mtp", type=int, default=0)
+    runtime_options.add_argument("--container-name", help="Only the exact qwen38-wizard-<target> name")
     runtime_options.add_argument("--unsafe-override", action="store_true")
     for command, help_text in (
         ("serve", "audit and serve a pinned local checkpoint"),

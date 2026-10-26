@@ -57,7 +57,8 @@ def exact_id(value: str) -> bool:
 
 
 def validate_container(actual: dict[str, Any], *, expected_id: str, target: str,
-                       image_id: str | None = None) -> None:
+                       image_id: str | None = None, expected_name: str | None = None,
+                       wizard_owned: bool = False) -> None:
     labels = (actual.get("Config") or {}).get("Labels") or {}
     if (not exact_id(expected_id) or actual.get("Id") != expected_id or
             labels.get("ai.yslab.recipe") != RECIPE_LABEL or
@@ -65,6 +66,12 @@ def validate_container(actual: dict[str, Any], *, expected_id: str, target: str,
         raise ProbeError("container ID/recipe/target ownership mismatch")
     if image_id is not None and actual.get("Image") != image_id:
         raise ProbeError("container image ID differs from recorded deployment")
+    if wizard_owned:
+        # 기존 레거시와 공유되는 recipe/target label만으로는 삭제 권한이 없다.
+        if (expected_name != f"qwen38-wizard-{target}"
+                or actual.get("Name") != f"/{expected_name}"
+                or labels.get("ai.kjlee.wizard") != "kjlee-qwen38-dgx-spark-wizard"):
+            raise ProbeError("dedicated wizard name/ownership label mismatch")
 
 
 def image_in_use(image_id: str) -> bool:
