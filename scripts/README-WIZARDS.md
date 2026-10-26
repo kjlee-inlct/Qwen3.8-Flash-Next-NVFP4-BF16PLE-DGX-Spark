@@ -1,5 +1,7 @@
 # DGX Spark 설치·제거 위자드 사용 안내
 
+**다음 세션 인수인계:** [SESSION-HANDOFF-PROMPT.md](../docs/SESSION-HANDOFF-PROMPT.md)에서 최종 GitHub PR #1 병합, DGX 163개 전체 테스트 통과 기록, 미완료 실제 설치/제거 시험 및 GitHub 직접 작업 규칙을 확인하세요. 아래 일부 이전 시점 문구는 당시 기록입니다.
+
 > **2026-10-26 사용자 DGX 로그: 모의 36/36 및 전체 156/156 PASS (이전 HEAD).**
 > 실제 새 설치/제거/rollback은 **NOT TESTED**; `main` 브랜치용 새 검증기
 > 테스트는 새 커밋에서 재실행 필요. [검증 증거](VALIDATION-RESULTS-20261026.md).
