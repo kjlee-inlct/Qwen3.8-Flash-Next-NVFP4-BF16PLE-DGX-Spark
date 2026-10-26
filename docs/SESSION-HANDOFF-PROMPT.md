@@ -384,3 +384,30 @@ non-strict Source Manifest 검사는 이때 전체 blob/mode/origin/working-tree
 계속 검증하고 브랜치 이름 검증만 하지 않는다. `--strict`에서는 detached
 HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두 경우를
 검증한다. CI 실행 결과를 확인하기 전까지 CI_NOT_VERIFIED다.
+
+
+---
+
+## 10. 2026-10-27 llama-benchy pre-blazux Baseline 확정
+
+> 이 절은 이전 2026-10-26 운영·CI 상태보다 늦은 **사용자 제공 DGX 실측**이다. 구체적인 원본·12조건 표·해시·재현법은 [Baseline 보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md)를 먼저 참조한다.
+
+### 완료된 사실
+
+- 목표: blazux 최적화 적용 **전에**, 실제 운영 모델의 동일 조건 성능 기준선을 저장하여 후속 동일 모델 A/B에 사용. llama-benchy Fork를 새로 개발하는 것이 아니라 기존 Qwen 개인 저장소에 측정 결과를 백업한다.
+- 원본 벤치마크 도구: [eugr/llama-benchy](https://github.com/eugr/llama-benchy), commit SHA **e9be344578cec17745066b220798b80a0d2686d3**, 버전 **0.4.1.dev1+ge9be34457**. DGX 독립 설치 경로는 **$HOME/Workspace/llm/llama-benchy-runner**다. 별도의 분석 checkout의 날짜형 baseline Git 태그가 hatch-vcs 빌드를 막았으며, --no-tags clone + 공식 v0.4.0 태그만 둔 runner의 uv sync는 사용자 로그에서 PASS였다.
+- 기존 운영: 컨테이너 **qwen38-flash-orca-uncensored-bf16-mtp**, Docker tag **yslab-qwen38-bf16ple:9492b78c**, API **http://127.0.0.1:8000/v1**, 모델 ID **qwen3.8-flash-next-orca-uncensored-bf16-mtp**, 최대 context 메타데이터 **262144**. 컨테이너/Image 전체 ID는 비공개로 유지.
+- Tokenizer SHA-256 **06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523**. 실행 중인 모델과 Docker mount의 recipe-view tokenizer.json에서 사용자 확인.
+- 2026-10-27 07:14 KST 단일 Smoke Test PASS: PP256 117.28 tok/s, TG32 35.59 tok/s, peak 36.74 tok/s, TTFR 1900.90 ms. 단일 1회 결과 ± 0.00은 안정성의 증거가 아니다.
+- **정식 Baseline 완료**: DGX 로그 PASS: baseline completed. 원본 디렉터리 **$HOME/Workspace/llm/bench-results-staging/20261026T221925Z-pre-blazux/**. 시작 2026-10-26 22:19:25 UTC, 결과 timestamp 2026-10-26 22:34:42 UTC. PP 2048/8192 × TG 128/256 × Depth 0/4096/16384, concurrency 1, 각 warmup 1회 후 3회 측정 = **12 조건/36 본 측정**. generation latency, exact-tg, NumPy seed 20261027, 총 토큰 시계열 포함.
+- 원본 result.json SHA-256 **25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf**, 원본 environment.json SHA-256 **76c94d48aa4597bd09e9973b6f5cba118db0009062f592e4a764398443f97eb6**. 첨부된 두 파일은 사용자의 SHA256SUMS와 **각각 일치**. 그 목록의 나머지 7개 파일은 사용자가 업로드하지 않았으므로 별도 무결성 검증하지 못했다.
+- 정식 결과는 results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json에 **원본 그대로** 보존한다. 전체 컨테이너/Image ID를 가진 원본 environment.json은 공개하지 않고 environment.public.json과 원본 해시만 기록한다.
+- 이전 docs/BENCHMARKS.md의 MTP2 44.23 end-to-end completion tok/s와 이번 llama-benchy TG 값은 측정 구간과 산식이 다르므로 직접 비교 금지.
+
+### 현 작업 범위와 다음 순서
+
+- 이번 PR 범위: [동일 조건 재실행 Bash 스크립트](../scripts/benchmark/run-llama-benchy.sh), 원본 result.json, 정제된 환경·원본 체크섬, [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md), 이 인수인계 문서, Source Manifest의 전체 path/mode/blob SHA 동기화.
+- **사용자 요청에 따라 신규 스크립트 실행·회귀시험 생략(NOT_RUN)**. 과거 DGX에서 성공한 수동 측정이 새 Bash 스크립트 자체의 실행 검증을 뜻하지 않는다. CI도 실행 결과 없으면 CI_NOT_VERIFIED.
+- 실행 스크립트는 원본 도구 SHA/Tokenizer SHA/서빙 모델을 검사하고 별도 staging 디렉터리에 JSON/진행 이벤트/로그/환경/메모리·GPU 상태/체크섬을 저장한다. Docker 이미지·컨테이너·운영 상태·model cache·기존 영수증에 쓰기 없음; API를 통한 추론 부하는 실제 발생한다. 개인 식별정보·프롬프트/응답 내용이 포함된 RAW 로그를 자동 공개하지 않는다.
+- 다음 단계: 이번 PR을 검토하고 main에 병합한 후 최신 main에서 **별도 blazux 적용 계획 브랜치** 시작. 미리 만든 docs/BLAZUX-VLLM032-ADOPTION-PLAN.md 초안은 그 브랜치에만 반영한다. 외부 blazux 분석 SHA **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa**.
+- 비교 전 제한: Orcarouter compressed-tensors/ BF16 PLE/ BF16 MTP 31개 overlay와 blazux ModelOpt 전용 hybrid/graft는 직접 호환이 검증되지 않았다. blazux 기본 스크립트의 docker rm -f 및 포트 18300 충돌 위험. 기존 레거시 stop/rm/restart 금지, 단일 GB10 두 대형 GPU 서버 동시 기동 금지. vLLM 0.32 실기기 전환과 성능 개선 주장은 아직 미검증.
