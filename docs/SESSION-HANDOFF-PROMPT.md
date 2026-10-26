@@ -333,3 +333,11 @@ PR #1 MERGED, `main=bdc84eae28b7ce49ea2dde3c3923cfdf60382cf6`, 사용자 DGX 기
 7. 사용자 제공 DGX 기능 HEAD `25949fd7...`의 163/163, 36/36, 7/7, legacy 6/6, API PASS는 **과거 스냅샷**이다. 새 커밋과 실제 DGX에 결과를 자동 승계하지 않는다.
 8. UNKNOWN 또는 실패 시 임의 복구/강제 삭제 대신 원인별 읽기 전용 조사; status/health는 ownership 증거와 분리한다.
 9. 종료 시 새 브랜치·HEAD·tree·Manifest 추적 수·테스트 환경별 실제 결과·PR/merge/CI·DGX 미완료·blocker를 문서와 답변에 정확히 반영한다.
+
+### PR checkout detached HEAD 안전 검사
+
+GitHub Actions의 pull_request checkout은 detached HEAD일 수 있다.
+non-strict Source Manifest 검사는 이때 전체 blob/mode/origin/working-tree를
+계속 검증하고 브랜치 이름 검증만 하지 않는다. `--strict`에서는 detached
+HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두 경우를
+검증한다. CI 실행 결과를 확인하기 전까지 CI_NOT_VERIFIED다.

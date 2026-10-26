@@ -82,6 +82,17 @@ class RuntimeTests(unittest.TestCase):
                                      cache, RuntimeOptions(),
                                      container_name="qwen38-flash-orca-uncensored")
 
+    def test_wizard_start_rejects_replace_without_docker(self):
+        from recipe.runtime import start_container
+        from unittest.mock import Mock
+        name = "qwen38-wizard-orca-uncensored"
+        runner = Mock()
+        with self.assertRaisesRegex(RuntimeConfigurationError, "replace denied"):
+            start_container(["docker", "run", "-d", "--name", name],
+                            orca_target(), replace=True,
+                            runner=runner, container_name=name)
+        runner.assert_not_called()
+
     def test_command_is_loopback_read_only_and_non_restarting(self):
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)

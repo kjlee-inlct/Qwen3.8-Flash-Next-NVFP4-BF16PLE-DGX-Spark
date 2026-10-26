@@ -150,7 +150,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "6840d679201a1e52b6479de0924af7454022db59"
+      "blob_sha": "8ec112ecc20305da5d856d0e8a23d86e6af7a376"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -420,7 +420,7 @@
     {
       "path": "scripts/verify-source-state.py",
       "mode": "100755",
-      "blob_sha": "d1c9b804c5468d7cfc2c88faeea09023723a8274"
+      "blob_sha": "b0c04b4da7cc257427584745913c18eaf3af35d8"
     },
     {
       "path": "scripts/verify-source-state.sh",
@@ -600,7 +600,7 @@
     {
       "path": "tests/test_runtime.py",
       "mode": "100644",
-      "blob_sha": "11ddadc4741a978fa3f09bde7731c7240f85272f"
+      "blob_sha": "fdc64ccfbe93a9cb062218c33fcdde41bbe87a4e"
     },
     {
       "path": "tests/test_safetensors_audit.py",
@@ -615,7 +615,7 @@
     {
       "path": "tests/test_source_state_release_branches.py",
       "mode": "100644",
-      "blob_sha": "0cab78a0c1135201a4551bced47436c47740bda9"
+      "blob_sha": "bc8240a7299211ec34d112b272bc56a4500c3323"
     },
     {
       "path": "tests/test_wizard_monitor.py",
