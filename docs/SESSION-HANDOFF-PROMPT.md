@@ -411,3 +411,16 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 - 실행 스크립트는 원본 도구 SHA/Tokenizer SHA/서빙 모델을 검사하고 별도 staging 디렉터리에 JSON/진행 이벤트/로그/환경/메모리·GPU 상태/체크섬을 저장한다. Docker 이미지·컨테이너·운영 상태·model cache·기존 영수증에 쓰기 없음; API를 통한 추론 부하는 실제 발생한다. 개인 식별정보·프롬프트/응답 내용이 포함된 RAW 로그를 자동 공개하지 않는다.
 - 다음 단계: 이번 PR을 검토하고 main에 병합한 후 최신 main에서 **별도 blazux 적용 계획 브랜치** 시작. 미리 만든 docs/BLAZUX-VLLM032-ADOPTION-PLAN.md 초안은 그 브랜치에만 반영한다. 외부 blazux 분석 SHA **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa**.
 - 비교 전 제한: Orcarouter compressed-tensors/ BF16 PLE/ BF16 MTP 31개 overlay와 blazux ModelOpt 전용 hybrid/graft는 직접 호환이 검증되지 않았다. blazux 기본 스크립트의 docker rm -f 및 포트 18300 충돌 위험. 기존 레거시 stop/rm/restart 금지, 단일 GB10 두 대형 GPU 서버 동시 기동 금지. vLLM 0.32 실기기 전환과 성능 개선 주장은 아직 미검증.
+
+---
+
+## 11. blazux vLLM 0.32 적용 계획 브랜치 — 2026-10-27
+
+> 별도 후속 계획. 기존 baseline 문서와 레거시 운영/소유권 규칙을 유지한다.
+
+- [Baseline PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)는 **MERGED**. main merge SHA: **2847e39b4131eb8aff78bf86ffce98892401722a**. 사용자 DGX에서 완료한 12조건·36회 pre-blazux 원본 JSON과 해시, 재실행 Bash, Baseline 보고서가 main에 보존됐다.
+- 후속 계획·분석 브랜치: **feature/blazux-vllm032-evaluation-20261027** (위 main merge SHA에서 분기). 첫 커밋 범위는 **docs/BLAZUX-VLLM032-ADOPTION-PLAN.md** 신규 계획서 및 이 핸드오프/Source Manifest 갱신만. vLLM 0.32 포팅, 이미지 빌드, 컨테이너 작업, 실 A/B는 **NOT_STARTED**.
+- 원본 blazux 분석 대상 GitHub: [blazux/qwen3.8-Flash-DGX](https://github.com/blazux/qwen3.8-Flash-DGX) pin **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa**. 모델 로더/PLE mmap BF16, MTP 31 텐서, compressed-tensors, prefix-cache/SSM, draft vocab, tool parser 등을 Gate별 검증한다.
+- **절대 보호:** 레거시 Docker stop/rm/restart/overwrite, HF cache/recipe views/mount/receipt 변경, 포트 8000/18300 무단 점유, 단일 GB10에서 레거시 실행 중 신규 대형 GPU 모델 병렬 기동 금지.
+- Baseline은 실행 및 원본 해시 2개 대조까지 완료됐지만 **재실행 Bash 신규 코드 자체의 테스트는 사용자 요청으로 NOT_RUN**. GitHub Actions 실행 0건/CI_NOT_VERIFIED, 다른 7개 로컬 로그 파일 해시 미대조, 입력 코퍼스/샘플링 세부 추가 확인 필요. 신규 브랜치 strict allowlist 제한은 변함없다.
+- 다음 세션은 현 최신 main/이 브랜치 HEAD를 확인하고 [계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md)의 **Gate 1 소스 함수/데이터 계약 비교**를 이어서 수행한다. 커밋·PR·머지·실 DGX 작업은 각각 수행/승인된 범위를 구별한다.
