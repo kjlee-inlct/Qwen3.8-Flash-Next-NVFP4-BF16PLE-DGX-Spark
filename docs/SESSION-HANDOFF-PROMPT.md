@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX pinned blazux source-preflight 실제 PASS 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 Dependency Trace (DGX 실행 전) 최신 진행 스냅샷을 우선한다. 직전 223-test DGX PASS는 유지한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 5 DGX pinned blazux Patch Preflight 실측 PASS — 최신 스냅샷
+## 2026-10-27 Track A Phase 5 Dependency Trace 통합 추가 — 최신 진행 (DGX 실행 전)
+
+- **확정된 직전 DGX 증거:** 코드 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`에서 Source 152/152 PASS, Mock 38/38, unittest **223/223 XFAIL0**, pinned blazux 5계열 source preflight PASS, **적용 승인 0건**. 해당 결과는 [Phase5 DGX 실측 정본](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md). 이번 작업 출발한 문서 전용 HEAD `e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6`는 DGX에서 재실행된 HEAD가 아니다.
+- **같은 Phase 5에서 신규 실행 준비:** `src/phase5_dependency_trace.py`에서 설치 vLLM을 import하지 않고 Source AST의 계산 RHS·assignments·calls·redacted return shapes 조사. Mamba add/preprocess/postprocess, Scheduler __init__/prefix hit, ParserEngine/Qwen3/Streaming Parser/Responses, NVIDIA MTP `lm_head`/`logits_processor`/weights 및 PLE forward를 통합 출력. `config`+`v1`의 `mamba_block_size` 대입(STORE)/사용(LOAD) 위치 탐색; **스캔 한계·symlink·unreadable·누락은 fail-closed 성격으로 명시**.
+- **검증 구성:** 합성 Python source만 사용하는 `tests/test_blazux_phase5_dependency_trace.py` **10개**, `scripts/phase5-check-offline.sh` AST 포함. 현재 목표 전체 unit **233 tests XFAIL=0**이며 **아직 DGX NOT_RUN**. Source Manifest 예정 **156개** (전 153 + 새 3). 단위시험/ABI 결과를 미리 PASS라고 주장 금지.
+- **재현 문서:** [Phase5 Source Dependency Trace](BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md). 기존 Phase5 전용 clean checkout에서 ff-only로 최신 SHA 확인 후 **격리된 CPU-only, network=none, --read-only, runc** 컨테이너 한 번만 실행. 기존 운영 Docker, MTP 원본 31 BF16 텐서, 95GiB PLE/weights, GPU·ports·HF cache/receipt 절대 변경하지 않는다.
+- **중요 차단:** `mamba_block_size`는 실제 config 객체 런타임 공급자/LCM/slot restore 확인 전 Mamba 수정 금지. Parser/Responses의 streamed tool args/terminal error는 호출명 AST만으로 판단 불가. MTP draft vocab은 공유 head/dtype/TP/tokenizer/acceptance 및 한국어·Tool Calling 품질 미확인으로 **기본 적용 금지**. 이 조사기는 **SOURCE_EVIDENCE_ONLY / APPLY_APPROVED=0**, 후속 source/CPU test는 동일 Phase5, GPU/서빙/Track B는 사용자 별도 승인.
+- **보호 정책:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` immutable. PR·Merge 지금 불필요, 허용 시 Phase5→Phase4 *비병합 Draft*만 검토, `main` PR/merge/cherry-pick/rebase/squash/sync 영구 금지.
+
+---
+
+## 2026-10-27 Track A Phase 5 DGX pinned blazux Patch Preflight 실측 PASS — 이전 확정 스냅샷
 
 - **소스 코드 실측 HEAD:** `feature/blazux-phase5-correctness-mtp-offline@2c7c6896430be0d9eada656f17edf97d9c5f4d3f`; 사용자 DGX 출력에서 **152/152 Source Manifest, 38/38 Wizard Mock, unittest 223/223 XFAIL=0, AST 및 Source-only patch preflight PASS**. 마지막 `PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL`, `PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED`. 이 후속 보고서/manifest 문서 커밋은 **DGX에서 시험한 소스 HEAD가 아님**.
 - **patch-family 실측 상태 5개:** Mamba/Scheduler=`SOURCE_PREIMAGE_CANDIDATE_UNSAFE_TO_APPLY`; Tool Argument Schema, Tool Literal Marker=`MULTI_FILE_PATCH_PREREQUISITES_UNVERIFIED`; Responses terminal=`PROTOCOL_AND_SERVING_COMPATIBILITY_UNVERIFIED`; reduced MTP draft vocab=`MTP_COMPUTE_LOGITS_HOOK_CANDIDATE_NOT_APPROVED`. **APPLY_APPROVED=0, runtime/ABI correctness=NOT_VERIFIED**. 어떤 상태도 blazux 최적화를 운영 이미지에 적용한 것이 아님.

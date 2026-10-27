@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase 5 pinned blazux patch preflight DGX 실측 PASS (최신)
+## 2026-10-27 Phase 5 읽기 전용 실제 Source Dependency Trace 합본 (DGX 실행 전)
+
+- 기존 **Patch Preflight DGX 실측 223/223 PASS/XFAIL0**는 테스트 코드 `2c7c6896...`에만 귀속. 이제 같은 Phase5에서 **Mamba/Scheduler block field 생성/LCM, Parser/Responses 호출관계, NVIDIA MTP lm_head/weight sharing**을 Source AST 기반으로 더 구체적으로 조사한다. 새 Phase 생성 안 함.
+- 새 [Phase5 Dependency Trace 실행 문서](BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md): `src/phase5_dependency_trace.py` (import-free, read-only `config`+`v1` scope Mamba STORE/LOAD; Mamba/Scheduler/Parser/Responses/MTP/PLE method expression/AST trace), `tests/test_blazux_phase5_dependency_trace.py` 신규 10개와 통합 AST Gate. **목표 unittest 233/XFAIL0, 새 DGX 실측 NOT_RUN**.
+- 실제 코드를 포함하는 patch 적용 권한은 별개: source expression/assignment/call graph는 **semantic ABI/runtime correctness가 아님**. 동적 필드·dependency·GPU·real model·MTP acceptance·tool parser SSR/HTTP는 미검증. 현재 blazux patch-family 실제 적용 승인 0건.
+- `main`·P0·Phase1~4 불변, 현재 PR/Merge 불필요, blazux `main` PR/merge/cherry-pick/rebase/squash/sync 영구 금지. 운영 Docker/model/GPU/weights/ports/cache/receipts 미변경.
+
+## 2026-10-27 Phase 5 pinned blazux patch preflight DGX 실측 PASS (이전 확정 상태)
 
 - 실제 DGX 소스 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`, Source Manifest **152/152 PASS**, Wizard Mock **38/38**, unittest **223/223 XFAIL=0**. 패치 **소스 전제조건 점검** 종료, 설치 엔진의 기능 패치/출력 비교/성능 측정 **미실행**. [실측 정본](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md).
 - Mamba/Scheduler의 legacy source preimage anchor와 NVIDIA MTP `compute_logits` 훅 후보 확인. 그러나 cache_config.mamba_block_size 실제 공급/LCM/state restore, Parser/Responses 다중파일 및 새 helper 의존성, MTP shared `lm_head`/dtype/vocab/acceptance 미검증. **다섯 계열 적용 승인 0**.

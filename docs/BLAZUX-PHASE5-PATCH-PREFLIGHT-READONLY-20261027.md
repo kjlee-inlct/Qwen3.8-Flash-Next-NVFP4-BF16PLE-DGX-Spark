@@ -5,6 +5,12 @@
 >
 > 비교 기준: blazux [PIN `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa). 동일 Phase5 브랜치 `feature/blazux-phase5-correctness-mtp-offline` 유지; PR/Merge·운영 수정 없음.
 
+## 동일 Phase 5의 다음 Dependency Trace — 신규 작업 (DGX 실행 전)
+
+- 직전 사용자 DGX 실측은 Source 152/152, unit 223/223 XFAIL0의 실제 `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`; 이를 보고한 docs-only HEAD는 `e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6`.
+- 다음 동일 브랜치 Gate는 [Mamba/Scheduler·Parser/Responses·MTP AST Dependency Trace](BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md). 새 코드 `src/phase5_dependency_trace.py` 및 신규 10개 stdlib fixture를 포함해 **233 tests XFAIL0 예상**, 실제 새 DGX 실행은 아직 NOT_RUN.
+- `mamba_block_size`의 source STORE/LOAD는 runtime cache field provisioning을 보증하지 않고, Parser/Responses AST 호출관계는 실제 SSE/Chat tool 실행이 아니며, MTP `lm_head` 대입은 같은 tensor storage alias·TP shard shape를 보증하지 않는다. **어떤 blazux source patch도 바로 적용하지 않는다**.
+
 ## 2026-10-27 DGX 실제 Patch Preflight 결과 — 최초 준비 상태보다 우선
 
 - **사용자 DGX 실측 정확한 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`**: Source Manifest 152/152 PASS(전후), Wizard mocks 38/38 PASS, unittest 223/223 PASS, XFAIL=0, AST 검사 PASS, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, `PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL`, `PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED` PASS.

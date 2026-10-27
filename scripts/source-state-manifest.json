@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 153,
+  "tracked_file_count": 156,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -92,7 +92,8 @@
     "2026-10-27 Phase5 same-branch ABI triage extension from immutable prior Phase5 docs SHA f3e5fa32a30cb258acd66a9700c6db2a78eb71cc: added safe read-only preview vLLM source/AST SHA256 inventory under installed root, bounded priority scan for relocated Qwen4Exp/Qwen38 MTP/PLE file candidates and class compute_logits method names/args, Mamba/Scheduler block-size, Tool Parser/Responses pinned blazux anchor hints and previous DGX SHA drift; 7 additional stdlib synthetic fixture regression tests (215 unit tests expected), AST gate expansion, runbook/adoption/handoff. This commit is NOT DGX tested; existing Phase5 208-test user evidence remains tied to 01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94. ABI signature hints are NOT actual runtime compatibility. No vLLM patch/GPU/operational changes. Main and all prior phases unchanged, no PR/Merge.",
     "2026-10-27 Phase5 DGX user source triage stdout for exact tested code HEAD 9e2d1647357938f6d465eb9b3ce473d03e38e779: Source Manifest 148/148 PASS, Wizard mock 38/38, unittest 215 OK XFAIL=0, source AST and offline PASS, read-only installed vLLM AST/hash report ending PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED. Installed NVIDIA Qwen3.8 MTP and PLE sources are at models/qwen3_8_flash_next/nvidia/mtp.py and ple_layer.py (old ABSENT_OR_RELOCATED was path assumption), AMD counterparts present separately. Mamba and Scheduler blazux legacy block-size source anchor hints present; Parser/Streaming/Responses patch helper hints missing. Model search CANDIDATE_LIMIT_REACHED (536 visited, 43 matched, 32 displayed); relevant Qwen3.8 Nvidia files found but full inventory incomplete. These are SOURCE ONLY candidate findings, NOT ABI/runtime/bug/patch safety certification. GPU/TPS/CI untested. Docs-only 149-file Manifest commit new SHA NOT DGX retested. main/P0/Phase1-4 refs immutable, no PR/merge.",
     "2026-10-27 Phase5 same-branch pinned blazux patch preflight extension based on Phase5 docs-only HEAD e3ea43e95cb444197400389b0dfe3064a3e9f879. Source-only 12 installed preview Python files fingerprint/anchor counts/function AST structure/signature, conservative 5-patch-family prerequisite classifications for Mamba/Scheduler, Tool Argument Schema, Literal Marker, Responses and MTP reduced draft vocabulary. 8 new stdlib synthetic fake-tree regression tests, total expected unittest 223 XFAIL=0; actual new DGX run NOT_DONE. Import-free read-only CPU-only source scanning, no patch/engine/weight/GPU, no automatic approval. Previous user DGX 215-test evidence belonged only to tested SHA 9e2d1647357938f6d465eb9b3ce473d03e38e779. Preserve main/P0/Phase1-4 immutable, no PR/merge.",
-    "2026-10-27 user DGX patch preflight actual tested source HEAD 2c7c6896430be0d9eada656f17edf97d9c5f4d3f: Source 152/152 twice, Wizard Mock 38/38, unittest 223 OK XFAIL=0, AST PASS, PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL and final PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED. All 12 installed vLLM preview source files parsed and SHA/AST fingerprints recorded; Mamba/Scheduler legacy block expressions present but cache_config.mamba_block_size not observed; Parser/Responses multi-file patch prerequisites missing/unverified; NVIDIA MTP compute_logits/load_weights candidate not approved; five patch families zero approvals. GPU, actual prefix hit/tool/Responses, MTP acceptance, real model inference/TPS and CI not verified. This docs-only report/Gate5/adoption/handoff+153-file source Manifest commit is NOT retested on DGX and has its own SHA. Main/P0/Phase1-4 unchanged, no PR/merge."
+    "2026-10-27 user DGX patch preflight actual tested source HEAD 2c7c6896430be0d9eada656f17edf97d9c5f4d3f: Source 152/152 twice, Wizard Mock 38/38, unittest 223 OK XFAIL=0, AST PASS, PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL and final PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED. All 12 installed vLLM preview source files parsed and SHA/AST fingerprints recorded; Mamba/Scheduler legacy block expressions present but cache_config.mamba_block_size not observed; Parser/Responses multi-file patch prerequisites missing/unverified; NVIDIA MTP compute_logits/load_weights candidate not approved; five patch families zero approvals. GPU, actual prefix hit/tool/Responses, MTP acceptance, real model inference/TPS and CI not verified. This docs-only report/Gate5/adoption/handoff+153-file source Manifest commit is NOT retested on DGX and has its own SHA. Main/P0/Phase1-4 unchanged, no PR/merge.",
+    "2026-10-27 Phase5 same-branch dependency-trace followup (parent docs-only e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6): import-free read-only AST analysis of Mamba/Scheduler block division and cache field provider STORE/LOAD (bounded config+v1 search), Parser/Qwen3/Streaming/Responses static calls and redacted return shapes, NVIDIA MTP lm_head/logits_processor assignment and compute_logits/load_weights, PLE forward. Added 10 synthetic stdlib fixture tests (233 total expected XFAIL0), AST gate, isolated DGX runbook, adoption/handoff and 156-entry full Manifest. New HEAD is NOT DGX tested; previous true user DGX PASS 223/223 and source 152 belonged ONLY to tested source SHA 2c7c6896430be0d9eada656f17edf97d9c5f4d3f. No runtime patches or approvals, no GPU/model/HTTP/TPS/CI. Main/P0/Phase1-4 refs unchanged; no PR/Merge."
   ],
   "files": [
     {
@@ -206,6 +207,11 @@
       "blob_sha": "73ff5aa53d5702551b9306b64d58562ffa22718e"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md",
+      "mode": "100644",
+      "blob_sha": "f86731b524dcfe0ac0377e1502ec914109cbf2dc"
+    },
+    {
       "path": "docs/BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md",
       "mode": "100644",
       "blob_sha": "a5c76d384ef498c5e17164da25f94fce2dccb479"
@@ -223,7 +229,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-PATCH-PREFLIGHT-READONLY-20261027.md",
       "mode": "100644",
-      "blob_sha": "bda38d4b8f027fa8df18462484fe271adb112868"
+      "blob_sha": "fce157c31be8ccad12b1d4676f2f4141e8cca2da"
     },
     {
       "path": "docs/BLAZUX-PHASE5-PREVIEW-ABI-READONLY-TRIAGE-20261027.md",
@@ -233,7 +239,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "62f3049cd54e58be426bead16533d83fd4ddea71"
+      "blob_sha": "4b1f8017256c9e590c38d84fd3fcbc2ee956b4b9"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -248,7 +254,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "94e54ce81a3b547ce9cfb467b126a1664ed2d33f"
+      "blob_sha": "faac0ac001ed97454ac16697fef9b0da6073bb28"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -488,7 +494,7 @@
     {
       "path": "scripts/phase5-check-offline.sh",
       "mode": "100755",
-      "blob_sha": "a43e74500ae6b23e64011743b85a76c7fc8254ef"
+      "blob_sha": "463d139da70cc1a87820c21da8d0e7dd90d4ba8d"
     },
     {
       "path": "scripts/prepare.sh",
@@ -641,6 +647,11 @@
       "blob_sha": "463638adc9be5a984927a7dca24626c8b515f800"
     },
     {
+      "path": "src/phase5_dependency_trace.py",
+      "mode": "100644",
+      "blob_sha": "9cd9c3b839d520f4df033520027e2e881c6512a2"
+    },
+    {
       "path": "src/phase5_offline_contracts.py",
       "mode": "100644",
       "blob_sha": "0f63fe6b4bf94918fc65981733a156788b897641"
@@ -759,6 +770,11 @@
       "path": "tests/test_blazux_phase5_contracts.py",
       "mode": "100644",
       "blob_sha": "a80c3088daebc3b24ad001b0f2765840c97f6508"
+    },
+    {
+      "path": "tests/test_blazux_phase5_dependency_trace.py",
+      "mode": "100644",
+      "blob_sha": "6013c9c5dafd3782763f5fa4663b9edcd68e2310"
     },
     {
       "path": "tests/test_blazux_phase5_patch_readiness.py",
