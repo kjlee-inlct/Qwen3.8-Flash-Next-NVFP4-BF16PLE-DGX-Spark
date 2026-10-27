@@ -1,5 +1,16 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 현재 세션 인수인계 진입점 — Phase6 범위 확정만 진행 (실행 미승인)
+
+> **최신 활성 과제**: Phase5 소스·CPU 오프라인 Gate는 **종료 완료**. 현재 새 대화에 인계할 것은 **Phase6 승인 범위·검증 우선순위·통합 Gate 설계**뿐이다. Phase6 실행 또는 새 브랜치 생성/PR/머지는 아직 승인되지 않았다. 역사적 완료사항과 공통 운영 규칙은 이 문서 아래 및 관련 정본에서 읽고, 새 대화용 프롬프트에 중복 복제하지 말 것.
+
+- **확정 종료 증거**: 전용 DGX checkout에서 실행한 코드 SHA `780b780fc7572226a6a9ff2e52cd8e1921c8738b`, Wizard Mock 38/38, unit 310/310 XFAIL0, Source177/177, G1–G8 PASS 및 G8 13,824 합성 조합. [실측 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md), [Phase5 종료/Phase6 경계](BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md). `a205a3f958c250e2e30cb20fc99424666b2e0ff5`은 Phase5 결과를 보존한 **문서 전용** 선행 HEAD로 그 SHA에서 DGX 재시험은 없음; 이 진입점이 포함되는 후속 문서 커밋 역시 재시험 증거가 아니다.
+- **2026-10-28 GitHub 확인 시점**: Phase5 실험 브랜치 `feature/blazux-phase5-correctness-mtp-offline` (선행 HEAD `a205a3f958c250e2e30cb20fc99424666b2e0ff5`), `main=2847e39b4131eb8aff78bf86ffce98892401722a`. 현재 open PR **0**, Actions 전체 workflow run **0**, 해당 선행 HEAD commit status **0** / PR-triggered workflow run **0**. `.github/workflows/test.yml` 파일 존재 ≠ CI PASS. 다른 Phase0–4 protected heads는 과거와 동일. 최신 ref/PR/CI는 새 대화에서 **다시 조회**.
+- **Phase6 아직 NOT_RUN/BLOCKED**: 실행 중인 실모델 `CacheConfig.block_size` 대 `MambaSpec.block_size` 숫자 관계, 활성 scheduler/backend/group/slot/tensor 물리 경계, GPU Mamba 복사·rollback·prefix cache hit, speculative MTP acceptance, Parser/Tool/Responses HTTP 계약, PP/TG/TPS·메모리/안정성 및 실제 CI. Source-only와 synthetic PASS를 GPU/ABI 검증이나 수정 승인으로 확대하지 않는다.
+- **다음 대화 우선순위**: (1) 최신 GitHub 상태 재확인 + 이 문서 상단·[적용 계획](BLAZUX-VLLM032-ADOPTION-PLAN.md)·종료 정본 읽기; (2) P6-A 읽기 전용 활성 구성/ABI 관찰, P6-B 격리 GPU state correctness, P6-C MTP/Tool/Responses, P6-D 정확성 충족 후 성능·안정성의 **각 Gate 전제·정확성 oracle·성공/실패/차단·rollback 및 증거 경계**를 구체화; (3) 사용자가 Phase6 브랜치/실환경 테스트/모델 접근/CI/patch/PR/merge에 대해 **각각 명시적으로 승인한 범위**만 수행; (4) 승인된 소스·CPU 자료 수집은 GitHub 연결 도구로 정본 스크립트/테스트/문서·Manifest를 **같은 커밋**에서 업데이트, DGX 전용 checkout의 `pull --ff-only`와 **묶음 명령 하나**로 증거 수집. 임의의 GPU/model/weights/HF cache/운영 Docker/serving/ports/CI 작업 금지.
+- **인수인계 원칙**: 새 대화용 프롬프트에는 이 현재 과제·미완료·최신 HEAD/PR/CI·DGX PASS 출처·다음 우선순위·금지동작만 포함하고, 완료된 과거 phases 및 세부 정책은 [영구 정본](SESSION-HANDOFF-PROMPT.md), [적용 계획](BLAZUX-VLLM032-ADOPTION-PLAN.md), [검증 보고서](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md) 링크 참조로 처리. GitHub 커넥터의 commit/PR/review/merge는 **필요하고 현 승인 범위에 있을 때 직접 수행**하되 인수인계 작성 자체를 이유로 PR/merge를 만들지 않는다.
+
+
 ## 2026-10-28 DGX Phase5 G1–G8 오프라인 종료 PASS — 현재 정본 (Phase6 준비)
 
 - **최신 전체 DGX PASS의 정확한 실행 소스 SHA: `780b780fc7572226a6a9ff2e52cd8e1921c8738b`** (별도 Phase5 checkout, user-provided `붙여넣은 텍스트(1)(20261027-171555).txt`): Wizard Mock **38/38**, Python **310/310 XFAIL=0**, Source Manifest **177/177**, AST/오프라인 전체 wrapper PASS, 설치 이미지 고정 소스 검사 **G1–G8 모두 PASS**, **G8 13,824 synthetic alignment/tiling cases / 23,552 spans**, `BATCH_SOURCE_CPU_CHECKS_PASS=25528` (독립 unittest 수 아님), `PHASE5_MAMBA_BATCH_SOURCE_CPU_DONE_NOT_CERTIFIED`, `PASS: PHASE5_BATCH_OFFLINE_AND_PINNED_SOURCE_EXECUTED_NOT_CERTIFIED`, 사용자 쉘 `PHASE5_FINAL_OFFLINE_GATE_COMPLETED`. **Log final status 0; error/traceback 없음.**

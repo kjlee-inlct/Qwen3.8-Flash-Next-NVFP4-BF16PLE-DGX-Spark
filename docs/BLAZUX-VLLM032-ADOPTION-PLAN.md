@@ -1,5 +1,12 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 현재 작업 상태 — Phase6 범위 합의 (실행 미승인)
+
+- Phase5 source/CPU G1–G8는 **DGX 테스트 코드 `780b780fc7572226a6a9ff2e52cd8e1921c8738b`의 전체 PASS**로 종료. 현 Phase5 HEAD `a205a3f958c250e2e30cb20fc99424666b2e0ff5`는 정본 문서 보존 이후 기록, 여기의 후속 문서 커밋 역시 시험 SHA가 아님. 증거는 [Phase5 DGX 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md).
+- **인계할 현 과제는 Phase6 P6-A(read-only 실설정·ABI) → P6-B(격리 GPU state/prefix correctness) → P6-C(MTP·Tool/Responses) → P6-D(성능·안정성) 실행 범위, Gate 오라클, 승인·rollback 요건 설계**이다. 모든 실환경 항목 **NOT_RUN/BLOCKED**. Phase6 ref/PR/실 GPU/모델/CI/patch는 별도 승인이 필요. 소스 분석 완료와 runtime ready/patch approval를 혼동하지 말 것.
+- 현재 GitHub 조사 기준 open PR 0, Actions run 0, commit statuses 0; workflow YAML 존재는 실행 증거 아님. 새로운 대화는 [SESSION-HANDOFF-PROMPT.md](SESSION-HANDOFF-PROMPT.md) 최상단의 **현재 세션 인수인계 진입점**부터 읽고, 규칙·증거를 반복 작성하지 말 것. 사용자 신규 규칙·결과·보류를 본 문서/인수인계/종료 정본/전체 Source Manifest에 같은 승인 브랜치 커밋으로 동기화.
+
+
 ## 2026-10-28 DGX Phase5 G1–G8 오프라인 종료 PASS — 현재 정본 (Phase6 준비)
 
 - **최신 전체 DGX PASS의 정확한 실행 소스 SHA: `780b780fc7572226a6a9ff2e52cd8e1921c8738b`** (별도 Phase5 checkout, user-provided `붙여넣은 텍스트(1)(20261027-171555).txt`): Wizard Mock **38/38**, Python **310/310 XFAIL=0**, Source Manifest **177/177**, AST/오프라인 전체 wrapper PASS, 설치 이미지 고정 소스 검사 **G1–G8 모두 PASS**, **G8 13,824 synthetic alignment/tiling cases / 23,552 spans**, `BATCH_SOURCE_CPU_CHECKS_PASS=25528` (독립 unittest 수 아님), `PHASE5_MAMBA_BATCH_SOURCE_CPU_DONE_NOT_CERTIFIED`, `PASS: PHASE5_BATCH_OFFLINE_AND_PINNED_SOURCE_EXECUTED_NOT_CERTIFIED`, 사용자 쉘 `PHASE5_FINAL_OFFLINE_GATE_COMPLETED`. **Log final status 0; error/traceback 없음.**

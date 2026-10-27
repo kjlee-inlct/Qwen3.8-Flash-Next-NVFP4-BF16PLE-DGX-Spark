@@ -1,5 +1,12 @@
 # Track A Phase 5 — Mamba physical-address grouped Gate / Phase 6 readiness
 
+## 2026-10-28 현재 이관 상태 (Phase6 실행 미승인)
+
+- Phase5 source/CPU offline scope는 exact DGX-tested `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (310/310 XFAIL0, Source177, G1–G8)에서 종료되었다. Phase5 종료 재시험 계획 없음; 새 대화는 [SESSION-HANDOFF-PROMPT.md](SESSION-HANDOFF-PROMPT.md)의 최신 **Phase6 범위 확정만 진행** 진입점부터 시작할 것.
+- 남은 일은 P6-A 실제 설정/ABI, P6-B 격리 GPU state/prefix, P6-C real MTP/Parser/Tool/Responses, P6-D 정확성 후 TPS/메모리/안정성의 묶음 검증 설계와 승인 요건이다. 모두 **NOT_RUN/BLOCKED**, blazux 패치 승인 없음. 운영 서비스/모델/GPU/CI/Phase6 branch/PR/merge는 명시적 승인 전 수행 금지.
+- 2026-10-28 확인: Phase5 선행 문서 HEAD `a205a3f958c250e2e30cb20fc99424666b2e0ff5`, open PR 0, Actions run 0, commit statuses 0. 후속 docs-only HEAD를 DGX-tested SHA로 귀속하지 말 것.
+
+
 ## 2026-10-28 Exit decision (CURRENT): Phase5 SOURCE/CPU OFFLINE PASS, Phase6 runtime NOT_RUN
 
 - **DGX tested code `780b780fc7572226a6a9ff2e52cd8e1921c8738b`**: Manifest **177/177**, Wizard **38/38**, unit **310/310 XFAIL0**, AST/offline wrapper PASS, source/CPU G1–G8 PASS, G8 **13,824 synthetic configurations / 23,552 spans**, embedded `25528` checks, required final shell marker PASS. This resolves the *historical* `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5` G8 descriptor FAIL. [Newest evidence](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md).
