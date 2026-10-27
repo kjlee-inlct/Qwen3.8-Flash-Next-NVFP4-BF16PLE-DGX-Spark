@@ -1,5 +1,13 @@
 # blazux Track A Phase 6 — Approval-gated runtime verification
 
+## 2026-10-28 최신: 사용자 P6-A3b-1 격리 CPU-only 소스 조사 1회 명시 승인 (아직 DGX 실행 전)
+
+- **사용자 승인 범위**: 기존 고정 이미지 ID로 일회용 `docker run --rm` **1회**, CPU-only 설치 vLLM 소스 SHA256/AST 확인만 승인. `scripts/phase6-a3b1-cpu-container-gate.sh --execute`가 유일한 승인된 진입점. GPU/모델·가중치/HF 캐시/운영 Docker stop/restart/exec/HTTP/벤치/CI/패치/PR/merge 및 실제 Scheduler/CacheConfig/MambaSpec 객체 생성은 승인하지 않음. 기존 preview 스크립트는 계속 비실행. [안전 실행 정본](BLAZUX-PHASE6-A3B1-CPU-ISOLATED-GATE.md).
+- **직전 실제 DGX 테스트 코드 SHA** `7dc77164447bdd272b3ff791341d8ec5379a1edd`: Phase6 오프라인 테스트 **45/45 PASS**, Source Manifest **196/196 PASS**, P6-A3b-0 CPU 합성 그룹 LCM32/GCD16·가상 Mamba32/cache16, `PHASE6_A3B_CPU_PREP_DONE_NO_DOCKER_OR_ACTIVE_RUNTIME` 및 `PHASE6_A3B0_DGX_PREPARATION_VERIFIED_NO_RUNTIME`. 32/16은 실제 운영값이 아니며 patch/bug 증거도 아님. 새 GitHub 커밋의 코드는 DGX NOT_RUN; 목표 **57 test·200 source 파일은 기대값**, 새 HEAD의 검증 결과를 만들지 말 것.
+- **새 A3b-1 fail-closed 경계**: clean Phase6 전용 checkout/전체 Manifest, `MemAvailable>=4GiB` 현재값, 운영 컨테이너 running 및 pinned digest 실행 전후 검증, 로컬 이미지 고정, `runc`, CPU 1/메모리 512MiB/total memory+swap 512MiB(별도 swap 불가), 네트워크·GPU·파일쓰기 제한, nonroot UID65534, drop ALL caps, no-new-privileges, HF offline. vLLM import/실제 config constructor 금지. 표준출력은 Python 독립 오라클로 8개 AST anchor+**7개 historical SHA 일치**만 allowlist 판정. KV resolver의 소스 SHA는 이번 검사에서 **미고정**(AST anchor만), 과대 표기 금지. 부적합 시 BLOCKED, 보안 완화·root fallback·자동 재시도 금지.
+- **Gate 상태**: A3b-1 최종 PASS가 나와도 `PASS_PINNED_SOURCE_AST_ONLY` 한정. 실제 운영 중인 Scheduler 선택 클래스/CacheConfig·Mamba 그룹별 block_size/물리 block-table 및 CUDA 상태 주소 `NOT_OBSERVED`; **P6-A 실제 런타임 BLOCKED**, P6-B/C/D NOT_RUN/BLOCKED. 이전 A3a 호스트 MemAvailable 14085MiB, NVML GPU 메모리 N/A는 새로운 GPU 안전성 증거 아님. Pre-blazux 12×3 baseline/원본 보존, 역사적 corpus SHA/sampler/KV 비교 미확정, P6-D 여전히 BLOCKED. main/P0/Phase1~5 불변.
+
+
 ## 2026-10-28 Phase6 P6-A3b-0 CPU-only 실행 전 준비 — 최신
 
 - **실제 마지막 DGX 검증 소스**: `100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1`, Phase6 28/28 unittest PASS, Source Manifest 190/190 PASS, A3a passive resource `OBSERVED_METADATA_ONLY`. 이후 `a9e628b39fb97fe4ba57bd2b9fbc04a937c056c9`는 문서·Manifest 전용 기록 커밋(미재시험). Host MemAvailable 14085 MiB, SwapFree 8735 MiB, GPU NVML 메모리 total/free/used `N/A`, GPU 순간 util 0%, 35°C. 추가 GPU/모델 동시 실행 안전성 증명 안 됨.
@@ -81,3 +89,7 @@ Use three separately labeled results: (1) `PASSIVE_DEPLOYMENT_PROVENANCE` (A2/A3
 ## A3b-0 CPU preparation Gate (not P6-A PASS)
 
 The checked-in Phase6 A3b-0 synthetic input deliberately has `source_kind=SYNTHETIC_CPU_FIXTURE` and calculates only simple arithmetic diagnostics; group LCM/GCD can differ from actual vLLM resolver due to early returns, DCP, prefix-caching and connectors. Thus no candidate number is an inferred operational Scheduler/hash size. A later separately authorized ephemeral CPU-only container can verify pinned installed-source SHA/AST but, until approved, no `docker run` is executed and no real Config/Scheduler/MambaSpec constructor is invoked. Active runtime class/group/tables/pointers and GPU headroom remain unknown; P6-A3b-0 remains PREPARATION_ONLY regardless of offline test success. [A3b-0 runbook](BLAZUX-PHASE6-A3B-CPU-CONFIG-PREP.md).
+
+## A3b-1 limited permission gate
+
+User approved **one** ephemeral CPU-only immutable-image source SHA/AST inspection; see [A3b-1 runbook](BLAZUX-PHASE6-A3B1-CPU-ISOLATED-GATE.md). It requires real-time host >=4 GiB MemAvailable, pinned running legacy before and after, 1 CPU/512MiB memory+total swap, runc, network=none, read-only root/source, no GPU, nonroot 65534 and independent schema validation of seven pinned file hashes plus eight AST source components. No vLLM import/model/Scheduler constructor is invoked. A source PASS cannot certify actual active block size, group/physical pointers or P6-A. Stop on any mismatch; no automatic retry.

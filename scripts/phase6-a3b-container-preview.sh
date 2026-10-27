@@ -3,7 +3,7 @@
 # Intentionally has NO docker run execution path, regardless of arguments.
 set -Eeuo pipefail
 [[ "$#" == 1 && "$1" == "--preview" ]] || {
-  echo "BLOCKED: CPU-only Docker run is NOT approved; --preview only" >&2
+  echo "BLOCKED: this tool is preview-only; use separately gated phase6-a3b1-cpu-container-gate.sh --execute" >&2
   exit 2
 }
 cat <<'PREVIEW'
@@ -18,5 +18,5 @@ Proposed isolation for a separately approved future operation:
 - python3 /phase6/src/phase6_a3b_cpu_config.py --installed-source-only
 - HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONDONTWRITEBYTECODE=1
 - PHASE6_A3B_CPU_INSPECTION_ONLY=1, no vLLM imports, no config constructor
-STOP: No docker run or model startup will be performed by this preview script.
+STOP: This preview script never executes Docker. CPU-only source inspection requires the separately approved bounded A3b-1 gate.
 PREVIEW

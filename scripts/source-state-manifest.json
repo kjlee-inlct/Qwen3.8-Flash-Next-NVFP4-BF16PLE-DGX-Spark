@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 196,
+  "tracked_file_count": 200,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -116,7 +116,8 @@
     "2026-10-28 operator DGX Phase6 SHA 0513b118260047b9965e16b20bdadf690c112c5d: ff-only update, bash syntax PASS, 15/15 Phase6 unittest OK, source 186/186 PASS, PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED and operator PHASE6_A2_PREFLIGHT_DGX_COMPLETED. Running pinned image digest match=true; launch flags 0.8 GPU utilization, max-model-len 262144, max-num-batched-tokens 8192, max-num-seqs 8. Baseline raw SHA/runner Git SHA matched; current Gutenberg SHA256 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c; historic corpus hash absent, sampling/KV unverified. Live Scheduler/Mamba/group/address NOT_OBSERVED; P6-A runtime BLOCKED; P6-B/C/D NOT_RUN. Evidence-only doc commit is not tested SHA; no GPU/model/API/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 protected.",
     "2026-10-28 Phase6 A3a prepared from docs-only HEAD be7a463274765627d0fd0da3a9d70907c5f0cf83: read-only host /proc/meminfo, fixed legacy Docker inspect metadata and nvidia-smi optional NVML numeric telemetry; safe parser/fail-closed 13 new synthetic stdlib tests. Expect Phase6 unit 28 and tracked Source190 on new SHA but DGX NOT_RUN until operator. Last measured DGX Phase6 SHA 0513b118: unit 15/15 Source186/186 plus passive A2 image/baseline/runner PASS; historical corpus SHA unknown, cache hash 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c. Resource snapshot cannot prove free unified GPU headroom nor selected Scheduler/Mamba/real addresses. Runtime P6-A/B/C/D BLOCKED; no GPU/model/HTTP/CI/benchmark/patch/PR/merge approval. main/P0/Phase1-5 immutable.",
     "2026-10-28: DGX operator tested Phase6 exact SHA 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, 28/28 Phase6 unit PASS, full Source Manifest 190/190 PASS and PHASE6_A3A_PASSIVE_RESOURCE_OBSERVATION_COMPLETED_NOT_GPU_CERTIFIED plus final PHASE6_A3A_DGX_OBSERVATION_COMPLETED. Legacy running/image pin true, explicit Docker Memory limit null. Host MemTotal124543 MiB, MemAvailable14085 MiB, SwapTotal16383 MiB, SwapFree8735 MiB. Single NVML GPU util 0.0%, temp35C, GPU total/free/used memory unavailable, status PARTIAL. This does not show real Scheduler/CacheConfig/MambaSpec/group/table/state pointers nor safe extra model headroom. P6-A active runtime BLOCKED; P6-B/C/D NOT_RUN; no GPU/model/HTTP/benchmark/CI/patch/PR/merge. Baseline corpus original hash/sampler/KV unresolved, only current corpus SHA from previous A2. New record/manifest documentation-only commit is NOT DGX tested; main/P0/Phase1-5 and original baseline untouched.",
-    "2026-10-28 Phase6 A3b-0 preparation from latest prior docs-only SHA a9e628b39fb97fe4ba57bd2b9fbc04a937c056c9: add stdlib strict synthetic group block-size LCM/GCD diagnostic fixture, installed-vLLM pinned SHA/AST future CPU-only source probe (not actual Config constructor), 17 new tests, host offline prep wrapper and Docker print-only --preview with no execution path. Expect Phase6 45 unittest / Source196 tracked on new SHA, NOT DGX run before operator. Last actual DGX A3a 28/28 Source190/190 only at 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, host MemAvailable14085 MiB, NVML memory N/A and 0% momentary utilization, not safe GPU headroom. Proposed future Docker CPU-only run requires explicit separate approval, bounded 1CPU/512MiB, isolated no-network no-GPU no-model. P6-A active Scheduler/CacheConfig/MambaSpec/group/state pointers remain BLOCKED; P6-B/C/D NOT_RUN; no Docker/model/GPU/HTTP/benchmark/CI/patch/PR/merge. Main/P0/Phase1-5 immutable."
+    "2026-10-28 Phase6 A3b-0 preparation from latest prior docs-only SHA a9e628b39fb97fe4ba57bd2b9fbc04a937c056c9: add stdlib strict synthetic group block-size LCM/GCD diagnostic fixture, installed-vLLM pinned SHA/AST future CPU-only source probe (not actual Config constructor), 17 new tests, host offline prep wrapper and Docker print-only --preview with no execution path. Expect Phase6 45 unittest / Source196 tracked on new SHA, NOT DGX run before operator. Last actual DGX A3a 28/28 Source190/190 only at 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, host MemAvailable14085 MiB, NVML memory N/A and 0% momentary utilization, not safe GPU headroom. Proposed future Docker CPU-only run requires explicit separate approval, bounded 1CPU/512MiB, isolated no-network no-GPU no-model. P6-A active Scheduler/CacheConfig/MambaSpec/group/state pointers remain BLOCKED; P6-B/C/D NOT_RUN; no Docker/model/GPU/HTTP/benchmark/CI/patch/PR/merge. Main/P0/Phase1-5 immutable.",
+    "2026-10-28 user approved one bounded Phase6 A3b-1 CPU-only disposable docker run for pinned installed-vLLM source SHA/AST only. Previous exact operator DGX tested Phase6 HEAD 7dc77164447bdd272b3ff791341d8ec5379a1edd: unittest 45/45 PASS, Source196/196 PASS, synthetic group LCM32/GCD16 and artificial cache16/Mamba32, PHASE6_A3B0_DGX_PREPARATION_VERIFIED_NO_RUNTIME; preview Docker never executed. Add guarded one-run CPU 1/512MiB total memory+swap512MiB, runc/no GPU/network/nonroot/read-only pinned image ID, MemAvailable>=4GiB, pinned legacy identity before+after, allowlisted host evidence validator for 7 pinned SHA + 8 AST components (KV resolver SHA not pinned); 12 new tests and canonical A3b1 runbook. Expected new Phase6 57/57, Source200/200 but NEW HEAD DGX NOT_RUN until operator. Active Scheduler/CacheConfig/MambaSpec physical GPU state P6-A BLOCKED, P6-B/C/D NOT_RUN; no model/GPU/HTTP/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 unchanged."
   ],
   "files": [
     {
@@ -297,7 +298,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "1a013540cfe668d48e122276106fca7d3d209e4e"
+      "blob_sha": "9706f5d8bc5ddfa09e2b229b7bc1529b5bba8b11"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -327,32 +328,37 @@
     {
       "path": "docs/BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md",
       "mode": "100644",
-      "blob_sha": "f469620fe23056a049f9629df1063e06641acf9d"
+      "blob_sha": "7ebe1973343f8d2f4c604df1e1673233c4eaa7a8"
     },
     {
       "path": "docs/BLAZUX-PHASE6-A3B-CPU-CONFIG-PREP.md",
       "mode": "100644",
-      "blob_sha": "a0e4c690396d4417aeec1fcb3579b94f4d091eed"
+      "blob_sha": "dfeaa88f2e1d2b9b26f075c44d8382961ea31ab3"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE6-A3B1-CPU-ISOLATED-GATE.md",
+      "mode": "100644",
+      "blob_sha": "c486963cbfd3beaaffb00ee88ed5fd761d12448e"
     },
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "708de3203289c271b1464480820ce0589df320d3"
+      "blob_sha": "e4c40a513a9290f3cbaa44ecb803504f2c7879a2"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "89223250408a771c1efb06d57e6d92c62a96e90e"
+      "blob_sha": "7a0338879f5e4f5748d9d270ece51f1b305d915b"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "bf5432b1389c2f49b5e7c7a1699892f1fcdbb54d"
+      "blob_sha": "a70cad19f40f9d5c0a65374ab06ecef28ac671e5"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "db96d05b0d271c911036264962c580b456624dbf"
+      "blob_sha": "71db0e8a70ddeaf381164f05cce9c96a80021aaf"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -367,7 +373,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "17d1ea377d24dd6f705722f4b714bb8e4de2a523"
+      "blob_sha": "7bf1ac883bdd1dd395bd46b694ed5a922f333c80"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -622,12 +628,17 @@
     {
       "path": "scripts/phase6-a3b-container-preview.sh",
       "mode": "100755",
-      "blob_sha": "259cfbbad70a8fecb02263d7e54e925b7dfd4482"
+      "blob_sha": "4960e2dd0bc0ded25920f26c7478a40c43b55bbe"
     },
     {
       "path": "scripts/phase6-a3b-cpu-prepare.sh",
       "mode": "100755",
       "blob_sha": "74dab043e32372babe6cefa8486e64886743162e"
+    },
+    {
+      "path": "scripts/phase6-a3b1-cpu-container-gate.sh",
+      "mode": "100755",
+      "blob_sha": "bd45bb81e05e589e6694b550a05b71202ec03722"
     },
     {
       "path": "scripts/phase6-gate.sh",
@@ -840,6 +851,11 @@
       "blob_sha": "cdb5bbd646aad0aa9b1fea8668f5193e4f519696"
     },
     {
+      "path": "src/phase6_a3b1_evidence.py",
+      "mode": "100644",
+      "blob_sha": "48127a515d8a84ce41b903b28dfa29b217273d43"
+    },
+    {
       "path": "src/phase6_gate.py",
       "mode": "100644",
       "blob_sha": "aa7654a5f47cddeababef4e3a0daffdea6fb4be8"
@@ -998,6 +1014,11 @@
       "path": "tests/test_blazux_phase6_a3b_cpu.py",
       "mode": "100644",
       "blob_sha": "385def975e67446f8208808c79e2ea26dc2b2461"
+    },
+    {
+      "path": "tests/test_blazux_phase6_a3b1_gate.py",
+      "mode": "100644",
+      "blob_sha": "cd75ee93bc562bdd0fa7e7562beb96a6a2d9dbc8"
     },
     {
       "path": "tests/test_blazux_phase6_gate.py",

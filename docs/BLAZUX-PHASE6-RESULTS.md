@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 최신: 사용자 P6-A3b-1 격리 CPU-only 소스 조사 1회 명시 승인 (아직 DGX 실행 전)
+
+- **사용자 승인 범위**: 기존 고정 이미지 ID로 일회용 `docker run --rm` **1회**, CPU-only 설치 vLLM 소스 SHA256/AST 확인만 승인. `scripts/phase6-a3b1-cpu-container-gate.sh --execute`가 유일한 승인된 진입점. GPU/모델·가중치/HF 캐시/운영 Docker stop/restart/exec/HTTP/벤치/CI/패치/PR/merge 및 실제 Scheduler/CacheConfig/MambaSpec 객체 생성은 승인하지 않음. 기존 preview 스크립트는 계속 비실행. [안전 실행 정본](BLAZUX-PHASE6-A3B1-CPU-ISOLATED-GATE.md).
+- **직전 실제 DGX 테스트 코드 SHA** `7dc77164447bdd272b3ff791341d8ec5379a1edd`: Phase6 오프라인 테스트 **45/45 PASS**, Source Manifest **196/196 PASS**, P6-A3b-0 CPU 합성 그룹 LCM32/GCD16·가상 Mamba32/cache16, `PHASE6_A3B_CPU_PREP_DONE_NO_DOCKER_OR_ACTIVE_RUNTIME` 및 `PHASE6_A3B0_DGX_PREPARATION_VERIFIED_NO_RUNTIME`. 32/16은 실제 운영값이 아니며 patch/bug 증거도 아님. 새 GitHub 커밋의 코드는 DGX NOT_RUN; 목표 **57 test·200 source 파일은 기대값**, 새 HEAD의 검증 결과를 만들지 말 것.
+- **새 A3b-1 fail-closed 경계**: clean Phase6 전용 checkout/전체 Manifest, `MemAvailable>=4GiB` 현재값, 운영 컨테이너 running 및 pinned digest 실행 전후 검증, 로컬 이미지 고정, `runc`, CPU 1/메모리 512MiB/total memory+swap 512MiB(별도 swap 불가), 네트워크·GPU·파일쓰기 제한, nonroot UID65534, drop ALL caps, no-new-privileges, HF offline. vLLM import/실제 config constructor 금지. 표준출력은 Python 독립 오라클로 8개 AST anchor+**7개 historical SHA 일치**만 allowlist 판정. KV resolver의 소스 SHA는 이번 검사에서 **미고정**(AST anchor만), 과대 표기 금지. 부적합 시 BLOCKED, 보안 완화·root fallback·자동 재시도 금지.
+- **Gate 상태**: A3b-1 최종 PASS가 나와도 `PASS_PINNED_SOURCE_AST_ONLY` 한정. 실제 운영 중인 Scheduler 선택 클래스/CacheConfig·Mamba 그룹별 block_size/물리 block-table 및 CUDA 상태 주소 `NOT_OBSERVED`; **P6-A 실제 런타임 BLOCKED**, P6-B/C/D NOT_RUN/BLOCKED. 이전 A3a 호스트 MemAvailable 14085MiB, NVML GPU 메모리 N/A는 새로운 GPU 안전성 증거 아님. Pre-blazux 12×3 baseline/원본 보존, 역사적 corpus SHA/sampler/KV 비교 미확정, P6-D 여전히 BLOCKED. main/P0/Phase1~5 불변.
+
+
 ## 2026-10-28 Phase6 P6-A3b-0 CPU-only 실행 전 준비 — 최신
 
 - **실제 마지막 DGX 검증 소스**: `100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1`, Phase6 28/28 unittest PASS, Source Manifest 190/190 PASS, A3a passive resource `OBSERVED_METADATA_ONLY`. 이후 `a9e628b39fb97fe4ba57bd2b9fbc04a937c056c9`는 문서·Manifest 전용 기록 커밋(미재시험). Host MemAvailable 14085 MiB, SwapFree 8735 MiB, GPU NVML 메모리 total/free/used `N/A`, GPU 순간 util 0%, 35°C. 추가 GPU/모델 동시 실행 안전성 증명 안 됨.
@@ -52,7 +60,7 @@ Phase6 offline code now has DGX operator evidence on exact SHA `0513b118260047b9
 | P6-C MTP/tool/parser/Responses | BLOCKED | model/API execution not approved; requires P6-B |
 | P6-D performance/stability | BLOCKED | benchmark not approved; requires all correctness gates |
 | GitHub Actions | NOT_RUN | user prohibited CI |
-| Phase6 DGX offline source/tests | PASS | 28/28 unittest and 190/190 Source Manifest at exact DGX tested SHA 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1; earlier 15/15 at 0513b118 |
+| Phase6 DGX offline source/tests | PASS at previously tested code | 45/45 unittest, Source196/196 exact DGX SHA `7dc77164447bdd272b3ff791341d8ec5379a1edd`; new 57/200 untested |
 | Phase5 offline exit | PASS (historical) | exact DGX-tested SHA `780b780fc7572226a6a9ff2e52cd8e1921c8738b`, never attribute to Phase6 HEAD |
 
 Record future runs with exact tested SHA, environment fingerprint, raw redacted evidence, each required oracle, failure/blocked reason, cleanup and final status. Do not overwrite history.
@@ -71,3 +79,14 @@ Record future runs with exact tested SHA, environment fingerprint, raw redacted 
 
 - New files: one pure stdlib fixture/group arithmetic projection, one synthetic fixture JSON, 17 new CPU-only unit tests, two Bash entrypoints (prepare + Docker preview-only), and A3b-0 runbook. The Phase6 next combined Gate expects 45 unittest cases and Source196 tracked files, subject to operator evidence. No Docker runtime execution path was enabled.
 - A `SYNTHETIC_GEOMETRY_ONLY_NOT_RUNTIME` output is not P6-A PASS and no actual Scheduler, CacheConfig, MambaSpec constructor is invoked. P6-A real runtime, P6-B/C/D continue BLOCKED/NOT_RUN.
+
+## P6-A3b-0 operator DGX result (2026-10-28)
+
+- `git pull --ff-only` from 100ffb3 to exact `7dc77164447bdd272b3ff791341d8ec5379a1edd`, Bash syntax checks successful, `Ran 45 tests`, `OK`, `PASS_SOURCE_ONLY: 196 tracked file(s)` twice, `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`.
+- CPU synthetic input output: 2 fake groups, Mamba group count1, naive LCM32/GCD16, artificial Mamba32/cache16, `SYNTHETIC_GEOMETRY_ONLY_NOT_RUNTIME` and `p6_a_runtime_status=BLOCKED`. No real scheduler/Mamba values or bug established.
+- Preview-only `PHASE6_A3B_CPU_CONTAINER_PROPOSAL_ONLY_NOT_EXECUTED`, `PHASE6_A3B_CPU_PREP_DONE_NO_DOCKER_OR_ACTIVE_RUNTIME`, final `PHASE6_A3B0_DGX_PREPARATION_VERIFIED_NO_RUNTIME`. No GPU/model, Docker CPU-run, CI or benchmark executed.
+
+## Upcoming approved P6-A3b-1 run — NOT_RUN on new HEAD
+
+- Approval strictly one 1CPU/512MiB locked image read-only source SHA/AST ephemeral container, host + Docker metadata guards. Expected Phase6 unit 57, Source200; do not claim actual PASS until DGX log. Mark source SHA/AST success `PASS_PINNED_SOURCE_AST_ONLY`, not P6-A active runtime.
+- If pinned source drift/permissions/resource margin/runtime unavailable, report BLOCKED without retry or weakening isolation. P6-A real ABI/B/C/D stay BLOCKED.
