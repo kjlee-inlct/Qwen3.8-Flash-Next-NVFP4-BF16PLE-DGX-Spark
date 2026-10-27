@@ -73,7 +73,8 @@
     "Current documentation/Source Manifest refresh does not touch runtime code and does not establish fresh DGX testing on the resulting new Git merge SHA.",
     "2026-10-27: user-reported pre-blazux 12x3 llama-benchy baseline archived (raw result SHA256 verified against uploaded checksum) with public environment projection, re-run Bash script, and handoff. New script runtime/tests/CI/publication audit NOT_RUN at user's request; source snapshot only.",
     "2026-10-27: planning-only blazux vLLM 0.32 evaluation branch forked from merged baseline PR #5 main 2847e39b4131eb8aff78bf86ffce98892401722a. Only adoption plan/handoff/source inventory changed; actual blazux code, build, runtime and A/B NOT_STARTED. Existing DGX service unchanged and no new tests executed.",
-    "2026-10-27: document-only Track A (preview engine) versus Track B (future independent vLLM 0.32) separation; priority P1/P2/P3, synthetic BF16 offline validation, default-OFF independent flags, rollback, isolated image/container/port/receipt/view paths, main protection caveat, and existing Baseline/script status. No new runtime implementation, DGX test, CI run, or GPU activation performed."
+    "2026-10-27: document-only Track A (preview engine) versus Track B (future independent vLLM 0.32) separation; priority P1/P2/P3, synthetic BF16 offline validation, default-OFF independent flags, rollback, isolated image/container/port/receipt/view paths, main protection caveat, and existing Baseline/script status. No new runtime implementation, DGX test, CI run, or GPU activation performed.",
+    "2026-10-27: refreshed session handoff at current blazux Track A branch; clarified 2026-10-26 wizard DGX tests as historical (114/114, 38/38, 172/172 on 66051cd), PR #5 merged benchmark 12x3 baseline, snapshot 2847e39 main and 0e9b25d design commit, current Track A Gate 1 priority, separate not-yet-created Track B branch, Gate 1 1:1 deliverables, P1/P2/P3, provenance/reproducibility gaps, deferred CI, and protected legacy. Documentation/manifest only; no new tests or DGX/GPU/runtime action."
   ],
   "files": [
     {
@@ -164,7 +165,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "c8f16bdbcf69aaa9c4b1f10429b5ad1dd8693143"
+      "blob_sha": "354486044bc42bd56942f89e8e9e0fc3937b5c97"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

@@ -1,15 +1,39 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-26 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, 최신 진행 과제는 **blazux Track A 정적 비교(Gate 1)**다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 최신 검증 기준: 2026-10-26 DGX `main` 실측 (PR #3 이후)
+## 현재 진행 상태 및 새 세션 우선 읽기 — 2026-10-27
 
-> **현재 상태의 우선 기준.** 아래 오래된 PR #1/기능 브랜치 시험 및 보류 목록은
-> 작성 당시의 **과거 이력**이다. 항목이 충돌하면 이 최신 기록과 현 GitHub 소스/새 DGX 로그를 대조한다.
+> **현재 작업을 이어받을 때 이 절을 가장 먼저 적용한다.** 아래 2026-10-26 Wizard 검증·PR #1/#3 기록은 실제로 수행된 **과거 테스트**이며 삭제하지 않는다. 새로운 GitHub HEAD에 대해 DGX 테스트가 다시 PASS했다는 뜻이 아니다.
+
+| 항목 | 최신 확인된 기준 | 다음 세션의 해석 |
+| --- | --- | --- |
+| 개인 GitHub \`main\` | **2847e39b4131eb8aff78bf86ffce98892401722a** | 2026-10-27 조회한 PR #5 병합 커밋. 새 세션에서 HEAD 재조회 |
+| 현재 개발 브랜치 | **\`feature/blazux-vllm032-evaluation-20261027\`** | blazux **Track A** 검토·계획 브랜치. 새 세션에서 HEAD/트리 재조회 |
+| 기록된 설계 보강 커밋 | **0e9b25d93eb533b1936930c77bf7f7b874ec0b60** | 2026-10-27 설계서 보강 기준. **본 핸드오프 갱신 커밋 자체의 SHA 아님** |
+| 신규 PR | **없음** (2026-10-27 조회) | 현재 브랜치를 성급히 \`main\`에 병합하지 않는다 |
+| 실험 원본 blazux | **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa** | [외부 기술 참조](https://github.com/blazux/qwen3.8-Flash-DGX); 원본 저장소 전체 merge·serve.sh 실행 금지 |
+| 성능 Baseline | PR **#5 MERGED**, 정식 **12조건 × 각 3회 = 36회** | [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md) 및 원본 JSON·해시가 \`main\`에 보존됨 |
+| Benchmark helper | \`scripts/benchmark/run-llama-benchy.sh\` | PR #5에 포함됐으나 **신규 wrapper 자체의 DGX 실행은 NOT_RUN** |
+| Wizard DGX 검증 | \`main=66051cdcd4b2c5766de55421579867c195fe4084\` | 2026-10-26 source **114/114**, mock **38/38**, unit **172/172**, legacy Health PASS; **이후 소스 SHA로 승격 금지** |
+| Source Manifest | 현 기능 브랜치의 \`files[]\` **120개 + Manifest 자체 1개** | 새 변경시 Git 트리 path/mode/blob SHA와 모두 일치시켜 **같은 커밋**에 저장 |
+| GitHub CI / branch protection | Actions run **0** → \`CI_NOT_VERIFIED\`; \`main.protected=false\` | CI 정상화는 사용자 요청으로 보류. \`main\`의 PR 리뷰 보호는 **운영 정책**, 강제된 GitHub 보호 설정이 아님 |
+| 엔진·GPU 실기기 | blazux 구현/이미지 빌드/A/B 시험 **NOT_STARTED** | 기존 레거시 컨테이너·모델·포트·영수증은 변경 금지 |
+
+**두 개발 트랙은 섞지 않는다.** **Track A**는 현재 preview vLLM에서 가능한 계측·정확성/성능 개선만 독립적으로 검토하고, **Track B** 공식 vLLM 0.32 포팅은 Go/No-Go 판단 뒤 \`feature/vllm032-bf16ple-port\` 별도 장기 브랜치에서 착수한다(**현재 해당 브랜치는 미생성**). Track A 작업이 Track B 시작이나 GPU 활성화를 자동 승인하지 않는다.
+
+**최우선 다음 단계: Gate 1 정적 1:1 계약 비교.** [설계서](BLAZUX-VLLM032-ADOPTION-PLAN.md) §1.4/§3.1/Gate 1을 읽고, 현 preview와 고정 blazux 소스의 PLE \`mmap\`·BF16 offset/gather, MTP 31텐서/가드, QSA top-k, prefix-cache/SSM, Tool/Responses parser를 함수·데이터 flow 단위로 매핑한다. **KEEP / PORT / ADAPT / DEFER_TO_TRACK_B / REJECT**를 각 기능별 출처/위험/테스트 계약과 함께 기록한다. 새 GPU/Docker 작업은 하지 않는다.
+
+---
+
+## 2026-10-26 Wizard 검증 기준: DGX `main` 읽기 전용 실측 (PR #3 이후; 과거 이력)
+
+> **Wizard 운영·시험에 한정된 당시 최신 기준.** 아래 오래된 PR #1/기능 브랜치 시험 및 보류 목록은
+> 작성 당시의 **과거 이력**이다. 현재 진행 상태는 맨 위의 **2026-10-27 작업 요약**이 우선하며, 항목이 충돌하면 현재 GitHub 소스/새 DGX 로그를 대조한다.
 > **이 문서를 포함한 다음 docs-only 머지 커밋은 DGX에서 다시 실행한 것이 아니다.**
 
 - 최종 검증 대상: GitHub [PR #3](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/3)
@@ -51,7 +75,7 @@
 
 ## 0. 새 세션에서 사용할 최상위 지시
 
-당신은 **단일 NVIDIA DGX Spark(GB10)**에서 실행하는 Qwen3.8-Flash-Next NVFP4/BF16 PLE + BF16 MTP 레시피의 **개인 Fork 설치·제거 위자드/운영 관리 프로젝트**를 이어받은 엔지니어링 보조자다. **한국어**로 기술 분석, 코드, 설명, 보고를 작성한다.
+당신은 **단일 NVIDIA DGX Spark(GB10)**에서 실행하는 Qwen3.8-Flash-Next NVFP4/BF16 PLE + BF16 MTP 레시피의 **개인 Fork 운영·위자드 유지보수 및 blazux 선택적 최적화 검토 프로젝트**를 이어받은 엔지니어링 보조자다. **한국어**로 기술 분석, 코드, 설명, 보고를 작성한다. 현재 실행 과제는 **Track A의 Gate 1 함수별 소스 계약 비교**이며, 신규 위자드 실배포 또는 vLLM 0.32 포팅이 아니다.
 
 **제1원칙은 현재 운영 중인 기존 YSLAB 서비스, Docker 이미지/컨테이너, HF 캐시, recipe views, 모델 가중치, 로컬 상태 파일, 포트 8000, 다른 Ollama/OpenWebUI 및 네트워크 서비스를 변경하지 않는 것이다.** GitHub 소스 변경과 운영 서버에 대한 변경은 서로 다르다.
 
@@ -61,7 +85,7 @@
 
 ### 다음 세션 시작용 사용자 메시지 예시
 
-> 개인 GitHub 저장소 `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`의 최신 `main`에서 `docs/SESSION-HANDOFF-PROMPT.md`를 먼저 읽으세요. 확정된 구현, 보류된 일, DGX 기존 서비스 보호 규칙을 기준으로 프로젝트를 이어서 진행하세요. 매번 코드·스크립트·문서·테스트를 필요한 만큼 업데이트/신규 작성하고 소스 Manifest를 동기화하세요. 연결된 GitHub 플러그인으로 커밋, PR, 머지까지 직접 처리할 수 있습니다. 실제 Docker/모델 파일은 건드리지 말고 읽기 전용 검증부터 시작하세요.
+> 개인 GitHub 저장소 `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`의 `main`과 `feature/blazux-vllm032-evaluation-20261027` 최신 HEAD를 **둘 다 먼저 확인**하고, 기능 브랜치의 `docs/SESSION-HANDOFF-PROMPT.md`와 `docs/BLAZUX-VLLM032-ADOPTION-PLAN.md`를 읽으세요. PR #5 Baseline 원본은 `main`에 병합됐고, 현재는 **Track A Gate 1 blazux↔현 preview 함수/텐서 계약 1:1 비교** 단계입니다. P1→P2→P3 우선순위, 별도 Track B `feature/vllm032-bf16ple-port` 미생성 상태, DGX 레거시/위자드 보호 규칙을 준수하세요. 필요한 변경만 문서·테스트·Source Manifest와 함께 기능 브랜치에 커밋하고, PR/머지는 사용자 요청과 리뷰 범위 안에서 직접 수행하세요. 테스트 미실행/CI 부재는 명시하고 Docker·모델 파일은 변경하지 마세요.
 
 ---
 
@@ -82,7 +106,7 @@
 | GitHub Actions | 마지막 조회에서 workflow run/check run **0건**(CI PASS라고 주장 금지) |
 | 이 문서 반영 이후 | **새 commit/PR가 생길 수 있으므로 반드시 원격 HEAD를 다시 확인** |
 
-PR #1 병합 직후 개인 Fork `main`과 기능 브랜치의 **Git tree가 동일**함을 GitHub 도구로 확인했다. 이는 소스 통합의 성공 증거다. 사용자의 DGX 마지막 로그는 기능 브랜치 `25949fd7...`의 실행 결과로, **로컬 DGX가 `main`으로 전환되었다는 로그는 아직 없다**. GitHub PR 머지는 DGX 컨테이너를 재실행하거나 가중치를 변경하지 않는다.
+**이 단락은 PR #1 직후의 과거 기록이다.** 당시 개인 Fork `main`과 기능 브랜치의 Git tree 동일성을 GitHub 도구로 확인했다. 당시 사용자 DGX 로그는 기능 HEAD `25949fd7...`였지만 **이후 2026-10-26 사용자 DGX 로그에서 `main=66051cdc...` 전환·114/114, 38/38, 172/172 PASS가 확인되었다.** 현 원격 `main=2847e39...` 또는 blazux 기능 브랜치의 새 문서 커밋에 대해 DGX에서 재시험한 증거는 없다. GitHub PR 머지는 DGX 컨테이너를 재실행하거나 가중치를 변경하지 않는다.
 
 ---
 
@@ -280,13 +304,16 @@ Git merge commit은 SHA가 달라질 수 있지만 **모든 tracked blob/mode와
 
 ### 7.1 GitHub 읽기 전용
 
-1. 현재 `main` HEAD/트리, PR #1 병합 상태 및 이후 신규 PR/커밋을 확인.
+1. **`main`과 현재 blazux 기능 브랜치의 양쪽 HEAD/트리·PR #5 병합·후속 PR·CI 현황을 먼저 확인**하고 맨 위 2026-10-27 상태 요약과 대조한다. 아래 과거 Wizard 관련 파일도 역사적 보호 규칙을 확인하는 용도로 읽는다.
 2. **이 문서, `README.md`, `scripts/deployment-manifest.json`, `scripts/source-state-manifest.json`, `scripts/verify-source-state.py`, `scripts/wizard/*`**의 최신 버전을 조회.
 3. Source Manifest와 HEAD tree의 **전체** SHA/mode/경로 대조, README와 `huggingface/README.md` 미러 확인.
 4. GitHub Actions run/check를 조회하고, run=0이라면 `CI_NOT_VERIFIED`라고 표기.
-5. 최신 주요 문서: [Legacy 설치 보호](../scripts/LEGACY-INSTALLATION.md), [DGX 관찰](../scripts/LEGACY-OBSERVATION-20261026.md), [안전·복구](../scripts/SAFETY-AND-RECOVERY.md), [작업 순서](../scripts/OPERATIONS.md), [시험 계획](../scripts/TEST-PLAN.md), [테스트 증거](../scripts/VALIDATION-RESULTS-20261026.md), [Health 비교](../scripts/STATUS-COMPARE-AND-HEALTH.md), [Manifest 계약](../scripts/MANIFEST-SCHEMA.md), [Git Pull](../scripts/VERIFY-FROM-GIT-PULL.md), [역사적 개발 계획](../scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md).
+5. **현재 개발의 필수 참조:** [blazux 계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md), [Baseline 보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md), [Benchmark 재실행 wrapper](../scripts/benchmark/run-llama-benchy.sh)(실행 시험 NOT_RUN), [첨부된 원본 Benchmark 결과](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json). 
+6. Wizard 운영 역사 확인: [Legacy 설치 보호](../scripts/LEGACY-INSTALLATION.md), [DGX 관찰](../scripts/LEGACY-OBSERVATION-20261026.md), [안전·복구](../scripts/SAFETY-AND-RECOVERY.md), [작업 순서](../scripts/OPERATIONS.md), [시험 계획](../scripts/TEST-PLAN.md), [테스트 증거](../scripts/VALIDATION-RESULTS-20261026.md), [Health 비교](../scripts/STATUS-COMPARE-AND-HEALTH.md), [Manifest 계약](../scripts/MANIFEST-SCHEMA.md), [Git Pull](../scripts/VERIFY-FROM-GIT-PULL.md), [역사적 개발 계획](../scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md).
 
 ### 7.2 DGX 사용자가 실행할 수 있는 **읽기 전용 중심** 명령
+
+> 아래 코드 블록에 포함된 `git fetch/switch/pull`은 **조회만 하는 명령이 아니라 checkout/remote-tracking refs를 변경할 수 있다**. 현재 진행 중인 기능 브랜치·로컬 변경을 먼저 확인하고, 명시적으로 로컬 동기화할 때만 사용한다. 단순 소스 검토에는 GitHub 읽기 전용 조회가 우선이며, 승인 없는 DGX 명령 실행은 금지한다.
 
 과거에는 기능 브랜치였으나 **2026-10-26 사용자 제공 최신 로그에서 `main=66051cdc...` 확인**. 향후 재실행 시에도 원격 origin/로컬 수정을 다시 확인한다.
 
@@ -404,12 +431,12 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 - 정식 결과는 results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json에 **원본 그대로** 보존한다. 전체 컨테이너/Image ID를 가진 원본 environment.json은 공개하지 않고 environment.public.json과 원본 해시만 기록한다.
 - 이전 docs/BENCHMARKS.md의 MTP2 44.23 end-to-end completion tok/s와 이번 llama-benchy TG 값은 측정 구간과 산식이 다르므로 직접 비교 금지.
 
-### 현 작업 범위와 다음 순서
+### 당시 Baseline PR #5의 범위와 이후 계획 (PR #5 MERGED)
 
-- 이번 PR 범위: [동일 조건 재실행 Bash 스크립트](../scripts/benchmark/run-llama-benchy.sh), 원본 result.json, 정제된 환경·원본 체크섬, [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md), 이 인수인계 문서, Source Manifest의 전체 path/mode/blob SHA 동기화.
+- 병합된 PR #5 범위: [동일 조건 재실행 Bash 스크립트](../scripts/benchmark/run-llama-benchy.sh), 원본 result.json, 정제된 환경·원본 체크섬, [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md), 이 인수인계 문서, Source Manifest의 전체 path/mode/blob SHA 동기화.
 - **사용자 요청에 따라 신규 스크립트 실행·회귀시험 생략(NOT_RUN)**. 과거 DGX에서 성공한 수동 측정이 새 Bash 스크립트 자체의 실행 검증을 뜻하지 않는다. CI도 실행 결과 없으면 CI_NOT_VERIFIED.
 - 실행 스크립트는 원본 도구 SHA/Tokenizer SHA/서빙 모델을 검사하고 별도 staging 디렉터리에 JSON/진행 이벤트/로그/환경/메모리·GPU 상태/체크섬을 저장한다. Docker 이미지·컨테이너·운영 상태·model cache·기존 영수증에 쓰기 없음; API를 통한 추론 부하는 실제 발생한다. 개인 식별정보·프롬프트/응답 내용이 포함된 RAW 로그를 자동 공개하지 않는다.
-- 다음 단계: 이번 PR을 검토하고 main에 병합한 후 최신 main에서 **별도 blazux 적용 계획 브랜치** 시작. 미리 만든 docs/BLAZUX-VLLM032-ADOPTION-PLAN.md 초안은 그 브랜치에만 반영한다. 외부 blazux 분석 SHA **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa**.
+- **후속 완료:** PR #5는 이미 `main=2847e39b...`로 병합됐고 `feature/blazux-vllm032-evaluation-20261027` 브랜치에 계획서를 커밋했다. **현재 다음 단계는 Gate 1 정적 코드 비교**이며, blazux 참조 SHA는 **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa**로 고정한다.
 - 비교 전 제한: Orcarouter compressed-tensors/ BF16 PLE/ BF16 MTP 31개 overlay와 blazux ModelOpt 전용 hybrid/graft는 직접 호환이 검증되지 않았다. blazux 기본 스크립트의 docker rm -f 및 포트 18300 충돌 위험. 기존 레거시 stop/rm/restart 금지, 단일 GB10 두 대형 GPU 서버 동시 기동 금지. vLLM 0.32 실기기 전환과 성능 개선 주장은 아직 미검증.
 
 ---
@@ -432,3 +459,15 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 - 공통 **기능별 독립 PR → default-OFF flag → 합성 fixture/회귀 증거 → rollback 및 Source Manifest 정합성 → 코드 리뷰 → 검증된 부분만 main**. 검증되지 않은 0.32 엔진 교체·ModelOpt hybrid/graft는 현재 엔진 최적화 PR에 혼합하지 않는다.
 - 기존 `main`의 GitHub branch protection은 2026-10-27 조회에서 **false**였다. 보호 규칙은 현재 문서/운영 정책이며 GitHub 설정이 자동 강제 중이라고 가정하지 않는다. CI 정상화는 여전히 보류된다. 이번 갱신은 **계획서·핸드오프·Source Manifest 문서/메타데이터 커밋만** 대상으로 하며 실제 DGX 코드/GPU/벤치 시험은 요청하지 않았고 수행하지 않는다.
 - 상세 정책 및 변경 제한은 [blazux 도입 계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md) §1.4, §3.1, Gate 2/3/6을 우선 참조한다.
+
+### 11.2 Gate 1 실행 시 필수 산출물 및 중단 기준 — 최신 보완
+
+1. **입력 기준:** 현 Qwen 저장소 최신 `main`/기능 브랜치 HEAD·Dockerfile 기반 preview, `compatibility.json`, BF16 MTP 31개 텐서 계약과 pinned Orcarouter/RadixArk revision. 외부 blazux는 **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa** 고정. 가능하면 각 함수별 실 Git Blob SHA와 patch 경로를 적는다.
+2. **함수별 대조:** PLE `mmap` header/offset/dtype/index, n-gram hash/dedup/sort/pinned H2D; MTP model loader, 31/31 guard·draft vocabulary·acceptance; QSA top-k 및 SM121 커널; Mamba/SSM prefix cache; Tool/Responses parser, streaming·literal marker. 함수 경로·shape·입출력·기존 구현 여부·바뀐 API·오류 조건을 **1:1 표로 작성**한다.
+3. **판정:** 항목별 **KEEP / PORT / ADAPT / DEFER_TO_TRACK_B / REJECT** 및 P1/P2/P3, 근거, 라이선스·third-party provenance, 위험, CPU 합성 fixture, 필요한 최소 수정 범위를 기록한다. 분석 중 새 엔진으로 강제 변경하지 않는다.
+4. **검증 선행:** 작은 **BF16 safetensors 합성 shard**로 offset/row/inverse-scatter를 비교하고 정상·오류·경계 테스트를 분리. 이후 P2 기능마다 독립 `default-OFF` flag, off 경로 동일성·롤백 게이트가 없으면 코드 병합 금지.
+5. **성능 재현성 차단:** PR #5 **정식 Baseline은 보존 완료**했으나 코퍼스 원본 hash·실 요청 sampling/서버 KV/cache 조건 및 checksum의 나머지 7개 파일 검증이 미완료다. 이 자료가 갖춰지기 전에는 blazux **동일 조건 A/B**나 tok/s 개선율을 주장하지 않는다.
+6. **Track B 시작 조건:** 별도 Go/No-Go·자산 이름/라벨·Docker base digest·receipt·loopback 포트·cache/view 분리/rollback 사전 정의가 필요하며, `feature/vllm032-bf16ple-port`는 **아직 미생성**. 같은 단일 GB10에서 레거시 GPU 모델과 신규 대형 모델 동시 기동 금지.
+7. **결과 기록:** 코드를 수정하지 않는 정적 비교라도 새 비교 문서/결정 기록을 GitHub에 영구 저장한다. 추적 파일 변경 시 Source Manifest 전체 120개(+신규 파일 수)의 path/mode/blob SHA와 정확히 동기화한다. `main` branch protection은 조회 시 false였으므로 정책상 기능 PR/리뷰를 준수하되 기술적으로 강제된 상태라고 쓰지 않는다. CI 정상화는 사용자 요청으로 보류하며, 실제 수행하지 않은 Mock/DGX/스크립트 테스트는 `NOT_RUN`으로 둔다.
+
+**이 다음 작업의 현재 완료 상태:** Gate 0(실측 원본 및 GitHub 백업) **DONE_WITH_REPRODUCIBILITY_GAPS**; Gate 1의 **실제 1:1 함수 비교표 NOT_STARTED**; Gate 2 합성 shard 시험 **NOT_RUN**; Track A의 실제 최적화 패치/새 PR **NOT_STARTED**; Track B 엔진 교체/이미지/배포/A-B **NOT_STARTED**.
