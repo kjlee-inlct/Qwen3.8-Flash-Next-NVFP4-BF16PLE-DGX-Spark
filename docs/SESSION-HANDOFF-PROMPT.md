@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, 최신 진행 과제는 **blazux Track A 정적 비교(Gate 1)**다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase 1 DGX 검증 준비 보강 — 최신 추가사항
+## 2026-10-27 Phase 1 DGX 오프라인 검증 PASS — 현재 최신 스냅샷
+
+- **실제 DGX 검증 출처:** 사용자 제공 terminal transcript, `feature/blazux-phase1-source-compare` **정확한 실측 HEAD `8555a0a5a73d6bf390eeeb3495a01257c0ca3327`**. [Phase 1 DGX 검증 보고서](BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md)를 최우선으로 확인한다.
+- **실기 결과:** `PASS_SOURCE_ONLY` 122/122 (시작·종료 2회), deployment manifest 4 target OK, Wizard fake/mock **38/38**, 전체 repo **172/172**, bash syntax 및 publication audit PASS. 기존 이미지의 격리 CPU 컨테이너에서 기존 PLE FP8/BF16 synthetic fixture **ALL OK**; Python test `torch=2.13.0+cu130`, `numpy=2.2.6`. 기존 main `66051cd`에서의 과거 172/172이 아니라 **새 Phase 1 실측**이다.
+- **판정:** Phase 1 Gate 1 정적 소스 비교 + 사용자 DGX 오프라인 회귀 시험 완료. GPU/실 모델 추론, blazux 최적화 코드 포팅, 성능 A/B, vLLM 0.32 ABI/Parser, GitHub CI **NOT_RUN/NOT_VERIFIED**. 기존 컨테이너를 stop/restart/replace하지 않았다. 결과만으로 실시간 운영 헬스/모델 품질 주장 금지.
+- **SHA 구분:** 사용자가 검증한 `8555a0a5...`는 변경 전 *테스트 대상*이다. 이 보고서·인수인계·Source Manifest만 추가한 GitHub docs-only commit은 새 HEAD이고, 사용자의 DGX에서 재시험한 SHA가 아니다. 최종 SHA는 본 커밋의 GitHub branch HEAD에서 확인. Manifest 재계산·정확한 트리 Blob/모드는 commit 이후 GitHub에서 확인한다.
+- **다음 분기:** Phase 1 확정 문서 커밋 HEAD에서 Phase 2 `feature/blazux-phase2-offline-fixtures` 분기. Phase 1 추가 코드 변경 금지, `main` 및 P0 불변, Track B 승인 전 미생성.
+
+---
+
+## 2026-10-27 Phase 1 DGX 검증 준비 보강 — 작성 당시 스냅샷
 
 - Phase 1 Gate 1은 static-only 소스 계약 보고서 작성 완료. 이번 보강으로 [실기 DGX 격리 clone/pull 및 소스+오프라인 시험 방법](BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md)을 추가했다. **Phase 1 blazux serving 패치 구현/성능 실측은 수행하지 않음**.
 - `scripts/verify-source-state.sh --strict`와 `scripts/verify-main-readonly.sh`는 각각 기존 release-branch allowlist 및 main 전용이라 **Phase 1 브랜치에서 실행 금지**. Phase 1 소스 검증은 별도 checkout에서 `scripts/verify-source-state.sh` (non-strict) + 명시적 branch/HEAD/remote 보호 확인을 사용. Manifest의 strict 허용 목록을 확대하지 않는다.

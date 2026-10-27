@@ -1,8 +1,13 @@
 # Track A / Phase 1 — Gate 1 소스·데이터 계약 1:1 비교
 
-> 작성일: 2026-10-27 (Asia/Seoul). 상태: STATIC_SOURCE_REVIEW_COMPLETE_WITH_BLOCKERS / CPU_RUNTIME_NOT_RUN / DGX_GPU_NOT_RUN / CI_NOT_VERIFIED. **운영 반영·성능 개선 검증 아님.**
+> 작성일: 2026-10-27 (Asia/Seoul). 초기 정적 분석 상태: STATIC_SOURCE_REVIEW_COMPLETE_WITH_BLOCKERS. **후속 DGX 시험:** PHASE1_DGX_OFFLINE_PASS / EXISTING_PLE_CPU_FIXTURE_PASS / DGX_GPU_NOT_RUN / CI_NOT_VERIFIED. **운영 반영·성능 개선 검증 아님.**
 > 소스 기준: 내부 P0 `966ec7cf0741734b844b1cea938d56678a756469`; 외부 blazux `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`; 비교 시작 전 main `2847e39b4131eb8aff78bf86ffce98892401722a`.
 > 계보: P0 → `feature/blazux-phase1-source-compare` (분기 부모 SHA `966ec7cf0741734b844b1cea938d56678a756469`). Phase 1 결과는 main/P0/실제 운영 DGX 서비스에 반입하지 않는다. 별도 DGX 소스 checkout으로의 read-only pull/오프라인 검사만 허용한다. Track B는 승인 전 생성 금지.
+
+## DGX 실측 보강 (Phase 1 Gate 1 종료)
+
+- 사용자 제공 2026-10-27 DGX 로그에서 **Phase 1 @ `8555a0a5a73d6bf390eeeb3495a01257c0ca3327`** 확인: Source Manifest 122/122(2회), Wizard Mock 38/38, 전체 unittest 172/172, manifest 4 target, Bash syntax / publication audit PASS. 기존 vLLM 이미지의 격리 CPU 컨테이너에서 FP8/BF16 PLE 기존 fixture `ALL OK`; GPU inference, blazux 패치 실행, CI는 NOT_RUN.
+- [별도 영구 실측 보고서](BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md)에 사용자 제공 로그의 검증 대상·명령·결과·한계를 기록했다. **이 문서 추가 이후 docs-only 새 SHA는 사용자 DGX에서 아직 재검증하지 않았다**. 블레이즈 최적화 기능은 Phase 1에 구현되지 않았다.
 
 ## 1. 비교 범위, 검증 방식, 신뢰 경계
 
@@ -10,7 +15,7 @@
 - 내부 [PLE](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/src/vllm_ple_mmap.py), [PLE CPU fixture](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/src/test_ple_mmap_cpu.py), [Dockerfile](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/Dockerfile), [MTP overlay](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/src/recipe/mtp.py), [MTP guard](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/src/patch_qwen4_exp_mtp_load_guard.py), [MTP compressed ignore](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/src/patch_qwen4_exp_mtp_compressed_ignore.py), [compatibility](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/966ec7cf0741734b844b1cea938d56678a756469/compatibility.json)을 읽었다.
 - 외부 [PLE](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/vllm_ple_mmap.py), [PLE CPU fixture](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/test_ple_mmap_cpu.py), [Dockerfile](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/Dockerfile), [Top-K](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_qsa_exact_topk.py), [QSADET](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_qsadet.py), [QSA FP8 KV](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_qsa_fp8_kv.py), [MTP prefilter](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_mtp_name_prefilter.py), [draft vocab](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_mtp_draft_vocab.py), [MTP graft](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/scripts/prepare-mtp-graft.sh), [Mamba block](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patch_mamba_block_size.py), [M-RoPE](https://github.com/blazux/qwen3.8-Flash-DGX/blob/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa/src/patches/qwen-mrope-cache-window.patch) 및 parser/Responses patch를 읽었다.
 - 정적 문자열·목록 검사: 내부 MTP guard 31개 = overlay 31개, 이름 집합 완전 일치. 관련 PLE/Top-K/Mamba/parser feature anchor 존재 확인. **이것은 스크립트 정적 검사이며 unittest 실행 또는 엔진 동작 검증이 아니다.**
-- 내부 Source Manifest P0의 120개 path/mode/blob SHA는 GitHub 트리와 일치. Phase 1 Gate 1 커밋 `8226d8e676a6bfb3671eef7fc09bfdebd0782249`에서 문서+Manifest **121/121 일치** 확인. 이번 read-only 검증 절차 추가에 대한 최종 Manifest 대조는 해당 보강 커밋 확인 결과를 따른다.
+- 내부 Source Manifest P0의 120개 path/mode/blob SHA는 GitHub 트리와 일치. Phase 1 Gate 1 커밋 `8226d8e676a6bfb3671eef7fc09bfdebd0782249`에서 문서+Manifest **121/121 일치** 확인. 후속 read-only 검증 절차 포함 커밋 `8555a0a5a73d6bf390eeeb3495a01257c0ca3327`에서 **122/122 GitHub·DGX 소스 검증 PASS**. 이번 실측 기록 추가 이후 Manifest는 다음 docs-only 커밋에서 별도 대조한다.
 
 ## 2. PLE mmap: 함수별 1:1 대응표 (최우선)
 
@@ -126,4 +131,4 @@
 ### Phase 1 DGX 소스 검증 경계
 
 - [DGX 전용 소스 pull 및 read-only 검사 절차](BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md)를 따른다. 원래 `--strict` 소스 검증은 지정된 release 브랜치 전용이므로 Phase 1에 사용하지 않는다. non-strict도 전체 파일 Blob/모드·Fork origin 검증을 강제한다.
-- 기존 Docker/모델 변경과 blazux 최적화 성능시험은 범위 밖. 이 보강은 Gate 1 QA 준비 문서이며 **신규 CPU unit/GPU/CI 실측 결과를 생성하지 않는다**.
+- 기존 Docker/모델 변경과 blazux 최적화 성능시험은 범위 밖. 해당 QA 준비 문서 작성 시점에는 실측이 없었지만, 이후 사용자 DGX에서 **CPU unit 172/172, mock 38/38, PLE CPU fixture ALL OK**가 확인됐다. GPU/CI는 여전히 NOT_RUN.

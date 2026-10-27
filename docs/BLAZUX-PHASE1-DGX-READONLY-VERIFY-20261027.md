@@ -4,6 +4,8 @@
 >
 > 원본: 개인 저장소 [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark), Phase 1 `feature/blazux-phase1-source-compare` ← P0 `966ec7cf0741734b844b1cea938d56678a756469`; 비교 외부 [blazux/qwen3.8-Flash-DGX](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa) commit `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`.
 
+> **실기 수행 증거 추가:** 문서 최초 작성 시 NOT_RUN이었으나, 이후 사용자가 Phase 1 `8555a0a5...`에서 실제 122/122·38/38·172/172 및 PLE CPU fixture `ALL OK`를 보고했다. 판정·범위·SHA 구분은 [DGX 결과 보고서](BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md)를 참조한다. 문서 보강 이후 docs-only 새 HEAD를 사용자 DGX에서 재시험한 것은 아니다.
+
 ## 1. 검토 결론 및 시험 가능 범위
 
 - **추가 최적화 구현: 필요 없음 (Phase 1 범위).** Gate 1은 [함수·데이터 계약 정적 비교 보고서](BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md)로 완료. PLE small-batch gather·pinned H2D·GPU inverse·계측 기능은 아직 포팅/활성화하지 않았고 후속 Phase에서 flag OFF 및 fixture로 검증할 사안이다.

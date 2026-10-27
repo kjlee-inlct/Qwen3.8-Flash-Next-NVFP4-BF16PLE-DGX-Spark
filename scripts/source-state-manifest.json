@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 122,
+  "tracked_file_count": 123,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -77,7 +77,8 @@
     "2026-10-27: refreshed session handoff at current blazux Track A branch; clarified 2026-10-26 wizard DGX tests as historical (114/114, 38/38, 172/172 on 66051cd), PR #5 merged benchmark 12x3 baseline, snapshot 2847e39 main and 0e9b25d design commit, current Track A Gate 1 priority, separate not-yet-created Track B branch, Gate 1 1:1 deliverables, P1/P2/P3, provenance/reproducibility gaps, deferred CI, and protected legacy. Documentation/manifest only; no new tests or DGX/GPU/runtime action.",
     "2026-10-27: user policy supersedes old blazux selective main merge: NEVER submit/merge/squash/cherry-pick/rebase blazux commits to main. P0 experimentation root remains separate; create fresh Track A Phase 1 child from pinned P0 HEAD, subsequent phases from prior finalized phase HEAD; optional Track B is sibling branched from P0 only after Go/No-Go; aborting all experiments must leave main and legacy deployment unchanged. Documentation+source inventory only, no runtime tests, no CI run.",
     "Phase 1 Gate 1 snapshot (2026-10-27): static-only source comparison, no runtime/CI; branch feature/blazux-phase1-source-compare from P0@966ec7cf0741734b844b1cea938d56678a756469; see docs/BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md.",
-    "2026-10-27 Phase 1 DGX-safe read-only source pull/verification runbook added. Release strict allowlist unchanged; local/DGX scripts, CPU tests, GPU, CI not executed for this documentation update. Source tree and manifest checked via GitHub tree at new commit."
+    "2026-10-27 Phase 1 DGX-safe read-only source pull/verification runbook added. Release strict allowlist unchanged; local/DGX scripts, CPU tests, GPU, CI not executed for this documentation update. Source tree and manifest checked via GitHub tree at new commit.",
+    "2026-10-27 DGX user logs: Track A Phase1@8555a0a5a73d6bf390eeeb3495a01257c0ca3327 source 122/122 twice, wizard mock 38/38, repo unit 172/172, manifest 4 targets, bash syntax and publication audit PASS; isolated CPU-only existing-image PLE FP8/BF16 fixture ALL OK, torch 2.13.0+cu130 numpy 2.2.6. Actual GPU/model A/B and CI NOT_RUN. New evidence/docs manifest commit has a different SHA and is not a freshly host-tested commit."
   ],
   "files": [
     {
@@ -143,12 +144,17 @@
     {
       "path": "docs/BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md",
       "mode": "100644",
-      "blob_sha": "29f37a9e7c9fb191a837c49bc0d05ddae2008714"
+      "blob_sha": "9bf29a84f8d56f52bb58fb7429b05f7dc188e4d0"
     },
     {
       "path": "docs/BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md",
       "mode": "100644",
-      "blob_sha": "4072f2a8ebfa7389593108373179d9f8ef101a09"
+      "blob_sha": "48f63639a9066dcc3cd1438f93c84e58ecf6a662"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "0abf5d2036b4e5d3c7df3687aa9cf9e36d567459"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -168,7 +174,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "76680cf6e93408d02e8708dead798e4da8e7f9ed"
+      "blob_sha": "4ca90a5bac6f1b83ee973e30b25a13c00c291524"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
