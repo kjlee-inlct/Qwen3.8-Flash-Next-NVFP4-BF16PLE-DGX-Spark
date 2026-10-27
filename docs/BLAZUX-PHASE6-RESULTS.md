@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 최신 결정: P6-A → P6-AB 성능 체크포인트 → P6-B (계획 승인, 추론/벤치 실행 미승인)
+
+- **사용자 요청**: P6-A에서 P6-B로 이동하기 전 벤치마크를 남겨 추후 B/C 개선·회귀를 판단할 기준점 확보. [P6-A→B 벤치 체크포인트 정본](BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md)을 신설; **옵션/권장 중간 성능 기록**이며 A/B/C correctness 및 P6-D 공식 성능 Gate를 대체하지 않음.
+- **최근 DGX 사용자 실제 확인 SHA** `0ad5e62caab2e95c57813cc6401d2f00622f3f4f`: Phase6 57/57 unittest PASS, Source200/200 PASS, CPU-only 1회 고정 이미지 소스 AST 8컴포넌트·역사적 SHA 7개 검증 `PASS_PINNED_SOURCE_AST_ONLY`, 운영 컨테이너 실행/고정 이미지 동일성 전후 PASS, 호스트 MemAvailable=14064MiB, `PHASE6_A3B1_DGX_SOURCE_PROBE_COMPLETED`. **실제 활성 Scheduler/CacheConfig/MambaSpec/물리 table/state pointer는 미관측**, P6-A 실제 ABI `BLOCKED`; P6-B/C/D NOT_RUN.
+- **지금 구현한 중간 단계 P6-AB-0**: 최초 pre-blazux `result.json` SHA256 `25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf`와 12조건×3회 원본 숫자, `environment.public.json`의 runner/tokenizer 및 반복·seed를 검증하는 `scripts/phase6-ab-benchmark-plan.sh` 및 CPU stdlib 계약 검사만 포함. **신규 추론·벤치 측정은 하지 않음**; 이번 코드 HEAD는 DGX NOT_RUN, 신규 **13 unittest/4 tracked files**, 다음 기대 총 Phase6 **70 tests / Source204** (실제 DGX PASS는 아직 아님).
+- **향후 진짜 PRE-B 재측정 P6-AB-1**: P6-A 실제 PASS, 격리 후보 또는 운영 API 대상의 구체적 HTTP/GPU 부하 및 모델 접근 승인, 동일 12×3·1 warmup·3 repeats, runner/tokenizer/corpus SHA, 샘플링·KV/cache 및 컨테이너 환경·자원 기록을 조건으로 별도 36회; 기존 `scripts/benchmark/run-llama-benchy.sh`는 운영 `127.0.0.1:8000`을 대상으로 하므로 **허가 없이 실행 금지**. 원본 pre-blazux 실측과 새 PRE-B 결과는 독립 저장, 과거 corpus/sampler/KV 동등성이 없으면 **strict A/B 비교 BLOCKED**; 대신 향후 동일 조건의 pre-B/post-B 신규 쌍으로 비교할 것. 임계값은 사전 승인 전 미확정. P6-AB-1 벤치 실행 자체는 이번 메시지의 계획 요청으로 별도 명시 승인된 것이 아님.
+- main/P0/Phase1–5, PR#5 원본 baseline, 기존 DGX 운영 Docker/서비스/포트/HF cache 불변; blazux 패치, 모델/GPU 벤치 실행, CI, PR, Merge 없음. 신규 문서/Source Manifest를 동일 Phase6 브랜치 단일 커밋으로 맞추고, 정확한 마지막 DGX-tested SHA와 후속 문서/소스 HEAD 구분.
+
+
 ## 2026-10-28 최신: 사용자 P6-A3b-1 격리 CPU-only 소스 조사 1회 명시 승인 (아직 DGX 실행 전)
 
 - **사용자 승인 범위**: 기존 고정 이미지 ID로 일회용 `docker run --rm` **1회**, CPU-only 설치 vLLM 소스 SHA256/AST 확인만 승인. `scripts/phase6-a3b1-cpu-container-gate.sh --execute`가 유일한 승인된 진입점. GPU/모델·가중치/HF 캐시/운영 Docker stop/restart/exec/HTTP/벤치/CI/패치/PR/merge 및 실제 Scheduler/CacheConfig/MambaSpec 객체 생성은 승인하지 않음. 기존 preview 스크립트는 계속 비실행. [안전 실행 정본](BLAZUX-PHASE6-A3B1-CPU-ISOLATED-GATE.md).
@@ -60,7 +69,7 @@ Phase6 offline code now has DGX operator evidence on exact SHA `0513b118260047b9
 | P6-C MTP/tool/parser/Responses | BLOCKED | model/API execution not approved; requires P6-B |
 | P6-D performance/stability | BLOCKED | benchmark not approved; requires all correctness gates |
 | GitHub Actions | NOT_RUN | user prohibited CI |
-| Phase6 DGX offline source/tests | PASS at previously tested code | 45/45 unittest, Source196/196 exact DGX SHA `7dc77164447bdd272b3ff791341d8ec5379a1edd`; new 57/200 untested |
+| Phase6 DGX offline source/tests | PASS at exact DGX source | **57/57** unittest and **200/200** Source Manifest at SHA `0ad5e62caab2e95c57813cc6401d2f00622f3f4f`; upcoming P6-AB planner code expected **70/204** remains NOT_RUN |
 | Phase5 offline exit | PASS (historical) | exact DGX-tested SHA `780b780fc7572226a6a9ff2e52cd8e1921c8738b`, never attribute to Phase6 HEAD |
 
 Record future runs with exact tested SHA, environment fingerprint, raw redacted evidence, each required oracle, failure/blocked reason, cleanup and final status. Do not overwrite history.
@@ -90,3 +99,15 @@ Record future runs with exact tested SHA, environment fingerprint, raw redacted 
 
 - Approval strictly one 1CPU/512MiB locked image read-only source SHA/AST ephemeral container, host + Docker metadata guards. Expected Phase6 unit 57, Source200; do not claim actual PASS until DGX log. Mark source SHA/AST success `PASS_PINNED_SOURCE_AST_ONLY`, not P6-A active runtime.
 - If pinned source drift/permissions/resource margin/runtime unavailable, report BLOCKED without retry or weakening isolation. P6-A real ABI/B/C/D stay BLOCKED.
+
+## 2026-10-28 DGX P6-A3b-1 operator result (exact tested SHA)
+
+- Dedicated Phase6 checkout fast-forward from 7dc771 to `0ad5e62caab2e95c57813cc6401d2f00622f3f4f`; full phase6 unittest **57/57 OK**, Source Manifest **200/200 PASS**; `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`.
+- One approved ephemeral CPU-only source SHA/AST scan: `P6-A3B1_BEFORE=PINNED_LEGACY_RUNNING`, `P6-A3B1_AFTER=PINNED_LEGACY_RUNNING`, host MemAvailable **14064 MiB** observed, policy 1 CPU /512MiB memory+total swap/no-network/no-GPU/read-only, 8 AST components, 7 previously pinned source SHA checked, KV resolver AST anchor true but SHA not pinned; `PASS_PINNED_SOURCE_AST_ONLY`, `PHASE6_A3B1_CPU_ISOLATED_PINNED_SOURCE_PASS_NOT_ACTIVE_RUNTIME`, final `PHASE6_A3B1_DGX_SOURCE_PROBE_COMPLETED`. No model inference, actual config reconstruction, GPU, HTTP, benchmarking or operational changes are evidenced.
+- **Actual P6-A remains BLOCKED**: Scheduler factory effective branch, `CacheConfig` and each `MambaSpec` block, live block tables and GPU tensor addresses not observed. P6-B/C/D remain NOT_RUN/BLOCKED.
+
+## Intermediate P6-A→B performance checkpoint requested (PLAN_ONLY)
+
+- User requests an additional pre-B performance reference. Existing raw baseline 12×3 36 measurements pre-blazux is already archived. New P6-AB-0 source-only `scripts/phase6-ab-benchmark-plan.sh` validates immutable baseline, original matrix and runner/tokenizer provenance; **not** a new benchmark.
+- Planned fresh PRE-B 36 measured runs: after actual P6-A PASS plus **separate** target-specific inference/API/performance approval and isolation, before B changes. Preserve same input+corpus+sampler+cache/KV configuration and raw private artifacts. If missing historic corpus SHA/sampling, report strict old-vs-new comparability BLOCKED and compare fresh pre-B/post-B matched pair instead.
+- Upcoming new Phase6 offline test count **70** and source manifest **204** are expectations until operator DGX log. No auto-start, no port8000 load or P6-B progression under this plan. [P6-AB runbook](BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md).
