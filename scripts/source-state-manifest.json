@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 129,
+  "tracked_file_count": 130,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -79,7 +79,8 @@
     "Phase 1 Gate 1 snapshot (2026-10-27): static-only source comparison, no runtime/CI; branch feature/blazux-phase1-source-compare from P0@966ec7cf0741734b844b1cea938d56678a756469; see docs/BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md.",
     "2026-10-27 Phase 1 DGX-safe read-only source pull/verification runbook added. Release strict allowlist unchanged; local/DGX scripts, CPU tests, GPU, CI not executed for this documentation update. Source tree and manifest checked via GitHub tree at new commit.",
     "2026-10-27 DGX user logs: Track A Phase1@8555a0a5a73d6bf390eeeb3495a01257c0ca3327 source 122/122 twice, wizard mock 38/38, repo unit 172/172, manifest 4 targets, bash syntax and publication audit PASS; isolated CPU-only existing-image PLE FP8/BF16 fixture ALL OK, torch 2.13.0+cu130 numpy 2.2.6. Actual GPU/model A/B and CI NOT_RUN. New evidence/docs manifest commit has a different SHA and is not a freshly host-tested commit.",
-    "2026-10-27 Track A Phase2 forked from final Phase1 docs HEAD a50fc53721f3d23325dca44eb799f0f388d65951. Added stdlib synthetic BF16 safetensors parser/layout regression, known duplicate-shard XFAIL, real module PyTorch/NumPy CPU-only gather/forward byte-exact fixture, MTP name/dtype 31/31, standalone QSA CPU oracle, isolated runner and Gate2/handoff docs. NOT_RUN: DGX new test scripts, CI, GPU inference, runtime optimizations. No main/P0/Phase1 modifications. Re-verify in dedicated Phase2 DGX checkout."
+    "2026-10-27 Track A Phase2 forked from final Phase1 docs HEAD a50fc53721f3d23325dca44eb799f0f388d65951. Added stdlib synthetic BF16 safetensors parser/layout regression, known duplicate-shard XFAIL, real module PyTorch/NumPy CPU-only gather/forward byte-exact fixture, MTP name/dtype 31/31, standalone QSA CPU oracle, isolated runner and Gate2/handoff docs. NOT_RUN: DGX new test scripts, CI, GPU inference, runtime optimizations. No main/P0/Phase1 modifications. Re-verify in dedicated Phase2 DGX checkout.",
+    "2026-10-27 DGX Phase2 user-provided logs for exact source HEAD fd9d8cfb6938b82ae979c9804386ffbe084cc81d: source 129/129 twice, wizard mocks 38/38, repository unit 188 completed OK with 1 known expectedFailure in duplicate PLE shard fail-closed regression, bash syntax/publication audit PASS, isolated CPU/PyTorch PLE byte-exact workers=1 and workers=4 output PHASE2_PLE_CPU_ALL_OK. G2-01 OPEN, not full fail-closed PASS. This docs/manifest-only commit has a new SHA; DGX tests not re-run for it. GPU, model inference, performance A/B and CI not verified."
   ],
   "files": [
     {
@@ -158,9 +159,14 @@
       "blob_sha": "9bf29a84f8d56f52bb58fb7429b05f7dc188e4d0"
     },
     {
+      "path": "docs/BLAZUX-PHASE2-DGX-VALIDATION-RESULTS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "b382d9fc4789f249a4e8a08bc850ad9aa215841d"
+    },
+    {
       "path": "docs/BLAZUX-PHASE2-GATE2-OFFLINE-20261027.md",
       "mode": "100644",
-      "blob_sha": "ad6eb1e0cc2771250ec014e224d240cb3d28f2a7"
+      "blob_sha": "39b2cd703ef05bfa8fae95b39bccbb16e97aa43b"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -180,7 +186,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "8ec23ab61c0e9653010e5271716702c1817f597f"
+      "blob_sha": "c5e321882d91d3604a519b15b8eb4ef32bd3717a"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

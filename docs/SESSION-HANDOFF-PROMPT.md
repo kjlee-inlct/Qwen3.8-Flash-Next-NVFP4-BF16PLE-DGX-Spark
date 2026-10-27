@@ -1,12 +1,21 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 2 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 2 실기 검증 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 2 — 합성 BF16/CPU Gate 2 구현 진행 (최신 스냅샷)
+## 2026-10-27 Track A Phase 2 DGX 검증 완료 — 현 최신 스냅샷
+
+- **실측 HEAD:** `feature/blazux-phase2-offline-fixtures@fd9d8cfb6938b82ae979c9804386ffbe084cc81d`. 사용자 DGX offline wrapper 로그: Source Manifest **129/129(2회)**, deployment manifest 4 targets, Wizard mock **38/38**, full unittest **188개 실행 / expected failure 1개**, Bash syntax·publication audit PASS.
+- **신규 PyTorch PLE fixture:** 사용자 후속 stdout에서 기존 production PLE BF16 mmap gather와 torch forward 바이트 일치 `workers=1 chunk=1024` 및 `workers=4 chunk=2` **PASS**, 종료 `PHASE2_PLE_CPU_ALL_OK`. GPU·vLLM 런타임 추론·성능/품질 A/B, blazux 패치 도입은 시험하지 않았고 CI는 계속 `NOT_VERIFIED`.
+- **미해결 G2-01:** `_find_shards`는 중복 PLE shard index를 덮어쓸 수 있어 fail-closed 보장되지 않는다. unittest의 `@expectedFailure`는 **1건 XFAIL(OPEN)**이며 결함 해결 PASS로 해석 금지. Phase 2 완료는 *계획된 오프라인 테스트 실행 완료*를 의미할 뿐 전체 안전성/운영 승인 아님.
+- **정본 결과:** [Phase 2 DGX 검증 보고서](BLAZUX-PHASE2-DGX-VALIDATION-RESULTS-20261027.md), [Gate 2 문서](BLAZUX-PHASE2-GATE2-OFFLINE-20261027.md), 사용자가 시험한 원본 SHA `fd9d8cfb...`. 이 영구 기록만 추가하는 docs-only commit의 새 HEAD는 **실측한 Git SHA가 아니다**.
+- **다음 우선순위/브랜치:** 현재 Phase 2의 알려진 XFAIL 위험을 후속 독립 실험 Phase에서 fail-closed로 수정하고 regression으로 검증할지 Gate 리뷰에서 판단한다. 새 Phase는 Phase 2 확정 docs HEAD에서만 자식 분기하며, 부모·P0·`main`은 불변. `main`으로 향하는 PR/merge/cherry-pick/squash/rebase/sync **절대 금지**. Phase 간 PR은 필요할 때 review-only/draft, **merge도 금지**.
+
+---
+## 2026-10-27 Track A Phase 2 — 합성 BF16/CPU Gate 2 구현 진행 (과거 스냅샷)
 
 - **정확한 계보:** P0 `feature/blazux-vllm032-evaluation-20261027@966ec7cf0741734b844b1cea938d56678a756469` → Phase 1 최종 `feature/blazux-phase1-source-compare@a50fc53721f3d23325dca44eb799f0f388d65951` → **Phase 2 `feature/blazux-phase2-offline-fixtures`**, 그 SHA로 신규 생성. Phase 1의 실제 DGX 테스트 대상은 `8555a0a5...`; Phase 1 docs-only 확정 HEAD는 `a50fc537...`.
 - **Phase 2 코드:** 표준 라이브러리 기반 합성 BF16 safetensors 13×7/4 shards, 원본 PLE parser/layout AST 함수의 오프라인 회귀, 실제 PyTorch/NumPy PLE mmap gather+forward byte-by-byte CPU fixture, MTP 31/31 guard, QSA *독립* CPU TopK oracle, 독립 브랜치/원격/Manifest fail-closed 검증 wrapper. [Gate 2 계획·실행·위험 보고서](BLAZUX-PHASE2-GATE2-OFFLINE-20261027.md). 기존 모델/serving 코드/설치/운영 컨테이너는 변경하지 않는다.

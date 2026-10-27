@@ -1,11 +1,17 @@
 # Track A Phase 2 — Gate 2 합성 BF16/CPU 계약 시험 및 DGX 실행 절차
 
-> 2026-10-27 (Asia/Seoul). 상태: **GATE2_IMPLEMENTED_AWAITING_REAL_DGX_EXECUTION / CI_NOT_VERIFIED / GPU_NOT_RUN**. 신규 최적화 커널·vLLM 패치·Docker image 변경은 없음. GitHub에 코드/문서가 저장됐다는 사실은 테스트 PASS가 아니다.
+> 2026-10-27 (Asia/Seoul). 상태: **GATE2_DGX_OFFLINE_COMPLETE_WITH_KNOWN_XFAIL_1 / CI_NOT_VERIFIED / GPU_NOT_RUN**. 신규 최적화 커널·vLLM 패치·Docker image 변경은 없음. GitHub에 코드/문서가 저장됐다는 사실은 테스트 PASS가 아니다.
 >
 > 전 단계: [Phase 1 DGX 실측](BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md) / 검증 HEAD `8555a0a5a73d6bf390eeeb3495a01257c0ca3327`; Phase 1 확정 문서 HEAD `a50fc53721f3d23325dca44eb799f0f388d65951`.
 >
 > 본 Phase 2 브랜치 `feature/blazux-phase2-offline-fixtures`는 Phase 1 확정 HEAD에서 정확히 분기. 외부 분석 기준 [blazux/qwen3.8-Flash-DGX](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa) @ `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`.
 
+## 실기 검증 확정 — 현재 결과 (초기 실행 방법보다 최신)
+
+- 사용자 제공 DGX Spark 로그의 **Phase 2 정확한 HEAD `fd9d8cfb6938b82ae979c9804386ffbe084cc81d`**: `PASS_SOURCE_ONLY` **129/129 두 번**, Wizard mocks **38/38**, full Unit **188개 완료, XFAIL=1**, manifest 4 targets, Bash/publication audit PASS.
+- 후속 신규 실제 production PLE/NumPy/PyTorch CPU 경로: `workers=1 chunk=1024` 및 `workers=4 chunk=2` **BF16 bit/byte-exact PASS**, 종료 `PHASE2_PLE_CPU_ALL_OK`.
+- **이 검증은 Phase 2 코드의 실측 SHA에 한정한다.** 본 검증 기록/Manifest 후속 docs-only commit에서는 재실행하지 않았음. 중복 PLE shard 검사는 **known open XFAIL**이고, GPU/실 모델/QSA 커널/CI는 NOT_RUN.
+- 근거·계보·한계·후속 위험은 [DGX Phase 2 실측 결과 영구 문서](BLAZUX-PHASE2-DGX-VALIDATION-RESULTS-20261027.md)를 우선한다.
 ## 1. 구현 범위와 역할 분리
 
 | 파일 | 실행 의존성 | 시험 대상/역할 |
@@ -101,8 +107,8 @@ scripts/phase2-check-offline.sh
 
 Phase 2 완료 판정 후 Phase 3은 Phase 2의 고정 HEAD에서 **새 자식 브랜치**로만 생성한다. 실험 코드를 `main`으로 PR, merge, cherry-pick, squash, rebase, sync하지 않는 정책은 성능 결과와 무관하게 영구 유지한다.
 
-## 6. 실행 결과 기록 형식
+## 6. 실행 결과 기록 형식 (실기 실행 전 준비 사항·과거 지침)
 
 - 검증한 정확한 Phase 2 HEAD, origin/branch, Source Manifest `N/N`, mock `N/N`, full unittest `N/N`, known-gap **expectedFailures 개수**, stdout final PASS, 별도 `PHASE2_PLE_CPU_ALL_OK`.
 - CPU/PyTorch, GPU visible flag, 실제 실행/미실행 구분. CI=NOT_VERIFIED (Actions 0). 기존 모델 서비스 생존 여부는 별도 관찰하지 않았으면 UNKNOWN.
-- 사용자 제공 결과를 검토한 뒤에만 영구 보고서의 `AWAITING_REAL_DGX_EXECUTION` 상태를 변경한다. 새 docs-only commit SHA를 테스트한 것처럼 쓰지 않는다.
+- 사용자 제공 결과를 검토하여 위 영구 검증 문서로 실측을 기록했다. 새 docs-only commit SHA를 테스트한 것처럼 쓰지 않는다.
