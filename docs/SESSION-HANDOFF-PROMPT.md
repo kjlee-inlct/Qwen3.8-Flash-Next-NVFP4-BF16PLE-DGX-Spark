@@ -1,5 +1,13 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 현재 진행 작업만 인수인계할 때 읽을 우선 문서 (2026-10-28)
+
+- **새 대화에 바로 붙여 넣을 현재 작업 전용 프롬프트**: [PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md). 이 요약은 지금 진행 중인 Phase6 실서비스 ABI 관찰 + 승인된 기존 서비스 벤치 재측정만 다루고, 본 문서 아래에 누적된 과거 확정 사실·완료 이력·운영 금지 규칙은 링크로 참조한다.
+- **마지막 실제 DGX-tested 소스 SHA**: `fb5deae540812a300cb8404a53a202e505c40577` (70/70 Phase6 unit, Source204/204, 기존 Baseline 원본 SHA/12×3 검증 PASS, 신규 inference `NOT_RUN`). **현재 기능 구현 GitHub 코드 SHA**: `d031d4196eab1f5f1603d6541eaf5a31b02192c0` (새 live `/metrics` 관찰기와 guarded provisional 12×3 스크립트, 아직 DGX NOT_RUN); 현재 문서만 변경한 새 commit은 별도로 DGX 테스트한 SHA가 아니다.
+- CI/PR: 2026-10-28 구현 HEAD 조회 당시 **Open PR 0**, combined statuses `[]`, 조회 가능한 PR-triggered workflow runs `[]`. 이 정보는 GitHub CI PASS를 뜻하지 않는다. 현재 진행 단계에서는 별도 기능 merge/PR이 없으며 본 문서 갱신으로 기존 보호 규칙을 변경하지 않는다.
+
+---
+
 ## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
 
 - **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).
