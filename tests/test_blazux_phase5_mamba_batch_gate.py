@@ -154,10 +154,11 @@ class Phase5MambaPhysicalBatchGateTests(unittest.TestCase):
 class Phase5MemcopyTiledPartitionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.f = pure_oracles()["tiled_spans"]
+        cls.f = staticmethod(pure_oracles()["tiled_spans"])
 
     def test_g8_is_in_pinned_batch_gate(self):
         code = embedded_python()
+        self.assertIsInstance(type(self).__dict__["f"], staticmethod)
         self.assertIn("G8 PASS:", code)
         self.assertIn('g8_cases == 13824', code)
         self.assertIn("((src_addr_i ^ dst_addr_i) & 7) == 0", code)

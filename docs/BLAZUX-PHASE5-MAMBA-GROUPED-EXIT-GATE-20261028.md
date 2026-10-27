@@ -1,10 +1,17 @@
 # Track A Phase 5 — Mamba physical-address grouped Gate / Phase 6 readiness
 
-> **G1–G7 DGX PASS at 3c364209 / G8 NEW HEAD DGX NOT_RUN / GPU-RUNTIME NOT_CERTIFIED / PATCH_APPROVAL ZERO.** This is a Phase 5 check and does not itself authorize a new phase, real GPU/model access, CI, or runtime patching.
+## 2026-10-28 G8 fail-closed 및 새 영구 문서 규칙
+
+`ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`의 첫 G8 DGX 시도: Source177/177와 Wizard38/38 PASS, 전체 310 unittest는 **FAILED(errors=15)**; Python descriptor 함수 바인딩 `cls.f`에 암묵적 `self` 전달된 신규 테스트 코드 오류. **Group B/G1–G8 NOT_RUN**. 같은 Phase5에서 `staticmethod`로 수정, 기존 test에서 descriptor를 검사하도록 보강. 로컬 참고값 13,824/13,824 synthetic fixture PASS는 **DGX 전체 Gate PASS가 아님**. 완료된 마지막 실제 DGX 전부 PASS `3c364209`: 300/300, Source176, G1–G7. 신규 Github 수정 HEAD 재실행 전 Phase5 G8 종료 주장 금지.
+
+신규 운영 규칙: 규칙/증거/오류/핸드오프 누락 확인 시, **SESSION-HANDOFF-PROMPT.md + 적용 계획 + 해당 정본 보고서/종료기준 + Full Source Manifest를 항상 같은 Phase5 브랜치의 동일 커밋에서 동기화**. 다음 실행은 Github 직접 커밋→DGX 별도 Phase5 checkout의 `git pull --ff-only`→**통합 Gate 한 번**. Phase6 새 브랜치/PR/Merge 및 실 GPU/운영/patch 변경은 별도 승인 전 금지.
+
+
+> **G1–G7 DGX PASS at 3c364209 / first G8 ff1f66a DGX FAIL / fixed HEAD DGX NOT_RUN / GPU-RUNTIME NOT_CERTIFIED / PATCH_APPROVAL ZERO.** This is a Phase 5 check and does not itself authorize a new phase, real GPU/model access, CI, or runtime patching.
 
 ## Evidence provenance
 
-- Last actual full DGX Gate PASS remains **tested code HEAD `a5376cc06536ce786cdb6db8425e26e21b608910`**, unit **276/276**, XFAIL=0, source **169/169**. Neither later docs-only HEADs nor the new code in this Gate has been DGX tested yet.
+- Last actual full DGX Gate PASS remains **tested code HEAD `3c36420998061f7a3e656eb77390c04b7d2ef935`**, unit **300/300**, XFAIL=0, source **176/176**, G1–G7 PASS. Later source `ff1f66a` **FAILED 310 unittest** because of new G8 Python descriptor binding; Group B/G1–G8 NOT_RUN at that SHA. The new binding fix HEAD has not been fully DGX tested yet.
 - User DGX source-only evidence in [fused-kernel body report](BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md) and [physical state/metadata report](BLAZUX-PHASE5-DGX-PHYSICAL-STATE-METADATA-RESULTS-20261028.md). Installed `v1/worker/mamba_utils.py` pinned SHA256 `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`, physical helper lines 122–252, metadata lines 843–957.
 - This commit introduces `scripts/phase5-mamba-batch-check.sh` and `tests/test_blazux_phase5_mamba_batch_gate.py` (24 locally executed synthetic/unit cases, **not** full DGX run). A pinned installed vLLM source SHA drift blocks verification.
 

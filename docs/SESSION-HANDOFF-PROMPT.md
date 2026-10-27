@@ -1,5 +1,14 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 필수 영구 규칙: 코드·테스트·문서·핸드오프를 항상 한 커밋에서 동기화
+
+1. 신규 요청 규칙, 사용자 DGX 실측, 오류 원인, 수정·예외·보류, 누락된 계약, 다음 단계 Gate 및 실행 명령을 발견하면 **즉시 같은 Phase 브랜치의 `docs/SESSION-HANDOFF-PROMPT.md`, 관련 `docs/BLAZUX-VLLM032-ADOPTION-PLAN.md`, 해당 검증 정본/종료 기준 문서와 `scripts/source-state-manifest.json`을 함께 갱신**한다. 단순 대화상의 약속은 영구 인수인계가 아니다. 별도 언급이 없어도 작업 완료 전 항상 이 네 범주를 대조한다. 기록 중복 없이 서로 다른 문서에는 정본 링크와 최신 상태만 요약한다.
+2. **실제 테스트 PASS·FAIL의 출처를 실행한 정확한 SHA에 귀속**한다. 후속 문서/테스트 수정 SHA에 이전 PASS를 옮겨 쓰지 않는다. 최신 실행의 실패가 있으면 이전 성공 기록을 삭제하거나 덮어씌우지 않고 `PASS / FAIL / BLOCKED / NOT_RUN` 및 원인·수정·재시험 필요 여부를 함께 남긴다. 그룹 A가 실패한 경우 그 뒤 그룹 B/G1–G8는 **NOT_RUN**이다. 예상 시험 수와 실측 시험 수를 구별한다.
+3. **1개씩 질문·검사 지시 금지:** 근거 수집은 하나의 묶음 Gate로 구성하되 각 필수 검사, source SHA, bounds, source/CPU vs GPU-runtime 한계, 최종 마커를 누락 없이 기록한다. Github 커넥터로 직접 코드·스크립트·문서·Manifest를 동일 브랜치에 CAS/fast-forward 커밋한 다음, 사용자가 별도 Phase 전용 DGX checkout에서 `git pull --ff-only` 및 커밋된 단일 Gate를 실행한다. 채팅 파일 다운로드/복사로 배포하지 않는다.
+4. 이전·현재·다음 단계 변경 범위, 보호 브랜치 HEAD, PR/CI 실제 상태, 최신 DGX의 전체 로그/출처, 잔여 위험·미완료/보류, 다음 명령까지 `SESSION-HANDOFF-PROMPT.md`에서 재현 가능해야 한다. 운영 Docker/모델/GPU/weights/HF cache/포트, blazux 실제 patch, Phase6 생성/PR/Merge는 별도 승인 전 금지.
+5. **현재 실패 수정의 필수 기록:** DGX `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`에서 Source177/177, Wizard38/38을 통과했지만 unit **310 실행, FAILED(errors=15)**. 원인은 `Phase5MemcopyTiledPartitionTests.setUpClass: cls.f = pure_oracles()["tiled_spans"]`에서 Python 함수가 인스턴스의 bound method로 변환돼 예상 6인자 대신 7인자가 된 것. G8 알고리즘의 실제 GPU 결함 증거가 아님. **Group B/G1–G8 NOT_RUN**. 현재 테스트 소스에서 `cls.f = staticmethod(...)`로 바인딩 수정하고 같은 이름의 기존 10개 G8 회귀시험에 staticmethod descriptor 확인을 추가; 다음 동일 브랜치 커밋에서 DGX 전체 Gate 310 + G1–G8 재시험 필수. 마지막 실제 **전체 PASS** 코드는 여전히 `3c36420998061f7a3e656eb77390c04b7d2ef935`(300/300 XFAIL0, Source176/176, G1–G7)이며 새 수정 커밋은 아직 DGX NOT_RUN.
+
+
 ## 2026-10-28 DGX Phase5 grouped G1–G7 전체 PASS 및 마지막 G8 alignment/tile CPU 보강 — 최신
 
 - [새 DGX 실측 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md): **실제 DGX 검증 코드 SHA `3c36420998061f7a3e656eb77390c04b7d2ef935`**, Source Manifest **176/176**, Wizard Mock **38/38**, 전체 Python unit **300/300 XFAIL0**, Source AST/Bash/audit wrapper PASS, G1–G7 PASS, CPU source internal 343개 check PASS. 설치 vLLM `_memcpy_u64_tiled:40–119` 전체 본문 확인, 최종 `PHASE5_GROUPED_GATE_EXECUTION_COMPLETED`. 이는 CUDA GPU correctness/활성 블록 설정값/Tool·Responses·MTP 실동작 증명이 아님.

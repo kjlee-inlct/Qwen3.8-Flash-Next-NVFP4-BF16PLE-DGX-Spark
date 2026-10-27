@@ -1,5 +1,12 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 Phase5 G8 최초 DGX 실패 및 수정 (증거와 규칙 영구 동기화)
+
+- [DGX Group A/G8 오류를 추가 기록한 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md): 새 Gate `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5` **Source177/177, Mock38/38 PASS**이나 **310 unit FAILED(errors=15)**. 원인은 새 `tiled_spans` 함수의 Python descriptor 자동 `self` 주입으로 인한 `TypeError: ... takes 6 positional arguments but 7 were given`. Group B/G1–G8는 실행되지 않았으며 **절대로 G8 PASS로 보고하지 않는다**.
+- 동일 Phase5 후속 테스트 수정: `cls.f = staticmethod(pure_oracles()["tiled_spans"])` + 기존 G8 테스트에서 descriptor 회귀 확인. 별도 로컬 합성 `13,824`정렬/타일 조합과 `23,552`개 span은 PASS. 수정 후 Github HEAD의 새 DGX 전체 Gate는 **NOT_RUN**, 전체 예상 310건. 마지막 전체 DGX 성공 근거는 `3c36420998061f7a3e656eb77390c04b7d2ef935` (300/300·176·G1–G7)이다.
+- **새 영구 규칙:** 신규 규칙/오류/실측/미완료/보류/차기 Gate마다 code+tests+각 영구 문서(`SESSION-HANDOFF-PROMPT.md`·적용계획·검증 정본·종료기준)+전체 Source Manifest를 **동일 커밋에서 최신화**. 사용자에게는 Github 커밋 후 DGX **전용 Phase5 checkout에서 fetch+ff-only pull+통합 Gate 한 번**만 지시. 계획·코드·검증 샘플을 다운로드 배포하지 않는다. 실패 SHA와 패스 SHA 엄격히 분리, Phase6/실 GPU/모델/서빙/patch·PR/Merge는 별도 승인 전 불변.
+
+
 ## 2026-10-28 DGX Phase5 grouped G1–G7 전체 PASS 및 마지막 G8 alignment/tile CPU 보강 — 최신
 
 - [새 DGX 실측 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md): **실제 DGX 검증 코드 SHA `3c36420998061f7a3e656eb77390c04b7d2ef935`**, Source Manifest **176/176**, Wizard Mock **38/38**, 전체 Python unit **300/300 XFAIL0**, Source AST/Bash/audit wrapper PASS, G1–G7 PASS, CPU source internal 343개 check PASS. 설치 vLLM `_memcpy_u64_tiled:40–119` 전체 본문 확인, 최종 `PHASE5_GROUPED_GATE_EXECUTION_COMPLETED`. 이는 CUDA GPU correctness/활성 블록 설정값/Tool·Responses·MTP 실동작 증명이 아님.

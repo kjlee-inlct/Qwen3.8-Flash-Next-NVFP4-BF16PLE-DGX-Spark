@@ -1,5 +1,14 @@
 # Track A Phase 5 — DGX Group A + G1–G7 Mamba physical-state offline 결과 (2026-10-28)
 
+## 2026-10-28 G8 최초 DGX 실행 결과 — 실패 (회귀시험 함수 바인딩)
+
+- 실행 브랜치 `feature/blazux-phase5-correctness-mtp-offline`, 실제 **실패 SHA `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`**. `git fetch` + `git pull --ff-only` Fast-forward PASS.
+- GROUP A Source Manifest `PASS_SOURCE_ONLY:177` 및 Wizard Mock `38/38 PASS`. 그러나 `Ran 310 tests in 0.365s` 후 `FAILED (errors=15)`, `FAIL: Phase5 unittest suite failed`. 10개의 새 G8 테스트 중 `test_g8_is_in_pinned_batch_gate`만 PASS, 나머지 9개 테스트가 unbound/bound descriptor 오류(서브테스트 포함 15 error)로 실패. `PHASE5_UNIT_PASS=310`, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, `G8 PASS`, 최종 Shell success 마커 **없음**.
+- 재현/원인: `Phase5MemcopyTiledPartitionTests.setUpClass(cls)`에서 `cls.f = pure_oracles()["tiled_spans"]` 함수 객체를 클래스 속성으로 저장. Python instance lookup `self.f(...)`가 `self`를 1개 더 전달하여 `TypeError: tiled_spans() takes 6 positional arguments but 7 were given`. **테스트 harness의 함수 descriptor 바인딩 오류이며 Triton/GPU/물리 memory fault 증거가 아님**.
+- 수정: `cls.f = staticmethod(pure_oracles()["tiled_spans"])`로 인스턴스 자동 바인딩 방지 + 기존 테스트의 staticmethod 형태 확인. 별도 로컬 G8 geometry fixture **13,824/13,824 synthetic CASE PASS**, span 23,552개 검사. 수정 GitHub SHA에서의 **전체 310 unittest, Source177 및 Group B/G1–G8 DGX 실행은 아직 NOT_RUN**. **가장 최근 완전 PASS**는 변경 이전 실측 `3c36420998061f7a3e656eb77390c04b7d2ef935`: 300/300 XFAIL0, Source176/176, G1–G7.
+- Fail-closed: Group A failure caused `set -Eeuo pipefail` exit. **Group B G1–G8 전체 NOT_RUN** (앞선 `3c364209`의 G1–G7 PASS를 이 SHA에 귀속하지 않는다). Source-only/synthetic CPU correctness와 활성 GPU runtime/실 Mamba sizes·physical bounds/real speculative acceptance 여부는 구별한다.
+
+
 > **DGX_GATE_PASS_AT_TESTED_SHA / UNIT_300_XFAIL0 / SOURCE176 / WIZARD_MOCK38 / G1_TO_G7_PASS / ORIGINAL_MEMCPY_BODY_PRINTED / RUNTIME_GPU_NOT_VERIFIED / PATCH_APPROVAL_ZERO.**
 >
 > 사용자 제공 `붙여넣은 텍스트(1)(20261027-164453).txt` (user-supplied shell transcript), exact tested source **`3c36420998061f7a3e656eb77390c04b7d2ef935`** on `feature/blazux-phase5-correctness-mtp-offline`. Source was fast-forward pulled in a **separate dedicated Phase 5 checkout** from previous source SHA `a5376cc`. Original operational `yslab-qwen38-bf16ple-dgx-spark` shell CWD did not cause a pull there: command changes directory to Phase5 checkout before Git actions.
