@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 pinned blazux patch preflight (실행 전) 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX pinned blazux source-preflight 실제 PASS 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 5 pinned blazux Patch Preflight 추가 — 현재 최신 (DGX 실행 전)
+## 2026-10-27 Track A Phase 5 DGX pinned blazux Patch Preflight 실측 PASS — 최신 스냅샷
+
+- **소스 코드 실측 HEAD:** `feature/blazux-phase5-correctness-mtp-offline@2c7c6896430be0d9eada656f17edf97d9c5f4d3f`; 사용자 DGX 출력에서 **152/152 Source Manifest, 38/38 Wizard Mock, unittest 223/223 XFAIL=0, AST 및 Source-only patch preflight PASS**. 마지막 `PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL`, `PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED`. 이 후속 보고서/manifest 문서 커밋은 **DGX에서 시험한 소스 HEAD가 아님**.
+- **patch-family 실측 상태 5개:** Mamba/Scheduler=`SOURCE_PREIMAGE_CANDIDATE_UNSAFE_TO_APPLY`; Tool Argument Schema, Tool Literal Marker=`MULTI_FILE_PATCH_PREREQUISITES_UNVERIFIED`; Responses terminal=`PROTOCOL_AND_SERVING_COMPATIBILITY_UNVERIFIED`; reduced MTP draft vocab=`MTP_COMPUTE_LOGITS_HOOK_CANDIDATE_NOT_APPROVED`. **APPLY_APPROVED=0, runtime/ABI correctness=NOT_VERIFIED**. 어떤 상태도 blazux 최적화를 운영 이미지에 적용한 것이 아님.
+- **원래 설치된 12개 파일 SHA/AST**는 [Phase5 DGX Patch Preflight 영구 보고서](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md) 참조. Mamba legacy block-size 1 / dedicated mamba field 0, Scheduler legacy 1 / `self.block_size` assignment 0. MTP NVIDIA `compute_logits(self,hidden_states,spec_step_idx)` (lines465–468) 및 `load_weights(self,weights)` (470–488), `lm_head`/logits_processor source anchors; Parser/Responses 신규 helper 대부분 부재. **field 정의·group LCM·state restore, Parser multi-file patch preimages, MTP shared head/weight-vocab/acceptance를 확인하기 전 실제 patch 금지**.
+- **범위와 다음 순서:** 같은 Phase5에서 우선 Mamba/Scheduler cache config·group LCM·state slot 생성/복원 소스 계약, 다음 Tool/Responses multi-file preimage/context, 마지막 MTP lm_head 실제 호출·TP/dtype/vocab 계약을 **읽기 전용으로 추적**. 사용자 명시적 승인 없는 GPU/HTTP/모델 load/serving/TPS/CI 금지. Track B 0.32/YaRN/Hybrid FP8 별도 보류.
+- **시험 기준 분리:** Phase 4 독립 FAST/STATS는 기본 OFF, Phase5 CPU 정확성/소형 bench는 이전 실측 그대로 보존. 새 GitHub 문서 전용 SHA에서 223 unit 재실행한 것으로 주장 금지.
+- **GitHub refs:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf0741734b844b1cea938d56678a756469`, Phase1 `a50fc53721f3d23325dca44eb799f0f388d65951`, Phase2 `76588845d7742703475ae1f49d5e8f5c174bb77a`, Phase3 `760f227e46a358445db3d3931b5efbe40de5f609`, Phase4 `69860277122dffe3082c5b065e4361a571317a8e` 불변. **PR/Merge 지금 필요 없음**, 필요하면 Phase5→Phase4 Draft 비병합 리뷰만. blazux→`main` PR/merge/cherry-pick/rebase/squash/sync 영구 금지. 운영 Docker/모델/cache/포트/receipt 절대 변경 금지.
+
+---
+
+## 2026-10-27 Track A Phase 5 pinned blazux Patch Preflight 추가 — 이전 계획 (DGX 실행 전)
 
 - **현재 실제 검증 증거:** 사용자 DGX에서 소스 `9e2d1647357938f6d465eb9b3ce473d03e38e779`가 148/148 Source Manifest, 38/38 Mock, unittest 215/215 XFAIL0 및 preview source-only ABI 탐색 종료. 그 실측을 문서화한 기존 Phase5 docs HEAD는 `e3ea43e95cb444197400389b0dfe3064a3e9f879`. **새 소스 HEAD에서 223개 unittest 및 patch preflight 결과는 아직 NOT_RUN**.
 - **이번 범위 묶음:** `src/phase5_patch_readiness.py`의 import-free vLLM source file 12개 read-only SHA256/AST method fingerprint/patch anchor 카운트 및 conservative classification, `tests/test_blazux_phase5_patch_readiness.py` 신규 **8개 fake-source stdlib 회귀**, `scripts/phase5-check-offline.sh` AST 검사 확장, [Patch Preflight Runbook](BLAZUX-PHASE5-PATCH-PREFLIGHT-READONLY-20261027.md). 전체 단위시험 **223 예상, XFAIL 0**; 직접 DGX 로그 수신 전 PASS를 선언하지 말 것.

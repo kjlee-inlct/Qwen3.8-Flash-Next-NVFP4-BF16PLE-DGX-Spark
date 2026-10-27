@@ -1,9 +1,18 @@
 # Phase 5 확장 — pinned blazux 패치별 Source Preflight (no-write)
 
-> **상태: SOURCE_PREPARED / DGX_NEW_GATE_NOT_RUN / ENGINE_COMPATIBILITY_NOT_CERTIFIED.** 2026-10-27 Asia/Seoul.
+> **최신 상태: DGX_SOURCE_PREFLIGHT_PASS / SOURCE_152_152 / MOCK_38_38 / UNIT_223_XFAIL_0 / PATCH_APPLICATION_NOT_APPROVED / ENGINE_COMPATIBILITY_NOT_CERTIFIED.** 2026-10-27 Asia/Seoul.
 > 이전 Phase5 **DGX 실제 통과**: source `9e2d1647357938f6d465eb9b3ce473d03e38e779`, 148/148 Source, unittest 215/215 XFAIL=0. 이후 **문서 전용** HEAD `e3ea43e95cb444197400389b0dfe3064a3e9f879`. 이번 코드와 보고서가 추가된 **새 소스 HEAD는 아직 DGX 재실행 전**이다.
 >
 > 비교 기준: blazux [PIN `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa). 동일 Phase5 브랜치 `feature/blazux-phase5-correctness-mtp-offline` 유지; PR/Merge·운영 수정 없음.
+
+## 2026-10-27 DGX 실제 Patch Preflight 결과 — 최초 준비 상태보다 우선
+
+- **사용자 DGX 실측 정확한 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`**: Source Manifest 152/152 PASS(전후), Wizard mocks 38/38 PASS, unittest 223/223 PASS, XFAIL=0, AST 검사 PASS, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, `PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL`, `PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED` PASS.
+- 설치 preview vLLM **12개 파일 Source SHA256/AST method fingerprint/anchor count 수집 완료**. 다섯 패치 계열의 `preflight.status`는 각각 Mamba `SOURCE_PREIMAGE_CANDIDATE_UNSAFE_TO_APPLY`, Tool Schema 및 Literal Marker `MULTI_FILE_PATCH_PREREQUISITES_UNVERIFIED`, Responses `PROTOCOL_AND_SERVING_COMPATIBILITY_UNVERIFIED`, MTP `MTP_COMPUTE_LOGITS_HOOK_CANDIDATE_NOT_APPROVED`. **적용 승인 0건**.
+- **Mamba:** legacy `self.cache_config.block_size` 1회, `self.cache_config.mamba_block_size` 0회, Scheduler legacy assignment 1회. 해당 field/LCM/state-slot 단위 연결 확인 전 수정 금지.
+- **MTP:** NVIDIA `models/qwen3_8_flash_next/nvidia/mtp.py`의 `compute_logits(self,hidden_states,spec_step_idx)` lines 465–468, `load_weights(self,weights)` lines 470–488 확인. 실제 lm_head 공유/weight shape/vocab/acceptance 미검증.
+- **Tool/Responses:** Parser/Adapter helper 및 Responses failed/incomplete event source anchor 부재(현재 확인된 각 소스에서만). 다중파일 패치 전제 및 실제 SSE/Chat 동작 검증 전 적용 금지.
+- [DGX Source Preflight 정본 실측 보고서](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md)에 원래 SHA 및 12개 컴포넌트 SHA·추가 차단요소 기록. **이후 보고서/Manifest만 추가한 docs-only SHA는 DGX에서 223개 재실행된 SHA가 아니다**. GPU/실 모델/HTTP/TPS/CI 전부 NOT_RUN/NOT_VERIFIED.
 
 ## 1. 이번에 구현한 검증
 

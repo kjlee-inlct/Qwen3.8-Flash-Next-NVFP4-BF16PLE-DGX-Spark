@@ -6,7 +6,13 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase 5 pinned blazux patch preflight 통합 (아직 DGX 실행 전)
+## 2026-10-27 Phase 5 pinned blazux patch preflight DGX 실측 PASS (최신)
+
+- 실제 DGX 소스 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`, Source Manifest **152/152 PASS**, Wizard Mock **38/38**, unittest **223/223 XFAIL=0**. 패치 **소스 전제조건 점검** 종료, 설치 엔진의 기능 패치/출력 비교/성능 측정 **미실행**. [실측 정본](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md).
+- Mamba/Scheduler의 legacy source preimage anchor와 NVIDIA MTP `compute_logits` 훅 후보 확인. 그러나 cache_config.mamba_block_size 실제 공급/LCM/state restore, Parser/Responses 다중파일 및 새 helper 의존성, MTP shared `lm_head`/dtype/vocab/acceptance 미검증. **다섯 계열 적용 승인 0**.
+- 동일 Source/CPU-only 안전 범위는 새 Phase 없이 **Phase5 지속**. 이전 P0/Phase1~4/`main` 불변, main PR/Merge 영구 금지. 운영 Docker/모델/GPU/HTTP/TPS/CI 미변경/미실행.
+
+## 2026-10-27 Phase 5 pinned blazux patch preflight 통합 (기존 실행 전 계획)
 
 - 기존 Phase5 source-only 실측 `9e2d1647...`: Source 148/148, 215 unittest PASS, 설치 NVIDIA Qwen3.8 MTP/PLE 경로 확인. 정확한 인수인계는 [DGX ABI 증거 보고서](BLAZUX-PHASE5-DGX-PREVIEW-ABI-TRIAGE-RESULTS-20261027.md)를 따른다.
 - 이번 Phase5 동일 브랜치에서 [Patch preflight 오프라인 runbook](BLAZUX-PHASE5-PATCH-PREFLIGHT-READONLY-20261027.md)에 따라 Mamba/Scheduler cache config, Parser Tool Argument Schema·Literal Marker, Responses streaming terminal, MTP Reduced Vocabulary **5개 patch-family**의 read-only 12-source AST/hash/anchor/signature 조사 및 8개 fake fixture 테스트를 추가했다. **예상 223 tests/XFAIL0, 실제 새 DGX 실행 NOT_RUN**.
