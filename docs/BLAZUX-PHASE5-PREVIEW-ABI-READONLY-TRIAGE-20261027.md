@@ -1,9 +1,17 @@
 # Phase 5 내부 확장 — 설치된 preview vLLM 읽기 전용 ABI 소스 점검
 
-> 2026-10-27 (Asia/Seoul) / **구현 완료, DGX 실행 전 상태: ABI_TRIAGE_READY_NOT_RUN**.
+> 2026-10-27 (Asia/Seoul) / **최신 DGX 실측: SOURCE_TRIAGE_RUN_PASS / SOURCE_148_148 / UNIT_215_XFAIL_0 / ACTUAL_ENGINE_ABI_NOT_CERTIFIED**.
 > 같은 Phase 5에서 처리한다. **새 Phase/Track B 생성 없음. 운영 vLLM 파일, 이미지, HF cache, 모델, 포트, GPU는 수정하거나 실행하지 않는다.**
 >
 > 기준: 개인 Fork `feature/blazux-phase5-correctness-mtp-offline` (이 단계의 부모 `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`), 이전 사용자 실기 소스 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`. 원래 Phase4/Phase3/P0/main immutable.
+
+## DGX 읽기 전용 ABI triage 실측 완료 — 최초 실행 계획보다 우선
+
+- 검증된 정확한 소스 `9e2d1647357938f6d465eb9b3ce473d03e38e779`, `PASS_SOURCE_ONLY: 148 tracked file(s)`, Wizard Mock **38/38**, unittest **215/215 XFAIL=0**, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` 및 `PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED` 확인.
+- 기존 고정 경로에서 발견하지 못했던 NVIDIA MTP와 PLE는 실제 설치 트리 **`models/qwen3_8_flash_next/nvidia/mtp.py` 및 `models/qwen3_8_flash_next/nvidia/ple_layer.py`** 에 존재. 동일 계열 AMD implementation도 별도 존재. `Qwen3_8FlashNextMTP.compute_logits(self,hidden_states,spec_step_idx)` 소스 시그니처 확인; **engine compatibility 인증 아님**.
+- Mamba legacy block expression = true, Scheduler legacy block assignment = true. Parser Tool argument helper들, streaming literal-marker helper, Responses failed/incomplete helper는 분석된 파일에서 미발견. **SOURCE_ANCHOR_CANDIDATE**로만 기록, 실제 패치 적용 또는 cache/Parser/HTTP runtime 검증으로 해석 금지.
+- Candidate scan 결과 `visited=536`, `matched_file_count=43` 중 **32개 후보만 반환(CANDIDATE_LIMIT_REACHED)**. 전체 모델 감사 완료 아님. 필요한 Qwen3.8 NVIDIA/AMD MTP/PLE는 반환된 목록에서 직접 관측됨.
+- [Phase5 ABI triage 사용자 DGX 실측 정본](BLAZUX-PHASE5-DGX-PREVIEW-ABI-TRIAGE-RESULTS-20261027.md). 새 보고서/Manifest 커밋은 **docs-only 후속 HEAD**이며 DGX에서 215개를 재실행한 SHA가 아니다.
 
 ## 1. 왜 같은 Phase 5에서 추가 검증하는가?
 

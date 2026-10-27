@@ -8,7 +8,15 @@
 >
 > **핵심 경계:** 이 Phase 5는 실제 설치된 preview vLLM의 `StreamingParserEngine`, `MambaHybrid`, speculative drafter를 패치하는 단계가 **아니다**. 저장소에는 그 프레임워크 본문이 vendored되어 있지 않아 소스 ABI를 모르는 상태에서 적용하면 잘못된 기능 PASS를 만들 수 있다. 합성 oracle 테스트 성공은 실제 prefix hit·Tool Calling·Responses·MTP acceptance 성공과 다르다.
 
-## 2026-10-27 Phase 5 동일 Gate 후속 작업 — read-only preview vLLM ABI triage 준비
+## 2026-10-27 Phase 5 DGX Preview ABI Triage 실측 완료 (최신)
+
+- 사용자 제출 로그: 정확한 소스 HEAD `9e2d1647357938f6d465eb9b3ce473d03e38e779`; Source Manifest **148/148**, Wizard Mock **38/38**, unittest **215/215 XFAIL=0**, Source AST 검사 PASS, `PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED` 종료.
+- **NVIDIA 모델 경로 해소:** `models/qwen3_8_flash_next/nvidia/mtp.py`/`ple_layer.py`/`model.py` 존재, AST class 및 MTP `compute_logits(...,spec_step_idx)` 시그니처 확인. 이전 `ABSENT_OR_RELOCATED`는 고정 경로 가정 때문에 나타난 현상이었음.
+- Mamba/Scheduler 기존 block-size 표현과 Qwen Parser/Responses 미존재 helper를 확인하여 외부 blazux **소스 비교 후보**로만 선별. 후보 수 43개/출력 제한 32개 `CANDIDATE_LIMIT_REACHED`: 전체 검색 완료 아님.
+- **실제 엔진 패치·runtime/cache hit/Parser SSE/MTP acceptance/실 weights·GPU/TPS·CI는 전부 미검증/미실행**. 계속 같은 Phase5에서 exact source/patch anchor 내용을 읽기 전용으로 비교해야 한다.
+- [DGX Preview ABI Triage 실측 보고서](BLAZUX-PHASE5-DGX-PREVIEW-ABI-TRIAGE-RESULTS-20261027.md)에 소스 SHA와 개별 결과를 보존. 이 기록을 추가한 GitHub docs-only SHA는 DGX에서 재시험하지 않았다.
+
+## 2026-10-27 Phase 5 동일 Gate 후속 작업 — read-only preview vLLM ABI triage 준비 (이전 계획)
 
 - 사용자 DGX의 **원래 208/208 PASS**는 정확한 코드 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`에 대한 실측으로 **변경 없이 보존**. 보고서 이후 Phase 5 최신 docs HEAD `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`에서 작업을 계속한다.
 - 이번 같은 Phase 5의 추가 3개 파일: `src/phase5_preview_abi_audit.py`, `tests/test_blazux_phase5_preview_abi_audit.py` (신규 **7개 stdlib 회귀**), [Preview ABI 읽기 전용 실행 절차](BLAZUX-PHASE5-PREVIEW-ABI-READONLY-TRIAGE-20261027.md). `scripts/phase5-check-offline.sh`를 확장하고 **이전 208 + 신규 7 = 총 215개 unittest/XFAIL 0 (예상)**. 실제 DGX 215개는 아직 **NOT_RUN**.

@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 read-only preview ABI triage 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX preview ABI triage 실측 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 5 read-only preview ABI triage 추가 (현 최신, 실행 전)
+## 2026-10-27 Track A Phase 5 DGX preview ABI 소스 triage 실측 완료 — 현재 최신
+
+- **사용자 DGX 실측 소스 SHA:** `feature/blazux-phase5-correctness-mtp-offline@9e2d1647357938f6d465eb9b3ce473d03e38e779`; Source **148/148 PASS**, Wizard mock **38/38 PASS**, unittest **215/215 OK XFAIL=0**, AST 검사 및 마지막 `PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED` PASS. 실측은 사용자 stdout로 확인, GitHub에서 DGX를 재실행하지는 않았다.
+- **실제 source 경로 해소:** 설치된 `vllm/models/qwen3_8_flash_next/nvidia/mtp.py`(SHA256 `d1ee05d4ec35360a9a801f7ef5271e8e4cda458a9c754058899441fa1e7bd0d6`), `nvidia/ple_layer.py` (SHA256 `6690edcd2e2b2ae309b214991a060bffbdbbcdc42334e164db0aebcc0a5b397e`) 및 NVIDIA `model.py` 존재; AMD 대응 구현은 **별도 소스**로 확인. `Qwen3_8FlashNextMTP.compute_logits(self,hidden_states,spec_step_idx)`, `forward`, `load_weights` AST 함수/인자 확인. 이전 `ABSENT_OR_RELOCATED`는 이전 조사지의 경로 가정 오류였음.
+- **blazux anchor triage:** Mamba `legacy_small_block_expression=true`, `direct_mamba_block_expression=false`, Scheduler `legacy_cache_block_assignment=true`, `scheduler_block_assignment=false`. `ParserEngine`의 `_normalize_tool_arguments`/`_arguments_block_emission`/`_skip_incomplete_tool_slot`, `StreamingParserEngine._marker_is_literal`, Responses failed/incomplete 관련 helper 미발견. `parser_engine_config.guard_literal_tool_markers` 미발견. **이 결과는 source anchor 힌트**이고 ABI/기능 PASS, 실제 버그 확정, patch의 안전한 적용 허가는 아님.
+- **범위 한계:** `model_search= CANDIDATE_LIMIT_REACHED`, 536 Python 파일 탐색 중 matched 43개/표시 32개; 전체 모델 검사 미완료이나 Qwen3.8 NVIDIA·AMD MTP/PLE 대상 파일은 실제 목록에 포함. 모든 세부 path/method/SHA 근거: [Phase5 ABI 실측 정본](BLAZUX-PHASE5-DGX-PREVIEW-ABI-TRIAGE-RESULTS-20261027.md).
+- **다음 같은 Phase5 내 작업:** pinned blazux `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`의 Mamba/Scheduler, Parser/Responses, MTP 원본 patch와 설치된 함수 본문/정확한 source anchor를 읽기 전용으로 비교하여 `SAFE_OFFLINE_PATCH_CANDIDATE/ABI_MISMATCH/ALREADY_PRESENT/INCONCLUSIVE` 판정. **GPU/HTTP 실제 모델 서빙, cached-vs-uncached, MTP acceptance, TPS/CI는 별도 승인 전 미실행.** 이전 Phase/P0/main 보호, PR/merge 현재 불필요, main 방향 작업 영구 금지.
+- **Git SHA 구별:** 사용자 실기 HEAD `9e2d1647...`와 이번 증거 보고서/handoff/source manifest만 갱신하는 docs-only HEAD는 구별할 것. 새 docs SHA는 DGX에서 215 tests 재실행된 코드가 아님.
+
+---
+
+## 2026-10-27 Track A Phase 5 read-only preview ABI triage 추가 (이전 계획)
 
 - **기반:** Phase 5 이전 실기 PASS 코드는 `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94` (144/144 Source, 208/208 unittest XFAIL0, 12조건 합성 PLE CPU benchmark, 설치 preview source inventory). 확정 docs HEAD `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`에서 같은 Phase5의 후속 코드·시험·문서만 커밋. **Phase5를 세분화해 새 Phase를 만들지 않는다**.
 - **이번 추가:** `src/phase5_preview_abi_audit.py`가 vLLM을 import하지 않고 기존 이미지의 설치 소스 경로·SHA256·클래스/함수 인자·blazux pinned anchor를 AST/문자열로 읽는다. qwen4_exp·qwen3_8 트리의 모델 MTP/PLE 후보 파일을 우선 찾고, 후보가 많으면 한계 도달을 명시. symlink·out-of-tree·너무 큰 파일은 읽지 않는다. 실제 preview source patch/load/GPU 실행 없음.
