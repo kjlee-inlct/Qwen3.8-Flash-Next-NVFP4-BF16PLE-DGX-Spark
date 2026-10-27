@@ -1,5 +1,12 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 Phase5 grouped Mamba G1–G7 exit Gate — DGX NOT_RUN
+
+- [단일 검증/Phase6 readiness runbook](BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md): `scripts/phase5-mamba-batch-check.sh`를 **동일 Phase5 브랜치에 커밋**, 사용자는 전용 clean Phase5 checkout에서 fast-forward pull 후 **스크립트 한 번만** 실행. 스크립트는 전체 `scripts/phase5-check-offline.sh`(Source Manifest/mock/unit/AST/audit)와 설치 vLLM pinned SHA4파일/물리 주소/metadata/helper + V1/V2 mapping/multi-group/SD·DS conv/temporal/token bias/zero-boundary/negative-sentinel의 **G1–G7 CPU-only 합성 Gate**를 묶는다. `_memcpy_u64_tiled` 본체도 bound 내 출력해 누락 여부를 확인한다.
+- 신규 `tests/test_blazux_phase5_mamba_batch_gate.py`의 **24개 stdlib 테스트는 이 세션의 격리된 로컬 staging에서만 PASS**, **새 Github HEAD의 DGX 전체 suite/Manifest Gate는 NOT_RUN**. 마지막 실제 DGX 전체 Gate PASS=코드 `a5376cc06536ce786cdb6db8425e26e21b608910`의 276/276 XFAIL0, Source169/169; 새 예상 300건을 DGX 실측으로 표현 금지.
+- Phase6 진입을 빠르게 준비하되 **source/CPU Gate 완료 ≠ GPU runtime correctness/실 모델의 CacheConfig=MambaSpec 값/실 block-table 메모리 안전/CI/patch 승인**. Phase6 브랜치/실 GPU 실험/서빙·Docker·weights·모델·HF cache·HTTP/TPS/CI 및 모든 blazux patch는 **별도 명시적 승인 전 금지**. 현재 Phase5에서 기록·검증만 하고 main/P0/Phase1–4 불변, PR/Merge 없음.
+
+
 ## 2026-10-28 Phase5 Mamba P1/P2 실물리 State address + Metadata source inspection — 최신
 
 - [정본 P1/P2 전체 본문 실측 보고서](BLAZUX-PHASE5-DGX-PHYSICAL-STATE-METADATA-RESULTS-20261028.md): 사용자 DGX 로그 `붙여넣은 텍스트(1)(20261027-161759).txt`에서 설치 `mamba_utils.py` SHA256 `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3` 고정, `_copy_mamba_state_block:122–252` 및 `_populate_metadata:843–957` **전체 본문**, `OUTPUT_PARTIAL=False`, physical pointer/index/stride, DS/SD conv vs temporal bias 및 group-local metadata/table ptr 공급 확인.

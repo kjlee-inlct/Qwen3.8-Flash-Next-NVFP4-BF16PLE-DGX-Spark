@@ -65,6 +65,7 @@ for name in (
     "tests/test_blazux_phase5_scheduler_provenance.py",
     "tests/test_blazux_phase5_block_flow_narrow.py",
     "tests/test_blazux_phase5_scheduler_mamba_contract.py",
+    "tests/test_blazux_phase5_mamba_batch_gate.py",
 ):
     ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
 print("PHASE5_SOURCE_AST_OK")
