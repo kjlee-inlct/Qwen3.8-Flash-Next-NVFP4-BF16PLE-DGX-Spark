@@ -1,11 +1,18 @@
 # Track A Phase 5 — Scheduler 생성자 block_size 출처 / Mamba State Slot 정렬 조사
 
-> **상태: SOURCE_READY / NEW_DGX_GATE_NOT_RUN / NO_PATCH_APPROVAL / NO_GPU / NO_ENGINE_IMPORT.**
+> **최신 상태: DGX_SOURCE_ONLY_GATE_PASS_244 / MANIFEST_160 / SCHEDULER_LCM_AND_CTOR_ANCHORS_FOUND / ASSIGN_SCAN_PARTIAL / NO_PATCH_APPROVAL / NO_GPU.**
 > 날짜: 2026-10-27 (Asia/Seoul). 기존 Phase 5 브랜치 `feature/blazux-phase5-correctness-mtp-offline`에서 유지. 별도 Phase 6/Track B/PR을 생성하지 않는다.
 >
 > **기반 docs-only Git HEAD:** `fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1`. 실제 DGX Source-only trace를 실행한 SHA는 `2cadc7369b4b813332a767733faa9c2529413cd9`이며 JSON+marker만 확보됐다. 이 SHA의 전체 233개 unit 및 Source 156/156 **실측 PASS는 확인되지 않았다**. 마지막 확정 전체 test PASS는 `2c7c6896430be0d9eada656f17edf97d9c5f4d3f` (223/223, mocks38/38, Source152/152).
 >
 > 외부 blazux pinned `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`와 설치 preview vLLM의 패치 호환 여부는 **아직 결정하지 않는다**.
+
+## DGX Source-only 실제 실행 결과 (최신, 이전 실행 계획보다 우선)
+
+- 사용자 첨부 `붙여넣은 텍스트(1)(20261027-102956).txt`: **실측 소스 HEAD `04b871ab632b2a59d55d11f19009c48daa3ce5c0`**, 전체 unittest `PHASE5_UNIT_PASS=244; XFAIL=0`, Source Manifest **160/160**, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, `PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED` 및 최종 `PHASE5_SCHEDULER_PROVENANCE_EXECUTED_NOT_CERTIFIED` PASS.
+- **Source 연결 후보 발견:** `v1/engine/core.py:161`의 `Scheduler(block_size=scheduler_block_size, hash_block_size=hash_block_size)`, `v1/core/kv_cache_utils.py:640`의 `scheduler_block_size=math.lcm(*group_block_sizes)`, `kv_cache_utils.py:665`의 `hash_block_size=requested if requested is not None else math.gcd(*hashing_sizes)`, `Scheduler.__init__:174`의 `self.block_size=block_size`. **각 위치는 AST 관측이지만 실제 caller↔return import/value flow는 아직 확인되지 않았다**.
+- **중요 PARTIAL:** Python 384 파일(6,448,206 bytes, unreadable=0)을 스캔했어도 **`ASSIGN_SITE_LIMIT`=64**에 도달, assignment 출력은 **부분 목록**. Scheduler direct-name 후보 1개는 `NAME_MATCH_SCHEDULER_NOT_RESOLVED`, dynamic-ctor 0은 그 스코프의 관측에 한정. 모든 곳을 완전 검사했다고 주장하지 말 것.
+- [DGX Scheduler Provenance 실측 정본](BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md)에서 source lines/판정·잔여 검증 조건 기록. Mamba worker와 Scheduler aligned split은 계속 `cache_config.block_size`를 사용하는 source preimage; 현 실 모델 state-slot 정확성 미검증, 패치 적용 승인 0, GPU/운영 미실행. **후속 docs-only Git SHA는 DGX에서 재실행된 소스 HEAD가 아니다.**
 
 ## 1. 직접 확인된 문제와 이번 접근
 

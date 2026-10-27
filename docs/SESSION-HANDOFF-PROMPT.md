@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler 생성자 block-size 출처 조사 최신 실행 전 스냅샷을 우선한다. 기존 Source-only JSON 증거는 유지하며 새 244 unit 실측은 아직 없다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler/LCM 소스 추적의 사용자 DGX 244/244 PASS 실측 스냅샷을 우선한다. Source-only 분석은 PARTIAL이고 패치 적용 승인은 없다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase 5 Scheduler 생성자·LCM 출처 읽기 전용 조사 묶음 (현 최신, DGX 실행 전)
+## 2026-10-27 Phase5 DGX Scheduler LCM / ctor source-only 실측 결과 — 우선 스냅샷
+
+- **사용자 DGX 실제 소스 `04b871ab632b2a59d55d11f19009c48daa3ce5c0`**: `PHASE5_UNIT_PASS=244; XFAIL=0`, Source Manifest 160/160 PASS, AST/Wrapper PASS, `PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED`, 최종 `PHASE5_SCHEDULER_PROVENANCE_EXECUTED_NOT_CERTIFIED`. 새로운 **docs-only** SHA에서는 DGX 244개를 재실행하지 않음. 이번 로그에 개별 mock 시험 수는 미표시(Wrapper는 완료). [상세 Source-only 결과](BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md).
+- **핵심 실제 AST:** `v1/engine/core.py:161` `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)` direct-name 후보 1 (`NAME_MATCH_SCHEDULER_NOT_RESOLVED`); `v1/core/kv_cache_utils.py:640` `scheduler_block_size=math.lcm(*group_block_sizes)`; `kv_cache_utils.py:665` `hash_block_size=requested if requested is not None else math.gcd(*hashing_sizes)`; `Scheduler.__init__:174` `self.block_size=block_size`; `_mamba_block_aligned_split:392`와 `MambaHybridModelState.add_request:116`은 legacy `cache_config.block_size`. 아직 EngineCore의 실제 import/return/assignment 연결, hybrid group/mamba state slot 단위는 미증명. blazux patch 적용 금지.
+- **한계:** `scan.state=PARTIAL` 이유 `ASSIGN_SITE_LIMIT` (일반 block_size assignment 64개로 잘림); scan file 384/384, 6,448,206 bytes, unreadable 0. dynamic ctor 0은 스코프 안 결과. **PARTIAL을 COMPLETE라고 기록하면 안 됨**.
+- **다음 같은 Phase5:** `v1/engine/core.py`와 `v1/core/kv_cache_utils.py:resolve_kv_cache_block_sizes`만 대상으로 `group_block_sizes` 생성→`scheduler_block_size` LCM→반환→EngineCore Scheduler 인자를 precise import/AST source-only 분석하고 Mamba spec.slot alignment를 synthetic CPU fixture로 확인. 범위를 좁혀 ASSIGN_SITE_LIMIT 회피, 새 Phase 생성 금지.
+- **보호:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0/Phase1~4 그대로. PR/Merge 불필요, `main` PR/Merge/Cherry-pick/Rebase/Squash/Sync 영구 금지. 운영 Docker/GPU/weights/HF cache/model/ports/HTTP/TPS/CI/배포 모두 별도 승인 전 미진행. 모든 blazux 적용 승인 **0건**.
+
+---
+
+## 2026-10-27 Phase 5 Scheduler 생성자·LCM 출처 읽기 전용 조사 묶음 (이전 구현 계획)
 
 - **단일 Phase5 유지:** 브랜치 `feature/blazux-phase5-correctness-mtp-offline`의 검증된 기존 문서 HEAD `fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1`에서 새 source-only 분석기·회귀시험·runbook·Manifest를 추가한다. **확정 실기 결과는 이전 코드 `2c7c6896...`의 unit223/223, Mock38/38, Source152/152**. 사용자 마지막 AST JSON은 보호 명령 맥락 SHA `2cadc7369b4b813332a767733faa9c2529413cd9`의 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED` 확인에 한정; 그 소스의 **233 tests/156 Source 전체 Gate는 로그 미제공으로 미확정**. 새 이번 소스 HEAD 또한 DGX **NOT_RUN**.
 - **왜 추가하는가:** config/cache.py:125에 mamba_block_size STORE, config/vllm.py:2535–2536에 LOAD가 있지만 `MambaHybridModelState.add_request:116`은 `cache_config.block_size`로 slot을 나누고 `Scheduler._mamba_block_aligned_split:392`도 legacy block_size 사용. Scheduler.__init__:174의 `self.block_size`는 계산된 값이 아니라 **생성자 인자 `block_size` 저장**. 따라서 실제 생성자 **호출부/동적 scheduler_cls factory·LCM/그룹 정렬·state-slot restore** 검증이 다음 우선순위다.

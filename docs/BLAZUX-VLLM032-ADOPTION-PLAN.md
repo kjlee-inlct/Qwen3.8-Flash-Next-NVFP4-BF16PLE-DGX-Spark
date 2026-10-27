@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 Scheduler ctor 인자/그룹 LCM 소스 추적 추가 (DGX 새 코드 미실행)
+## 2026-10-27 Phase5 Scheduler block-size LCM/생성자 DGX Source-only 실측 (최신)
+
+- **사용자 DGX 실제 소스 HEAD `04b871ab632b2a59d55d11f19009c48daa3ce5c0`**: Source Manifest 160/160, `PHASE5_UNIT_PASS=244; XFAIL=0`, Source AST/Wrapper PASS, Scheduler AST tool 종료 marker. [실측 근거 보고서](BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md).
+- `kv_cache_utils.py:640` `scheduler_block_size=math.lcm(*group_block_sizes)`; `kv_cache_utils.py:665` `hash_block_size=requested if requested is not None else math.gcd(*hashing_sizes)`; `v1/engine/core.py:161` `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)`; Scheduler ctor `self.block_size=block_size`. **서로 다른 파일의 수식·변수 같은 이름을 실제 call/return flow로 확정하면 안 됨**.
+- `scan.state=PARTIAL` 원인 `ASSIGN_SITE_LIMIT`=64, 384 files/6,448,206 bytes 읽음/unreadable 0. 다음 같은 Phase5에서 **EngineCore → resolve_kv_cache_block_sizes 반환 → group block size 계산**의 파일 지정 source-only 정밀 추적을 실시. Mamba state slot, 실제 prefix hit, Parser/Responses, MTP reduced draft는 미승인.
+- blazux 패치 적용 승인 0, GPU/모델/운영/HTTP/TPS 미실행, `main`·P0·Phase1~4 불변 및 PR/Merge 금지. 새 docs-only SHA는 DGX 재시험하지 않았다.
+
+## 2026-10-27 Phase5 Scheduler ctor 인자/그룹 LCM 소스 추적 추가 (기존 DGX 실행 전 계획)
 
 - 사용자 제공 Phase5 AST trace JSON(명령 보호 SHA `2cadc7369b4b813332a767733faa9c2529413cd9`)으로 `config/cache.py`의 `mamba_block_size` 정의 후보·`config/vllm.py`의 참조, Scheduler.__init__의 `self.block_size=block_size`, Mamba/Scheduler worker의 `cache_config.block_size` 사용이 확인됐다. **실제 Scheduler 생성자 호출자/LCM/SSM state slot 단위는 여전히 미확인**. 직전 확정된 전체 unit은 223/223 at `2c7c6896...`; 새 233 unit PASS도 로그 미제공.
 - 새 [Scheduler Block Provenance 실행 Gate](BLAZUX-PHASE5-SCHEDULER-BLOCK-PROVENANCE-20261027.md)에서는 기존 Phase5 브랜치에 import-free source-only `Scheduler(...)` 직접/동적 class factory 후보 탐색, positional/keyword `block_size`·`hash_block_size` 표현, LCM 대입·mamba field STORE/LOAD, 원본 Scheduler/Mamba AST method trace와 합성 **11개 회귀시험**을 하나로 묶는다. **목표 전체 244개/XFAIL0, Manifest160**, 현재 신규 DGX **NOT_RUN**.

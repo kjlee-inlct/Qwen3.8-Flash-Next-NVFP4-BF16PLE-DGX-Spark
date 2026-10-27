@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 160,
+  "tracked_file_count": 161,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -95,7 +95,8 @@
     "2026-10-27 user DGX patch preflight actual tested source HEAD 2c7c6896430be0d9eada656f17edf97d9c5f4d3f: Source 152/152 twice, Wizard Mock 38/38, unittest 223 OK XFAIL=0, AST PASS, PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL and final PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED. All 12 installed vLLM preview source files parsed and SHA/AST fingerprints recorded; Mamba/Scheduler legacy block expressions present but cache_config.mamba_block_size not observed; Parser/Responses multi-file patch prerequisites missing/unverified; NVIDIA MTP compute_logits/load_weights candidate not approved; five patch families zero approvals. GPU, actual prefix hit/tool/Responses, MTP acceptance, real model inference/TPS and CI not verified. This docs-only report/Gate5/adoption/handoff+153-file source Manifest commit is NOT retested on DGX and has its own SHA. Main/P0/Phase1-4 unchanged, no PR/merge.",
     "2026-10-27 Phase5 same-branch dependency-trace followup (parent docs-only e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6): import-free read-only AST analysis of Mamba/Scheduler block division and cache field provider STORE/LOAD (bounded config+v1 search), Parser/Qwen3/Streaming/Responses static calls and redacted return shapes, NVIDIA MTP lm_head/logits_processor assignment and compute_logits/load_weights, PLE forward. Added 10 synthetic stdlib fixture tests (233 total expected XFAIL0), AST gate, isolated DGX runbook, adoption/handoff and 156-entry full Manifest. New HEAD is NOT DGX tested; previous true user DGX PASS 223/223 and source 152 belonged ONLY to tested source SHA 2c7c6896430be0d9eada656f17edf97d9c5f4d3f. No runtime patches or approvals, no GPU/model/HTTP/TPS/CI. Main/P0/Phase1-4 refs unchanged; no PR/Merge.",
     "2026-10-27 DGX Phase5 AST trace JSON for command-guarded SHA 2cadc7369b4b813332a767733faa9c2529413cd9: source-only trace completed with Mamba cache config STORE/LOAD, Scheduler block_size constructor assignment, conditional NVIDIA MTP lm_head and Parser/Responses static edges. JSON itself contains no HEAD. No 233-unit-test or 156-source-manifest evidence in this attachment, thus new Gate remains NOT_CONFIRMED. Previous 223-unit PASS attached to 2c7c6896. No patch authorization, GPU, runtime or CI. Documentation-only 157-file manifest HEAD not DGX retested. main/P0/Phase1-4 protected and no PR/Merge.",
-    "2026-10-27 Track A Phase5 Scheduler constructor/block_size provenance source-only extension from docs-only HEAD fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1: add import-free, bounded config+v1 AST scan for name-based Scheduler() and unresolved dynamic scheduler_cls() construction, keyword/positional block_size/hash_block_size hints, LCM-like assignments, mamba_block_size STORE/LOAD and original Scheduler/Mamba method traces. 11 stdlib synthetic fixture tests and source AST wrapper; expected total 244 tests XFAIL0 and 160 tracked manifest files. New code NOT DGX tested. Prior DGX complete Gate proved only 223/223 at 2c7c6896; later DGX AST trace JSON completed at command-guarded 2cadc736 but 233 unittest/156 Source logs NOT supplied. Pinned blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa. No ABI/patch approval, serving/GPU/model/HTTP or main/P0/Phase1-4 changes. No PR/Merge."
+    "2026-10-27 Track A Phase5 Scheduler constructor/block_size provenance source-only extension from docs-only HEAD fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1: add import-free, bounded config+v1 AST scan for name-based Scheduler() and unresolved dynamic scheduler_cls() construction, keyword/positional block_size/hash_block_size hints, LCM-like assignments, mamba_block_size STORE/LOAD and original Scheduler/Mamba method traces. 11 stdlib synthetic fixture tests and source AST wrapper; expected total 244 tests XFAIL0 and 160 tracked manifest files. New code NOT DGX tested. Prior DGX complete Gate proved only 223/223 at 2c7c6896; later DGX AST trace JSON completed at command-guarded 2cadc736 but 233 unittest/156 Source logs NOT supplied. Pinned blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa. No ABI/patch approval, serving/GPU/model/HTTP or main/P0/Phase1-4 changes. No PR/Merge.",
+    "2026-10-27 DGX Phase5 source-only Scheduler block provenance actual command-guarded/tested HEAD 04b871ab632b2a59d55d11f19009c48daa3ce5c0: PHASE5_UNIT_PASS=244 XFAIL0, Source160/160, AST/wrapper PASS; isolated source-only marker PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED and final EXECUTED_NOT_CERTIFIED. Source AST in v1/core/kv_cache_utils.py:640 scheduler_block_size=math.lcm(*group_block_sizes) and :665 hash_block_size=requested or math.gcd(*hashing_sizes), v1/engine/core.py:161 name-based Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size), Scheduler.__init__:174 self.block_size=block_size, Mamba and Scheduler alignment paths still cache_config.block_size. Scan visited 384 Python files 6,448,206 bytes unreadable0 but state PARTIAL due ASSIGN_SITE_LIMIT 64 assignments; import binding and end-to-end return/caller flow UNPROVEN. No runtime patch/ABI/cache correctness/GPU inference/TPS/CI approval. New docs-only SHA/Manifest161 not DGX retested; main/P0/Phase1-4 immutable, no PR/Merge."
   ],
   "files": [
     {
@@ -229,6 +230,11 @@
       "blob_sha": "2cdc8bb613931baff33eeb54eb6cc61dbb5fc60d"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "77a810682aab10d806ba755930265da2e3b95557"
+    },
+    {
       "path": "docs/BLAZUX-PHASE5-DGX-VALIDATION-RESULTS-20261027.md",
       "mode": "100644",
       "blob_sha": "b3d88d17e624a8abaa53a277319fefa4e33406f3"
@@ -246,12 +252,12 @@
     {
       "path": "docs/BLAZUX-PHASE5-SCHEDULER-BLOCK-PROVENANCE-20261027.md",
       "mode": "100644",
-      "blob_sha": "d2770f6aca2641227c73b6123a49bc754da7ece2"
+      "blob_sha": "ce7973af494ec58c83ae778defdd93152cef0009"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "283707207aa6223354200acbcfc3625588d9ec8f"
+      "blob_sha": "d6cae371463c4c39f6aa8d0e6f60605bb01bd39b"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -266,7 +272,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "c7c2d59b6c1147ce6d30fbc8d030790b7e941286"
+      "blob_sha": "9756221829f79a0dda58f1b7c99c3d9121aa9574"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
