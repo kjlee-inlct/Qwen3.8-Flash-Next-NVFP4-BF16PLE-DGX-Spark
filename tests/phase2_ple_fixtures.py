@@ -66,6 +66,7 @@ def make_bf16_fixture(
     rows_override: dict[int, int] | None = None,
     corrupt_payload_length: tuple[int, ...] = (),
     with_index: bool = True,
+    duplicate_shard_zero_in_second_file: bool = False,
 ) -> PleFixture:
     """Build 13 x 7 BF16 entries in four shards, including a short final shard.
 
@@ -116,6 +117,16 @@ def make_bf16_fixture(
             name = f"{PREFIX}.shard_{part}.weight"
             tensors.append((name, dtype, (actual_rows, width), payload))
             weight_map[name] = filename
+        if file_no == 1 and duplicate_shard_zero_in_second_file:
+            # Index continues to point shard_0 to file 0; reading file 1
+            # due to its valid shard_2/3 entries must still detect the
+            # unexpected same shard index in another header.
+            tensors.append((
+                f"{PREFIX}.shard_0.weight",
+                "BF16",
+                (shard_size, cols),
+                b"".join(rows[:shard_size]),
+            ))
         _write_safetensors(root / filename, tensors)
     if with_index:
         (root / "model.safetensors.index.json").write_text(

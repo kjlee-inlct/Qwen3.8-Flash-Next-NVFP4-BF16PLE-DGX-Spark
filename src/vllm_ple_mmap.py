@@ -302,6 +302,11 @@ def _find_shards(
         for name, meta in header.items():
             m = shard_re.search(name)
             if m:
+                shard_index = int(m.group(1))
+                if shard_index in shards:
+                    raise ValueError(
+                        f"PLE duplicate shard index {shard_index} for layer {layer_idx}"
+                    )
                 start, end = meta["data_offsets"]
                 rows, cols = meta["shape"]
                 if dtype_str is None:
@@ -317,7 +322,7 @@ def _find_shards(
                         "PLE shards have mixed widths: "
                         f"expected {shard_cols}, got {cols} for {name}"
                     )
-                shards[int(m.group(1))] = (path, data_start + start, rows)
+                shards[shard_index] = (path, data_start + start, rows)
             elif scale_re.search(name):
                 start, end = meta["data_offsets"]
                 scale_entry = (path, data_start + start, end - start, meta["dtype"])

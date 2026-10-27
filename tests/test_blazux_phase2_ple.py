@@ -1,4 +1,4 @@
-"""Phase 2 stdlib-only tests of unmodified PLE parsing/layout functions.
+"""Phase 2/3 stdlib-only tests of PLE parsing/layout source contracts.
 
 Do not import vllm_ple_mmap as a module here: it eagerly imports torch/numpy.
 Instead compile the four unchanged pure functions from its AST. This is a
@@ -146,13 +146,8 @@ class Phase2PleSourceContractTests(unittest.TestCase):
             self.assertEqual(dtype, "BF16")
             self.assertIsNone(scale)
 
-    @unittest.expectedFailure
-    def test_known_gap_duplicate_shard_names_across_two_headers(self):
-        """Known gap: _find_shards silently overwrites a duplicate index.
-
-        This is intentionally XFAIL: accept no false claim of fail-closed
-        protection. If the core is fixed in a later Phase, remove decorator.
-        """
+    def test_duplicate_shard_names_across_two_headers_are_rejected(self):
+        """Phase 3: without index.json, duplicate shards fail closed."""
         with tempfile.TemporaryDirectory() as tmp:
             fixture = make_bf16_fixture(Path(tmp))
             path = fixture.root / "duplicate.safetensors"
@@ -163,7 +158,17 @@ class Phase2PleSourceContractTests(unittest.TestCase):
                         b"".join(fixture.rows[:4]))]
             )
             (fixture.root / "model.safetensors.index.json").unlink()
-            with self.assertRaisesRegex(ValueError, "duplicate"):
+            with self.assertRaisesRegex(ValueError, "duplicate shard index 0"):
+                self.find(fixture.root)
+
+    def test_indexed_weight_map_does_not_hide_duplicate_shard(self):
+        """A second indexed safetensors file can also contain shard_0."""
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = make_bf16_fixture(
+                Path(tmp), duplicate_shard_zero_in_second_file=True
+            )
+            self.assertTrue((fixture.root / "model.safetensors.index.json").is_file())
+            with self.assertRaisesRegex(ValueError, "duplicate shard index 0"):
                 self.find(fixture.root)
 
 

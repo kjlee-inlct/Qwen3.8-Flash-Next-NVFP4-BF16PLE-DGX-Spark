@@ -1,12 +1,20 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 2 실기 검증 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 3 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 2 DGX 검증 완료 — 현 최신 스냅샷
+## 2026-10-27 Track A Phase 3 — 중복 PLE shard 인덱스 Fail-Closed 구현 (최신)
+
+- **출처/계보:** 개인 Fork Phase 2 최종 docs HEAD `76588845d7742703475ae1f49d5e8f5c174bb77a`에서 **Phase 3 전용 브랜치 `feature/blazux-phase3-ple-duplicate-shard-guard`** 생성. Phase 1/P0/main 불변. Phase 2 실기 검증 정본은 `fd9d8cf...`(코드)와 `765888...`(증거 docs) 구분.
+- **G2-01 수정:** `src/vllm_ple_mmap.py::_find_shards`에서 한 레이어의 중복 PLE shard index가 여러 scanned safetensors header에서 발견되면 `ValueError`로 중단. 정상 경로는 변경 없이 유지. Phase 2의 XFAIL decorator 제거, no-index 기존 회귀 및 indexed second-file 신규 음성 시험, 실제 PyTorch CPU module의 duplicate 입력 시험을 추가. [Phase 3 Gate 3 문서](BLAZUX-PHASE3-G2-01-DUPLICATE-SHARD-GUARD-20261027.md) 참조.
+- **검증 경계:** 브랜치 커밋 GitHub tree/Manifest 대조는 실제 수정 후 확인. **사용자 DGX의 Phase 3 unittest/CPU/GPU/CI는 아직 NOT_RUN/NOT_VERIFIED**. 목표 unittest 189개 / XFAIL=0, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK` 및 기존 PLE CPU byte-exact PASS를 제출받아야 Gate 종료. Source Header JSON 중복 키 같은 다른 리스크까지 해결한 것이 아님.
+- **브랜치/PR 규칙:** 이전 Phase는 영구 불변. 필요할 때만 `base=feature/blazux-phase2-offline-fixtures`, `head=feature/blazux-phase3-ple-duplicate-shard-guard`의 **리뷰 전용 비병합 Draft PR** 검토. PR을 만들든 말든 Merge 금지. `main` 대상 PR/merge/rebase/cherry-pick/squash/sync는 어떤 경우도 허용하지 않음. GPU/서비스·HF cache/receipt/port는 조작하지 않는다.
+
+---
+## 2026-10-27 Track A Phase 2 DGX 검증 완료 — 과거 최신 스냅샷
 
 - **실측 HEAD:** `feature/blazux-phase2-offline-fixtures@fd9d8cfb6938b82ae979c9804386ffbe084cc81d`. 사용자 DGX offline wrapper 로그: Source Manifest **129/129(2회)**, deployment manifest 4 targets, Wizard mock **38/38**, full unittest **188개 실행 / expected failure 1개**, Bash syntax·publication audit PASS.
 - **신규 PyTorch PLE fixture:** 사용자 후속 stdout에서 기존 production PLE BF16 mmap gather와 torch forward 바이트 일치 `workers=1 chunk=1024` 및 `workers=4 chunk=2` **PASS**, 종료 `PHASE2_PLE_CPU_ALL_OK`. GPU·vLLM 런타임 추론·성능/품질 A/B, blazux 패치 도입은 시험하지 않았고 CI는 계속 `NOT_VERIFIED`.

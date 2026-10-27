@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 130,
+  "tracked_file_count": 132,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -80,7 +80,8 @@
     "2026-10-27 Phase 1 DGX-safe read-only source pull/verification runbook added. Release strict allowlist unchanged; local/DGX scripts, CPU tests, GPU, CI not executed for this documentation update. Source tree and manifest checked via GitHub tree at new commit.",
     "2026-10-27 DGX user logs: Track A Phase1@8555a0a5a73d6bf390eeeb3495a01257c0ca3327 source 122/122 twice, wizard mock 38/38, repo unit 172/172, manifest 4 targets, bash syntax and publication audit PASS; isolated CPU-only existing-image PLE FP8/BF16 fixture ALL OK, torch 2.13.0+cu130 numpy 2.2.6. Actual GPU/model A/B and CI NOT_RUN. New evidence/docs manifest commit has a different SHA and is not a freshly host-tested commit.",
     "2026-10-27 Track A Phase2 forked from final Phase1 docs HEAD a50fc53721f3d23325dca44eb799f0f388d65951. Added stdlib synthetic BF16 safetensors parser/layout regression, known duplicate-shard XFAIL, real module PyTorch/NumPy CPU-only gather/forward byte-exact fixture, MTP name/dtype 31/31, standalone QSA CPU oracle, isolated runner and Gate2/handoff docs. NOT_RUN: DGX new test scripts, CI, GPU inference, runtime optimizations. No main/P0/Phase1 modifications. Re-verify in dedicated Phase2 DGX checkout.",
-    "2026-10-27 DGX Phase2 user-provided logs for exact source HEAD fd9d8cfb6938b82ae979c9804386ffbe084cc81d: source 129/129 twice, wizard mocks 38/38, repository unit 188 completed OK with 1 known expectedFailure in duplicate PLE shard fail-closed regression, bash syntax/publication audit PASS, isolated CPU/PyTorch PLE byte-exact workers=1 and workers=4 output PHASE2_PLE_CPU_ALL_OK. G2-01 OPEN, not full fail-closed PASS. This docs/manifest-only commit has a new SHA; DGX tests not re-run for it. GPU, model inference, performance A/B and CI not verified."
+    "2026-10-27 DGX Phase2 user-provided logs for exact source HEAD fd9d8cfb6938b82ae979c9804386ffbe084cc81d: source 129/129 twice, wizard mocks 38/38, repository unit 188 completed OK with 1 known expectedFailure in duplicate PLE shard fail-closed regression, bash syntax/publication audit PASS, isolated CPU/PyTorch PLE byte-exact workers=1 and workers=4 output PHASE2_PLE_CPU_ALL_OK. G2-01 OPEN, not full fail-closed PASS. This docs/manifest-only commit has a new SHA; DGX tests not re-run for it. GPU, model inference, performance A/B and CI not verified.",
+    "2026-10-27 Track A Phase3 created from immutable Phase2 final docs HEAD 76588845d7742703475ae1f49d5e8f5c174bb77a. G2-01 fix only: src/vllm_ple_mmap.py::_find_shards rejects repeated scanned PLE shard indices before overwrite with ValueError; Phase2 XFAIL promoted to PASS, indexed secondary-header case added, production torch CPU fixture asserts rejection, phase3 runner fails if any unittest XFAIL remains. No Docker/model/weights/serving installation change; DGX Phase3 tests, CI and GPU NOT_RUN. Preserve main/P0/Phase1/Phase2 refs, no PR/merge to main."
   ],
   "files": [
     {
@@ -169,6 +170,11 @@
       "blob_sha": "39b2cd703ef05bfa8fae95b39bccbb16e97aa43b"
     },
     {
+      "path": "docs/BLAZUX-PHASE3-G2-01-DUPLICATE-SHARD-GUARD-20261027.md",
+      "mode": "100644",
+      "blob_sha": "484f98d860d34ce8641eaf7920e74665738be556"
+    },
+    {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
       "blob_sha": "9ae3a4c4ceaee420e59d5e27a99f500bcd2426db"
@@ -186,7 +192,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "c5e321882d91d3604a519b15b8eb4ef32bd3717a"
+      "blob_sha": "21706bf1fbd5808c4e9c91b1a9ae078101f5bb49"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -414,6 +420,11 @@
       "blob_sha": "161a589d5ebf792788ba912a1915b139ca43d1b1"
     },
     {
+      "path": "scripts/phase3-check-offline.sh",
+      "mode": "100755",
+      "blob_sha": "c4d41ed4cf4b587e18e8c433b2fccdd07e79256a"
+    },
+    {
       "path": "scripts/prepare.sh",
       "mode": "100755",
       "blob_sha": "cdf820715a3869b87aad3559b209114748fe22b4"
@@ -616,17 +627,17 @@
     {
       "path": "src/test_ple_phase2_cpu.py",
       "mode": "100644",
-      "blob_sha": "c695f55f53776356ed52abbf6ca10f6aa0ff91b7"
+      "blob_sha": "ea01de150cb409b078ef06f3d6ea13d6cada83e8"
     },
     {
       "path": "src/vllm_ple_mmap.py",
       "mode": "100644",
-      "blob_sha": "8313aff03e1f50c1861c068a6a745b7b632c3d9d"
+      "blob_sha": "8fc211eb85dc9e2b30779ebdbbc77e448df77798"
     },
     {
       "path": "tests/phase2_ple_fixtures.py",
       "mode": "100644",
-      "blob_sha": "8b206ef6ddfa6514aec25f00060c6c71eb76b8a1"
+      "blob_sha": "7e5a29d595136377909b5fb8f71a794557594a57"
     },
     {
       "path": "tests/test_benchmarks.py",
@@ -641,7 +652,7 @@
     {
       "path": "tests/test_blazux_phase2_ple.py",
       "mode": "100644",
-      "blob_sha": "c990a3bc03bd63af17fd8670deb18ca8a6c0987a"
+      "blob_sha": "423f77bfed035176c81742ed33c0656bbd94bd80"
     },
     {
       "path": "tests/test_ci_contract.py",

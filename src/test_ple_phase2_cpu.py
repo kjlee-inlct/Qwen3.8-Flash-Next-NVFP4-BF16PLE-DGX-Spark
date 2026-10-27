@@ -87,6 +87,20 @@ def exercise() -> None:
             finally:
                 table.pool.shutdown(wait=True)
 
+    # Phase 3: exercise duplicate detection in the real imported module,
+    # not only the stdlib-only AST extraction used by unit tests.
+    with tempfile.TemporaryDirectory(prefix="ple-phase3-duplicate-") as duplicate_tmp:
+        fixture = make_bf16_fixture(
+            Path(duplicate_tmp), duplicate_shard_zero_in_second_file=True
+        )
+        try:
+            ple._find_shards(str(fixture.root), 1)
+        except ValueError as exc:
+            if "duplicate shard index 0" not in str(exc):
+                raise
+        else:
+            raise AssertionError("PLE duplicate shard index was accepted")
+    print("PHASE3_PLE_DUPLICATE_GUARD_ALL_OK")
     print("PHASE2_PLE_CPU_ALL_OK")
 
 
