@@ -6,7 +6,15 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 Scheduler Factory / Mamba Slot Source Contract DGX 실측 PASS — 최신
+## 2026-10-27 Phase5 Source-only Scheduler 분기 / Cache block 최소치 / Mamba fused-index 계약 보충 — 최신
+
+- 새 DGX source-only 3명령 종료 마커 `CHECK1_SCHEDULER_FACTORY_SOURCE_DONE`, `CHECK2_BLOCK_ORIGINS_SOURCE_DONE`, `CHECK3_MAMBA_SLOT_SOURCE_DONE`. 정본 [Phase5 DGX 3-check kernel/source](BLAZUX-PHASE5-DGX-THREE-CHECKS-KERNEL-RESULTS-20261027.md). 마지막 전체 unit PASS는 여전히 **tested source SHA `a5376cc06536ce786cdb6db8425e26e21b608910`에서 276/276 XFAIL0, Source169/169**. 이후 docs-only SHA 또는 3 소스 조사가 전체 tests를 다시 돌렸다고 적지 않는다.
+- `config/scheduler.py:170–191` 실제 분기: scheduler_cls None + async true → AsyncScheduler, async false → Scheduler; custom type 직접 cast, 문자열 qualname resolve. `async_scheduling` 선언 None/default, 활성 설정·반환 class ABI는 미확인.
+- **`EngineCore v1/engine/core.py:321–324` `cache_config.block_size = min(group.kv_cache_spec.block_size)` 대입 경로 발견**. 별도 MambaSpec.block_size와 동일하지 않을 수 있음. `CacheConfig.DEFAULT_BLOCK_SIZE=16`을 실제 운영값이라고 주장 금지. CHECK2 문자열 탐색은 `SCAN_OUTPUT_LIMIT_REACHED` 103 hits/162 files **PARTIAL**.
+- `mamba_hybrid.add_request:116`은 seed B_cache, `mamba_utils.preprocess...:431`은 computed_after / B_mamba, `v1/attention/backends/utils.py:1125`는 spec.block_size 기준 align table gather, `run_fused_precopy`와 `run_fused_postprocess_align`은 kernel에 src/dst/offset/block_size 전달. **실제 `precopy_mamba_align_fused_kernel` 및 `postprocess_mamba_fused_kernel` 함수 본체를 CHECK3이 검색하지 않았음**, ctx.block_size provenance/real slot correctness 미확정.
+- 다음 같은 Phase5에선 **두 실제 Triton kernel의 index/address/stride**, state context의 block_size 공급자, 엔진 min-group assignment 도달성과 fake boundary CPU fixture를 먼저 검증. 실제 user model config/SSM state/cache correctness/patch 승인 없으며 main/P0/Phase1~4 불변, PR/Merge/GPU/serving/CI 금지.
+
+## 2026-10-27 Phase5 Scheduler Factory / Mamba Slot Source Contract DGX 실측 PASS — 이전 전체 Gate
 
 - **DGX 실제 시험 소스** `a5376cc06536ce786cdb6db8425e26e21b608910`: unit **276/276 XFAIL0**, Manifest **169/169**, Source AST/전체 offline wrapper PASS, Scheduler/Mamba source-only 조사 정상 종료 `DONE_NOT_PATCH_APPROVED` / `EXECUTED_NOT_CERTIFIED`. 설치 source 6파일 PARSEABLE_ONLY, `source_checks` **10/10 true**, `missing_source_checks=[]`. [DGX 증거 정본](BLAZUX-PHASE5-DGX-SCHEDULER-MAMBA-CONTRACT-RESULTS-20261027.md). 새 docs-only Git SHA는 DGX unit 재시험 아님.
 - `SchedulerConfig.get_scheduler_cls` 반환 AST는 `AsyncScheduler`(:175), `Scheduler`(:178), `cast(...,self.scheduler_cls)`(:190), `resolve_obj_by_qualname(self.scheduler_cls)`(:191). `EngineCore`는 config factory local class를 호출함. **실제 활성 class 및 branch predicates는 미검증**.

@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler/Mamba Source Contract **DGX 276/276 PASS 실측 증거**가 최신이다. 소스 검사 10/10 true는 실제 active Scheduler/config block equality/slot correctness 인증이 아니며 패치 승인 0건이다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 DGX 3차 읽기 전용 kernel/source 검사 결과를 최신 증거로 우선한다. 마지막 전체 276/276 Gate PASS는 소스 a5376cc... 에 귀속되며 실제 active block equality/slot correctness 및 패치 승인은 없다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase5 Scheduler/Mamba Source Contract DGX 276 PASS — 현 최신
+## 2026-10-27 Phase5 Scheduler 설정 분기 / CacheConfig min block / Mamba Align Kernel 소스 3회 확인 — 최신
+
+- **사용자 DGX 읽기 전용 출력** `붙여넣은 텍스트(1)(20261027-145706).txt`: `CHECK1_SCHEDULER_FACTORY_SOURCE_DONE`, `CHECK2_BLOCK_ORIGINS_SOURCE_DONE`, `CHECK3_MAMBA_SLOT_SOURCE_DONE`. 운영 Docker 이미지 ID 조회 후 별도의 network-none, read-only, GPU-none runc 임시 컨테이너에서 Python source만 조회. 이번 명령은 **전체 276 unit 또는 Source Manifest 170를 재실행하지 않음**. 마지막 전체 PASS는 소스 HEAD `a5376cc06536ce786cdb6db8425e26e21b608910`: unit276/276 XFAIL0, Source169/169, static checks10/10 true. 이전 docs-only HEAD `321d979eca30b20e5724afbddfe15fe6bf962fbe`, Manifest170. 새 이번 docs-only HEAD도 DGX 전체 재시험한 SHA가 아님.
+- **CHECK1**: `SchedulerConfig.get_scheduler_cls:170–191`에서 scheduler_cls is None이면 async_scheduling true → `AsyncScheduler` :175, false → `Scheduler` :178 (양쪽 함수 내부 import). custom scheduler_cls가 non-string 객체면 cast 반환 :190, 문자열이면 `resolve_obj_by_qualname` :191. 선언 default `scheduler_cls=None`, `async_scheduling=None`; 활성 runtime 값·실 반환 class/ABI 미확인. `EngineCore.__init__:148`은 local Scheduler에 factory 결과 대입; 직전 direct-import AST false는 analyzer 한계.
+- **CHECK2 (PARTIAL)**: `SCAN_OUTPUT_LIMIT_REACHED`, 162 files/3,571,805 bytes/103 matches. `v1/engine/core.py:321–324`에서 **`cache_config.block_size = min(g.kv_cache_spec.block_size for g in kv_cache_groups)`** 대입 후보 발견. MambaSpec block 크기는 개별 spec에서 공급되고 frozen spec/align mode position-indexed table 사용; 실제 활성 값이 다른지 모름. `CacheConfig.DEFAULT_BLOCK_SIZE=16`은 runtime 실측값이 아님. `mamba_get_block_table_tensor:1125` align index는 `(seq_lens-1)//kv_cache_spec.block_size`.
+- **CHECK3**: `mamba_hybrid.add_request:116` 초기 seed 분모는 `cache_config.block_size`, `mamba_utils.preprocess_mamba_align_fused_kernel:431`는 `new_state_idx=(computed_after+MAMBA_BLOCK_SIZE-1)//MAMBA_BLOCK_SIZE-1` 및 `src_col=old_idx`, spec 크기는 `mamba_spec.block_size` 전달. `run_fused_precopy`가 이전 src/dst/bias를 kernel에 전달, `run_fused_postprocess_align`는 `postprocess_mamba_fused_kernel(block_size=self.block_size)` 호출. **실 kernel 함수 `precopy_mamba_align_fused_kernel`·`postprocess_mamba_fused_kernel`은 이전 검색 target에 포함되지 않아 본문 미검사**, ctx.block_size 생성/stride·block_table 실제 address/slot mapping도 미확인.
+- **정본 보고서**: [Phase5 DGX 3-check kernel source](BLAZUX-PHASE5-DGX-THREE-CHECKS-KERNEL-RESULTS-20261027.md)와 소스 fingerprint·판정·한계 보존. 다음 **동일 Phase5**에서 고정 `mamba_utils.py` source의 두 kernel 본체/ctx block_size provenance, `EngineCore` min-group block assignment 도달, MambaSpec 설정값 공급 및 synthetic CPU 경계 fixture. 운영 Docker/config/GPU/weights/HF cache/ports/HTTP/CI 접근/patch 금지, blazux 전 계열 `patch_approved=false`. 새 phase/PR/merge 없음; main/P0/Phase1~4 HEAD immutable.
+
+---
+
+## 2026-10-27 Phase5 Scheduler/Mamba Source Contract DGX 276 PASS — 이전 전체 Gate
 
 - **사용자 실제 DGX 소스 HEAD `a5376cc06536ce786cdb6db8425e26e21b608910`**: `Ran 276 tests`, `PHASE5_UNIT_PASS=276; XFAIL=0`, `PHASE5_SOURCE_AST_OK`, `PASS_SOURCE_ONLY: 169 tracked file(s)`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` PASS, isolated `PHASE5_SCHEDULER_MAMBA_CONTRACT_DONE_NOT_PATCH_APPROVED` 및 `EXECUTED_NOT_CERTIFIED`. 설치 6파일 `PARSEABLE_ONLY`, static `source_checks` **10/10 true**, `missing_source_checks=[]`. Wizard Mock 개별 **38/38 수치는 이번 사용자 발췌 로그에는 없으므로 해당 숫자를 새 SHA의 독립 실측으로 기록 금지**. 마지막 259/259은 이전 코드 `bc89de62...`의 역사적 Gate.
 - **Factory의 source 반환 네 분기 위치**: `config/scheduler.py:175` `AsyncScheduler`, :178 `Scheduler`, :190 `cast(type[...],self.scheduler_cls)`, :191 `resolve_obj_by_qualname(self.scheduler_cls)`. `EngineCore.__init__:148`에서 local `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`, :161 ctor kw call. 그러나 branch predicates/actual config class/override·스케줄러 서빙 ABI는 여전히 미확인. `active_scheduler_class_verified=false`.

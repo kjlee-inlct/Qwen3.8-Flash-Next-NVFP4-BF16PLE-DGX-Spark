@@ -6,6 +6,12 @@
 >
 > 외부 pinned blazux source `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`. 분석은 installed preview의 Python source를 **읽기 전용으로 AST 검사**한 것이며 실제 blazux patch 실행, 실제 모델/서빙/GPU/HTTP/TPS/CI 검증이 아니다.
 
+## 이후 별도 DGX source-only 3항목 보충 (전체 276 suite 재실행 아님)
+
+- [새 3-check 소스 결과](BLAZUX-PHASE5-DGX-THREE-CHECKS-KERNEL-RESULTS-20261027.md): `SchedulerConfig.get_scheduler_cls`의 실제 async/default/custom 분기를 확인했고, `EngineCore v1/engine/core.py:321–324`의 `cache_config.block_size = min(group_spec.block_size)` 대입 경로를 발견. Mamba seed cache-config block 분모와 preprocess Mamba spec block 분모의 불일치 **가능성**을 구체화했으나 활성 숫자·실 오류/State Slot 정합성은 측정하지 않음.
+- 세 번째 로그에서 `preprocess_mamba_align_fused_kernel`는 `src_col=old_state_idx`를 쓰고 새로운 index를 Mamba spec block-size로 계산, postprocess는 ctx.block_size로 fused kernel 호출. 그러나 `precopy_mamba_align_fused_kernel`/`postprocess_mamba_fused_kernel` 실제 본체 및 ctx.block_size 초기화 소스는 검색 대상에 포함되지 않아 **미검사**. CHECK2는 `SCAN_OUTPUT_LIMIT_REACHED`로 **PARTIAL**.
+- 본 문서의 기존 **276/276 PASS는 test source `a5376cc06536ce786cdb6db8425e26e21b608910`에만 귀속**하며 이번 세 inspections 또는 docs-only Git HEAD가 전체 테스트 PASS를 새로 증명하지 않음. 실제 blazux patch 승인 0건 유지.
+
 ## 1. DGX에서 실제 확인된 Gate
 
 ```text
