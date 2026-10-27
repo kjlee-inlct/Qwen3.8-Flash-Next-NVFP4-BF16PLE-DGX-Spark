@@ -1,0 +1,17 @@
+{
+  "source_kind": "SYNTHETIC_CPU_FIXTURE",
+  "cache_block_size": 16,
+  "scheduler_block_size": 32,
+  "hash_block_size": 16,
+  "dcp_size": 1,
+  "groups": [
+    {
+      "kind": "attention",
+      "block_size": 16
+    },
+    {
+      "kind": "mamba",
+      "block_size": 32
+    }
+  ]
+}
