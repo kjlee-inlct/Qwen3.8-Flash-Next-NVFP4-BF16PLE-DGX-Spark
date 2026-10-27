@@ -1,9 +1,14 @@
 # Track A Phase 3 — G2-01 중복 PLE 샤드 인덱스 Fail-Closed 보완 및 회귀
 
-> 작성: 2026-10-27 (Asia/Seoul). **상태: CODE_COMMITTED_DGX_TEST_NOT_RUN / CI_NOT_VERIFIED / GPU_NOT_RUN.** 이 문서는 소스 변경과 사용자 DGX 재검증 절차를 정의한다. 실기 PASS를 미리 선언하지 않는다.
+> 작성: 2026-10-27 (Asia/Seoul). **최신 상태: PHASE3_G2_01_DGX_OFFLINE_PASS / XFAIL_0 / PLE_CPU_BYTE_EXACT_PASS / CI_NOT_VERIFIED / GPU_NOT_RUN.** 초기 문서의 DGX_NOT_RUN은 작성 당시 상태이며 아래 최신 결과가 우선한다. 이 문서는 소스 변경과 사용자 DGX 재검증 절차를 정의한다. 실기 PASS를 미리 선언하지 않는다.
 >
 > Fork: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark). 부모 Phase 2 확정 HEAD `76588845d7742703475ae1f49d5e8f5c174bb77a` → Phase 3 자식 `feature/blazux-phase3-ple-duplicate-shard-guard`. P0 `966ec7cf0741734b844b1cea938d56678a756469`, Phase 1 `a50fc53721f3d23325dca44eb799f0f388d65951`, 기존 main `2847e39b4131eb8aff78bf86ffce98892401722a` **절대 변경 금지**. blazux 출처는 [고정 SHA](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa).
 
+## DGX 실기 시험 확인 — 후속 결과 (본 문서 초기 예정보다 최신)
+
+- 사용자 제공 Phase 3 소스 HEAD `cb1de387b09786d6be35fec838c6549a78e5417c`의 로그: **Source Manifest 132/132, unittest 189/189, XFAIL=0**, `PASS: PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0`.
+- 새 실제 PyTorch PLE CPU fixture 출력: `workers=1 chunk=1024`, `workers=4 chunk=2`의 **BF16 바이트 일치 PASS**, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK` 및 `PHASE2_PLE_CPU_ALL_OK`. G2-01은 **소형 CPU 합성 회귀 범위에서 해결**로 기록한다.
+- [Phase 3 실기 검증 영구 보고서](BLAZUX-PHASE3-DGX-VALIDATION-RESULTS-20261027.md)는 명령/결과/근거/미검증 범위/원본 실측 SHA를 구분한다. 이후 docs-only SHA에서의 재시험은 아님. GPU/vLLM 운영 추론/성능/CI는 미검증.
 ## 1. 발견된 결함과 최소 수정
 
 Phase 2 사용자 DGX 실기 `fd9d8cfb6938b82ae979c9804386ffbe084cc81d`에서 **Source 129/129, Mock 38/38, unittest 188 (XFAIL=1), PLE CPU BF16 byte-exact (workers=1/4) PASS**를 확인했다. 상세 근거는 [Phase 2 결과](BLAZUX-PHASE2-DGX-VALIDATION-RESULTS-20261027.md).

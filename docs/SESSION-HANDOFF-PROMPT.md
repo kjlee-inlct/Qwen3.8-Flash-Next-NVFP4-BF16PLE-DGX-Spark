@@ -1,12 +1,21 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 3 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 3 DGX 실측 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 3 — 중복 PLE shard 인덱스 Fail-Closed 구현 (최신)
+## 2026-10-27 Track A Phase 3 DGX 시험 완료 — 현재 최신 인수인계
+
+- **검증 완료:** 사용자 제공 DGX Phase 3 오프라인 wrapper 로그: 정확한 소스 HEAD `cb1de387b09786d6be35fec838c6549a78e5417c`, `PASS_SOURCE_ONLY` **132/132**, Python **189 tests OK, XFAIL=0**, 최종 `PASS: PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0`. 기존 phase3 runner의 branch/origin/clean/source/deployment manifest/Mock/Bash audit 검증 체인을 통과했으나 사용자 마지막 출력에는 별도 세부 test 수치 전부가 포함되지는 않음.
+- **실제 PyTorch PLE CPU 후속 출력:** `workers=1 chunk=1024` 및 `workers=4 chunk=2`에서 **BF16 mmap gather/forward byte-exact PASS**, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK`, `PHASE2_PLE_CPU_ALL_OK`. **G2-01은 작은 합성 CPU 회귀시험 범위에서 CLOSED**, 배포/실 모델/GPU inference·CUDA graph/QSA TopK 성능 확인과는 구분.
+- **정본:** [Phase 3 DGX 실측 보고서](BLAZUX-PHASE3-DGX-VALIDATION-RESULTS-20261027.md), [Phase 3 Gate 3 수정 및 실행 문서](BLAZUX-PHASE3-G2-01-DUPLICATE-SHARD-GUARD-20261027.md). 사용자 실측 소스 SHA `cb1de387...`를 보존하며, 보고서/handoff/source manifest만 갱신된 docs-only 커밋은 DGX에서 재시험된 것으로 주장하지 않는다.
+- **열린 범위:** 손상 index/JSON duplicate key/모델 전체 신뢰성, 95GiB 실제 PLE, MTP 실제 로더, vLLM 0.32 이식, 성능 A/B, GPU/CI는 미검증. 기존 서비스를 stop/restart/update하지 않는다.
+- **GitHub 불변 정책:** 보호 `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase 1 `a50fc537...`, Phase 2 `76588845...` 영구 보호. Phase 3 확정 문서 SHA 이후에만 후속 Phase 자식 브랜치. PR이 필요하면 Phase 3→Phase 2로 리뷰 전용 Draft PR만, **merge하지 않음**. **어떠한 실험도 `main`으로 PR/merge/rebase/cherry-pick/squash/sync 금지**.
+
+---
+## 2026-10-27 Track A Phase 3 — 중복 PLE shard 인덱스 Fail-Closed 구현 (과거 스냅샷)
 
 - **출처/계보:** 개인 Fork Phase 2 최종 docs HEAD `76588845d7742703475ae1f49d5e8f5c174bb77a`에서 **Phase 3 전용 브랜치 `feature/blazux-phase3-ple-duplicate-shard-guard`** 생성. Phase 1/P0/main 불변. Phase 2 실기 검증 정본은 `fd9d8cf...`(코드)와 `765888...`(증거 docs) 구분.
 - **G2-01 수정:** `src/vllm_ple_mmap.py::_find_shards`에서 한 레이어의 중복 PLE shard index가 여러 scanned safetensors header에서 발견되면 `ValueError`로 중단. 정상 경로는 변경 없이 유지. Phase 2의 XFAIL decorator 제거, no-index 기존 회귀 및 indexed second-file 신규 음성 시험, 실제 PyTorch CPU module의 duplicate 입력 시험을 추가. [Phase 3 Gate 3 문서](BLAZUX-PHASE3-G2-01-DUPLICATE-SHARD-GUARD-20261027.md) 참조.
