@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 120,
+  "tracked_file_count": 121,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -75,7 +75,8 @@
     "2026-10-27: planning-only blazux vLLM 0.32 evaluation branch forked from merged baseline PR #5 main 2847e39b4131eb8aff78bf86ffce98892401722a. Only adoption plan/handoff/source inventory changed; actual blazux code, build, runtime and A/B NOT_STARTED. Existing DGX service unchanged and no new tests executed.",
     "2026-10-27: document-only Track A (preview engine) versus Track B (future independent vLLM 0.32) separation; priority P1/P2/P3, synthetic BF16 offline validation, default-OFF independent flags, rollback, isolated image/container/port/receipt/view paths, main protection caveat, and existing Baseline/script status. No new runtime implementation, DGX test, CI run, or GPU activation performed.",
     "2026-10-27: refreshed session handoff at current blazux Track A branch; clarified 2026-10-26 wizard DGX tests as historical (114/114, 38/38, 172/172 on 66051cd), PR #5 merged benchmark 12x3 baseline, snapshot 2847e39 main and 0e9b25d design commit, current Track A Gate 1 priority, separate not-yet-created Track B branch, Gate 1 1:1 deliverables, P1/P2/P3, provenance/reproducibility gaps, deferred CI, and protected legacy. Documentation/manifest only; no new tests or DGX/GPU/runtime action.",
-    "2026-10-27: user policy supersedes old blazux selective main merge: NEVER submit/merge/squash/cherry-pick/rebase blazux commits to main. P0 experimentation root remains separate; create fresh Track A Phase 1 child from pinned P0 HEAD, subsequent phases from prior finalized phase HEAD; optional Track B is sibling branched from P0 only after Go/No-Go; aborting all experiments must leave main and legacy deployment unchanged. Documentation+source inventory only, no runtime tests, no CI run."
+    "2026-10-27: user policy supersedes old blazux selective main merge: NEVER submit/merge/squash/cherry-pick/rebase blazux commits to main. P0 experimentation root remains separate; create fresh Track A Phase 1 child from pinned P0 HEAD, subsequent phases from prior finalized phase HEAD; optional Track B is sibling branched from P0 only after Go/No-Go; aborting all experiments must leave main and legacy deployment unchanged. Documentation+source inventory only, no runtime tests, no CI run.",
+    "Phase 1 Gate 1 snapshot (2026-10-27): static-only source comparison, no runtime/CI; branch feature/blazux-phase1-source-compare from P0@966ec7cf0741734b844b1cea938d56678a756469; see docs/BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md."
   ],
   "files": [
     {
@@ -92,26 +93,6 @@
       "path": ".gitignore",
       "mode": "100644",
       "blob_sha": "b65cdb70eda0da34458496bae7166202ed370db7"
-    },
-    {
-      "path": "Dockerfile",
-      "mode": "100644",
-      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
-    },
-    {
-      "path": "LICENSE",
-      "mode": "100644",
-      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
-    },
-    {
-      "path": "NOTICE",
-      "mode": "100644",
-      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
-    },
-    {
-      "path": "README.md",
-      "mode": "100644",
-      "blob_sha": "7ec5f749659c893c805a458b678ed4571ad6af5d"
     },
     {
       "path": "benchmarks/common.py",
@@ -144,9 +125,24 @@
       "blob_sha": "267f122555cf6984d092f9aacf29e196128a0926"
     },
     {
+      "path": "Dockerfile",
+      "mode": "100644",
+      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
+    },
+    {
+      "path": "docs/benchmark/LLAMA-BENCHY-BASELINE-20261027.md",
+      "mode": "100644",
+      "blob_sha": "0ab1233077fb38789616a89284c3d320ca33d737"
+    },
+    {
       "path": "docs/BENCHMARKS.md",
       "mode": "100644",
       "blob_sha": "0dfc6422823978049573fbc2058f1af785d1265e"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md",
+      "mode": "100644",
+      "blob_sha": "b17ec3e1a0ea41afe1cdc539ff9e419bf02a7ec4"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -166,7 +162,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "5270a482c0adfa95e62d3c880d3c3ada10056355"
+      "blob_sha": "652b8364188d53c1fd08d0e1c08d56fdb4af70c1"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -179,19 +175,24 @@
       "blob_sha": "df7b597acf95a6d7ba83b0398559a5d38935c2a4"
     },
     {
-      "path": "docs/benchmark/LLAMA-BENCHY-BASELINE-20261027.md",
-      "mode": "100644",
-      "blob_sha": "0ab1233077fb38789616a89284c3d320ca33d737"
-    },
-    {
       "path": "huggingface/README.md",
       "mode": "100644",
       "blob_sha": "819e8aca3e941f28d2e4b50907474b42444b211a"
     },
     {
-      "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/SHA256SUMS.original",
+      "path": "LICENSE",
       "mode": "100644",
-      "blob_sha": "24b36b6f99065f526cb227a5b2291c7a322de5fe"
+      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
+    },
+    {
+      "path": "NOTICE",
+      "mode": "100644",
+      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "blob_sha": "7ec5f749659c893c805a458b678ed4571ad6af5d"
     },
     {
       "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/environment.public.json",
@@ -202,6 +203,11 @@
       "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json",
       "mode": "100644",
       "blob_sha": "218da9c7b834f4731eda55d10c2f414571f8d318"
+    },
+    {
+      "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/SHA256SUMS.original",
+      "mode": "100644",
+      "blob_sha": "24b36b6f99065f526cb227a5b2291c7a322de5fe"
     },
     {
       "path": "results/orcarouter/checkpoint-audit.json",
@@ -304,61 +310,6 @@
       "blob_sha": "83e016be37d0b74a24ff2b907447338924ef3c5f"
     },
     {
-      "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
-      "mode": "100644",
-      "blob_sha": "b0d0ea1cdeb21bb5496af49834e68a4a5223434f"
-    },
-    {
-      "path": "scripts/LEGACY-INSTALLATION.md",
-      "mode": "100644",
-      "blob_sha": "4c4be0321a6498da2b3209ffd9379aaad8a13240"
-    },
-    {
-      "path": "scripts/LEGACY-OBSERVATION-20261026.md",
-      "mode": "100644",
-      "blob_sha": "4e4b6168b7ebf7bdd356c57b254bffb3935ba60e"
-    },
-    {
-      "path": "scripts/MANIFEST-SCHEMA.md",
-      "mode": "100644",
-      "blob_sha": "e965946505988326989a76fbec2f78ddcc2492c1"
-    },
-    {
-      "path": "scripts/OPERATIONS.md",
-      "mode": "100644",
-      "blob_sha": "a1c64d68ddff8afa97b0eec58393c1a37b69717c"
-    },
-    {
-      "path": "scripts/README-WIZARDS.md",
-      "mode": "100644",
-      "blob_sha": "b76fbc0cbf3f40cde4a3fed0b0d0468d01b2cea1"
-    },
-    {
-      "path": "scripts/SAFETY-AND-RECOVERY.md",
-      "mode": "100644",
-      "blob_sha": "1fd4cc6c1ea8522705ca951368c88863558d8d60"
-    },
-    {
-      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
-      "mode": "100644",
-      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
-    },
-    {
-      "path": "scripts/TEST-PLAN.md",
-      "mode": "100644",
-      "blob_sha": "1ac7a86c12016887657175c4b4fd361634f756d1"
-    },
-    {
-      "path": "scripts/VALIDATION-RESULTS-20261026.md",
-      "mode": "100644",
-      "blob_sha": "50876f9f3bfecfc1415424b293f7e96f02d4614a"
-    },
-    {
-      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
-      "mode": "100644",
-      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
-    },
-    {
       "path": "scripts/activate.sh",
       "mode": "100755",
       "blob_sha": "56ad3f856021c88062ceb131f04cd67f5bc04a95"
@@ -399,14 +350,39 @@
       "blob_sha": "fcd061abe117b23eb179b703a1a5f3fe7bdf7e30"
     },
     {
+      "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "b0d0ea1cdeb21bb5496af49834e68a4a5223434f"
+    },
+    {
       "path": "scripts/install.sh",
       "mode": "100755",
       "blob_sha": "e649b1adc0294a409410a7323402edde3f65d060"
     },
     {
+      "path": "scripts/LEGACY-INSTALLATION.md",
+      "mode": "100644",
+      "blob_sha": "4c4be0321a6498da2b3209ffd9379aaad8a13240"
+    },
+    {
+      "path": "scripts/LEGACY-OBSERVATION-20261026.md",
+      "mode": "100644",
+      "blob_sha": "4e4b6168b7ebf7bdd356c57b254bffb3935ba60e"
+    },
+    {
+      "path": "scripts/MANIFEST-SCHEMA.md",
+      "mode": "100644",
+      "blob_sha": "e965946505988326989a76fbec2f78ddcc2492c1"
+    },
+    {
       "path": "scripts/manifest.sh",
       "mode": "100755",
       "blob_sha": "de7afca67b1cf7f63ca363f070b79f7233c8d882"
+    },
+    {
+      "path": "scripts/OPERATIONS.md",
+      "mode": "100644",
+      "blob_sha": "a1c64d68ddff8afa97b0eec58393c1a37b69717c"
     },
     {
       "path": "scripts/prepare.sh",
@@ -419,9 +395,19 @@
       "blob_sha": "f17888dd1bdd4b0e50a014529b6476b85fbeb7d4"
     },
     {
+      "path": "scripts/README-WIZARDS.md",
+      "mode": "100644",
+      "blob_sha": "b76fbc0cbf3f40cde4a3fed0b0d0468d01b2cea1"
+    },
+    {
       "path": "scripts/run-mock-tests.sh",
       "mode": "100755",
       "blob_sha": "d04288fc62a63da79b7d7c6bd28329602727aa6b"
+    },
+    {
+      "path": "scripts/SAFETY-AND-RECOVERY.md",
+      "mode": "100644",
+      "blob_sha": "1fd4cc6c1ea8522705ca951368c88863558d8d60"
     },
     {
       "path": "scripts/serve.sh",
@@ -432,6 +418,11 @@
       "path": "scripts/smoke-test.sh",
       "mode": "100755",
       "blob_sha": "3dddf35081239b564dca0e2032957be4febe707a"
+    },
+    {
+      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
+      "mode": "100644",
+      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
     },
     {
       "path": "scripts/status.sh",
@@ -449,9 +440,24 @@
       "blob_sha": "8d7c657a111ed8df4d93c804470eba00621f4396"
     },
     {
+      "path": "scripts/TEST-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "1ac7a86c12016887657175c4b4fd361634f756d1"
+    },
+    {
       "path": "scripts/uninstall.sh",
       "mode": "100755",
       "blob_sha": "c9bc36d041899c5afccfd1c26f5d304a4b2eb6b0"
+    },
+    {
+      "path": "scripts/VALIDATION-RESULTS-20261026.md",
+      "mode": "100644",
+      "blob_sha": "50876f9f3bfecfc1415424b293f7e96f02d4614a"
+    },
+    {
+      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
+      "mode": "100644",
+      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
     },
     {
       "path": "scripts/verify-main-readonly.sh",
@@ -614,11 +620,6 @@
       "blob_sha": "7128f6527d5f473aa2ddc7b4af6973183d10784b"
     },
     {
-      "path": "tests/test_mtp.py",
-      "mode": "100644",
-      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
-    },
-    {
       "path": "tests/test_mtp_compressed_ignore_patch.py",
       "mode": "100644",
       "blob_sha": "8b8a044089b2a62fd2fba225df86332f2c099460"
@@ -627,6 +628,11 @@
       "path": "tests/test_mtp_load_guard_patch.py",
       "mode": "100644",
       "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
+    },
+    {
+      "path": "tests/test_mtp.py",
+      "mode": "100644",
+      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
     },
     {
       "path": "tests/test_publication_audit.py",

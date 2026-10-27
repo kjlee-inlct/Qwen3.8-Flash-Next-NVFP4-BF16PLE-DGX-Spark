@@ -6,6 +6,15 @@
 
 ---
 
+## 2026-10-27 Phase 1 추가 스냅샷 (아래 P0 기록보다 최신)
+
+- Track A Phase 1 브랜치: `feature/blazux-phase1-source-compare`; 분기 부모 `966ec7cf0741734b844b1cea938d56678a756469` (P0 루트). GitHub 소스 기준 외부 SHA `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`.
+- Gate 1 정적 분석은 [Phase 1 함수/데이터 비교표](BLAZUX-PHASE1-GATE1-SOURCE-COMPARE-20261027.md)에 영구 보존한다. PLE BF16 offset/width/128 shard 및 MTP 31/31은 KEEP; PLE 계측·small batch 최적화는 선택적 PORT/ADAPT 후보; vLLM 0.32 constructor/graph/parser 직접 복사는 DEFER_TO_TRACK_B; NVFP4 MTP graft는 현 운영 계보에 REJECT.
+- 이번 Phase 1에서는 새로운 Python 단위시험, GPU, Docker 및 CI를 실행하지 않았다. 수행한 것은 GitHub tree/Manifest 대조와 정적 코드/이름 목록 검증이다. **Phase 1 HEAD는 아래 결과 문서·Manifest의 커밋을 다시 읽어 확정한다.**
+- 다음 단계는 Phase 1 HEAD 확정 후 신규 Phase 2 자식 브랜치에서 **작은 BF16 synthetic safetensors** 및 순수 CPU fixture 작성/실행이다. 위 Wizard/P0 구간의 과거 브랜치 미생성 서술은 당시 스냅샷이며 이 최신 기록을 우선한다.
+- blazux 관련 커밋은 어떤 상황에서도 main에 PR/merge/cherry-pick/rebase/squash/sync 하지 않는다. DGX/운영 서비스는 변경하지 않는다.
+
+---
 ## 현재 진행 상태 및 새 세션 우선 읽기 — 2026-10-27
 
 > **현재 작업을 이어받을 때 이 절을 가장 먼저 적용한다.** 2026-10-26 Wizard 검증은 과거 시험이다. **2026-10-27 새 불변 정책:** blazux 관련 모든 브랜치/Phase의 변경을 `main`에 PR·머지·스쿼시·체리픽·리베이스·동기화하지 않는다. 각 Phase는 직전 확정 Phase의 HEAD에서 새 자식 브랜치를 만들어, 실험을 전부 폐기해도 `main`이 달라지지 않게 한다.
