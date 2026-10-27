@@ -1,0 +1,23 @@
+# blazux Track A Phase 6 — Approval-gated runtime verification
+
+Status: IMPLEMENTATION_PREPARED / DGX_NOT_RUN / GPU_NOT_RUN / CI_NOT_RUN / PATCH_NOT_APPROVED.
+Parent: Phase5 docs-only `11fd777e2c49c030eee671133ab0af3a3ca9c26d`.
+Phase5 verified source: `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (310 unit, 38 mocks, 177 source, G1–G8).
+No re-execution of Phase5 is required. Phase6 branch and code preparation are approved; no DGX/GPU/CI/serving/model/patch/PR/merge approval.
+
+## Gate dependency and execution boundary
+
+P6-A -> P6-B -> P6-C -> P6-D. A FAIL/BLOCKED prohibits B; B FAIL/BLOCKED prohibits C; any required correctness FAIL/BLOCKED prohibits D. Each step emits PASS/FAIL/BLOCKED/NOT_RUN. Missing observation is BLOCKED, never inferred PASS. Any observed error stops downstream gates. No automatic transition from offline to runtime.
+
+| Gate | Prerequisite | Input and independent oracle | PASS / FAIL / BLOCKED | Evidence / stop and rollback |
+| --- | --- | --- | --- | --- |
+| P6-A active config/ABI | Separately approved DGX read-only observation; known image and source provenance | Active Scheduler class/factory branch, CacheConfig, scheduler/hash/DCP, each MambaSpec and group; real block-table rows/stride/dtype, V1/V2 row-slot mapping, tensor ptr/shape/stride/dtype/allocation. Recompute token->logical->physical index and byte ranges independently | PASS only with complete real observed inventory and every mapping in bounds; FAIL reproducible ABI/index/bounds contradiction; BLOCKED inaccessible or incomplete runtime data | Masked JSON + source SHA, image digest, config provenance, exact observation command. Stop on drift/secret exposure. No changes to restore |
+| P6-B GPU state | A PASS; separate isolated GPU and model approval | G1–G8-derived edge cases; actual CUDA/Triton precopy/postprocess, uint64/byte fallback, multi-group, SD/DS/temporal, aliasing, rollback, prefix hit, cancellation, request isolation. CPU independent byte-exact reference for copies, explicit numerical tolerance only for arithmetic | PASS exact state and canary/neighbor invariants; FAIL reproducible corruption/OOB/mismatch; BLOCKED missing instrumentation/isolation | Pre/post state hashes, guarded buffers, GPU errors, kernel/env provenance. Stop immediately on OOB/guard violation; destroy isolated process, check operational non-interference |
+| P6-C MTP/API | B PASS; isolated model and HTTP permission | All/partial/zero acceptance, rejection, cancellation/resume, deterministic token/state oracle, streaming/nonstreaming, Tool Calling, parser, Responses/Chat, malformed inputs/status codes | PASS all token-state and protocol invariants; FAIL reproducible state/API error; BLOCKED no acceptance instrumentation | Redacted request/response traces, accepted-token metadata, SSE terminal event and status. Stop on state drift; tear down isolated server/port |
+| P6-D perf/stability | A/B/C PASS and separate benchmark approval | Existing 12x3 pre-blazux baseline, equivalent PP/TG/concurrency/depth, warmups, TPS, latency, memory, error rates, long-duration resources; predeclare tolerance and comparable fingerprint | PASS within approved regression thresholds; FAIL reproducible breach; BLOCKED incomparable conditions or absent thresholds | Raw results, fingerprint, medians/p95, memory/thermal log. Stop on OOM, resource limit or service interference; remove isolated resources |
+
+## First integrated bundle and limitations
+
+`scripts/phase6-gate.sh` runs Phase6-specific offline tests and strict source-manifest verification only. Optional `--snapshot PATH` evaluates an operator-supplied *offline JSON snapshot*; its PASS is **snapshot contract PASS only**, never real active configuration P6-A PASS. Without an independently approved, implemented, provenance-verified DGX observer, **P6-A runtime remains BLOCKED**. P6-B/C/D have explicit BLOCKED stubs, not simulated passes. No Docker, GPU, HTTP, CI, model, weights, HF cache, port, production or patch actions.
+
+Separate later approval is required for DGX read-only access, GPU execution, model startup, API/ports, performance, CI, patches, PR, and merge. GitHub writes on this branch only; main/P0/Phase1–4/Phase5 protected.

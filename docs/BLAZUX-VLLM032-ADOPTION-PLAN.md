@@ -1,5 +1,12 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 Phase6 implementation-preparation approval (current)
+- User approved **new Phase6 branch + offline Gate scripts/tests/docs + GitHub commit only**. DGX/GPU/CI/operational service/model/patch/PR/merge are NOT approved.
+- Phase6 branch `feature/blazux-phase6-runtime-gates` starts from Phase5 docs-only `11fd777e2c49c030eee671133ab0af3a3ca9c26d`. Phase5 tested SHA remains `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (G1–G8 source/CPU PASS). No Phase5 repeat.
+- [Phase6 gate plan](BLAZUX-PHASE6-GATE-PLAN.md) and [Phase6 result ledger](BLAZUX-PHASE6-RESULTS.md) are canonical. `scripts/phase6-gate.sh` is offline-only; supplied JSON fixture PASS is **not** active DGX P6-A PASS. Runtime P6-A/B/C/D remain BLOCKED. Separate explicit approvals required for every runtime scope.
+- Phase6 implementation and documentation plus full Source Manifest are one commit on Phase6 only. Preserve main/P0/Phase1–5 heads, no PR/merge. No DGX test claim on documentation/implementation SHA.
+
+
 ## 2026-10-28 현재 작업 상태 — Phase6 범위 합의 (실행 미승인)
 
 - Phase5 source/CPU G1–G8는 **DGX 테스트 코드 `780b780fc7572226a6a9ff2e52cd8e1921c8738b`의 전체 PASS**로 종료. 현 Phase5 HEAD `a205a3f958c250e2e30cb20fc99424666b2e0ff5`는 정본 문서 보존 이후 기록, 여기의 후속 문서 커밋 역시 시험 SHA가 아님. 증거는 [Phase5 DGX 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md).

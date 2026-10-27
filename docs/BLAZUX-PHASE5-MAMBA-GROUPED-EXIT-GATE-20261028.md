@@ -1,5 +1,12 @@
 # Track A Phase 5 — Mamba physical-address grouped Gate / Phase 6 readiness
 
+## 2026-10-28 Phase6 implementation-preparation approval (current)
+- User approved **new Phase6 branch + offline Gate scripts/tests/docs + GitHub commit only**. DGX/GPU/CI/operational service/model/patch/PR/merge are NOT approved.
+- Phase6 branch `feature/blazux-phase6-runtime-gates` starts from Phase5 docs-only `11fd777e2c49c030eee671133ab0af3a3ca9c26d`. Phase5 tested SHA remains `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (G1–G8 source/CPU PASS). No Phase5 repeat.
+- [Phase6 gate plan](BLAZUX-PHASE6-GATE-PLAN.md) and [Phase6 result ledger](BLAZUX-PHASE6-RESULTS.md) are canonical. `scripts/phase6-gate.sh` is offline-only; supplied JSON fixture PASS is **not** active DGX P6-A PASS. Runtime P6-A/B/C/D remain BLOCKED. Separate explicit approvals required for every runtime scope.
+- Phase6 implementation and documentation plus full Source Manifest are one commit on Phase6 only. Preserve main/P0/Phase1–5 heads, no PR/merge. No DGX test claim on documentation/implementation SHA.
+
+
 ## 2026-10-28 현재 이관 상태 (Phase6 실행 미승인)
 
 - Phase5 source/CPU offline scope는 exact DGX-tested `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (310/310 XFAIL0, Source177, G1–G8)에서 종료되었다. Phase5 종료 재시험 계획 없음; 새 대화는 [SESSION-HANDOFF-PROMPT.md](SESSION-HANDOFF-PROMPT.md)의 최신 **Phase6 범위 확정만 진행** 진입점부터 시작할 것.
