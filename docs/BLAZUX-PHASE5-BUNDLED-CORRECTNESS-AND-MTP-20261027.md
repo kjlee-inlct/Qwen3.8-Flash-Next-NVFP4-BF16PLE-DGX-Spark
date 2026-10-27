@@ -1,12 +1,20 @@
 # Track A Phase 5 — P1 정확성·P2 후보 위험 검증을 하나의 Gate로 통합
 
-> **상태: SOURCE_READY_DGX_NOT_RUN / PREVIEW_VLLM_ABI_NOT_VERIFIED / NO_RUNTIME_PATCH / GPU_NOT_RUN / CI_NOT_VERIFIED.**
+> **최신 상태: PHASE5_DGX_CPU_OFFLINE_PASS / SOURCE_144_144 / UNIT_208_XFAIL_0 / MICROBENCH_12_CONDITIONS / INSTALLED_SOURCE_INVENTORY_CAPTURED / ACTUAL_VLLM_ABI_NOT_VERIFIED / GPU_NOT_RUN / CI_NOT_VERIFIED.**
 >
 > 작성: 2026-10-27 (Asia/Seoul). **부모:** Phase 4 검증 기록 HEAD `69860277122dffe3082c5b065e4361a571317a8e`; **자식 브랜치:** `feature/blazux-phase5-correctness-mtp-offline`. 이전 P0/Phase 1~4 및 `main` 불변. 사용자의 Phase 최소화 요구에 따라 Prefix/cache·Parser/Responses·MTP vocabulary 후보·CPU gather 벤치를 **하나의 Phase 5**에 묶어 진행한다.
 >
 > blazux 소스는 [외부 PIN `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa)에 고정한다. 출처 기능: `src/patch_mamba_block_size.py`, `src/patch_mtp_draft_vocab.py`, `src/patches/qwen-tool-marker-guard.patch`, `src/patches/qwen-tool-argument-schema.patch`, `src/patches/qwen-safe-output.patch`.
 >
 > **핵심 경계:** 이 Phase 5는 실제 설치된 preview vLLM의 `StreamingParserEngine`, `MambaHybrid`, speculative drafter를 패치하는 단계가 **아니다**. 저장소에는 그 프레임워크 본문이 vendored되어 있지 않아 소스 ABI를 모르는 상태에서 적용하면 잘못된 기능 PASS를 만들 수 있다. 합성 oracle 테스트 성공은 실제 prefix hit·Tool Calling·Responses·MTP acceptance 성공과 다르다.
+
+## DGX 통합 실기 시험 완료 — 실행 계획 이후 최종 결과
+
+- **정확한 실측 소스 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`**: `PASS_SOURCE_ONLY: 144 tracked file(s)`; **208 tests OK, XFAIL=0**, `PHASE5_SOURCE_AST_OK`, `PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, 최종 `PASS: PHASE5_BUNDLED_DGX_OFFLINE_EXECUTION`.
+- 기존 Phase2~4 BF16 PLE workers 1/4 byte-exact, 중복 샤드 guard, 4가지 FAST/STATS byte-exact 전부 PASS. 신규 소형 합성 CPU microbench **12조건 정상 종료**: `PHASE5_SYNTHETIC_CPU_BENCH_ALL_OK`. 이는 실제 95.37GiB NVMe·모델 TPS 성능 검증이 아니다.
+- 설치 vLLM **읽기 전용 소스 SHA/AST inventory 확보**, `PHASE5_VLLM_SOURCE_INVENTORY_DONE_NOT_ABI_CERTIFIED`. `mamba_hybrid/scheduler/parser_qwen3/parser_engine/streaming_parser/responses_serving` 소스 확인, 조사기의 `qwen38_mtp` 및 `qwen38_ple` 두 **예상 경로는 ABSENT_OR_RELOCATED** — 실제 코드가 없다는 확정이 아니라 경로/ABI 추가 확인 필요.
+- 실제 prefix cache/SSM state cache-hit 정합성, Tool Calling/Responses 실 엔진 JSON/SSE, MTP reduced draft vocab acceptance, GPU/실 모델/TPS/CI는 **NOT_VERIFIED**. 합성 oracle 성공을 실제 엔진 적용·기능 PASS로 과대 표시하지 않는다.
+- [Phase5 DGX 검증 결과 정본](BLAZUX-PHASE5-DGX-VALIDATION-RESULTS-20261027.md)에 12건 CPU latency 원문 수치 및 8개 설치 소스 관측 결과를 기록했다. 이 문서를 추가하는 **docs-only 후속 Git SHA는 DGX에서 실행한 SHA가 아니다.**
 
 ## 1. 한 Phase 안에 묶은 기능과 실제 구현
 
