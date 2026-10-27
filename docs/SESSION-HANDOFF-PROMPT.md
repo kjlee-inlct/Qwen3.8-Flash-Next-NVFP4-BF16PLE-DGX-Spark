@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX AST dependency trace JSON 확보 최신 스냅샷을 우선한다. 신규 233 tests의 전체 Gate는 로그 미제공으로 미확정이며 직전 223 PASS 증거는 유지한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler 생성자 block-size 출처 조사 최신 실행 전 스냅샷을 우선한다. 기존 Source-only JSON 증거는 유지하며 새 244 unit 실측은 아직 없다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase 5 — DGX AST dependency trace JSON 확인, unit gate 미확정 (현 최신)
+## 2026-10-27 Phase 5 Scheduler 생성자·LCM 출처 읽기 전용 조사 묶음 (현 최신, DGX 실행 전)
+
+- **단일 Phase5 유지:** 브랜치 `feature/blazux-phase5-correctness-mtp-offline`의 검증된 기존 문서 HEAD `fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1`에서 새 source-only 분석기·회귀시험·runbook·Manifest를 추가한다. **확정 실기 결과는 이전 코드 `2c7c6896...`의 unit223/223, Mock38/38, Source152/152**. 사용자 마지막 AST JSON은 보호 명령 맥락 SHA `2cadc7369b4b813332a767733faa9c2529413cd9`의 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED` 확인에 한정; 그 소스의 **233 tests/156 Source 전체 Gate는 로그 미제공으로 미확정**. 새 이번 소스 HEAD 또한 DGX **NOT_RUN**.
+- **왜 추가하는가:** config/cache.py:125에 mamba_block_size STORE, config/vllm.py:2535–2536에 LOAD가 있지만 `MambaHybridModelState.add_request:116`은 `cache_config.block_size`로 slot을 나누고 `Scheduler._mamba_block_aligned_split:392`도 legacy block_size 사용. Scheduler.__init__:174의 `self.block_size`는 계산된 값이 아니라 **생성자 인자 `block_size` 저장**. 따라서 실제 생성자 **호출부/동적 scheduler_cls factory·LCM/그룹 정렬·state-slot restore** 검증이 다음 우선순위다.
+- **새 파일:** `src/phase5_scheduler_provenance.py` = installed vLLM을 **import하지 않는** `config`+`v1` bounded source-only AST 조사기. 직접 `Scheduler(...)` 및 동적 `scheduler_cls(...)` 후보 호출, keyword/positional block_size/hash_block_size, `lcm` 대입·mamba_block_size STORE/LOAD, Scheduler/Mamba 원래 함수 AST trace를 수집하고 **소스 이름/표현 힌트는 실제 바인딩·semantic correctness가 아님**을 명시한다. `tests/test_blazux_phase5_scheduler_provenance.py` 신규 **11개 stdlib synthetic tests**, `scripts/phase5-check-offline.sh` AST gate 확장. 233+11 = **244 unit(XFAIL0) 목표, 아직 미실행**, Manifest 예상 **160 tracked**.
+- **Runbook/승인 경계:** [Scheduler Block Size Provenance 소스 조사](BLAZUX-PHASE5-SCHEDULER-BLOCK-PROVENANCE-20261027.md)에서 clean 별도 DGX checkout ff-only + `scripts/phase5-check-offline.sh` + 기존 이미지 ID의 `--runtime=runc --network=none --read-only --tmpfs /tmp:rw,mode=1777,size=256m CUDA_VISIBLE_DEVICES=-1` 임시 CPU-only 조사. 마커 `PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED`. 검색 한계 `PARTIAL`/dynamic factory unresolved면 결과를 과대 판정하지 않는다.
+- **변경·PR 금지:** blazux Mamba/Scheduler, Qwen Tool/Responses, MTP Reduced Draft Vocabulary 어느 patch도 아직 적용 승인 없음. 운영 Docker/서빙/모델·HF cache/receipts/ports/GPU·HTTP/실 모델 추론·TPS/CI 시험 금지. `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` 불변. PR/Merge 불필요; blazux→main PR/merge/cherry-pick/rebase/squash/sync 영구 금지.
+
+---
+
+## 2026-10-27 Phase 5 — DGX AST dependency trace JSON 확인, unit gate 미확정 (이전 증거)
 
 - **사용자 첨부:** `붙여넣은 텍스트(1)(20261027-091133).txt`는 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED`와 AST JSON을 포함. 앞선 사용자가 실행한 보호 명령 `EXPECTED=2cadc7369b4b813332a767733faa9c2529413cd9`에 의해 SHA 귀속(단 JSON 자체에는 HEAD 필드 없음). **233/233 unittest, 156/156 manifest 및 mock 결과는 이 첨부에 없어 PASS로 기록하지 말 것.** 마지막 확인된 전체 Source/unit PASS는 이전 `2c7c6896...`에서 Source152/152, mock38/38, unit223/223/XFAIL0.
 - **Mamba 핵심 발견:** source scan `SCANNED_READ_ONLY`, 384개 Python 파일/6,448,206bytes/unreadable0. `config/cache.py:125`의 `mamba_block_size` STORE, `config/cache.py:267` 및 `config/vllm.py:2535–2536`의 LOAD 확인. **이전 특정 worker 파일에 없는 것과 전역 field 부재는 다르다.** worker `add_request:116`은 `self.cache_config.block_size`로 나눔; Scheduler `__init__:174`의 `self.block_size`는 생성자 인자 `block_size` 그대로; scheduler `_mamba_block_aligned_split:392`은 `self.cache_config.block_size` 사용, hash_block_size도 별도. 실제 `Scheduler(block_size=...)` 호출자/LCM/SSM state seed/restore 단위 미검증.

@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 DGX 읽기 전용 Dependency Trace JSON 확보 (최신)
+## 2026-10-27 Phase5 Scheduler ctor 인자/그룹 LCM 소스 추적 추가 (DGX 새 코드 미실행)
+
+- 사용자 제공 Phase5 AST trace JSON(명령 보호 SHA `2cadc7369b4b813332a767733faa9c2529413cd9`)으로 `config/cache.py`의 `mamba_block_size` 정의 후보·`config/vllm.py`의 참조, Scheduler.__init__의 `self.block_size=block_size`, Mamba/Scheduler worker의 `cache_config.block_size` 사용이 확인됐다. **실제 Scheduler 생성자 호출자/LCM/SSM state slot 단위는 여전히 미확인**. 직전 확정된 전체 unit은 223/223 at `2c7c6896...`; 새 233 unit PASS도 로그 미제공.
+- 새 [Scheduler Block Provenance 실행 Gate](BLAZUX-PHASE5-SCHEDULER-BLOCK-PROVENANCE-20261027.md)에서는 기존 Phase5 브랜치에 import-free source-only `Scheduler(...)` 직접/동적 class factory 후보 탐색, positional/keyword `block_size`·`hash_block_size` 표현, LCM 대입·mamba field STORE/LOAD, 원본 Scheduler/Mamba AST method trace와 합성 **11개 회귀시험**을 하나로 묶는다. **목표 전체 244개/XFAIL0, Manifest160**, 현재 신규 DGX **NOT_RUN**.
+- `Scheduler` 이름만으로 실제 class binding을 확정하거나 동적 `scheduler_cls` 호출의 위치 인자를 임의로 해석하지 않는다. PARTIAL 스캔 시 false completeness 금지. cache group/LCM 및 state restore 미확인 상태에서 blazux Mamba patch 적용 불허. Tool/Responses/MTP 및 실제 추론/GPU/운영은 계속 별도 승인 전 NO GO.
+- Phase 증가 금지: CPU/source-only 후속은 모두 **Phase5**. `main`, P0, Phase1~4 불변, main PR/merge/cherry-pick/rebase/squash/sync 금지, 현재 PR/Merge 불필요.
+
+## 2026-10-27 Phase5 DGX 읽기 전용 Dependency Trace JSON 확보 (이전 실측)
 
 - 사용자 JSON이 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED`로 정상 종료했고 실행 명령은 `2cadc7369b4b813332a767733faa9c2529413cd9` 소스 HEAD를 확인하는 구조. 이번 로그에 전체 unit 233/233·Manifest 156/156은 없어 **전체 Gate PASS는 미확정**. 직전 확정 223 tests Source152/152는 별도 source SHA `2c7c6896...`에 귀속. [상세 실측 정본](BLAZUX-PHASE5-DGX-DEPENDENCY-TRACE-RESULTS-20261027.md).
 - Mamba `mamba_block_size` 구문은 `config/cache.py`와 `config/vllm.py`에서 정의/참조됨(384파일 scan, unreadable0). Worker `add_request`와 Scheduler `_mamba_block_aligned_split`은 여전히 `cache_config.block_size`를 사용하고 Scheduler `self.block_size`는 외부 생성자 인자를 전달받음. 호출자 LCM/state slot unit 확인 전 Mamba patch 안전 승인 불가.
