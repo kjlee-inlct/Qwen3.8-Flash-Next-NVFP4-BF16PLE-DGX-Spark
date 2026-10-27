@@ -6,6 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
+## 2026-10-27 최신 운영 규칙 보강 — Phase 묶음 진행
+
+> 아래 항목이 본 문서 최초 작성 당시의 단계별 Phase 설명보다 **최신**이다. 사용자 요청에 따라 같은 위험·승인·검증 경계를 공유하는 작업은 단일 Phase의 복수 독립 커밋으로 수행한다. 세부 프로그램과 고정 SHA는 [Phase 4 통합 Gate 문서](BLAZUX-PHASE4-BUNDLED-PLE-CPU-20261027.md)를 우선한다.
+
+- Phase 3에서 `G2-01` 중복 PLE shard 인덱스 fail-closed 회귀 **189/189 XFAIL=0** 및 CPU byte-exact를 실제 DGX에서 확인했다. Phase 3 확정 문서 HEAD `760f227e46a358445db3d3931b5efbe40de5f609`을 최종 불변 부모로 한다.
+- **Phase 4 단일 브랜치** `feature/blazux-phase4-ple-cpu-bundle`: 독립 feature A `VLLM_PLE_FAST_GATHER=0`(작은 batch inline gather), feature B `VLLM_PLE_PHASE_STATS=0`(per-table CPU gather 관측값). 각 최적화는 **서로 다른 구현 커밋** 및 독립 기본-OFF 플래그/rollback으로 보존; 같은 Phase의 공용 BF16 CPU fixture·unit tests·runbook·Manifest·실측 기록으로 묶는다.
+- **영구 금지:** `main` 대상 PR/merge/cherry-pick/rebase/squash/sync. 이전 P0/Phase1/Phase2/Phase3 ref도 수정하지 않는다. GPU/모델/Docker/HF cache/포트/receipt는 승인 전 변경하지 않는다.
+- 향후 Phase 분기는 **기술적 ABI/rollback 신뢰 경계 또는 새로운 운영·GPU 권한이 달라질 때만**. 동일 Phase 안에서 실패 재시험·추가 fixture·문서 정리는 추가 Phase 번호 없이 진행. 별도 Track B(vLLM 0.32)는 기존과 같이 **승인 전 시작 금지**.
 ## 1. 목표·범위·성공 정의
 
 ### 1.1 목표

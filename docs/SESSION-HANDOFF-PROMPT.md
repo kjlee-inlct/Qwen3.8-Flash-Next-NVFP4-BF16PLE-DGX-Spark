@@ -1,12 +1,21 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 3 DGX 실측 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 4 통합 진행 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 3 DGX 시험 완료 — 현재 최신 인수인계
+## 2026-10-27 Track A Phase 4 — 두 기능 통합, Phase 수 감축 (최신)
+
+- **사용자 우선 규칙 변경:** 작은 버그·기능·시험마다 새 Phase를 만들지 않는다. 위험/검증/rollback 범위가 같으면 **같은 Phase에 복수 기능별 독립 커밋**을 축적하고 공용 offline/GPU 승인 게이트를 적용한다. Phase 간 분기는 ABI/실험 안전 범위/별도 승인 변화가 있을 때만 한다. Phase 3 확정 부모 `760f227e46a358445db3d3931b5efbe40de5f609`를 원본으로 유지.
+- **Phase4 브랜치:** `feature/blazux-phase4-ple-cpu-bundle`. 기본 OFF 기능 A `VLLM_PLE_FAST_GATHER=0`/행 512 기준 small-N inline gather; 독립 기본 OFF 기능 B `VLLM_PLE_PHASE_STATS=0`의 per-table CPU gather calls/errors/rows/logical_bytes/gather_s/fast_calls. **서로 다른 2개 커밋**으로 나누어 별도 rollback·on/off 비교 가능. 원래 BF16 PLE, G2-01 duplicate fail-closed, MTP 이름 31개 보호 유지.
+- **동일 Phase 통합 시험:** [Phase 4 Gate 4 runbook](BLAZUX-PHASE4-BUNDLED-PLE-CPU-20261027.md), 신규 `scripts/phase4-check-offline.sh`, stdlib `tests/test_blazux_phase4_flags.py`, NumPy/PyTorch `src/test_ple_phase4_cpu.py`. OFF/OFF·ON/OFF·OFF/ON·ON/ON, BF16 byte-exact, input duplicates/short shard/threshold/invalid IDs/metrics snapshot, 그리고 기존 Phase3 G2-01 CPU 시험을 **같은 한 번의 임시 컨테이너에서 실행**. 예상 총 unit **194개 XFAIL=0** (실기 전 결과 아님).
+- **검증 상태:** Phase 4 source/manifest는 GitHub 커밋 뒤 path/mode/blob 1:1 재확인. **실제 DGX Phase 4 및 GPU/CI/A·B 성능시험은 아직 NOT_RUN/NOT_VERIFIED**; 성공·속도 향상 주장 불가. 원본 이미지·모델/컨테이너/HF cache/ports은 변경하지 않는다.
+- **PR/merge:** 현 단계 불필요. 필요하다면 `base=feature/blazux-phase3-ple-duplicate-shard-guard`, `head=feature/blazux-phase4-ple-cpu-bundle`의 **비병합 리뷰 전용 Draft PR**만 제안; 그 PR도 merge하지 않는다. `main`으로 향하는 어떠한 변경/PR/merge/cherry-pick/squash/rebase/sync도 **영구 금지**. P0/P1/P2/P3 고정.
+
+---
+## 2026-10-27 Track A Phase 3 DGX 시험 완료 — 과거 최신 인수인계
 
 - **검증 완료:** 사용자 제공 DGX Phase 3 오프라인 wrapper 로그: 정확한 소스 HEAD `cb1de387b09786d6be35fec838c6549a78e5417c`, `PASS_SOURCE_ONLY` **132/132**, Python **189 tests OK, XFAIL=0**, 최종 `PASS: PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0`. 기존 phase3 runner의 branch/origin/clean/source/deployment manifest/Mock/Bash audit 검증 체인을 통과했으나 사용자 마지막 출력에는 별도 세부 test 수치 전부가 포함되지는 않음.
 - **실제 PyTorch PLE CPU 후속 출력:** `workers=1 chunk=1024` 및 `workers=4 chunk=2`에서 **BF16 mmap gather/forward byte-exact PASS**, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK`, `PHASE2_PLE_CPU_ALL_OK`. **G2-01은 작은 합성 CPU 회귀시험 범위에서 CLOSED**, 배포/실 모델/GPU inference·CUDA graph/QSA TopK 성능 확인과는 구분.
