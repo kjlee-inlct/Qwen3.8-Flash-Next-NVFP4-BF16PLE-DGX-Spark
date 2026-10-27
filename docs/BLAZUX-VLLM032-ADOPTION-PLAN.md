@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase 5 읽기 전용 실제 Source Dependency Trace 합본 (DGX 실행 전)
+## 2026-10-27 Phase5 DGX 읽기 전용 Dependency Trace JSON 확보 (최신)
+
+- 사용자 JSON이 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED`로 정상 종료했고 실행 명령은 `2cadc7369b4b813332a767733faa9c2529413cd9` 소스 HEAD를 확인하는 구조. 이번 로그에 전체 unit 233/233·Manifest 156/156은 없어 **전체 Gate PASS는 미확정**. 직전 확정 223 tests Source152/152는 별도 source SHA `2c7c6896...`에 귀속. [상세 실측 정본](BLAZUX-PHASE5-DGX-DEPENDENCY-TRACE-RESULTS-20261027.md).
+- Mamba `mamba_block_size` 구문은 `config/cache.py`와 `config/vllm.py`에서 정의/참조됨(384파일 scan, unreadable0). Worker `add_request`와 Scheduler `_mamba_block_aligned_split`은 여전히 `cache_config.block_size`를 사용하고 Scheduler `self.block_size`는 외부 생성자 인자를 전달받음. 호출자 LCM/state slot unit 확인 전 Mamba patch 안전 승인 불가.
+- NVIDIA MTP 출력 head는 공유 `model.embed_tokens`, 별도 `ParallelLMHead`, `PPMissingLayer`로 분기하고, `compute_logits`가 logits_processor(head,states)를 호출. reduced draft vocab은 branch별 head storage와 loader remap, TP/dtype/vocab/acceptance/다국어 품질 확인 전 **미적용**. Parser/Responses도 정적 call edges 확보에 그치며 stream/HTTP 검증 없음.
+- **Phase5 안에서** cache field→Scheduler(block_size=...) 생성자 호출자→state restore 정합성부터 추가 분석. 운영 vLLM patch, GPU/model/TPS/HTTP/CI, TrackB 승인 전 금지. Main/P0/Phase1~4 immutable, blazux→main PR/merge/cherry-pick/rebase/squash/sync 영구 금지.
+
+## 2026-10-27 Phase 5 읽기 전용 실제 Source Dependency Trace 합본 (기존 계획)
 
 - 기존 **Patch Preflight DGX 실측 223/223 PASS/XFAIL0**는 테스트 코드 `2c7c6896...`에만 귀속. 이제 같은 Phase5에서 **Mamba/Scheduler block field 생성/LCM, Parser/Responses 호출관계, NVIDIA MTP lm_head/weight sharing**을 Source AST 기반으로 더 구체적으로 조사한다. 새 Phase 생성 안 함.
 - 새 [Phase5 Dependency Trace 실행 문서](BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md): `src/phase5_dependency_trace.py` (import-free, read-only `config`+`v1` scope Mamba STORE/LOAD; Mamba/Scheduler/Parser/Responses/MTP/PLE method expression/AST trace), `tests/test_blazux_phase5_dependency_trace.py` 신규 10개와 통합 AST Gate. **목표 unittest 233/XFAIL0, 새 DGX 실측 NOT_RUN**.

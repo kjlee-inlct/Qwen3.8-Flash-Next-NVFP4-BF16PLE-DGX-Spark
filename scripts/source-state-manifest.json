@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 156,
+  "tracked_file_count": 157,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -93,7 +93,8 @@
     "2026-10-27 Phase5 DGX user source triage stdout for exact tested code HEAD 9e2d1647357938f6d465eb9b3ce473d03e38e779: Source Manifest 148/148 PASS, Wizard mock 38/38, unittest 215 OK XFAIL=0, source AST and offline PASS, read-only installed vLLM AST/hash report ending PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED. Installed NVIDIA Qwen3.8 MTP and PLE sources are at models/qwen3_8_flash_next/nvidia/mtp.py and ple_layer.py (old ABSENT_OR_RELOCATED was path assumption), AMD counterparts present separately. Mamba and Scheduler blazux legacy block-size source anchor hints present; Parser/Streaming/Responses patch helper hints missing. Model search CANDIDATE_LIMIT_REACHED (536 visited, 43 matched, 32 displayed); relevant Qwen3.8 Nvidia files found but full inventory incomplete. These are SOURCE ONLY candidate findings, NOT ABI/runtime/bug/patch safety certification. GPU/TPS/CI untested. Docs-only 149-file Manifest commit new SHA NOT DGX retested. main/P0/Phase1-4 refs immutable, no PR/merge.",
     "2026-10-27 Phase5 same-branch pinned blazux patch preflight extension based on Phase5 docs-only HEAD e3ea43e95cb444197400389b0dfe3064a3e9f879. Source-only 12 installed preview Python files fingerprint/anchor counts/function AST structure/signature, conservative 5-patch-family prerequisite classifications for Mamba/Scheduler, Tool Argument Schema, Literal Marker, Responses and MTP reduced draft vocabulary. 8 new stdlib synthetic fake-tree regression tests, total expected unittest 223 XFAIL=0; actual new DGX run NOT_DONE. Import-free read-only CPU-only source scanning, no patch/engine/weight/GPU, no automatic approval. Previous user DGX 215-test evidence belonged only to tested SHA 9e2d1647357938f6d465eb9b3ce473d03e38e779. Preserve main/P0/Phase1-4 immutable, no PR/merge.",
     "2026-10-27 user DGX patch preflight actual tested source HEAD 2c7c6896430be0d9eada656f17edf97d9c5f4d3f: Source 152/152 twice, Wizard Mock 38/38, unittest 223 OK XFAIL=0, AST PASS, PHASE5_PATCH_PREFLIGHT_SOURCE_ONLY_DONE_NO_APPLY_APPROVAL and final PHASE5_PATCH_PREFLIGHT_EXECUTED_NOT_CERTIFIED. All 12 installed vLLM preview source files parsed and SHA/AST fingerprints recorded; Mamba/Scheduler legacy block expressions present but cache_config.mamba_block_size not observed; Parser/Responses multi-file patch prerequisites missing/unverified; NVIDIA MTP compute_logits/load_weights candidate not approved; five patch families zero approvals. GPU, actual prefix hit/tool/Responses, MTP acceptance, real model inference/TPS and CI not verified. This docs-only report/Gate5/adoption/handoff+153-file source Manifest commit is NOT retested on DGX and has its own SHA. Main/P0/Phase1-4 unchanged, no PR/merge.",
-    "2026-10-27 Phase5 same-branch dependency-trace followup (parent docs-only e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6): import-free read-only AST analysis of Mamba/Scheduler block division and cache field provider STORE/LOAD (bounded config+v1 search), Parser/Qwen3/Streaming/Responses static calls and redacted return shapes, NVIDIA MTP lm_head/logits_processor assignment and compute_logits/load_weights, PLE forward. Added 10 synthetic stdlib fixture tests (233 total expected XFAIL0), AST gate, isolated DGX runbook, adoption/handoff and 156-entry full Manifest. New HEAD is NOT DGX tested; previous true user DGX PASS 223/223 and source 152 belonged ONLY to tested source SHA 2c7c6896430be0d9eada656f17edf97d9c5f4d3f. No runtime patches or approvals, no GPU/model/HTTP/TPS/CI. Main/P0/Phase1-4 refs unchanged; no PR/Merge."
+    "2026-10-27 Phase5 same-branch dependency-trace followup (parent docs-only e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6): import-free read-only AST analysis of Mamba/Scheduler block division and cache field provider STORE/LOAD (bounded config+v1 search), Parser/Qwen3/Streaming/Responses static calls and redacted return shapes, NVIDIA MTP lm_head/logits_processor assignment and compute_logits/load_weights, PLE forward. Added 10 synthetic stdlib fixture tests (233 total expected XFAIL0), AST gate, isolated DGX runbook, adoption/handoff and 156-entry full Manifest. New HEAD is NOT DGX tested; previous true user DGX PASS 223/223 and source 152 belonged ONLY to tested source SHA 2c7c6896430be0d9eada656f17edf97d9c5f4d3f. No runtime patches or approvals, no GPU/model/HTTP/TPS/CI. Main/P0/Phase1-4 refs unchanged; no PR/Merge.",
+    "2026-10-27 DGX Phase5 AST trace JSON for command-guarded SHA 2cadc7369b4b813332a767733faa9c2529413cd9: source-only trace completed with Mamba cache config STORE/LOAD, Scheduler block_size constructor assignment, conditional NVIDIA MTP lm_head and Parser/Responses static edges. JSON itself contains no HEAD. No 233-unit-test or 156-source-manifest evidence in this attachment, thus new Gate remains NOT_CONFIRMED. Previous 223-unit PASS attached to 2c7c6896. No patch authorization, GPU, runtime or CI. Documentation-only 157-file manifest HEAD not DGX retested. main/P0/Phase1-4 protected and no PR/Merge."
   ],
   "files": [
     {
@@ -209,7 +210,12 @@
     {
       "path": "docs/BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md",
       "mode": "100644",
-      "blob_sha": "f86731b524dcfe0ac0377e1502ec914109cbf2dc"
+      "blob_sha": "bd7fd7af66f4ddd2efef00bfaf082658f5ba25aa"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE5-DGX-DEPENDENCY-TRACE-RESULTS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "a452933fc9af503dc912e663f1e11ba1a1249b33"
     },
     {
       "path": "docs/BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md",
@@ -239,7 +245,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "4b1f8017256c9e590c38d84fd3fcbc2ee956b4b9"
+      "blob_sha": "35d2b17421451179f28dac556a377e3d3e751778"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -254,7 +260,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "faac0ac001ed97454ac16697fef9b0da6073bb28"
+      "blob_sha": "bab15ccfa41c55ab38de7119776c882a1a2de00f"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

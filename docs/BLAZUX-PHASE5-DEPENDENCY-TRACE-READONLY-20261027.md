@@ -1,10 +1,18 @@
 # Phase 5 연속 Gate — Preview vLLM AST Dependency Trace / Source-Only
 
-> **상태: CODE_AND_TESTS_PREPARED / DGX_NEW_HEAD_NOT_RUN / NO_ENGINE_PATCH / NO_GPU / NO_MODEL_ACCESS.**
+> **최신 상태: DGX_DEPENDENCY_TRACE_JSON_CAPTURED / UNIT_233_NOT_EVIDENCED / SOURCE_156_NOT_EVIDENCED / NO_PATCH_APPROVAL / NO_GPU / NO_MODEL_ACCESS.**
 >
 > 날짜: 2026-10-27 (Asia/Seoul). 동일 `feature/blazux-phase5-correctness-mtp-offline` 브랜치 유지. 이전 **사용자 DGX 실제 PASS 코드 SHA `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`** (Source 152/152, mocks 38/38, unit 223/223 XFAIL0, pinned patch source preflight). 기록 완료된 이전 **docs-only HEAD `e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6`**에서 후속 작업 시작. 이번 신규 HEAD는 실제 DGX 미실행.
 >
 > blazux upstream 비교 대상 고정 [`8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa); 이 도구는 pinned 소스와 실제 엔진의 **관계 증거를 수집할 뿐 자동 patch·적용 승인·실 runtime 정합성 판단은 하지 않는다.**
+
+## 최신 DGX Dependency Trace 결과 — 실행 계획보다 우선
+
+- 사용자 DGX JSON + `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED` 종료 마커 확보. 앞서 제공된 명령이 보호 확인한 SHA는 `2cadc7369b4b813332a767733faa9c2529413cd9`; JSON 자체에는 Git SHA가 없으므로 **명령 맥락에 근거한 귀속**이다.
+- **Mamba:** `mamba_field_scan=SCANNED_READ_ONLY`, 384 Python files, 6,448,206 bytes, unreadable=0. `config/cache.py:125` mamba_block_size STORE, `config/cache.py:267`, `config/vllm.py:2535-2536` LOAD. `mamba_hybrid.add_request:116`는 여전히 cache_config.block_size로 나누며 `Scheduler.__init__:174`의 `self.block_size`는 인자 직접 대입, `_mamba_block_aligned_split:392`는 cache_config.block_size 사용. 실제 생성자 인자/LCM, state slot 단위 확인 전 patch 불가.
+- **MTP:** `self.lm_head`는 `model.embed_tokens`, `ParallelLMHead`, `PPMissingLayer` 조건부 대입, `compute_logits`는 logits_processor(self.lm_head,hidden_states). shared head/weight alias/TP/acceptance 미검증으로 reduced draft patch 금지.
+- **Parser/Responses:** arg converter flush, stream feed/finish, Responses parse_delta/emit_delta/_raise_if_error 호출명 확보. 신규 blazux helper 미확인. 실제 SSE/Tool 기능 인증 아님.
+- [실측 보고서](BLAZUX-PHASE5-DGX-DEPENDENCY-TRACE-RESULTS-20261027.md)에 상세 증거 기록. **이번 JSON에는 unit 233/233, Manifest 156/156, mocks 출력이 없으므로 해당 전체 Gate를 PASS로 확정하지 않음.** 앞서 실제 확인된 unit 223/223는 `2c7c6896...`에 귀속. GPU/운영/model 미실행, blazux patch 승인 0건.
 
 ## 1. 한 Phase에 묶은 조사 목적
 

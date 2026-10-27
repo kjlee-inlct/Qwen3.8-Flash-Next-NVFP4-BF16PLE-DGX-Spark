@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 Dependency Trace (DGX 실행 전) 최신 진행 스냅샷을 우선한다. 직전 223-test DGX PASS는 유지한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX AST dependency trace JSON 확보 최신 스냅샷을 우선한다. 신규 233 tests의 전체 Gate는 로그 미제공으로 미확정이며 직전 223 PASS 증거는 유지한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 5 Dependency Trace 통합 추가 — 최신 진행 (DGX 실행 전)
+## 2026-10-27 Phase 5 — DGX AST dependency trace JSON 확인, unit gate 미확정 (현 최신)
+
+- **사용자 첨부:** `붙여넣은 텍스트(1)(20261027-091133).txt`는 `PHASE5_DEPENDENCY_TRACE_DONE_NOT_PATCH_APPROVED`와 AST JSON을 포함. 앞선 사용자가 실행한 보호 명령 `EXPECTED=2cadc7369b4b813332a767733faa9c2529413cd9`에 의해 SHA 귀속(단 JSON 자체에는 HEAD 필드 없음). **233/233 unittest, 156/156 manifest 및 mock 결과는 이 첨부에 없어 PASS로 기록하지 말 것.** 마지막 확인된 전체 Source/unit PASS는 이전 `2c7c6896...`에서 Source152/152, mock38/38, unit223/223/XFAIL0.
+- **Mamba 핵심 발견:** source scan `SCANNED_READ_ONLY`, 384개 Python 파일/6,448,206bytes/unreadable0. `config/cache.py:125`의 `mamba_block_size` STORE, `config/cache.py:267` 및 `config/vllm.py:2535–2536`의 LOAD 확인. **이전 특정 worker 파일에 없는 것과 전역 field 부재는 다르다.** worker `add_request:116`은 `self.cache_config.block_size`로 나눔; Scheduler `__init__:174`의 `self.block_size`는 생성자 인자 `block_size` 그대로; scheduler `_mamba_block_aligned_split:392`은 `self.cache_config.block_size` 사용, hash_block_size도 별도. 실제 `Scheduler(block_size=...)` 호출자/LCM/SSM state seed/restore 단위 미검증.
+- **MTP 중요 분기:** `Qwen3_8FlashNextMTP.__init__`가 `self.model.embed_tokens`, `ParallelLMHead(...)`, `PPMissingLayer()`를 조건별 `self.lm_head`에 지정; `compute_logits`는 `self.logits_processor(self.lm_head,hidden_states)` 반환, `load_weights`에 native checkpoint 검증/name remap. Reduced draft vocab 단순 subset은 alias/weight dtype/vocab/TP/acceptance 검증 전 **NO GO**.
+- **Tool/Responses:** ParserEngine argument converter/_flush_arg_converter, Qwen3 extraction, StreamingParser feed/finish, Responses parse_delta/emit_delta/_raise_if_error 등 정적 call edge 확인. blazux 일부 helper는 해당 클래스에 null; 기능 전체 부재/버그 단정 금지.
+- **영구 증거:** [Phase5 DGX 의존성 추적 결과](BLAZUX-PHASE5-DGX-DEPENDENCY-TRACE-RESULTS-20261027.md), [기존 재현 및 Gate](BLAZUX-PHASE5-DEPENDENCY-TRACE-READONLY-20261027.md). 이후 docs-only SHA는 실제 DGX 소스 HEAD와 구분. **다섯 blazux patch 적용 승인 0건**, real prefix hit/Tool SSE/MTP acceptance/GPU/model/TPS/CI 미실행.
+- **다음:** 같은 Phase5에서 Mamba CacheConfig 실제 필드 설정 → Scheduler 생성자 block_size 호출자/LCM → Mamba state slot pre/postprocess 연결을 source-only로 분석, 이어 Parser/Responses multi-file dependency, MTP head/weights contract의 CPU fixture. `main`과 P0/Phase1~4 불변, PR/merge 금지, 운영 Docker/weights/cache/ports/GPU 미변경.
+
+---
+
+## 2026-10-27 Track A Phase 5 Dependency Trace 통합 추가 — 이전 구현 계획
 
 - **확정된 직전 DGX 증거:** 코드 HEAD `2c7c6896430be0d9eada656f17edf97d9c5f4d3f`에서 Source 152/152 PASS, Mock 38/38, unittest **223/223 XFAIL0**, pinned blazux 5계열 source preflight PASS, **적용 승인 0건**. 해당 결과는 [Phase5 DGX 실측 정본](BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md). 이번 작업 출발한 문서 전용 HEAD `e0dbed59b3ef8c5b7a3c843a904c4c96532f22e6`는 DGX에서 재실행된 HEAD가 아니다.
 - **같은 Phase 5에서 신규 실행 준비:** `src/phase5_dependency_trace.py`에서 설치 vLLM을 import하지 않고 Source AST의 계산 RHS·assignments·calls·redacted return shapes 조사. Mamba add/preprocess/postprocess, Scheduler __init__/prefix hit, ParserEngine/Qwen3/Streaming Parser/Responses, NVIDIA MTP `lm_head`/`logits_processor`/weights 및 PLE forward를 통합 출력. `config`+`v1`의 `mamba_block_size` 대입(STORE)/사용(LOAD) 위치 탐색; **스캔 한계·symlink·unreadable·누락은 fail-closed 성격으로 명시**.
