@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 182,
+  "tracked_file_count": 186,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -111,7 +111,8 @@
     "2026-10-28 COMPLETE PHASE5 OFFLINE G1-G8 PASS - DGX tested exact source SHA 780b780fc7572226a6a9ff2e52cd8e1921c8738b, user log 붙여넣은 텍스트(1)(20261027-171555).txt: Source Manifest177/177 PASS twice, Wizard Mock38/38, unittest310/310 XFAIL0, source AST+offline wrapper PASS, isolated pinned source G1-G8 PASS, G8 CPU synthetic alignment/tiling 13824 cases, 23552 spans, BATCH_SOURCE_CPU_CHECKS_PASS=25528 (not independent unittest count), original _memcpy_u64_tiled L40-119 printed, final PHASE5_FINAL_OFFLINE_GATE_COMPLETED. Previous ff1f66a DGX unit310 FAILED(errors=15) due Python descriptor auto-self fixed at 780b780; history retained. PHASE5 CPU/offline exit PASS only. Actual active block equality/groups/physical tensor bounds, GPU/Triton state rollback/prefix-cache hit, MTP/Tool/Responses HTTP/bench/CI NOT_VERIFIED; blazux patches ZERO. Latest new docs-only commit has NOT been DGX retested. User rule: always synchronize new rules/evidence/errors/handoff/next steps across SESSION-HANDOFF, ADOPTION, authoritative reports, exit gate, full manifest in SAME authorized branch commit; GitHub CAS direct, ff-only pull and grouped scripts, no download. main/P0/Phase1-4 unchanged, no Phase6 branch, no PR/Merge or operational changes.",
     "2026-10-28 current-work-only new-session handoff anchor added: Phase5 source/CPU DONE only at exact DGX-tested 780b780fc7572226a6a9ff2e52cd8e1921c8738b (unittest310/310, mock38/38, source177, G1-G8); latest prior docs-only HEAD a205a3f958c250e2e30cb20fc99424666b2e0ff5 was not DGX retested. Current task exclusively Phase6 approval/scope and staged grouped Gate oracle design (P6-A read-only active config/ABI, P6-B isolated GPU state/prefix, P6-C MTP/Tool/Responses, P6-D correctness-then-performance). All real runtime/GPU/model/CI Phase6 tasks NOT_RUN/BLOCKED, no Phase6 branch/PR/Merge/patch approval. GitHub open PR 0, Actions runs 0, commit statuses 0 at review. New session must reread current refs/status and documents, avoid copying prior phase histories; follow same-commit handoff/adoption/exit/manifest synchronization, CAS commit and guarded DGX ff-only workflow after scoped approval. This note and successor commit docs-only, not a new DGX Gate PASS.",
     "2026-10-28: Phase6 branch from Phase5 docs-only 11fd777e; user approved offline gate code/tests/docs GitHub commit only. P6-A supplied snapshot contract is not active runtime; P6-A/B/C/D BLOCKED, DGX/GPU/CI/model/serving/patch/PR/merge NOT_RUN/NOT_APPROVED. See docs/BLAZUX-PHASE6-GATE-PLAN.md and docs/BLAZUX-PHASE6-RESULTS.md. Exact Phase5 DGX tested source 780b780 unchanged.",
-    "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist."
+    "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist.",
+    "2026-10-28: DGX user Phase6 exact source SHA c7f4ca71... offline Phase6 7/7 PASS and Source182/182 PASS; DGX A1 read-only source inventory completed, pinned legacy image listing matched prefix b0984c4b724b; real P6-A active scheduler/cache/Mamba state NOT_OBSERVED/BLOCKED. Phase6 A2 safe docker inspect-only + baseline runner/result/corpus preflight scripts, 8 new stdlib synthetic tests and frozen benchmark rules added in later GitHub commit; later code/manifest SHA DGX NOT_RUN. No live GPU, model/API, benchmark, CI, blazux patch, PR or merge; main/P0/Phase1-5 immutable. Refer to Phase6 results and benchmark rules."
   ],
   "files": [
     {
@@ -292,7 +293,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "4264a81c080c0a907a16602cd74a8b64204bf433"
+      "blob_sha": "26ca6c98109e089542e9b57a5a0b6d8283903204"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -320,19 +321,24 @@
       "blob_sha": "58ca6e8f0ca151db560b6d7dc2a5e697c4cac90e"
     },
     {
+      "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
+      "mode": "100644",
+      "blob_sha": "948247d51a2b81c29e54ad32fe1a492a71561d55"
+    },
+    {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "23fbf3b088cb77c1ddebd3248746c474601a6ba4"
+      "blob_sha": "4a8a517053ff39fa4535679d521071815ba150f1"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "9bc3643a598a3f47a0a70a9b6c8d4023a0d6c4d3"
+      "blob_sha": "259672d279832138b068202341867ec83d12439d"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "09dfa0fc900047352e58754a73cc200cc795fdb8"
+      "blob_sha": "5a56232e370106663b9a41e2423ccc062036f533"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -347,7 +353,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "147e387ec86111184daa2a427da7e2163829fd0d"
+      "blob_sha": "d762df739a3a825ca575fc2438d271207fd9a2fa"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -600,6 +606,11 @@
       "blob_sha": "325be49e2c5677df1221b7be96cb2c53d8e5327d"
     },
     {
+      "path": "scripts/phase6-readonly-preflight.sh",
+      "mode": "100755",
+      "blob_sha": "79bd65dfab4686d2945769d31c78303b91198ef2"
+    },
+    {
       "path": "scripts/prepare.sh",
       "mode": "100755",
       "blob_sha": "cdf820715a3869b87aad3559b209114748fe22b4"
@@ -795,6 +806,11 @@
       "blob_sha": "aa7654a5f47cddeababef4e3a0daffdea6fb4be8"
     },
     {
+      "path": "src/phase6_readonly_preflight.py",
+      "mode": "100644",
+      "blob_sha": "face7d73c50017c3188dd2a8eaa78b93fd86d82a"
+    },
+    {
       "path": "src/recipe/__init__.py",
       "mode": "100644",
       "blob_sha": "6dd1e25d5a5d1afbe11e8049b21c82223016b0e9"
@@ -933,6 +949,11 @@
       "path": "tests/test_blazux_phase6_gate.py",
       "mode": "100644",
       "blob_sha": "535ce7a71fb5312d9ec137c3643f5468ccc69548"
+    },
+    {
+      "path": "tests/test_blazux_phase6_readonly_preflight.py",
+      "mode": "100644",
+      "blob_sha": "cfe9dd54f3a874481a1f29fb931e5722fa854fe3"
     },
     {
       "path": "tests/test_ci_contract.py",
