@@ -114,7 +114,8 @@
     "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist.",
     "2026-10-28: DGX user Phase6 exact source SHA c7f4ca71... offline Phase6 7/7 PASS and Source182/182 PASS; DGX A1 read-only source inventory completed, pinned legacy image listing matched prefix b0984c4b724b; real P6-A active scheduler/cache/Mamba state NOT_OBSERVED/BLOCKED. Phase6 A2 safe docker inspect-only + baseline runner/result/corpus preflight scripts, 8 new stdlib synthetic tests and frozen benchmark rules added in later GitHub commit; later code/manifest SHA DGX NOT_RUN. No live GPU, model/API, benchmark, CI, blazux patch, PR or merge; main/P0/Phase1-5 immutable. Refer to Phase6 results and benchmark rules.",
     "2026-10-28 operator DGX Phase6 SHA 0513b118260047b9965e16b20bdadf690c112c5d: ff-only update, bash syntax PASS, 15/15 Phase6 unittest OK, source 186/186 PASS, PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED and operator PHASE6_A2_PREFLIGHT_DGX_COMPLETED. Running pinned image digest match=true; launch flags 0.8 GPU utilization, max-model-len 262144, max-num-batched-tokens 8192, max-num-seqs 8. Baseline raw SHA/runner Git SHA matched; current Gutenberg SHA256 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c; historic corpus hash absent, sampling/KV unverified. Live Scheduler/Mamba/group/address NOT_OBSERVED; P6-A runtime BLOCKED; P6-B/C/D NOT_RUN. Evidence-only doc commit is not tested SHA; no GPU/model/API/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 protected.",
-    "2026-10-28 Phase6 A3a prepared from docs-only HEAD be7a463274765627d0fd0da3a9d70907c5f0cf83: read-only host /proc/meminfo, fixed legacy Docker inspect metadata and nvidia-smi optional NVML numeric telemetry; safe parser/fail-closed 13 new synthetic stdlib tests. Expect Phase6 unit 28 and tracked Source190 on new SHA but DGX NOT_RUN until operator. Last measured DGX Phase6 SHA 0513b118: unit 15/15 Source186/186 plus passive A2 image/baseline/runner PASS; historical corpus SHA unknown, cache hash 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c. Resource snapshot cannot prove free unified GPU headroom nor selected Scheduler/Mamba/real addresses. Runtime P6-A/B/C/D BLOCKED; no GPU/model/HTTP/CI/benchmark/patch/PR/merge approval. main/P0/Phase1-5 immutable."
+    "2026-10-28 Phase6 A3a prepared from docs-only HEAD be7a463274765627d0fd0da3a9d70907c5f0cf83: read-only host /proc/meminfo, fixed legacy Docker inspect metadata and nvidia-smi optional NVML numeric telemetry; safe parser/fail-closed 13 new synthetic stdlib tests. Expect Phase6 unit 28 and tracked Source190 on new SHA but DGX NOT_RUN until operator. Last measured DGX Phase6 SHA 0513b118: unit 15/15 Source186/186 plus passive A2 image/baseline/runner PASS; historical corpus SHA unknown, cache hash 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c. Resource snapshot cannot prove free unified GPU headroom nor selected Scheduler/Mamba/real addresses. Runtime P6-A/B/C/D BLOCKED; no GPU/model/HTTP/CI/benchmark/patch/PR/merge approval. main/P0/Phase1-5 immutable.",
+    "2026-10-28: DGX operator tested Phase6 exact SHA 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, 28/28 Phase6 unit PASS, full Source Manifest 190/190 PASS and PHASE6_A3A_PASSIVE_RESOURCE_OBSERVATION_COMPLETED_NOT_GPU_CERTIFIED plus final PHASE6_A3A_DGX_OBSERVATION_COMPLETED. Legacy running/image pin true, explicit Docker Memory limit null. Host MemTotal124543 MiB, MemAvailable14085 MiB, SwapTotal16383 MiB, SwapFree8735 MiB. Single NVML GPU util 0.0%, temp35C, GPU total/free/used memory unavailable, status PARTIAL. This does not show real Scheduler/CacheConfig/MambaSpec/group/table/state pointers nor safe extra model headroom. P6-A active runtime BLOCKED; P6-B/C/D NOT_RUN; no GPU/model/HTTP/benchmark/CI/patch/PR/merge. Baseline corpus original hash/sampler/KV unresolved, only current corpus SHA from previous A2. New record/manifest documentation-only commit is NOT DGX tested; main/P0/Phase1-5 and original baseline untouched."
   ],
   "files": [
     {
@@ -295,7 +296,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "1ed12f50dba4bbc105ad60b6d8947dc4c089adac"
+      "blob_sha": "44675ac5fa41778974e681c731d722e15a9dc8a3"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -325,27 +326,27 @@
     {
       "path": "docs/BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md",
       "mode": "100644",
-      "blob_sha": "0406f90db309b5b220180022f9b87e62f0065e85"
+      "blob_sha": "53283e164fb73e4be3900b72c66864112738066b"
     },
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "9d23ff74d929f348ca0cafc7a01c41d9b8ea71b6"
+      "blob_sha": "a7cf4d206e6e468880d35a944e75d80c8ed87fe9"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "93168dac6bf1118b84c6dbd7e37303e1b8009731"
+      "blob_sha": "59cc289f9483fba44f9fe7ed1e443f1feb54de66"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "6755e97e1fd31bb7fb836261c90835b5bda26c13"
+      "blob_sha": "c2fe50b1aad3dd00cad62e2bcb44c77e8d08f97f"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "2794b071e32b25e04a194544e3faa309d8c69500"
+      "blob_sha": "6dccd5f6c31153ccf1b9867b2b22a59e5cb0ab3e"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -360,7 +361,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "06d2296f4aa80da7140daebfffe75e8f2354fece"
+      "blob_sha": "ec3eac730093f479d02f6d773b429623415f1a6a"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
