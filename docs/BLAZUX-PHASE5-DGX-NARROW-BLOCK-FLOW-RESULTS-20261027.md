@@ -6,6 +6,12 @@
 >
 > 고정 외부 blazux source pin `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`. 오프라인 Python AST 출력은 실제 서비스 동작/SSM state slot correctness/ABI/GPU/MTP acceptance/PLE throughput/HTTP/TPS/CI를 인증하지 않는다.
 
+## 2026-10-27 이후의 source-only 추적 보충 — 기존 5/6 판정의 해석 정정
+
+- [추가 3항목 DGX 소스 실측](BLAZUX-PHASE5-DGX-THREE-SOURCE-CHECKS-20261027.md) `CHECK1`에서 `v1/engine/core.py:148` `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`가 발견됐다. 이로써 **`engine_static_imports_scheduler=false`는 직접 import 패턴에 한정된 분석기 미대응**이며 실제 Scheduler import 결함/버그를 의미하지 않는다. 당시 5/6 출력 자체는 보존한다. `get_scheduler_cls()`가 반환하는 실제 클래스, 설정 default/override는 아직 확인되지 않았으므로 이를 임의로 6/6 PASS라고 수정하지 않는다.
+- `CHECK2`에서 `decode_context_parallel_size`, KV 그룹 0/1 vs 다중 그룹 LCM, prefix/cache connector·Mamba non-align 조기 반환, hashing_sizes subset/GCD/override/ValueError 조건 확인. `CHECK3`에서 Mamba Worker/Scheduler `cache_config.block_size`와 preprocess `mamba_spec.block_size`/backend `kv_cache_spec.block_size`의 참조 경로 차이 확인; 실제 설정값 mismatch 및 SSM state slot 정확성은 **미확인**.
+- 이 보충은 **docs-only 정보 업데이트**이며 `bc89de6288889943b50090ac9638ee95c2434a79`의 259 unit 재실행을 뜻하지 않는다. 실제 blazux patch 승인 0, GPU/model/운영 미변경.
+
 ## 1. 사용자 실제 DGX 결과
 
 ```text

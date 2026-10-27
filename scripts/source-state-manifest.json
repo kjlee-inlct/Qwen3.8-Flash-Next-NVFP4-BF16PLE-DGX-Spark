@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 165,
+  "tracked_file_count": 166,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -98,7 +98,8 @@
     "2026-10-27 Track A Phase5 Scheduler constructor/block_size provenance source-only extension from docs-only HEAD fbfe28774ed8b7915ab6c44f6b5fe8a0c5f906d1: add import-free, bounded config+v1 AST scan for name-based Scheduler() and unresolved dynamic scheduler_cls() construction, keyword/positional block_size/hash_block_size hints, LCM-like assignments, mamba_block_size STORE/LOAD and original Scheduler/Mamba method traces. 11 stdlib synthetic fixture tests and source AST wrapper; expected total 244 tests XFAIL0 and 160 tracked manifest files. New code NOT DGX tested. Prior DGX complete Gate proved only 223/223 at 2c7c6896; later DGX AST trace JSON completed at command-guarded 2cadc736 but 233 unittest/156 Source logs NOT supplied. Pinned blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa. No ABI/patch approval, serving/GPU/model/HTTP or main/P0/Phase1-4 changes. No PR/Merge.",
     "2026-10-27 DGX Phase5 source-only Scheduler block provenance actual command-guarded/tested HEAD 04b871ab632b2a59d55d11f19009c48daa3ce5c0: PHASE5_UNIT_PASS=244 XFAIL0, Source160/160, AST/wrapper PASS; isolated source-only marker PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED and final EXECUTED_NOT_CERTIFIED. Source AST in v1/core/kv_cache_utils.py:640 scheduler_block_size=math.lcm(*group_block_sizes) and :665 hash_block_size=requested or math.gcd(*hashing_sizes), v1/engine/core.py:161 name-based Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size), Scheduler.__init__:174 self.block_size=block_size, Mamba and Scheduler alignment paths still cache_config.block_size. Scan visited 384 Python files 6,448,206 bytes unreadable0 but state PARTIAL due ASSIGN_SITE_LIMIT 64 assignments; import binding and end-to-end return/caller flow UNPROVEN. No runtime patch/ABI/cache correctness/GPU inference/TPS/CI approval. New docs-only SHA/Manifest161 not DGX retested; main/P0/Phase1-4 immutable, no PR/Merge.",
     "2026-10-27 Phase5 narrow EngineCore/KV resolver block-size source-flow bundle from prior docs-only HEAD f61e9dc03162997253e468ab8e33737b680b1b86: fixed-six-source read-only AST, import declaration of resolve_kv_cache_block_sizes/Scheduler, KV group LCM and hash GCD assignment and return, EngineCore resolver call→tuple unpack→Scheduler(block_size=) static candidate, and Mamba/Backend method traces. 15 synthetic stdlib unit tests; previous actual 244 PASS was only at user DGX source HEAD 04b871ab632b2a59d55d11f19009c48daa3ce5c0. New Phase5 code expected total unittest 259/XFAIL0, Manifest164 tracked, but NOT DGX tested and not runtime/caching correctness certified. Static-chain flags always runtime_flow_proven false and patch_approved false. No production vLLM patches/weights/GPU/HTTP/CI; immutable main/P0/Phase1-4, no PR or merge.",
-    "2026-10-27 DGX Phase5 narrow KV→EngineCore→Scheduler source-only verified test HEAD bc89de6288889943b50090ac9638ee95c2434a79: Source Manifest 164/164 twice, Wizard mock 38/38, full unittest 259/259 XFAIL0, Source AST + source contracts and isolated narrow AST DONE_NOT_PATCH_APPROVED/EXECUTED_NOT_CERTIFIED. Narrow static_chain 5/6 checks true: KV resolver import, group LCM assignment, return two sizes, EngineCore unpack resolver result and Scheduler ctor block_size kw, while engine_static_imports_scheduler=false due unresolved expected top-level import pattern; status UNRESOLVED_OR_PARTIAL_STATIC_CHAIN, runtime_flow_proven false and patch_approved false. KV resolver has group block sizes g.kv_cache_spec.block_size*dcp for AttentionSpec else unscaled; hash picks prefix-cacheable group subset or all; distinct returns at lines 632/647/657/673 so cannot infer unconditional LCM/GCD. Six source fingerprint SHA256 in report. No runtime engine patch, actual cache correctness, ABI, GPU, model inference, HTTP/TPS, MTP acceptance, PLE throughput or CI. Docs-only report/runbook/handoff/adoption and now 165-file complete Manifest commit NOT itself DGX retested; protect main/P0/Phase1-4 unchanged and no PR/Merge."
+    "2026-10-27 DGX Phase5 narrow KV→EngineCore→Scheduler source-only verified test HEAD bc89de6288889943b50090ac9638ee95c2434a79: Source Manifest 164/164 twice, Wizard mock 38/38, full unittest 259/259 XFAIL0, Source AST + source contracts and isolated narrow AST DONE_NOT_PATCH_APPROVED/EXECUTED_NOT_CERTIFIED. Narrow static_chain 5/6 checks true: KV resolver import, group LCM assignment, return two sizes, EngineCore unpack resolver result and Scheduler ctor block_size kw, while engine_static_imports_scheduler=false due unresolved expected top-level import pattern; status UNRESOLVED_OR_PARTIAL_STATIC_CHAIN, runtime_flow_proven false and patch_approved false. KV resolver has group block sizes g.kv_cache_spec.block_size*dcp for AttentionSpec else unscaled; hash picks prefix-cacheable group subset or all; distinct returns at lines 632/647/657/673 so cannot infer unconditional LCM/GCD. Six source fingerprint SHA256 in report. No runtime engine patch, actual cache correctness, ABI, GPU, model inference, HTTP/TPS, MTP acceptance, PLE throughput or CI. Docs-only report/runbook/handoff/adoption and now 165-file complete Manifest commit NOT itself DGX retested; protect main/P0/Phase1-4 unchanged and no PR/Merge.",
+    "2026-10-27 Phase5 user DGX 3 read-only source inspection outputs from 붙여넣은 텍스트(1)(20261027-114116).txt: CHECK1/CHECK2/CHECK3_SOURCE_INSPECTION_DONE. EngineCore v1/engine/core.py:148 Scheduler=vllm_config.scheduler_config.get_scheduler_cls(), resolving reason why previous direct-import AST check engine_static_imports_scheduler=false, but actual resolved class/override ABI not verified. v1/core/kv_cache_utils.py:627 DCP from parallel config; <=1 KV group returns cache_config.block_size*dcp twice; multi-group AttentionSpec block*dcp vs non-attention spec unscaled and math.lcm; prefix/connector off or Mamba non-align early returns same scheduler/hash size; else prefix-cacheable hashing_sizes or all, prefix_match_unit override or math.gcd, divisibility guard on hashing_sizes. Mamba align Worker add_request:116 uses cache_config.block_size while preprocess Triton uses mamba_spec.block_size and backend kv_cache_spec.block_size; Scheduler alignment uses cache_config.block_size, hash partial uses hash_block_size. Conditional source unit mismatch risk only, NOT observed bug/GPU cache error. Last FULL DGX offline Gate remains tested source bc89de6288889943b50090ac9638ee95c2434a79 with 259/259 unit XFAIL0, Source164/164, Wizard Mock38/38; three source inspections do not rerun full Gate. This docs-only followup Manifest166 HEAD NOT retested on DGX. No runtime/ABI/patch approval, GPU/model/HTTP/TPS/CI operations; main/P0/Phase1-4 unchanged, PR/Merge none."
   ],
   "files": [
     {
@@ -224,7 +225,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-DGX-NARROW-BLOCK-FLOW-RESULTS-20261027.md",
       "mode": "100644",
-      "blob_sha": "358201d66424f1df6b12bbe2c3b0071393ba732b"
+      "blob_sha": "e0eee8bfa1d42eb674b29a340266830cc344183f"
     },
     {
       "path": "docs/BLAZUX-PHASE5-DGX-PATCH-PREFLIGHT-RESULTS-20261027.md",
@@ -240,6 +241,11 @@
       "path": "docs/BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md",
       "mode": "100644",
       "blob_sha": "77a810682aab10d806ba755930265da2e3b95557"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE5-DGX-THREE-SOURCE-CHECKS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "b3642504b5cb5345e3d0130edfe174c3ae286ff0"
     },
     {
       "path": "docs/BLAZUX-PHASE5-DGX-VALIDATION-RESULTS-20261027.md",
@@ -269,7 +275,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "30b76ba46d018d1d420e4531248cf1460ba986a6"
+      "blob_sha": "ae0fda8be3904a379230f1d506acd08f21d43a32"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -284,7 +290,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "42143d4011fcfde329330d20437c1df6d6d5fdc7"
+      "blob_sha": "fd88451c73c7b2bc473365f70ae70cefd5dfa912"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

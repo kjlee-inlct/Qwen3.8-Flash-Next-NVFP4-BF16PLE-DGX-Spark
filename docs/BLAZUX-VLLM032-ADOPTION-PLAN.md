@@ -6,7 +6,15 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 KV LCM → EngineCore source-only DGX 실측 PASS — 최신
+## 2026-10-27 Phase5 Scheduler factory / KV Resolver / Mamba Block 3개 읽기 전용 조사 실측 — 최신
+
+- 사용자 DGX 제공 [3항목 소스 실측 정본](BLAZUX-PHASE5-DGX-THREE-SOURCE-CHECKS-20261027.md): `CHECK1/2/3_SOURCE_INSPECTION_DONE`, 별도 CPU-only read-only 검사. 이 출력은 **259 unittest/164 source Manifest의 재시험이 아니다**. 직전 확정 full DGX test 소스 `bc89de6288889943b50090ac9638ee95c2434a79`, 259/259 XFAIL0, Source164/164, Wizard Mock38/38. 이전 docs-only HEAD `17cfbc5b087a9245e2645a44131bd35f47dd7f40`는 실제 test SHA가 아님.
+- **Scheduler factory:** `v1/engine/core.py:148` `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`를 확인해 기존 `engine_static_imports_scheduler=false`(직접 import 기대)가 false였던 이유를 설명. :157 tuple unpack KV resolver→:161 생성자 block_size 전달. 다만 실제 config가 어떤 클래스를 반환할지는 미확인, 기존 test 5/6을 6/6이라 재표기하면 안 됨.
+- **KV blocks:** `v1/core/kv_cache_utils.py:627` DCP 공급자는 `decode_context_parallel_size`. 0/1 group 분기는 `cache_config.block_size*dcp`, 2+ groups는 AttentionSpec `spec.block_size*dcp`, 나머지 spec.block_size 그대로 LCM. Hash는 prefix/connector off 또는 Mamba non-align 시 scheduler 크기로 조기 반환. 그 외 cacheable group(없으면 전체)에서 요청된 `prefix_match_unit` or GCD, divisibility guard 대상 `hashing_sizes`. 세 조기 return 632/647/657, 일반 return 673 구분.
+- **Mamba conditional mismatch risk:** Worker `add_request:116` seed와 Scheduler aligned split `:392`는 `cache_config.block_size`; preprocess `MAMBA_BLOCK_SIZE=mamba_spec.block_size`, backend `kv_cache_spec.block_size` 및 postprocess fused. 서로 다른 참조 경로 확인됐지만 **실제 사용자 모델에서 수치가 다른지, state slot corruption/오류가 있는지는 아직 미검증**. Patch Mamba/Prefix 적용 금지.
+- **다음 같은 Phase5:** `get_scheduler_cls()` 반환 class/override source, KV grouped fake-config CPU branch fixtures, 실제 spec/copy context 및 Mamba seed-preprocess-postprocess 슬롯 단위 정합성 조사. Tool/Responses/MTP reduced-vocab도 미승인 유지. 사용자 명시적 승인 없는 실제 engine patch/운영 Docker/GPU/모델/HTTP/벤치/CI 금지, main/P0/Phase1~4 immutable·PR/Merge 0.
+
+## 2026-10-27 Phase5 KV LCM → EngineCore source-only DGX 실측 PASS — 이전 스냅샷
 
 - **실제 사용자 DGX 소스 HEAD** `bc89de6288889943b50090ac9638ee95c2434a79`에서 **Wizard Mock 38/38**, Source Manifest **164/164**, 전체 unittest **259/259 XFAIL0**, 정밀 source AST 완료. [DGX 정본 결과](BLAZUX-PHASE5-DGX-NARROW-BLOCK-FLOW-RESULTS-20261027.md). 문서 전용 후속 SHA는 DGX 재시험하지 않았다.
 - **Static check 5/6:** KV resolver import, group LCM assignment, KV 반환 tuple, EngineCore resolver tuple 대입, Scheduler ctor keyword 인자 true. `engine_static_imports_scheduler=false` (모듈 최상위 import의 분석기 허용 경로와 일치하지 않음); `UNRESOLVED_OR_PARTIAL_STATIC_CHAIN`, `runtime_flow_proven=false`, `patch_approved=false`. 어떤 이름 기반 정적 증거도 실제 serving correct/ABI 승인으로 승격하지 않음.
