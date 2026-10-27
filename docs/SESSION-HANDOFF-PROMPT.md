@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-10-27 Phase 1 DGX 검증 준비 보강 — 최신 추가사항
+
+- Phase 1 Gate 1은 static-only 소스 계약 보고서 작성 완료. 이번 보강으로 [실기 DGX 격리 clone/pull 및 소스+오프라인 시험 방법](BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md)을 추가했다. **Phase 1 blazux serving 패치 구현/성능 실측은 수행하지 않음**.
+- `scripts/verify-source-state.sh --strict`와 `scripts/verify-main-readonly.sh`는 각각 기존 release-branch allowlist 및 main 전용이라 **Phase 1 브랜치에서 실행 금지**. Phase 1 소스 검증은 별도 checkout에서 `scripts/verify-source-state.sh` (non-strict) + 명시적 branch/HEAD/remote 보호 확인을 사용. Manifest의 strict 허용 목록을 확대하지 않는다.
+- 사용자 DGX 운영 checkout·Docker·포트·HF cache·receipts를 보호한다. 새로운 Phase 1 읽기 전용 source 검증 명령은 사용자가 실제 실행하기 전까지 **NOT_RUN**이며 이전 Wizard 172/172 기록을 승계하지 않는다.
+- 다음 Phase 진입: Phase 1 실기 오프라인 시험 결과 검토 → Phase 1 확정 HEAD에서 신규 Phase 2 자식 브랜치 생성 → BF16 synthetic safetensors 등 Phase 2 fixture 작성. **blazux→main 영구 금지**.
+
+---
 ## 2026-10-27 Phase 1 추가 스냅샷 (아래 P0 기록보다 최신)
 
 - Track A Phase 1 브랜치: `feature/blazux-phase1-source-compare`; 분기 부모 `966ec7cf0741734b844b1cea938d56678a756469` (P0 루트). GitHub 소스 기준 외부 SHA `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`.
