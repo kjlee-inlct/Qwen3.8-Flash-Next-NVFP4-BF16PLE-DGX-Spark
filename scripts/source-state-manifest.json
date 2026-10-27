@@ -118,7 +118,8 @@
     "2026-10-28: DGX operator tested Phase6 exact SHA 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, 28/28 Phase6 unit PASS, full Source Manifest 190/190 PASS and PHASE6_A3A_PASSIVE_RESOURCE_OBSERVATION_COMPLETED_NOT_GPU_CERTIFIED plus final PHASE6_A3A_DGX_OBSERVATION_COMPLETED. Legacy running/image pin true, explicit Docker Memory limit null. Host MemTotal124543 MiB, MemAvailable14085 MiB, SwapTotal16383 MiB, SwapFree8735 MiB. Single NVML GPU util 0.0%, temp35C, GPU total/free/used memory unavailable, status PARTIAL. This does not show real Scheduler/CacheConfig/MambaSpec/group/table/state pointers nor safe extra model headroom. P6-A active runtime BLOCKED; P6-B/C/D NOT_RUN; no GPU/model/HTTP/benchmark/CI/patch/PR/merge. Baseline corpus original hash/sampler/KV unresolved, only current corpus SHA from previous A2. New record/manifest documentation-only commit is NOT DGX tested; main/P0/Phase1-5 and original baseline untouched.",
     "2026-10-28 Phase6 A3b-0 preparation from latest prior docs-only SHA a9e628b39fb97fe4ba57bd2b9fbc04a937c056c9: add stdlib strict synthetic group block-size LCM/GCD diagnostic fixture, installed-vLLM pinned SHA/AST future CPU-only source probe (not actual Config constructor), 17 new tests, host offline prep wrapper and Docker print-only --preview with no execution path. Expect Phase6 45 unittest / Source196 tracked on new SHA, NOT DGX run before operator. Last actual DGX A3a 28/28 Source190/190 only at 100ffb3ab3a4f0ca8edd6c201ec5af9fdc3b9ff1, host MemAvailable14085 MiB, NVML memory N/A and 0% momentary utilization, not safe GPU headroom. Proposed future Docker CPU-only run requires explicit separate approval, bounded 1CPU/512MiB, isolated no-network no-GPU no-model. P6-A active Scheduler/CacheConfig/MambaSpec/group/state pointers remain BLOCKED; P6-B/C/D NOT_RUN; no Docker/model/GPU/HTTP/benchmark/CI/patch/PR/merge. Main/P0/Phase1-5 immutable.",
     "2026-10-28 user approved one bounded Phase6 A3b-1 CPU-only disposable docker run for pinned installed-vLLM source SHA/AST only. Previous exact operator DGX tested Phase6 HEAD 7dc77164447bdd272b3ff791341d8ec5379a1edd: unittest 45/45 PASS, Source196/196 PASS, synthetic group LCM32/GCD16 and artificial cache16/Mamba32, PHASE6_A3B0_DGX_PREPARATION_VERIFIED_NO_RUNTIME; preview Docker never executed. Add guarded one-run CPU 1/512MiB total memory+swap512MiB, runc/no GPU/network/nonroot/read-only pinned image ID, MemAvailable>=4GiB, pinned legacy identity before+after, allowlisted host evidence validator for 7 pinned SHA + 8 AST components (KV resolver SHA not pinned); 12 new tests and canonical A3b1 runbook. Expected new Phase6 57/57, Source200/200 but NEW HEAD DGX NOT_RUN until operator. Active Scheduler/CacheConfig/MambaSpec physical GPU state P6-A BLOCKED, P6-B/C/D NOT_RUN; no model/GPU/HTTP/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 unchanged.",
-    "2026-10-28 user DGX Phase6 A3b1 exact SHA 0ad5e62caab2e95c57813cc6401d2f00622f3f4f 57/57 Phase6 unittest PASS, Source200/200 PASS, bounded disposable 1CPU/512MiB CPU-only runc pinned-source AST probe PASS with 8 AST components, 7 historical SHA matches (KV resolver file SHA unpinned), P6-A3B1_BEFORE and AFTER pinned legacy running, MemAvailable14064 MiB; final PHASE6_A3B1_DGX_SOURCE_PROBE_COMPLETED. Source-only: no active Scheduler/CacheConfig/MambaSpec/groups/GPU physical state observed. A runtime BLOCKED, B/C/D NOT_RUN. User requests to freeze a performance benchmark between P6-A and P6-B: optional PRE-B checkpoint, not gate bypass/P6-D; pre-blazux immutable 12x3/36 measured raw baseline SHA256 25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf. New Python stdlib/no-load baseline hash, provenance, exact 36 metric rows verifier + Bash plan-only + 13 tests + authoritative plan, full handoff/benchmark/adoption/Phase6/results/Phase5 docs synchronized. Expected next Phase6 70 unittest and tracked Source204, NOT DGX RUN on new SHA. Fresh PRE-B 12x3 after ACTUAL A PASS and separate explicit target/HTTP/GPU/benchmark approval only; no production port8000 load or legacy benchmark wrapper now, no model/GPU/API/CI/patch/PR/merge. Historical corpus SHA, sampling/KV still unverified; strict old-vs-new comparison BLOCKED. Main/P0/Phase1-5 and original pre-blazux baseline immutable."
+    "2026-10-28 user DGX Phase6 A3b1 exact SHA 0ad5e62caab2e95c57813cc6401d2f00622f3f4f 57/57 Phase6 unittest PASS, Source200/200 PASS, bounded disposable 1CPU/512MiB CPU-only runc pinned-source AST probe PASS with 8 AST components, 7 historical SHA matches (KV resolver file SHA unpinned), P6-A3B1_BEFORE and AFTER pinned legacy running, MemAvailable14064 MiB; final PHASE6_A3B1_DGX_SOURCE_PROBE_COMPLETED. Source-only: no active Scheduler/CacheConfig/MambaSpec/groups/GPU physical state observed. A runtime BLOCKED, B/C/D NOT_RUN. User requests to freeze a performance benchmark between P6-A and P6-B: optional PRE-B checkpoint, not gate bypass/P6-D; pre-blazux immutable 12x3/36 measured raw baseline SHA256 25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf. New Python stdlib/no-load baseline hash, provenance, exact 36 metric rows verifier + Bash plan-only + 13 tests + authoritative plan, full handoff/benchmark/adoption/Phase6/results/Phase5 docs synchronized. Expected next Phase6 70 unittest and tracked Source204, NOT DGX RUN on new SHA. Fresh PRE-B 12x3 after ACTUAL A PASS and separate explicit target/HTTP/GPU/benchmark approval only; no production port8000 load or legacy benchmark wrapper now, no model/GPU/API/CI/patch/PR/merge. Historical corpus SHA, sampling/KV still unverified; strict old-vs-new comparison BLOCKED. Main/P0/Phase1-5 and original pre-blazux baseline immutable.",
+    "2026-10-28: Operator DGX ran Phase6 exact source SHA fb5deae540812a300cb8404a53a202e505c40577 after ff-only pull: Phase6 offline unittest 70/70 OK, Source Manifest204/204 PASS. P6-AB-0 read-only immutable pre-blazux baseline checksum+runner+tokenizer+environment and 12 conditions x 3 measured repeats=36 numeric source matrix verified. Returned SOURCE_BASELINE_MATRIX_VALIDATED, original_sha256_match=true, runner_sha_match=true, tokenizer_sha_match=true, provenance_matrix_match=true, PLAN_READY_NOT_EXECUTED, pre_b_checkpoint_run=NOT_RUN, performance_benchmark_authorized=false, PHASE6_AB_BENCH_BASELINE_LOCKED_NEW_BENCH_NOT_RUN and final PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD. No new model/GPU/API/HTTP/Docker/benchmark run. Active P6-A ABI still BLOCKED, B/C/D NOT_RUN; historic corpus SHA absent and sampling/KV parity unverified, so historical strict A/B blocked. A->B benchmark checkpoint is reference-only until P6-A actual PASS and separate target/HTTP/GPU/benchmark authorization; original pre-blazux result preserved. This subsequent docs+manifest receipt commit is DGX NOT_RUN and must not inherit 70/204 evidence. Do not touch main/P0/Phase1-5, service/port/model/cache, PR/merge/CI."
   ],
   "files": [
     {
@@ -299,7 +300,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "8f2999cb8020804a7e131936bafb6917e96a5f98"
+      "blob_sha": "2db840adf6b1db6b02803c0482e158a4615c9faf"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -329,7 +330,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md",
       "mode": "100644",
-      "blob_sha": "0574fee700a4040f98ba3cd6abb4c35b5cf9c0a5"
+      "blob_sha": "7f6267892a9c507a4680836800e9f1f47e5b95c5"
     },
     {
       "path": "docs/BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md",
@@ -349,22 +350,22 @@
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "f9661b558b396790db1bdd56156a0b86b7542b94"
+      "blob_sha": "b0fef59a811df4cfdf5a62776dac85bfb90ceb31"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "85c54ed80b6df4c45abe1ef6a2a7b28b872b3867"
+      "blob_sha": "09d79a779922d386e1373516582ce0d11f90a930"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "70509cc443d63ee13e8b824aa5a841addd551083"
+      "blob_sha": "2eacd4c86b9c1fb81e016e24efe14933a495eb17"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "5d200d9786837efe3f7b9070595cafadca8c9228"
+      "blob_sha": "efccd66c4d2959d84fefa144a8bff8c63b5524d5"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -379,7 +380,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "497006e797adf25ffd043994935ca17d15049967"
+      "blob_sha": "11a1222fc0974b5f0afc238f3d98a1ea28c1537a"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
