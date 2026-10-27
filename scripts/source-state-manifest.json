@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 186,
+  "tracked_file_count": 190,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -113,7 +113,8 @@
     "2026-10-28: Phase6 branch from Phase5 docs-only 11fd777e; user approved offline gate code/tests/docs GitHub commit only. P6-A supplied snapshot contract is not active runtime; P6-A/B/C/D BLOCKED, DGX/GPU/CI/model/serving/patch/PR/merge NOT_RUN/NOT_APPROVED. See docs/BLAZUX-PHASE6-GATE-PLAN.md and docs/BLAZUX-PHASE6-RESULTS.md. Exact Phase5 DGX tested source 780b780 unchanged.",
     "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist.",
     "2026-10-28: DGX user Phase6 exact source SHA c7f4ca71... offline Phase6 7/7 PASS and Source182/182 PASS; DGX A1 read-only source inventory completed, pinned legacy image listing matched prefix b0984c4b724b; real P6-A active scheduler/cache/Mamba state NOT_OBSERVED/BLOCKED. Phase6 A2 safe docker inspect-only + baseline runner/result/corpus preflight scripts, 8 new stdlib synthetic tests and frozen benchmark rules added in later GitHub commit; later code/manifest SHA DGX NOT_RUN. No live GPU, model/API, benchmark, CI, blazux patch, PR or merge; main/P0/Phase1-5 immutable. Refer to Phase6 results and benchmark rules.",
-    "2026-10-28 operator DGX Phase6 SHA 0513b118260047b9965e16b20bdadf690c112c5d: ff-only update, bash syntax PASS, 15/15 Phase6 unittest OK, source 186/186 PASS, PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED and operator PHASE6_A2_PREFLIGHT_DGX_COMPLETED. Running pinned image digest match=true; launch flags 0.8 GPU utilization, max-model-len 262144, max-num-batched-tokens 8192, max-num-seqs 8. Baseline raw SHA/runner Git SHA matched; current Gutenberg SHA256 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c; historic corpus hash absent, sampling/KV unverified. Live Scheduler/Mamba/group/address NOT_OBSERVED; P6-A runtime BLOCKED; P6-B/C/D NOT_RUN. Evidence-only doc commit is not tested SHA; no GPU/model/API/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 protected."
+    "2026-10-28 operator DGX Phase6 SHA 0513b118260047b9965e16b20bdadf690c112c5d: ff-only update, bash syntax PASS, 15/15 Phase6 unittest OK, source 186/186 PASS, PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED and operator PHASE6_A2_PREFLIGHT_DGX_COMPLETED. Running pinned image digest match=true; launch flags 0.8 GPU utilization, max-model-len 262144, max-num-batched-tokens 8192, max-num-seqs 8. Baseline raw SHA/runner Git SHA matched; current Gutenberg SHA256 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c; historic corpus hash absent, sampling/KV unverified. Live Scheduler/Mamba/group/address NOT_OBSERVED; P6-A runtime BLOCKED; P6-B/C/D NOT_RUN. Evidence-only doc commit is not tested SHA; no GPU/model/API/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 protected.",
+    "2026-10-28 Phase6 A3a prepared from docs-only HEAD be7a463274765627d0fd0da3a9d70907c5f0cf83: read-only host /proc/meminfo, fixed legacy Docker inspect metadata and nvidia-smi optional NVML numeric telemetry; safe parser/fail-closed 13 new synthetic stdlib tests. Expect Phase6 unit 28 and tracked Source190 on new SHA but DGX NOT_RUN until operator. Last measured DGX Phase6 SHA 0513b118: unit 15/15 Source186/186 plus passive A2 image/baseline/runner PASS; historical corpus SHA unknown, cache hash 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c. Resource snapshot cannot prove free unified GPU headroom nor selected Scheduler/Mamba/real addresses. Runtime P6-A/B/C/D BLOCKED; no GPU/model/HTTP/CI/benchmark/patch/PR/merge approval. main/P0/Phase1-5 immutable."
   ],
   "files": [
     {
@@ -294,7 +295,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "47268fecc9dec648a48518ff7d55ecd38d45757c"
+      "blob_sha": "1ed12f50dba4bbc105ad60b6d8947dc4c089adac"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -322,24 +323,29 @@
       "blob_sha": "58ca6e8f0ca151db560b6d7dc2a5e697c4cac90e"
     },
     {
+      "path": "docs/BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md",
+      "mode": "100644",
+      "blob_sha": "0406f90db309b5b220180022f9b87e62f0065e85"
+    },
+    {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "f5ae0e4b4ddf4d40271283028cf6fb30ddb5922b"
+      "blob_sha": "9d23ff74d929f348ca0cafc7a01c41d9b8ea71b6"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "548ce30698c4292738ec3b14b167227baad60c0c"
+      "blob_sha": "93168dac6bf1118b84c6dbd7e37303e1b8009731"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "39aff9f57e3b96c39a24e4350b08ec5e7af23932"
+      "blob_sha": "6755e97e1fd31bb7fb836261c90835b5bda26c13"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "4e7010ef80b00c008e5d31da0a07b34930f13d45"
+      "blob_sha": "2794b071e32b25e04a194544e3faa309d8c69500"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -354,7 +360,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "12e910161c36b2e6d40298916e5d8e33992c8126"
+      "blob_sha": "06d2296f4aa80da7140daebfffe75e8f2354fece"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -602,6 +608,11 @@
       "blob_sha": "17415d7920204b33d0a59759497133ce21f6d5bc"
     },
     {
+      "path": "scripts/phase6-a3-readonly-resources.sh",
+      "mode": "100755",
+      "blob_sha": "9a732584c69b1c2ae8f9f4694fb0eff85c97bb34"
+    },
+    {
       "path": "scripts/phase6-gate.sh",
       "mode": "100755",
       "blob_sha": "325be49e2c5677df1221b7be96cb2c53d8e5327d"
@@ -802,6 +813,11 @@
       "blob_sha": "4ebbdc55320aa858e7eaee71712a3bc91e4e0b6b"
     },
     {
+      "path": "src/phase6_a3_readonly_resources.py",
+      "mode": "100644",
+      "blob_sha": "7b5a2cfaab645a0fd50ecf0903f4bb056792700d"
+    },
+    {
       "path": "src/phase6_gate.py",
       "mode": "100644",
       "blob_sha": "aa7654a5f47cddeababef4e3a0daffdea6fb4be8"
@@ -945,6 +961,11 @@
       "path": "tests/test_blazux_phase5_scheduler_provenance.py",
       "mode": "100644",
       "blob_sha": "c02fd3ed5e890f78ae9d420f9e0b986ae7290939"
+    },
+    {
+      "path": "tests/test_blazux_phase6_a3_resources.py",
+      "mode": "100644",
+      "blob_sha": "5b63e7caeb3d1be35c0ac89d71c3719493641295"
     },
     {
       "path": "tests/test_blazux_phase6_gate.py",

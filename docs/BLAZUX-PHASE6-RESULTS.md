@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 현재 Phase6 다음 묶음: P6-A3a 비침습 자원 관찰 (DGX 실행 전)
+
+- **가장 최근 실제 DGX 테스트 SHA**: `0513b118260047b9965e16b20bdadf690c112c5d` — Phase6 offline **15/15 PASS**, full Source **186/186 PASS**; A2 preflight pinned running Docker image PASS, baseline original SHA256 및 llama-benchy runner SHA PASS. Current Gutenberg cache SHA `8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c`; historical corpus SHA unavailable and sampling/KV unknown, strict A/B BLOCKED. Subsequent `be7a463274765627d0fd0da3a9d70907c5f0cf83` is **docs/Manifest-only** and NOT separately DGX tested.
+- **이 커밋의 신규 P6-A3a**: `scripts/phase6-a3-readonly-resources.sh` + `src/phase6_a3_readonly_resources.py` + 13개 stdlib regression + [A3 read-only Gate/decision](BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md). Old 15 + new 13 = **28 expected** Phase6 tests, full **190 expected tracked source files**; both counts NOT_RUN on new commit until operator DGX log. Existing operational container identity via `docker inspect`, host `/proc/meminfo`, optional `nvidia-smi` passive NVML metrics only. `nvidia-smi` N/A on unified-memory DGX is PARTIAL/UNAVAILABLE, **not** zero or sufficient GPU headroom.
+- **Gate boundary**: A3a completed metadata never equals P6-A runtime PASS. Actual selected Scheduler object, effective CacheConfig/MambaSpec block sizes, Mamba group table and physical GPU tensor allocations/pointers are still `NOT_OBSERVED`; P6-A/B/C/D runtime BLOCKED. CPU-only configured reproduction or isolated GPU/model inspection requires separate scoped approval, startup memory budget and zero legacy interference proof. No `docker exec/run`, live process attach/ptrace, model start, GPU computation, HTTP, benchmark, CI, blazux patch, PR or merge under this approval.
+- Only Phase6 GitHub branch may change; `main`, P0, Phase1–5 and original benchmark baseline remain immutable. Same commit updates handoff + adoption + exit boundary + Phase6 results/plan + all-tree Source Manifest. Latest GitHub commit SHA of this documentation update is not a new DGX-tested commit.
+
+
 ## 2026-10-28 Phase6 A2 DGX verified — CURRENT STATUS (scope-limited)
 
 - **Exact DGX operator-tested SHA** `0513b118260047b9965e16b20bdadf690c112c5d`, dedicated `~/Workspace/llm/blazux-phase6-gates` checkout, ff-only fast-forward from `c7f4ca7`. Bash syntax passed; Phase6 unittest **15/15 PASS**; `PASS_SOURCE_ONLY: 186 tracked file(s)` at exact SHA, `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`. Read-only preflight ended `PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED` and user shell `PHASE6_A2_PREFLIGHT_DGX_COMPLETED`.
@@ -22,12 +30,18 @@ Phase6 offline code now has DGX operator evidence on exact SHA `0513b118260047b9
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| P6-A real active configuration | BLOCKED | DGX passive metadata PASS at 0513b118; active class/cache/Mamba group/tensor pointers NOT_OBSERVED |
+| P6-A real active configuration | BLOCKED | DGX A2 passive metadata PASS at 0513b118; A3a newly prepared NOT_RUN, active class/cache/Mamba group/pointers NOT_OBSERVED |
 | P6-B GPU state/rollback/prefix | BLOCKED | GPU execution not approved; requires P6-A |
 | P6-C MTP/tool/parser/Responses | BLOCKED | model/API execution not approved; requires P6-B |
 | P6-D performance/stability | BLOCKED | benchmark not approved; requires all correctness gates |
 | GitHub Actions | NOT_RUN | user prohibited CI |
-| Phase6 DGX offline source/tests | PASS (bounded) | 15/15 unittest and 186/186 Source Manifest at exact tested SHA 0513b118 only |
+| Phase6 DGX offline source/tests | PASS (previous HEAD only) | 15/15 unittest and 186/186 Source Manifest at exact tested SHA 0513b118 only; A3a code and new 28 expected tests are NOT_RUN |
 | Phase5 offline exit | PASS (historical) | exact DGX-tested SHA `780b780fc7572226a6a9ff2e52cd8e1921c8738b`, never attribute to Phase6 HEAD |
 
 Record future runs with exact tested SHA, environment fingerprint, raw redacted evidence, each required oracle, failure/blocked reason, cleanup and final status. Do not overwrite history.
+
+## Upcoming DGX A3a evidence slot (not yet executed)
+
+- New exact-code SHA: resolve from GitHub after atomic manifest commit; do not copy 0513b118 test results to newer HEAD.
+- Expected trace: 28/28 Phase6 unittest, Source 190/190 (not actual results); `PHASE6_A3A_PASSIVE_RESOURCE_OBSERVATION_COMPLETED_NOT_GPU_CERTIFIED` and final user shell marker only after execution.
+- Record host MemAvailable/total and optional GPU telemetry availability as momentary passive observations. Do **not** infer safe model coexistence or activate GPU. P6-A real runtime BLOCKED regardless of passive outcome.
