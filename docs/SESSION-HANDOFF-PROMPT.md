@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 DGX 3차 읽기 전용 kernel/source 검사 결과를 최신 증거로 우선한다. 마지막 전체 276/276 Gate PASS는 소스 a5376cc... 에 귀속되며 실제 active block equality/slot correctness 및 패치 승인은 없다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 DGX Mamba 두 Triton 커널 및 Context block-size 설정 읽기 전용 검사 결과가 최신이다. 마지막 전체 276/276 Gate PASS는 소스 a5376cc...에 귀속하고, 신규 docs-only HEAD에서 재실행된 것이 아니다. 실제 active block equality/slot correctness 및 패치 승인은 여전히 없다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase5 Scheduler 설정 분기 / CacheConfig min block / Mamba Align Kernel 소스 3회 확인 — 최신
+## 2026-10-27 Phase5 DGX Mamba pre-copy/postprocess Triton 본체 및 Context block-size 확인 — 최신
+
+- 사용자 제공 `붙여넣은 텍스트(1)(20261027-152442).txt` (649줄): 운영 이미지 ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`를 참조한 **별도 CPU-only/read-only/no-network runc**의 `v1/worker/mamba_utils.py` AST/소스 검사 완료. Source SHA256 `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`, 전체 소스1521 lines. `FOUND_KERNELS=[precopy_mamba_align_fused_kernel,postprocess_mamba_fused_kernel]`, `CONTEXT_CLASS_FOUND=True`, `OUTPUT_PARTIAL=False`, `PHASE5_MAMBA_KERNEL_SOURCE_INSPECTION_DONE`, `PATCH_APPROVED=False` 및 `RUNTIME_CORRECTNESS_VERIFIED=False`. 이번 명령은 **전체 단위시험/Manifest Gate를 재실행하지 않음**. 마지막 실제 전체 DGX PASS는 코드 `a5376cc06536ce786cdb6db8425e26e21b608910` 276/276 XFAIL0/Manifest169. 이전 docs-only SHA `2def41755c2b55e95a094acabcaf1bd90d5e3259`는 Manifest171; 새로운 보고서/Manifest docs-only SHA도 DGX 검증 SHA가 아님.
+- **핵심 해결:** `MambaSpecDecodeGPUContext.create:720–728`는 Mamba group에서 동일 block_size/speculative blocks/mode를 assert, **:772 `block_size=mamba_spec.block_size`**를 context `cls(...)`에 공급. context field `block_size: int` (:682), fused postprocess V1 :1012/V2 :1110 모두 `block_size=self.block_size`. **preprocess 및 postprocess 공급값이 MambaSpec 기반**이라는 source contract 확인. 명시적 `__init__/__post_init__` absent는 방법 이름 부재만 의미.
+- **Precopy kernel 437–519:** batch→req mapping(optional, 음수 sentinel skip), `src_col=old_state_idx`, `dst_col=postadvance_state_idx`, fresh src negative/same column이면 no-copy; 다를 때 `token_bias`와 state/layout/table metadata를 공통 `_copy_mamba_state_block` 호출로 전달. **postprocess kernel 255–388:** computed/token acceptance V1/V2 분기, `aligned_new_computed=(new_num_computed//B_mamba)*B_mamba`, `dest_idx=aligned_new_computed//B_mamba-1`, `needs_copy`, same column + zero bias skip; batch-vs-req indexing 구분, 역시 `_copy_mamba_state_block` 이용.
+- **영구 근거:** [Mamba fused kernel 본체/context DGX 보고서](BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md). `run_fused_precopy`와 `run_fused_postprocess_align` 본체와 memory metadata 전달/forward-context init 진입 확인. **아직 공통 `_copy_mamba_state_block` 본문과 `_populate_metadata`의 실제 pointer/stride/offset mapping을 분석하지 않음**, 활성 사용자 모델의 `cache_config.block_size` vs `mamba_spec.block_size` 값 동일성 미확정. Worker 초기 seed 분모는 여전히 CacheConfig; actual GPU state/slot correctness, ABI, prefix-hit/errors, patches 미검증.
+- **다음 동일 Phase5:** 고정 경로의 `_copy_mamba_state_block`, `_populate_metadata` 함수 본체만 우선 조사하여 state index→logical column→physical block/conv offset mapping을 source/합성 CPU oracle로 검증. 운영 Docker/GPU/모델/weights/HF cache/ports/HTTP/CI/patch 변경 승인 0. main/P0/Phase1~4 불변, PR/Merge/cherry-pick/rebase/squash/sync 금지.
+
+---
+
+## 2026-10-27 Phase5 Scheduler 설정 분기 / CacheConfig min block / Mamba Align Kernel 소스 3회 확인 — 이전 실측
 
 - **사용자 DGX 읽기 전용 출력** `붙여넣은 텍스트(1)(20261027-145706).txt`: `CHECK1_SCHEDULER_FACTORY_SOURCE_DONE`, `CHECK2_BLOCK_ORIGINS_SOURCE_DONE`, `CHECK3_MAMBA_SLOT_SOURCE_DONE`. 운영 Docker 이미지 ID 조회 후 별도의 network-none, read-only, GPU-none runc 임시 컨테이너에서 Python source만 조회. 이번 명령은 **전체 276 unit 또는 Source Manifest 170를 재실행하지 않음**. 마지막 전체 PASS는 소스 HEAD `a5376cc06536ce786cdb6db8425e26e21b608910`: unit276/276 XFAIL0, Source169/169, static checks10/10 true. 이전 docs-only HEAD `321d979eca30b20e5724afbddfe15fe6bf962fbe`, Manifest170. 새 이번 docs-only HEAD도 DGX 전체 재시험한 SHA가 아님.
 - **CHECK1**: `SchedulerConfig.get_scheduler_cls:170–191`에서 scheduler_cls is None이면 async_scheduling true → `AsyncScheduler` :175, false → `Scheduler` :178 (양쪽 함수 내부 import). custom scheduler_cls가 non-string 객체면 cast 반환 :190, 문자열이면 `resolve_obj_by_qualname` :191. 선언 default `scheduler_cls=None`, `async_scheduling=None`; 활성 runtime 값·실 반환 class/ABI 미확인. `EngineCore.__init__:148`은 local Scheduler에 factory 결과 대입; 직전 direct-import AST false는 analyzer 한계.

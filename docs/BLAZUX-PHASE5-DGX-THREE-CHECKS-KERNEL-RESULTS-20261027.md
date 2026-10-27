@@ -47,6 +47,12 @@ Mathematical contrast: initial seed floor((N-1)/B_cache) vs updated index ceil(N
 
 **Important missing definitions in CHECK3:** user-chosen function names omitted the actual Triton implementations precopy_mamba_align_fused_kernel and postprocess_mamba_fused_kernel, so their bodies were NOT read. MambaSpecDecodeGPUContext.create/initialize_from_forward_context, self.block_size provenance, layout/strides/slot restoration also remain unverified. One must not claim full kernel correctness.
 
+## 후속 실제 DGX 소스 검사: 두 fused Triton kernel / Context 공급자 확인
+
+- 앞서 이 문서에서 미검증이라고 기록한 **`precopy_mamba_align_fused_kernel` 및 `postprocess_mamba_fused_kernel`** 두 함수 본문은 사용자 `붙여넣은 텍스트(1)(20261027-152442).txt`를 통해 **`mamba_utils.py:437–519` 및 :255–388**에서 각각 확인했다. `MambaSpecDecodeGPUContext.create:772`의 **`block_size=mamba_spec.block_size`**와 V1/V2 postprocess `self.block_size` keyword 전달도 정적 확인해, 이전의 context block-size 출처 UNKNOWN은 이제 해결됐다. [최신 상세 증거](BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md).
+- **새 남은 차단 요소:** 공통 `_copy_mamba_state_block` 실제 **물리 table row/column/pointer/conv offset** 구현 및 `_populate_metadata` 본체, 활성 config `B_cache==B_mamba`. Pre-copy skip 조건(src_col<0/same col), postprocess aligned boundary/accepted-token bias와 V2 batch-row vs req slot indexing을 source-only로 확인했으나 **실 GPU state correctness/모델 문제 발생은 미확인**.
+- 이번 추가 검사는 전체 DGX unit 276/Manifest169 Gate를 다시 실행한 것이 **아니고**, 보고서/Manifest docs-only SHA를 실제 test SHA로 해석하면 안 됨. blazux patch 적용 승인 여전히 **0**.
+
 ## 4. Next same Phase5 no-go gates
 
 1. Inspect fixed source locations in v1/worker/mamba_utils.py for precopy_mamba_align_fused_kernel and postprocess_mamba_fused_kernel bodies plus MambaSpecDecodeGPUContext create/initialize_from_forward_context and self.block_size assignment. Source read-only, no kernel execution.

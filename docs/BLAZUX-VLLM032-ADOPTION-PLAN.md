@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 Source-only Scheduler 분기 / Cache block 최소치 / Mamba fused-index 계약 보충 — 최신
+## 2026-10-27 Phase5 Mamba Triton pre-copy/postprocess 및 Context block-size DGX 소스 조사 — 최신
+
+- **[전체 정본 보고서](BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md)**: 사용자 DGX source-only 검사 `PHASE5_MAMBA_KERNEL_SOURCE_INSPECTION_DONE`/`OUTPUT_PARTIAL=False`. 설치 source `v1/worker/mamba_utils.py` SHA256 `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`; 두 Triton kernel `precopy_mamba_align_fused_kernel` (437–519)과 `postprocess_mamba_fused_kernel` (255–388) 전체 본체, context `MambaSpecDecodeGPUContext.create`/`initialize_from_forward_context`/fused methods를 소스로 읽음.
+- **`self.block_size` 공급원 해결:** `MambaSpecDecodeGPUContext.create:772`에서 `block_size=mamba_spec.block_size`를 context ctor에 전달. V2 postprocess :1110에서 `block_size=self.block_size`를 kernel에 전달하므로 pre/post는 MambaSpec token block-size를 따른다는 정적 근거 확보. Precopy는 src_col<0 또는 src==dst면 skip, 그 밖에는 token_bias와 함께 공통 `_copy_mamba_state_block` 호출. Postprocess는 aligned_new_computed, dest_block_idx, accept_token_bias로 복사 조건 결정 후 같은 helper 호출; V2의 req-slot/배치-row idx_mapping 구분.
+- **아직 미증명:** Worker `add_request`는 `cache_config.block_size`로 old state index seed, preprocess/postprocess는 `MambaSpec.block_size`, KV Align spec group index는 spec.block_size. 활성 실제 두 숫자 동일성/실 group 분기 아직 모름. 이번 로그에서 `_copy_mamba_state_block`의 물리 row/col/address 계산과 `_populate_metadata` 본체 미출력, GPU state 복원·kernel correctness·prefix-hit 실제 검증 없음. 조건부 mismatch risk를 실제 버그라고 선언하거나 blazux patch를 적용하면 안 됨.
+- **실험 provenance:** 최근 전체 DGX gate 276/276 XFAIL0, Source169/169은 테스트 코드 SHA `a5376cc06536ce786cdb6db8425e26e21b608910`만. 후속 docs-only SHA `2def41755c2b55e95a094acabcaf1bd90d5e3259`는 소스 검사 보고서/Manifest171, 이번 문서 증분도 전체 tests 재실행 아님. Phase5 CPU/source-only 한정, 보호 브랜치 불변, PR/Merge/실 GPU/모델/운영/CI 금지.
+
+## 2026-10-27 Phase5 Source-only Scheduler 분기 / Cache block 최소치 / Mamba fused-index 계약 보충 — 이전 실측
 
 - 새 DGX source-only 3명령 종료 마커 `CHECK1_SCHEDULER_FACTORY_SOURCE_DONE`, `CHECK2_BLOCK_ORIGINS_SOURCE_DONE`, `CHECK3_MAMBA_SLOT_SOURCE_DONE`. 정본 [Phase5 DGX 3-check kernel/source](BLAZUX-PHASE5-DGX-THREE-CHECKS-KERNEL-RESULTS-20261027.md). 마지막 전체 unit PASS는 여전히 **tested source SHA `a5376cc06536ce786cdb6db8425e26e21b608910`에서 276/276 XFAIL0, Source169/169**. 이후 docs-only SHA 또는 3 소스 조사가 전체 tests를 다시 돌렸다고 적지 않는다.
 - `config/scheduler.py:170–191` 실제 분기: scheduler_cls None + async true → AsyncScheduler, async false → Scheduler; custom type 직접 cast, 문자열 qualname resolve. `async_scheduling` 선언 None/default, 활성 설정·반환 class ABI는 미확인.
