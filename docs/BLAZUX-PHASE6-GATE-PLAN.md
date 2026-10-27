@@ -1,5 +1,14 @@
 # blazux Track A Phase 6 — Approval-gated runtime verification
 
+## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
+
+- **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).
+- **직전 실제 DGX 통합 검사 exact SHA `fb5deae540812a300cb8404a53a202e505c40577`**: Phase6 70/70 unittest PASS, Source204/204 PASS, 기존 2026-10-26/27 llama-benchy 12×3/36 pre-blazux result SHA·runner/tokenizer/frozen matrix PASS, `PLAN_READY_NOT_EXECUTED`, `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`. 70/204는 해당 소스 SHA 전용이며 새 GitHub 코드에 자동 귀속하지 않음.
+- **신규 Phase6 P6-A 실제 노출형 관찰기**: clean checkout/source manifest·Docker pinned image/StartedAt/ID 전후 확인 후 loopback `GET /v1/models`, `GET /metrics`만 조회; vLLM `vllm:cache_config_info`가 이미 제공하는 경우만 block_size/prefix_caching/gpu_utilization의 allowlist 값 표시. 이 메트릭은 **시작 시 공개된 cache-config 값**이며 실제 Scheduler class/그룹별 MambaSpec/physical table·GPU state pointers를 증명하지 못함. 이 필드의 실제 in-process 안전 observer가 없으면 `P6-A ACTIVE ABI BLOCKED` 유지. `docker exec`, ptrace, live code instrumentation, 2nd model start는 이 승인에 포함되지 않음.
+- **신규 Phase6 P6-AB 실제 부하 검증**: `scripts/phase6-ab-provisional-run.sh --preflight`(무부하) 후 `--execute`(기존 `127.0.0.1:8000/v1` 모델에 **추론 부하 12조건×3회/총36회**). P6-A 여전히 BLOCKED이므로 결과를 **PROVISIONAL_PRE_B_EXISTING_SERVICE_NOT_GATE_PASS**로만 기록. Pre-blazux 원본은 불변; private staging에 별도 `phase6-pre-b-provisional` 새 결과 + SHA·36 raw repeats 및 허용된 공개용 12조건 numeric summary. Runner/head·Tokenizer·현재 corpus 해시·Docker image/StartedAt·RAM ≥8GiB preflight, 진행 중 RAM <4GiB 또는 identity drift/1시간 초과시 **벤치 자식 프로세스 그룹만 중단**, 레거시 운영 컨테이너 stop/restart/exec 절대 하지 않음. 현재 데이터만으로 정상 서비스 응답시간 불변을 보장하지 않으며 부하 시 영향 가능.
+- **새 HEAD GitHub 소스 상태**: 신규 A observer 12 synthetic/offline tests + 벤치 watchdog/결과 검증 17 tests, 새 runbook 등으로 기존 70건에서 **99건 예상**, Source204에서 **211 tracked 파일 예상**. **신규 HEAD DGX NOT_RUN**이며 결과를 받기 전 PASS 주장 금지. P6-B/C/D 미실행. 과거 Baseline의 실제 corpus SHA·샘플링·KV(cache) 동일성 여전히 미확정 → 원본↔신규 strict 성능 개선율 금지; 새로운 같은 조건 PRE-B/POST-B 쌍으로만 추후 비교 가능. `main`/P0/Phase1–5, 고정 이미지/기존 서비스/원본 Baseline 보호.
+
+
 ## 2026-10-28 P6-AB-0 DGX 검증 확정 — 최신 체크포인트
 
 - **DGX operator-tested exact source SHA** `fb5deae540812a300cb8404a53a202e505c40577`: dedicated Phase6 checkout (`~/Workspace/llm/blazux-phase6-gates`) `git pull --ff-only` from `0ad5e62...`, Phase6 unittest **70/70 PASS** (`Ran 70 tests`, `OK`), `PASS_SOURCE_ONLY: 204 tracked file(s)` **204/204 PASS**. Offline marker `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`; P6-AB stdout marker `PHASE6_AB_BENCH_CHECKPOINT_PLAN_ONLY_NO_LOAD`, `PHASE6_AB_BENCH_BASELINE_LOCKED_NEW_BENCH_NOT_RUN`, final `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`.
@@ -68,7 +77,7 @@
 - User has not authorized DGX GPU, real model loading, HTTP/benchmark, CI, operational change, any blazux runtime patch, PR, or merge. A2 is explicit user-operated read-only observation, NOT permission to launch new compute; all new Phase6 code on the fresh commit is NOT_RUN until operator log. Main/P0/Phase1–5 remain untouched. Update these canonical docs and entire Source Manifest together.
 
 
-Status: DGX_OFFLINE_28_PASS_SOURCE190_AT_100FFB3 / A3a_PASSIVE_COMPLETE / A3b0_CPU_PREPARED_NOT_DGX_RUN / P6_A_ACTIVE_BLOCKED / GPU_CI_NOT_RUN / PATCH_NOT_APPROVED.
+Status: DGX_OFFLINE_70_PASS_SOURCE204_AT_FB5DEAE / NEXT_A_LIVE_METADATA_AND_BENCH_PROVISIONAL_APPROVED_NOT_RUN / P6_A_ACTIVE_BLOCKED / B_C_D_NOT_RUN / NO_MODEL_START_PATCH_OR_CI.
 Parent: Phase5 docs-only `11fd777e2c49c030eee671133ab0af3a3ca9c26d`.
 Phase5 verified source: `780b780fc7572226a6a9ff2e52cd8e1921c8738b` (310 unit, 38 mocks, 177 source, G1–G8).
 No re-execution of Phase5 is required. DGX user-operated read-only source/metadata inspections are completed; GPU/CI/serving/model/patch/PR/merge and performance measurements are not approved.
@@ -119,3 +128,7 @@ User approved **one** ephemeral CPU-only immutable-image source SHA/AST inspecti
 ## P6-AB-0 operator-confirmed source-only gate, no workload
 
 The user DGX validated the new no-load checkpoint plan at exact `fb5deae540812a300cb8404a53a202e505c40577`: 70/70 unittest, full Source204/204, baseline checksum and 12 condition × 3 repeat corpus-independent numerical schema PASS; printed `PHASE6_AB_BENCH_BASELINE_LOCKED_NEW_BENCH_NOT_RUN` and final `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`. This is a frozen plan/old artifact provenance, **not** a newly run pre-B performance benchmark. Active P6-A config/ABI evidence remains inaccessible; no transition to P6-B, and no grant of legacy 127.0.0.1:8000 inference/bench, GPU, model start or CI. The real pre-B capture still requires P6-A PASS and separately scoped serving/benchmark approval. See [P6-AB checkpoint](BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md).
+
+## 2026-10-28 live observer + provisional PRE-B exception (does not advance correctness)
+
+The user requested actual P6-A observation and a fresh benchmark to validate the existing runner. This is a narrow **performance-script verification exception** to the older P6-A→B dependency: `P6-A live exposed metadata → P6-AB-PROVISIONAL existing-service workload`, **without claiming P6-A PASS, transitioning into B, or substituting the P6-D full gate**. An actual P6-A ABI PASS still requires effective Scheduler class/group MambaSpec and real physical block-table/GPU state bounds from approved real in-process evidence. The current vLLM metric may expose cache block size only; if absent do not infer defaults. The live runner is allowlisted exact existing pinned service, not a new model. Check source, runner and corpus hash, preserve original 12×3 baseline, enforce private 36-run evidence and fail-closed memory+identity watchdog. Refer to [current runbook](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).

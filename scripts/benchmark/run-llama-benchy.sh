@@ -2,7 +2,11 @@
 # Reproduce the pre-blazux llama-benchy performance matrix on the DGX host.
 # The old Docker service is only observed, never stopped/rebuilt/restarted.
 # Produces private evidence locally; no Git or GitHub publication.
-# IMPORTANT: source-only / NOT_RUN during this PR, by user request.
+# HISTORICAL PR#5: this script was source-only/NOT_RUN in the original PR.
+# 2026-10-28: operator approved one Phase6 existing-service script validation.
+# Never call this legacy launcher directly for Phase6: use the resource/identity-
+# monitored scripts/phase6-ab-provisional-run.sh --execute entrypoint instead.
+# Original pre-blazux result bytes and default execution parameters are unchanged.
 set -Eeuo pipefail
 
 main() {
@@ -14,6 +18,8 @@ main() {
   container="${LLAMA_BENCHY_CONTAINER:-qwen38-flash-orca-uncensored-bf16-mtp}"
   model="${LLAMA_BENCHY_MODEL:-qwen3.8-flash-next-orca-uncensored-bf16-mtp}"
   out_root="${LLAMA_BENCHY_RESULTS_ROOT:-$HOME/Workspace/llm/bench-results-staging}"
+  # Pre-blazux is the historical default; Phase6 guard overrides the phase to
+  # a separate unique provisional PRE-B directory, never the archived dataset.
   phase="${LLAMA_BENCHY_PHASE:-pre-blazux}"
   source_sha="e9be344578cec17745066b220798b80a0d2686d3"
   tok_sha="06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"

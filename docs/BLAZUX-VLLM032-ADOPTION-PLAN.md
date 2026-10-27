@@ -1,5 +1,14 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
+
+- **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).
+- **직전 실제 DGX 통합 검사 exact SHA `fb5deae540812a300cb8404a53a202e505c40577`**: Phase6 70/70 unittest PASS, Source204/204 PASS, 기존 2026-10-26/27 llama-benchy 12×3/36 pre-blazux result SHA·runner/tokenizer/frozen matrix PASS, `PLAN_READY_NOT_EXECUTED`, `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`. 70/204는 해당 소스 SHA 전용이며 새 GitHub 코드에 자동 귀속하지 않음.
+- **신규 Phase6 P6-A 실제 노출형 관찰기**: clean checkout/source manifest·Docker pinned image/StartedAt/ID 전후 확인 후 loopback `GET /v1/models`, `GET /metrics`만 조회; vLLM `vllm:cache_config_info`가 이미 제공하는 경우만 block_size/prefix_caching/gpu_utilization의 allowlist 값 표시. 이 메트릭은 **시작 시 공개된 cache-config 값**이며 실제 Scheduler class/그룹별 MambaSpec/physical table·GPU state pointers를 증명하지 못함. 이 필드의 실제 in-process 안전 observer가 없으면 `P6-A ACTIVE ABI BLOCKED` 유지. `docker exec`, ptrace, live code instrumentation, 2nd model start는 이 승인에 포함되지 않음.
+- **신규 Phase6 P6-AB 실제 부하 검증**: `scripts/phase6-ab-provisional-run.sh --preflight`(무부하) 후 `--execute`(기존 `127.0.0.1:8000/v1` 모델에 **추론 부하 12조건×3회/총36회**). P6-A 여전히 BLOCKED이므로 결과를 **PROVISIONAL_PRE_B_EXISTING_SERVICE_NOT_GATE_PASS**로만 기록. Pre-blazux 원본은 불변; private staging에 별도 `phase6-pre-b-provisional` 새 결과 + SHA·36 raw repeats 및 허용된 공개용 12조건 numeric summary. Runner/head·Tokenizer·현재 corpus 해시·Docker image/StartedAt·RAM ≥8GiB preflight, 진행 중 RAM <4GiB 또는 identity drift/1시간 초과시 **벤치 자식 프로세스 그룹만 중단**, 레거시 운영 컨테이너 stop/restart/exec 절대 하지 않음. 현재 데이터만으로 정상 서비스 응답시간 불변을 보장하지 않으며 부하 시 영향 가능.
+- **새 HEAD GitHub 소스 상태**: 신규 A observer 12 synthetic/offline tests + 벤치 watchdog/결과 검증 17 tests, 새 runbook 등으로 기존 70건에서 **99건 예상**, Source204에서 **211 tracked 파일 예상**. **신규 HEAD DGX NOT_RUN**이며 결과를 받기 전 PASS 주장 금지. P6-B/C/D 미실행. 과거 Baseline의 실제 corpus SHA·샘플링·KV(cache) 동일성 여전히 미확정 → 원본↔신규 strict 성능 개선율 금지; 새로운 같은 조건 PRE-B/POST-B 쌍으로만 추후 비교 가능. `main`/P0/Phase1–5, 고정 이미지/기존 서비스/원본 Baseline 보호.
+
+
 ## 2026-10-28 P6-AB-0 DGX 검증 확정 — 최신 체크포인트
 
 - **DGX operator-tested exact source SHA** `fb5deae540812a300cb8404a53a202e505c40577`: dedicated Phase6 checkout (`~/Workspace/llm/blazux-phase6-gates`) `git pull --ff-only` from `0ad5e62...`, Phase6 unittest **70/70 PASS** (`Ran 70 tests`, `OK`), `PASS_SOURCE_ONLY: 204 tracked file(s)` **204/204 PASS**. Offline marker `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`; P6-AB stdout marker `PHASE6_AB_BENCH_CHECKPOINT_PLAN_ONLY_NO_LOAD`, `PHASE6_AB_BENCH_BASELINE_LOCKED_NEW_BENCH_NOT_RUN`, final `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`.
@@ -531,4 +540,4 @@ scripts/
 - 별도 vLLM 0.32 이미지 빌드, 신규 소유 컨테이너 활성화·회수·rollback, 동시 GPU/메모리 영향 및 실제 A/B 데이터.
 - 실제 서빙 서비스 stop/replace/remove/이관 및 blazux 최적화 개선 주장. 단일 GB10 기존 서비스 보호는 계속 P0이다.
 
-**다음 단계:** (1) 현 P0 HEAD를 검증하고 **Track A Phase 1 자식 브랜치를 새로 생성** → (2) pinned blazux ↔ 현 preview의 1:1 함수·텐서 대조표 → (3) Phase 1 확정 HEAD에서 **Phase 2 신규 브랜치**를 열어 P1 계측/정확성·합성 BF16 fixture → (4) 각 후속 Phase를 별도 자식 브랜치에서 default-OFF 기능별 검증 → (5) 실험 성과/차단 증거는 **실험 브랜치에만 보존**한다. `main` PR/병합은 어떤 Phase에서도 진행하지 않는다. **Track B**는 Go/No-Go 결정 후 P0에서 `feature/vllm032-bf16ple-port` 형제 브랜치로 분기하여 별도 자산으로 실험한다. **현재 실행 중인 레거시는 변경하지 않는다.**
+**이전 장기 계획의 역사적 Phase1 출발 항목(현재 지침 아님):** Phase1–5는 이미 별도 영구 문서로 진행됐고 현재 목표는 Phase6의 live ABI 노출형 관찰 및 승인된 PRE-B provisional benchmark이다. 맨 위 최신 Phase6 상태 및 `BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md`를 현재 실행 기준으로 사용한다. main/P0와 실험 브랜치 보호 및 후속 신규 이미지/모델 무승인 실행 금지는 유지한다.
