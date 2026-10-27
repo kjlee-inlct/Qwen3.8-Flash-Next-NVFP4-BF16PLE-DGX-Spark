@@ -112,7 +112,8 @@
     "2026-10-28 current-work-only new-session handoff anchor added: Phase5 source/CPU DONE only at exact DGX-tested 780b780fc7572226a6a9ff2e52cd8e1921c8738b (unittest310/310, mock38/38, source177, G1-G8); latest prior docs-only HEAD a205a3f958c250e2e30cb20fc99424666b2e0ff5 was not DGX retested. Current task exclusively Phase6 approval/scope and staged grouped Gate oracle design (P6-A read-only active config/ABI, P6-B isolated GPU state/prefix, P6-C MTP/Tool/Responses, P6-D correctness-then-performance). All real runtime/GPU/model/CI Phase6 tasks NOT_RUN/BLOCKED, no Phase6 branch/PR/Merge/patch approval. GitHub open PR 0, Actions runs 0, commit statuses 0 at review. New session must reread current refs/status and documents, avoid copying prior phase histories; follow same-commit handoff/adoption/exit/manifest synchronization, CAS commit and guarded DGX ff-only workflow after scoped approval. This note and successor commit docs-only, not a new DGX Gate PASS.",
     "2026-10-28: Phase6 branch from Phase5 docs-only 11fd777e; user approved offline gate code/tests/docs GitHub commit only. P6-A supplied snapshot contract is not active runtime; P6-A/B/C/D BLOCKED, DGX/GPU/CI/model/serving/patch/PR/merge NOT_RUN/NOT_APPROVED. See docs/BLAZUX-PHASE6-GATE-PLAN.md and docs/BLAZUX-PHASE6-RESULTS.md. Exact Phase5 DGX tested source 780b780 unchanged.",
     "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist.",
-    "2026-10-28: DGX user Phase6 exact source SHA c7f4ca71... offline Phase6 7/7 PASS and Source182/182 PASS; DGX A1 read-only source inventory completed, pinned legacy image listing matched prefix b0984c4b724b; real P6-A active scheduler/cache/Mamba state NOT_OBSERVED/BLOCKED. Phase6 A2 safe docker inspect-only + baseline runner/result/corpus preflight scripts, 8 new stdlib synthetic tests and frozen benchmark rules added in later GitHub commit; later code/manifest SHA DGX NOT_RUN. No live GPU, model/API, benchmark, CI, blazux patch, PR or merge; main/P0/Phase1-5 immutable. Refer to Phase6 results and benchmark rules."
+    "2026-10-28: DGX user Phase6 exact source SHA c7f4ca71... offline Phase6 7/7 PASS and Source182/182 PASS; DGX A1 read-only source inventory completed, pinned legacy image listing matched prefix b0984c4b724b; real P6-A active scheduler/cache/Mamba state NOT_OBSERVED/BLOCKED. Phase6 A2 safe docker inspect-only + baseline runner/result/corpus preflight scripts, 8 new stdlib synthetic tests and frozen benchmark rules added in later GitHub commit; later code/manifest SHA DGX NOT_RUN. No live GPU, model/API, benchmark, CI, blazux patch, PR or merge; main/P0/Phase1-5 immutable. Refer to Phase6 results and benchmark rules.",
+    "2026-10-28 operator DGX Phase6 SHA 0513b118260047b9965e16b20bdadf690c112c5d: ff-only update, bash syntax PASS, 15/15 Phase6 unittest OK, source 186/186 PASS, PHASE6_A2_READONLY_PREFLIGHT_COMPLETED_NOT_RUNTIME_CERTIFIED and operator PHASE6_A2_PREFLIGHT_DGX_COMPLETED. Running pinned image digest match=true; launch flags 0.8 GPU utilization, max-model-len 262144, max-num-batched-tokens 8192, max-num-seqs 8. Baseline raw SHA/runner Git SHA matched; current Gutenberg SHA256 8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c; historic corpus hash absent, sampling/KV unverified. Live Scheduler/Mamba/group/address NOT_OBSERVED; P6-A runtime BLOCKED; P6-B/C/D NOT_RUN. Evidence-only doc commit is not tested SHA; no GPU/model/API/benchmark/CI/patch/PR/merge; main/P0/Phase1-5 protected."
   ],
   "files": [
     {
@@ -293,7 +294,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "26ca6c98109e089542e9b57a5a0b6d8283903204"
+      "blob_sha": "47268fecc9dec648a48518ff7d55ecd38d45757c"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -323,22 +324,22 @@
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "948247d51a2b81c29e54ad32fe1a492a71561d55"
+      "blob_sha": "f5ae0e4b4ddf4d40271283028cf6fb30ddb5922b"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "4a8a517053ff39fa4535679d521071815ba150f1"
+      "blob_sha": "548ce30698c4292738ec3b14b167227baad60c0c"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "259672d279832138b068202341867ec83d12439d"
+      "blob_sha": "39aff9f57e3b96c39a24e4350b08ec5e7af23932"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "5a56232e370106663b9a41e2423ccc062036f533"
+      "blob_sha": "4e7010ef80b00c008e5d31da0a07b34930f13d45"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -353,7 +354,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "d762df739a3a825ca575fc2438d271207fd9a2fa"
+      "blob_sha": "12e910161c36b2e6d40298916e5d8e33992c8126"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
