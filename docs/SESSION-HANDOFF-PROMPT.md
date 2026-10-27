@@ -8,25 +8,25 @@
 
 ## 현재 진행 상태 및 새 세션 우선 읽기 — 2026-10-27
 
-> **현재 작업을 이어받을 때 이 절을 가장 먼저 적용한다.** 아래 2026-10-26 Wizard 검증·PR #1/#3 기록은 실제로 수행된 **과거 테스트**이며 삭제하지 않는다. 새로운 GitHub HEAD에 대해 DGX 테스트가 다시 PASS했다는 뜻이 아니다.
+> **현재 작업을 이어받을 때 이 절을 가장 먼저 적용한다.** 2026-10-26 Wizard 검증은 과거 시험이다. **2026-10-27 새 불변 정책:** blazux 관련 모든 브랜치/Phase의 변경을 `main`에 PR·머지·스쿼시·체리픽·리베이스·동기화하지 않는다. 각 Phase는 직전 확정 Phase의 HEAD에서 새 자식 브랜치를 만들어, 실험을 전부 폐기해도 `main`이 달라지지 않게 한다.
 
 | 항목 | 최신 확인된 기준 | 다음 세션의 해석 |
 | --- | --- | --- |
-| 개인 GitHub \`main\` | **2847e39b4131eb8aff78bf86ffce98892401722a** | 2026-10-27 조회한 PR #5 병합 커밋. 새 세션에서 HEAD 재조회 |
-| 현재 개발 브랜치 | **\`feature/blazux-vllm032-evaluation-20261027\`** | blazux **Track A** 검토·계획 브랜치. 새 세션에서 HEAD/트리 재조회 |
+| 개인 GitHub `main` | **2847e39b4131eb8aff78bf86ffce98892401722a** | 2026-10-27 조회한 PR #5 병합 커밋. 새 세션에서 HEAD 재조회 |
+| 현재 개발 브랜치 | **`feature/blazux-vllm032-evaluation-20261027`** | P0 실험 루트. 정책 반영 전 HEAD **`d877fc7197f3888bb80be2edc7fb20698e0d8316`**; 본 갱신 후 정확한 HEAD를 재조회하여 Phase 1 부모로 고정. 후속 새 Phase 브랜치 미생성 |
 | 기록된 설계 보강 커밋 | **0e9b25d93eb533b1936930c77bf7f7b874ec0b60** | 2026-10-27 설계서 보강 기준. **본 핸드오프 갱신 커밋 자체의 SHA 아님** |
-| 신규 PR | **없음** (2026-10-27 조회) | 현재 브랜치를 성급히 \`main\`에 병합하지 않는다 |
+| 신규 PR | **없음** (2026-10-27 조회) | blazux→`main` PR **금지**; 필요하면 Phase 간 GitHub Compare/미병합 리뷰만 진행 |
 | 실험 원본 blazux | **8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa** | [외부 기술 참조](https://github.com/blazux/qwen3.8-Flash-DGX); 원본 저장소 전체 merge·serve.sh 실행 금지 |
-| 성능 Baseline | PR **#5 MERGED**, 정식 **12조건 × 각 3회 = 36회** | [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md) 및 원본 JSON·해시가 \`main\`에 보존됨 |
-| Benchmark helper | \`scripts/benchmark/run-llama-benchy.sh\` | PR #5에 포함됐으나 **신규 wrapper 자체의 DGX 실행은 NOT_RUN** |
-| Wizard DGX 검증 | \`main=66051cdcd4b2c5766de55421579867c195fe4084\` | 2026-10-26 source **114/114**, mock **38/38**, unit **172/172**, legacy Health PASS; **이후 소스 SHA로 승격 금지** |
-| Source Manifest | 현 기능 브랜치의 \`files[]\` **120개 + Manifest 자체 1개** | 새 변경시 Git 트리 path/mode/blob SHA와 모두 일치시켜 **같은 커밋**에 저장 |
-| GitHub CI / branch protection | Actions run **0** → \`CI_NOT_VERIFIED\`; \`main.protected=false\` | CI 정상화는 사용자 요청으로 보류. \`main\`의 PR 리뷰 보호는 **운영 정책**, 강제된 GitHub 보호 설정이 아님 |
+| 성능 Baseline | PR **#5 MERGED**, 정식 **12조건 × 각 3회 = 36회** | [보고서](benchmark/LLAMA-BENCHY-BASELINE-20261027.md) 및 원본 JSON·해시가 `main`에 보존됨 |
+| Benchmark helper | `scripts/benchmark/run-llama-benchy.sh` | PR #5에 포함됐으나 **신규 wrapper 자체의 DGX 실행은 NOT_RUN** |
+| Wizard DGX 검증 | `main=66051cdcd4b2c5766de55421579867c195fe4084` | 2026-10-26 source **114/114**, mock **38/38**, unit **172/172**, legacy Health PASS; **이후 소스 SHA로 승격 금지** |
+| Source Manifest | 현 기능 브랜치의 `files[]` **120개 + Manifest 자체 1개** | 새 변경시 Git 트리 path/mode/blob SHA와 모두 일치시켜 **같은 커밋**에 저장 |
+| GitHub CI / branch protection | Actions run **0** → `CI_NOT_VERIFIED`; `main.protected=false` | CI 정상화는 사용자 요청으로 보류. `main`의 PR 리뷰 보호는 **운영 정책**, 강제된 GitHub 보호 설정이 아님 |
 | 엔진·GPU 실기기 | blazux 구현/이미지 빌드/A/B 시험 **NOT_STARTED** | 기존 레거시 컨테이너·모델·포트·영수증은 변경 금지 |
 
-**두 개발 트랙은 섞지 않는다.** **Track A**는 현재 preview vLLM에서 가능한 계측·정확성/성능 개선만 독립적으로 검토하고, **Track B** 공식 vLLM 0.32 포팅은 Go/No-Go 판단 뒤 \`feature/vllm032-bf16ple-port\` 별도 장기 브랜치에서 착수한다(**현재 해당 브랜치는 미생성**). Track A 작업이 Track B 시작이나 GPU 활성화를 자동 승인하지 않는다.
+**두 개발 트랙은 섞지 않는다.** Track A는 P0 루트 아래에서 Phase별 자식 브랜치를 계단식으로 생성한다. Track B `feature/vllm032-bf16ple-port`는 별도 Go/No-Go 뒤 **P0 고정 HEAD에서 형제 브랜치로 분기**하며, `main`에서 새로 분기하거나 Track A의 검증되지 않은 코드를 자동 상속하지 않는다. 현재 Track B와 Track A Phase 1 브랜치는 미생성이다.
 
-**최우선 다음 단계: Gate 1 정적 1:1 계약 비교.** [설계서](BLAZUX-VLLM032-ADOPTION-PLAN.md) §1.4/§3.1/Gate 1을 읽고, 현 preview와 고정 blazux 소스의 PLE \`mmap\`·BF16 offset/gather, MTP 31텐서/가드, QSA top-k, prefix-cache/SSM, Tool/Responses parser를 함수·데이터 flow 단위로 매핑한다. **KEEP / PORT / ADAPT / DEFER_TO_TRACK_B / REJECT**를 각 기능별 출처/위험/테스트 계약과 함께 기록한다. 새 GPU/Docker 작업은 하지 않는다.
+**최우선 다음 단계:** P0 브랜치 최신 HEAD와 Source Manifest 확인 → P0에서 **새 `feature/blazux-phase1-source-compare` 자식 브랜치 생성** → pinned blazux SHA와 현 preview의 PLE mmap/BF16 gather, MTP 31텐서/가드, QSA, SSM Prefix cache, Parser/Responses를 **Gate 1 함수·텐서 단위 1:1 비교**. 근거별 KEEP/PORT/ADAPT/DEFER_TO_TRACK_B/REJECT를 기록하고 실기기 Docker/GPU 작업은 하지 않는다.
 
 ---
 
@@ -274,11 +274,11 @@ Git merge commit은 SHA가 달라질 수 있지만 **모든 tracked blob/mode와
 3. 새 기능/반복 작업은 재사용 가능한 `scripts/`와 `tests/`로 만든다. 필요한 변경만 새 Git blob으로 생성한다.
 4. 추적 파일 **전부**의 최신 path/mode/Git blob SHA를 계산해 `scripts/source-state-manifest.json`을 다시 작성한다. 자기 자신은 파일 목록에서 제외.
 5. 정확한 base tree로 tree 생성 후 부모 commit SHA 지정 커밋. branch ref 갱신 시 **예상 HEAD lease**를 사용해 경합 방지. 강제 push 금지.
-6. 사용자가 PR/머지를 요청했으면 **새 PR 생성 → 변경 파일 diff·mergeable·예상 head SHA·CI·리뷰 확인 → 문제없으면 일반 merge commit으로 머지 → merged/closed, main HEAD/tree/Manifest 재조회**를 이어서 한다.
+6. **일반 Wizard/비-blazux 작업에만:** 승인된 PR의 diff/CI/리뷰를 검토하고 안전하게 merge한 뒤 검증한다. **blazux 예외:** 본 작업에서는 `main` PR/병합 및 모든 형태의 실험 코드 반입이 금지되어 있으며, Phase별 새 브랜치 커밋과 비교·미병합 리뷰만 허용한다.
 7. 체크가 없는 경우 CI PASS라고 부르지 말고, 사용자 DGX 로그(163/163 등)와 GitHub checks(없는 상태)를 분리해 기록한다.
 8. 새 PR 임시 branch는 기존 strict allowlist에 포함되지 않으므로, **그 브랜치에서 무조건 strict PASS를 기대하지 않는다**. 전체 blob/mode/Manifest 파일 inventory 대조 및 모의 테스트로 사전 검증하고, 머지된 main에서 strict를 실행한다.
 9. PR #1은 이미 머지된 과거 이력이다. 새 작업은 별도 PR로 기록한다. 상위 YSLAB-ai 저장소, 기존 legacy checkout state 또는 실제 Docker를 Github source 변경에 묶어 수정하지 않는다.
-10. 사용자가 승인한 GitHub source 작업이면 계획·검토·커밋·PR·머지를 같은 세션에서 완결하되, 오류·충돌·권한 부족이 있으면 사실대로 중단한다.
+10. 승인된 범위 내에서 연결된 GitHub 도구로 결과를 영구 기록한다. **blazux는 Phase별 브랜치 커밋까지만 수행**하며 일반 PR merge 관례를 적용하지 않는다. 오류·경합·CI 불명 상태는 사실대로 표시한다.
 
 ### 6.3 스크립트 생성/업데이트/사용 규칙
 
@@ -454,10 +454,10 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 
 ### 11.1 2026-10-27 설계 보강 — Track A/B 분리 및 개발 Gate (문서만 변경)
 
-- **Track A:** 현행 vLLM preview 기반 선택적 개선만 `feature/blazux-vllm032-evaluation-20261027`에서 계속한다. P1(PLE 단계별 계측, Prefix Cache/SSM 정확성, Tool/Responses parser 회귀) → P2(MTP reduced draft vocab, BF16 PLE gather, QSA top-k 각각 독립 기본 OFF flag) → P3(YaRN/FP8 고위험 보류). 1:1 함수·데이터 계약 및 **합성 BF16 safetensors shard 오프라인 fixture**가 우선이다.
-- **Track B:** 공식 vLLM 0.32 전환은 `feature/vllm032-bf16ple-port`라는 **미생성·미착수 별도 장기 브랜치**로만 진행한다. 착수 Go/No-Go를 별도로 결정하고 새 base image digest/container/host loopback port/receipt/recipe-view/result 디렉터리와 ownership label을 사용한다. 레거시/위자드 자산 및 포트 점유·변경 금지, 단일 GB10에서 두 대형 GPU 모델 동시 가동 금지.
-- 공통 **기능별 독립 PR → default-OFF flag → 합성 fixture/회귀 증거 → rollback 및 Source Manifest 정합성 → 코드 리뷰 → 검증된 부분만 main**. 검증되지 않은 0.32 엔진 교체·ModelOpt hybrid/graft는 현재 엔진 최적화 PR에 혼합하지 않는다.
-- 기존 `main`의 GitHub branch protection은 2026-10-27 조회에서 **false**였다. 보호 규칙은 현재 문서/운영 정책이며 GitHub 설정이 자동 강제 중이라고 가정하지 않는다. CI 정상화는 여전히 보류된다. 이번 갱신은 **계획서·핸드오프·Source Manifest 문서/메타데이터 커밋만** 대상으로 하며 실제 DGX 코드/GPU/벤치 시험은 요청하지 않았고 수행하지 않는다.
+- **Track A:** 현행 preview vLLM 기반 선택적 분석 및 P1 계측/정확성→P2 개별 default-OFF 최적화→P3 고위험 보류. 기존 `feature/blazux-vllm032-evaluation-20261027`는 P0 루트이며, **Phase 1은 P0 HEAD에서, Phase N+1은 Phase N의 확정 HEAD에서 각각 새 브랜치**를 생성한다. 작은 BF16 safetensors 합성 fixture로 증거를 먼저 확보한다.
+- **Track B:** 공식 vLLM 0.32 장기 실험은 **P0에서 별도 분기하는 형제 계보**로만 진행한다. `feature/vllm032-bf16ple-port`는 아직 미생성/미착수. Go/No-Go 후 독립 image digest·컨테이너/포트/receipt/view/결과 폴더·ownership label을 사용하고 기존 자산은 불변으로 유지한다.
+- 공통: **Phase별 새 브랜치 → 정적 근거/합성 fixture → default-OFF flag/rollback → 기능 리뷰 → 전 Phase HEAD에서 새 Phase 생성**. 검증 결과는 실험 브랜치에만 남기고 `main` PR/merge/cherry-pick/squash 등을 절대 하지 않는다. Track A/B 코드를 혼합하지 않는다.
+- 기존 `main`은 GitHub 조회 시 `protected=false`. 따라서 **blazux→main 금지는 별도 운영 규칙**이지 자동 기술적 제한이 아니다. CI 정상화는 사용자 지시로 보류; 본 문서 갱신은 GitHub 원격의 문서·Manifest 변경으로 실 DGX 검증을 수행하지 않았다.
 - 상세 정책 및 변경 제한은 [blazux 도입 계획서](BLAZUX-VLLM032-ADOPTION-PLAN.md) §1.4, §3.1, Gate 2/3/6을 우선 참조한다.
 
 ### 11.2 Gate 1 실행 시 필수 산출물 및 중단 기준 — 최신 보완
@@ -471,3 +471,19 @@ HEAD를 반드시 거부한다. 회귀시험은 별도 임시 Git fixture로 두
 7. **결과 기록:** 코드를 수정하지 않는 정적 비교라도 새 비교 문서/결정 기록을 GitHub에 영구 저장한다. 추적 파일 변경 시 Source Manifest 전체 120개(+신규 파일 수)의 path/mode/blob SHA와 정확히 동기화한다. `main` branch protection은 조회 시 false였으므로 정책상 기능 PR/리뷰를 준수하되 기술적으로 강제된 상태라고 쓰지 않는다. CI 정상화는 사용자 요청으로 보류하며, 실제 수행하지 않은 Mock/DGX/스크립트 테스트는 `NOT_RUN`으로 둔다.
 
 **이 다음 작업의 현재 완료 상태:** Gate 0(실측 원본 및 GitHub 백업) **DONE_WITH_REPRODUCIBILITY_GAPS**; Gate 1의 **실제 1:1 함수 비교표 NOT_STARTED**; Gate 2 합성 shard 시험 **NOT_RUN**; Track A의 실제 최적화 패치/새 PR **NOT_STARTED**; Track B 엔진 교체/이미지/배포/A-B **NOT_STARTED**.
+
+
+### 11.3 2026-10-27 신규 확정: 페이즈별 Git 계보 및 완전한 폐기 가능성
+
+> **우선순위:** 이 정책은 과거 `main`으로의 선택적 병합을 권장한 문장보다 우선한다. blazux와 관련된 모든 신규 코드는 실험 계보에만 두며 `main`에 절대 반입하지 않는다. 이미 `main`에 병합한 PR #5는 실험 전 Baseline 데이터이므로 그대로 보존한다.
+
+- **P0(존재):** `feature/blazux-vllm032-evaluation-20261027`는 `main@2847e39b4131eb8aff78bf86ffce98892401722a`에서 과거 한 번 생성된 실험 루트다. 이번 정책 커밋을 마치면 **그 최신 HEAD를 고정하고 P0에 기능 개발 코드를 직접 추가하지 않는다**.
+- **Track A Phase 1(미생성):** `feature/blazux-phase1-source-compare`를 현재 P0의 정확한 HEAD에서 새로 생성한다. Gate 1 1:1 함수/텐서 비교표, 독립 위험/판정/근거, Source Manifest를 저장한다.
+- **Track A 후속(미생성):** Phase 2 `feature/blazux-phase2-offline-fixtures`는 Phase 1의 검토 완료 HEAD에서 생성한다. 이후 각 Phase N+1은 직전 Phase N의 확정 HEAD를 부모로 **새 브랜치**를 만든다. 이전 Phase의 브랜치 ref는 보존·불변이다.
+- **Track B(미생성):** `feature/vllm032-bf16ple-port`는 별도 Go/No-Go 결정 이후 **P0 고정 HEAD에서 형제 브랜치**로 생성한다. `main`에서 직접 분기하지 않고 Track A Phase 코드를 상속하지 않는다. Track B 이후에도 각 단계는 새 자식 브랜치다.
+- **필수 재현 기록:** 매 Phase 부모 브랜치와 부모 commit SHA, external blazux pinned SHA `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`, source/manifest 경로·mode·blob SHA, 변경 범위, 산출물, 테스트/CI 미실행 여부, 실패/보류/다음 Phase Go·No-Go를 영구 기록한다.
+- **리뷰 및 원격 작업:** Phase간 GitHub Compare를 우선하고, PR을 만들더라도 `base=이전 Phase`, `head=현재 Phase`에서 **미병합 상태로만 리뷰**한다. 실험→`main` PR/merge/squash/cherry-pick/rebase/자동 main sync/force push 금지. `main.protected=false`라는 사실로 예외를 허용하지 않는다.
+- **안전한 중단/폐기:** 어떤 Phase에서든 실험 브랜치만 보존·아카이브하고 작업을 종료할 수 있어야 하며 `main`의 수정/되돌리기 또는 기존 DGX Docker/모델/영수증 정리 조작이 필요하면 설계 실패로 간주한다.
+- **현재 한계:** 기존 사용자 DGX에서 Baseline 12×3=36 실측 및 GitHub 원본 보존은 완료됐으나 Benchmark 신규 wrapper 실행은 NOT_RUN, 나머지 7개 원본 해시 대조 및 corpus/sampling 재현성은 미완료. Wizard 2026-10-26 source 114/114·mock 38/38·unit 172/172는 과거 HEAD 시험이다. blazux Gate 1 실제 1:1 함수 비교·합성 데이터 시험·배포/A/B는 미시작이며 CI 정상화 보류를 유지한다.
+
+**새 세션의 정확한 착수:** 최신 P0 HEAD/Manifest/PR/CI를 다시 확인 → Phase 1 자식 브랜치 생성 → Gate 1 정적 비교 문서 작성 및 Manifest 갱신 → 해당 Phase에서 코드 리뷰·검증 범위·차단 사항만 기록. `main`에 PR/머지는 하지 않는다.

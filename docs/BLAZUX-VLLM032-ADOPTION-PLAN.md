@@ -36,21 +36,51 @@
 
 **Track A — 현행 vLLM preview 기반의 선택적 기능 개선 (현재 작업)**
 
-- 브랜치: `feature/blazux-vllm032-evaluation-20261027` (현재 존재하는 분석·계획 브랜치). 실제 포팅 시 기능별 소규모 추가 브랜치/커밋과 독립 PR로 분리한다.
-- 순서: 기존 코드와 외부 blazux pinned SHA의 함수·텐서 경로 1:1 비교 → 계측·정확성 우선 → 합성 데이터 기반 CPU 오프라인 검증 → **기능별 기본 OFF flag**를 가진 최소 수정 → 별도 성능·정확성 검증 → 승인된 부분만 `main` PR.
+- **실험 루트(P0):** `feature/blazux-vllm032-evaluation-20261027` (현재 존재하는 분석·계획 브랜치). **실제 Gate 1부터는 현재 루트 HEAD를 부모로 새 Phase 1 브랜치를 생성**한다. 이후 각 Phase는 직전 확정 실험 브랜치의 HEAD에서 별도 후속 브랜치를 만든다. 승인받지 않은 `main` 병합·체리픽·코드 이전은 금지한다.
+- 순서: 기존 코드와 외부 blazux pinned SHA의 함수·텐서 경로 1:1 비교 → 계측·정확성 우선 → 합성 데이터 기반 CPU 오프라인 검증 → **기능별 기본 OFF flag**를 가진 최소 수정 → 독립 브랜치에서 성능·정확성 검증. **모든 blazux 실험은 `main`에서 영구 격리하며 검증 성공해도 `main`에 병합하지 않는다.**
 - 이미 쓰는 preview 이미지, Orcarouter checkpoint, BF16 PLE mmap, MTP=2 overlay를 기준으로 비교한다. 패치가 vLLM v0.32 내부 구조를 전제로 한다면 **Track A에 강제로 포팅하지 않고 DEFER_TO_TRACK_B**.
 - 본 트랙 진행은 **vLLM 0.32 Docker base 변경·모델 교체·운영 서비스 전환의 승인으로 간주하지 않는다**.
 
 **Track B — 공식 vLLM 0.32 엔진 전환 (선택적 후속 장기 실험; 미생성·미착수)**
 
-- 전용 브랜치 **`feature/vllm032-bf16ple-port`**를 현재 브랜치와 **별도로**, 실제 착수 판단을 마친 최신 검증된 `main`에서 분기한다. 현재 브랜치에 vLLM 0.32 전체 엔진 변경을 쌓지 않는다.
+- 전용 브랜치 **`feature/vllm032-bf16ple-port`**는 별도 Go/No-Go 승인 이후 **동일한 blazux 실험 루트(P0)의 고정 HEAD에서 Track A와 형제(sibling) 관계로 생성**한다. **`main`에서 직접 분기하지 않으며** Track A 실험 코드를 자동 상속하지 않는다. Track B도 단계마다 별도 자식 Phase 브랜치를 생성한다.
 - 비교·검증 단위: `vllm/vllm-openai:v0.32.0` 기반 코드를 **정확한 image digest로 pin**하고, Qwen4Exp 모델 로더·quantization dispatch·BF16 PLE·MTP 31/31 overlay·KV/Mamba/SSM·CUDA graph·Tool/Responses parser의 API/ABI/결과 정합성을 확인한다.
 - Track B는 별도 Docker 이미지/컨테이너/receipt/모델 view/결과 디렉터리/포트를 예약·소유한다. **기존 runtime 자산을 이름만 바꿔 재사용하는 방식 금지**.
 - Track B를 시작할지 자체가 별도 **Go/No-Go**. 성공하더라도 Track A의 선택 기능 병합과 결합된 PR로 올리지 않는다.
 
-**검증 및 병합 절차:** 1:1 분석 결과 작성 → 기능별 변경 범위/flag/rollback 계약 → 오프라인 회귀 → 공개 안전 검토/Source Manifest 갱신 → 기능별 PR·코드 리뷰 → 실제 검증 완료 항목만 `main` 병합. 미완료 Track B는 장기 브랜치에 남기고 조기 병합하지 않는다.
+**검증 및 격리 절차:** 1:1 분석 결과 작성 → 기능별 변경 범위/flag/rollback 계약 → 오프라인 회귀 → 공개 안전 검토/Source Manifest 갱신 → Phase별 독립 커밋과 코드 리뷰 → 다음 Phase는 **직전 승인 실험 HEAD에서 새 브랜치**로 진행. 선택적으로 Phase→부모 Phase 비교용 PR을 만들 수 있지만 **병합은 기본적으로 수행하지 않으며**, blazux에서 `main`으로 향하는 PR·Merge·Squash·Cherry-pick·자동 Rebase/동기화는 금지한다. 마지막에 기능을 전부 폐기해도 `main` 및 Baseline에 영향이 없어야 한다.
 
-참고: `main`은 문서상 승인·리뷰된 운영 기준이지만 2026-10-27 GitHub 조회에서 **GitHub branch protection 자체는 false**였다. 따라서 **PR을 통한 병합을 운영 규칙으로 강제하며 보호 설정을 이미 활성화했다고 기록하지 않는다**. Repository Ruleset/Branch Protection 강화는 별도 승인·권한이 필요한 관리 작업이다.
+참고: 2026-10-27 조회에서 `main.protected=false`였다. 따라서 **blazux→`main` 반입 금지는 GitHub가 자동 강제하는 보안 설정이 아니라 이 프로젝트의 명시적 작업 금지 규칙**이다. 어떠한 도구/자동 PR도 이 정책을 우회하지 않는다. Branch Protection/Ruleset 변경은 별도 승인 과제이며 이 실험 브랜치에서 설정을 변경하지 않는다.
+
+### 1.5 신규 불변 원칙: 페이즈별 **폐기 가능한 Git 계보**
+
+- **P0 실험 루트(기존):** `main@2847e39b4131eb8aff78bf86ffce98892401722a`에서 2026-10-27 한 번 생성된 `feature/blazux-vllm032-evaluation-20261027`를 시작점으로 한다. **이후의 blazux 브랜치는 `main`을 새 base로 삼지 않는다.** P0는 현재 계획·핸드오프·Baseline 링크의 고정 앵커이며, 이번 정책 반영 커밋 후 추가 실험 코드를 직접 쌓지 않는다.
+- **Track A Phase 1:** 다음 세션에서 새 `feature/blazux-phase1-source-compare` 브랜치를 P0의 확인된 최신 HEAD에서 생성. **아직 생성하지 않았음**. Gate 1의 소스·함수/텐서 1:1 비교표, 상태·근거·차단 이슈가 목표다.
+- **Track A Phase 2:** Phase 1의 리뷰·문서 결과를 확정한 HEAD에서 **새** `feature/blazux-phase2-offline-fixtures` 브랜치 생성. 작은 BF16 합성 safetensors·Mock·정확성 회귀 검증만 수행.
+- **Track A Phase 3 이상:** 승인된 이전 Phase HEAD를 부모로 새 `feature/blazux-phase<N>-<scope>` 생성. PLE/MTP/QSA/Parser 등 기능별 고립·기본 OFF·rollback·A/B 결과를 누적하되 지난 Phase 브랜치 HEAD는 보존한다.
+- **Track B(미생성):** 기술적으로 분리된 엔진 이식 실험 `feature/vllm032-bf16ple-port`는 **P0 고정 HEAD에서 별도로 분기**하며 Track A Phase 1/2 코드를 물려받지 않는다. Track B Phase 2 이후는 Track B의 선행 실험 브랜치를 부모로 생성한다. **Track B Go/No-Go 이전에는 브랜치조차 생성하지 않는다.**
+- **각 Phase 브랜치의 필수 메타데이터:** 부모 브랜치/정확한 부모 commit SHA, blazux upstream PIN, 이전 Phase 결과·검증 범위, 새 변경 파일의 Source Manifest 전체 path/mode/blob SHA, 테스트/CI 및 차단 이슈, 계속/보류/폐기 결정. 새로운 Phase를 열기 전 부모 HEAD와 트리·manifest를 다시 확인한다.
+- **브랜치 이동 정책:** 리뷰·비교가 필요하면 `base=직전 Phase`, `head=현재 Phase` 방향의 diff 또는 PR을 사용하되 **merge 버튼을 누르지 않는다**. phase N 커밋은 새 phase N+1이 부모 SHA로 직접 상속하므로 이전 phase에 역으로 커밋/merge할 필요가 없다. 강제 push·부모 reset/rebase 금지.
+- **최종 폐기 정책:** 모든 blazux 결과는 실험 ref에만 존재해야 한다. 진행을 취소하면 새 기능을 운영 `main`으로 되돌리거나 undo할 필요 없이 실험 브랜치를 보존/아카이브하고 종료하면 된다. **Baseline PR #5와 과거 운영 계보는 실험 시작 전 이미 `main`에 존재하므로 유지되며, blazux 관련 신규 commits는 절대 반입하지 않는다.**
+- 향후 사용자가 특별히 새로운 정책을 문서화하지 않는 한 **blazux 관련 모든 작업의 GitHub PR target은 `main`일 수 없고 merge/rebase/cherry-pick을 통한 반입도 금지**한다. 작업을 쉽게 하는 목적의 자동 `main` 동기화도 하지 않는다.
+
+~~~text
+main @ 2847e39 (PR #5 Baseline 유지, 실험 코드 불변)
+  |
+  +-- P0 feature/blazux-vllm032-evaluation-20261027 (현 계획 루트)
+        |
+        +-- Track A: phase1-source-compare (다음 세션에서 생성)
+        |     |
+        |     +-- phase2-offline-fixtures (Phase 1 확정 후 생성)
+        |            |
+        |            +-- phase3-<feature> ... (Phase별 새 브랜치)
+        |
+        +-- Track B: feature/vllm032-bf16ple-port (Go/No-Go 이후 별도 생성)
+              |
+              +-- 후속 vLLM032 phase 브랜치
+
+[금지] 어떤 실험 브랜치에서도 main으로 commit/PR merge/cherry-pick/squash 이관 불가
+~~~
 
 ## 2. 비교 대상 스냅샷(확정된 사실과 미검증 사항)
 
@@ -191,11 +221,11 @@
 
 ### Gate 6 — 코드 리뷰와 통합 결정
 
-**Merge acceptance:** 기능별 최소 변경과 default-OFF feature flag, 종전 경로 동작 동일성, BF16 합성 fixture·negative cases·MTP 31/31 load guard, 리소스/정확성 및 Baseline 대응 결과, Source Manifest의 path/mode/blob SHA, 라이선스와 독립 롤백 절차를 PR마다 확인한다. 하나라도 증거가 없는 기능은 **계속 브랜치에서 실험**하고 \`main\`에 넣지 않는다.
+**Phase acceptance (main merge 금지):** 기능별 최소 변경과 default-OFF feature flag, 종전 경로 동작 동일성, BF16 합성 fixture·negative cases·MTP 31/31 load guard, 리소스/정확성 및 Baseline 대응 결과, Source Manifest의 path/mode/blob SHA, 라이선스와 독립 롤백 절차를 각 Phase 리뷰에서 확인한다. 실패한 Phase에서는 새 Phase를 열지 않는다. 성공한 결과도 **실험 계보에만 보존**하고 `main`에 넣지 않는다.
 
-- 수집된 원시 결과가 Gate 0 Baseline과 연결되었고, patch provenance/라이선스/수정 영향 및 소유권 검사가 증명된 경우에만 선택적 병합을 검토한다.
+- 수집된 원시 결과가 Gate 0 Baseline과 연결되었고, patch provenance/라이선스/수정 영향 및 소유권 검사에 근거한 경우에만 **다음 Phase 분기(Go/No-Go)**를 검토한다. 그 자체로 `main` 병합을 승인하지 않는다.
 - 단계별 롤백 경로는 새 소유 자산 안에서만 검증한다. 기존 레거시 rollback을 핑계로 stop/rm/prune을 호출하지 않는다.
-- 전체 vLLM 0.32 포팅은 선택적 기능·계측 포팅과 별도 브랜치/PR로 유지한다.
+- 전체 vLLM 0.32 포팅은 선택적 기능·계측 포팅과 별도 **Track B 실험 계보**로 유지하고, 해당 결과 역시 `main`으로 PR/병합하지 않는다.
 - 운영 환경 변경은 GitHub 코드 merge와 **별개 승인 절차**로 처리한다.
 
 ## 5. 실험군·측정 결과의 저장 구조(제안)
@@ -230,12 +260,12 @@ scripts/
 ## 6. 커밋·브랜치·Source Manifest 계약
 
 - **Baseline 선행 PR #5는 2026-10-27 MERGED:** 새 `main` SHA **2847e39b4131eb8aff78bf86ffce98892401722a**. 정식 12×3 원본 `result.json`은 이제 `main`에 존재하며 다시 생성·덮어쓰기 금지.
-- **blazux 전용 독립 브랜치:** `feature/blazux-vllm032-evaluation-20261027`, PR #5 병합된 main에서 분기. 이번 첫 커밋은 **본 계획서, 핸드오프 상태 기록, Source Manifest만** 포함하며 vLLM/Docker/모델 적용 코드 변경 없음.
-- 이후 실제 기능 변경은 **Track A만** 우선 진행하며 blazux 고정 SHA, patch 단위 소스 비교, 라이선스/출처 기록, 작은 BF16 합성 데이터 오프라인 시험, 독립 default-OFF flag 및 rollback 확인을 각각 PR로 분리한다. **Track B** `feature/vllm032-bf16ple-port`는 타당성 판단 뒤 별도로 생성하며 현 브랜치에서 vLLM 0.32 전체 이식을 시작하지 않는다. 운영 서비스 변경은 GitHub merge와 무관한 승인 행위다.
+- **blazux 실험 루트(P0):** `feature/blazux-vllm032-evaluation-20261027`, PR #5 병합된 main에서 **과거에 한 번** 분기. 이번 정책이 확정된 후에는 이 브랜치를 기준으로 **Phase마다 별도 새 브랜치**를 만들고, `main`을 새 base로 삼거나 역방향으로 blazux 변경을 반입하지 않는다.
+- 이후 실제 기능 변경은 **Track A Phase 1부터 별도 자식 브랜치**에서 진행하며 blazux PIN/patch provenance, 합성 데이터 오프라인 시험, 독립 default-OFF flag/rollback, Source Manifest를 Phase별 커밋에 반영한다. **Track B** `feature/vllm032-bf16ple-port`는 별도 Go/No-Go 이후 **P0에서 갈라진 형제 실험 브랜치**이며 `main`에서 신규 분기하지 않는다. **이번 실험의 어떠한 PR도 `main`을 대상으로 하지 않는다.** 운영 서비스 변경은 GitHub 리뷰·커밋과 무관한 별도 승인 행위다.
 - `scripts/source-state-manifest.json`은 모든 tracked 파일의 path/mode/Git blob SHA 스냅샷이다. PR #5 머지 직후 **manifest 제외 119개(전체 120개)**였고, 본 계획서 1개 추가 시 **manifest 제외 120개(전체 121개)**를 기록해야 한다. HEAD 이동 시 숫자와 실제 tree를 재확인한다.
 - Manifest 자기참조 제외, 실제 Git blob/mode 전수 비교를 요구한다. `--strict`는 현재 `main`과 기존 승인된 release feature만 허용하므로 이번 신규 feature 브랜치에서 strict PASS를 주장할 수 없다.
 - 기존 GitHub Actions **run=0**, `CI_NOT_VERIFIED`. CI 정상화는 사용자가 별도로 연기한 과제이고, 이번 문서 작업에서 재개하지 않는다.
-- 문서 변경 커밋은 **실 DGX test, vLLM 0.32 이미지 빌드, 호환성 확인 또는 서비스 교체 성공**을 의미하지 않는다. `main`의 검증·운영 보호는 정책적 보호이며 GitHub의 Branch Protection / Ruleset 활성 상태와 구별한다.
+- 문서 변경 커밋은 **실 DGX test, vLLM 0.32 이미지 빌드, 호환성 확인 또는 서비스 교체 성공**을 의미하지 않는다. `main`의 검증·운영 보호 및 **blazux 관련 PR/merge 금지**는 정책적 보호이며 GitHub의 Branch Protection / Ruleset 활성 상태와 구별한다. 새 Phase는 독립 브랜치로만 생성·검증하고 기존 Phase 브랜치의 HEAD는 임의 이동하지 않는다.
 
 ## 7. 위험 목록·중단 기준
 
@@ -269,4 +299,4 @@ scripts/
 - 별도 vLLM 0.32 이미지 빌드, 신규 소유 컨테이너 활성화·회수·rollback, 동시 GPU/메모리 영향 및 실제 A/B 데이터.
 - 실제 서빙 서비스 stop/replace/remove/이관 및 blazux 최적화 개선 주장. 단일 GB10 기존 서비스 보호는 계속 P0이다.
 
-**다음 단계:** (1) **Track A** 1:1 함수·텐서 대조표 → (2) P1 계측·Prefix Cache/Parser 정확성 회귀와 합성 BF16 fixture 준비 → (3) P2 독립 default-OFF 기능별 오프라인 검증·최소 포팅 → (4) 별도 코드 리뷰/필요한 경우 허가된 DGX 평가·동일 조건 A/B → (5) 검증 기능만 `main` PR 병합. **Track B**는 별도 Go/No-Go 결정 후 `feature/vllm032-bf16ple-port`에서 독립 자산으로 착수한다. **현재 실행 중인 레거시는 변경하지 않는다.**
+**다음 단계:** (1) 현 P0 HEAD를 검증하고 **Track A Phase 1 자식 브랜치를 새로 생성** → (2) pinned blazux ↔ 현 preview의 1:1 함수·텐서 대조표 → (3) Phase 1 확정 HEAD에서 **Phase 2 신규 브랜치**를 열어 P1 계측/정확성·합성 BF16 fixture → (4) 각 후속 Phase를 별도 자식 브랜치에서 default-OFF 기능별 검증 → (5) 실험 성과/차단 증거는 **실험 브랜치에만 보존**한다. `main` PR/병합은 어떤 Phase에서도 진행하지 않는다. **Track B**는 Go/No-Go 결정 후 P0에서 `feature/vllm032-bf16ple-port` 형제 브랜치로 분기하여 별도 자산으로 실험한다. **현재 실행 중인 레거시는 변경하지 않는다.**
