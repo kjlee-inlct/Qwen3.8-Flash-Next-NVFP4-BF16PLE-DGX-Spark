@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 DGX 실기 PASS 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 read-only preview ABI triage 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 5 — DGX CPU/Source Gate 실기 PASS (현 최신)
+## 2026-10-27 Track A Phase 5 read-only preview ABI triage 추가 (현 최신, 실행 전)
+
+- **기반:** Phase 5 이전 실기 PASS 코드는 `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94` (144/144 Source, 208/208 unittest XFAIL0, 12조건 합성 PLE CPU benchmark, 설치 preview source inventory). 확정 docs HEAD `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`에서 같은 Phase5의 후속 코드·시험·문서만 커밋. **Phase5를 세분화해 새 Phase를 만들지 않는다**.
+- **이번 추가:** `src/phase5_preview_abi_audit.py`가 vLLM을 import하지 않고 기존 이미지의 설치 소스 경로·SHA256·클래스/함수 인자·blazux pinned anchor를 AST/문자열로 읽는다. qwen4_exp·qwen3_8 트리의 모델 MTP/PLE 후보 파일을 우선 찾고, 후보가 많으면 한계 도달을 명시. symlink·out-of-tree·너무 큰 파일은 읽지 않는다. 실제 preview source patch/load/GPU 실행 없음.
+- **신규 오프라인 회귀:** `tests/test_blazux_phase5_preview_abi_audit.py` 7개; Phase5 `scripts/phase5-check-offline.sh`에 AST 파일 포함. **예상 전체 unit 215, XFAIL 0**이며 새 HEAD의 DGX 실제 실행 결과는 아직 **NOT_RUN**. 조사지의 source string/AST 일치만으로 블록 상태 정확성/Tool Calling/Responses/MTP reduced vocab 기능 PASS 인증 금지.
+- **상세 재현 절차 및 Gate:** [Phase5 Preview vLLM ABI 읽기 전용 triage](BLAZUX-PHASE5-PREVIEW-ABI-READONLY-TRIAGE-20261027.md). Phase5 전용 DGX 체크아웃에서 `git fetch`/clean/ff-only pull 및 소스 검증을 하고, 운영 이미지 ID만 조회하는 `--runtime=runc --network=none --read-only CUDA_VISIBLE_DEVICES=-1` 임시 CPU 컨테이너로 도구 한 번 실행. 사용자 로그와 정확한 SHA를 받은 뒤 같은 Phase5에 영구 보고서 추가.
+- **정확한 외부 pin:** blazux `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`. `qwen38_mtp/ple`의 이전 `ABSENT_OR_RELOCATED`는 지정 경로 부재이지 모듈 자체 부재를 뜻하지 않는다. 실제 모델 MTP/PLE·cache/Parser ABI 승인 보류.
+- **브랜치 보호:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` 불변. 지금 PR/Merge 불필요; 필요할 때 Phase5→Phase4 비병합 Draft PR만. `main` PR/Merge/Cherry-pick/Rebase/Squash/Sync 영구 금지.
+
+---
+
+## 2026-10-27 Track A Phase 5 — DGX CPU/Source Gate 실기 PASS (이전 실측 스냅샷)
 
 - **실제 DGX 검증 코드 SHA:** `feature/blazux-phase5-correctness-mtp-offline@01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`. 사용자 로그: Source Manifest **144/144**, full unit **208/208 OK XFAIL=0**, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` PASS, 최종 `PHASE5_BUNDLED_DGX_OFFLINE_EXECUTION` PASS. 임시 컨테이너/설치 엔진 소스 인벤토리 stdout 근거로 기록.
 - **기존 정확성 회귀 유지:** BF16 PLE workers 1/4 byte exact, Phase3 중복 샤드 reject, Phase4 FAST/Stats 4-way matrix 전부 byte_exact=1.

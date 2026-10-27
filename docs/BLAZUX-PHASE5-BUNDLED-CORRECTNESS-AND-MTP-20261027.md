@@ -8,6 +8,13 @@
 >
 > **핵심 경계:** 이 Phase 5는 실제 설치된 preview vLLM의 `StreamingParserEngine`, `MambaHybrid`, speculative drafter를 패치하는 단계가 **아니다**. 저장소에는 그 프레임워크 본문이 vendored되어 있지 않아 소스 ABI를 모르는 상태에서 적용하면 잘못된 기능 PASS를 만들 수 있다. 합성 oracle 테스트 성공은 실제 prefix hit·Tool Calling·Responses·MTP acceptance 성공과 다르다.
 
+## 2026-10-27 Phase 5 동일 Gate 후속 작업 — read-only preview vLLM ABI triage 준비
+
+- 사용자 DGX의 **원래 208/208 PASS**는 정확한 코드 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`에 대한 실측으로 **변경 없이 보존**. 보고서 이후 Phase 5 최신 docs HEAD `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`에서 작업을 계속한다.
+- 이번 같은 Phase 5의 추가 3개 파일: `src/phase5_preview_abi_audit.py`, `tests/test_blazux_phase5_preview_abi_audit.py` (신규 **7개 stdlib 회귀**), [Preview ABI 읽기 전용 실행 절차](BLAZUX-PHASE5-PREVIEW-ABI-READONLY-TRIAGE-20261027.md). `scripts/phase5-check-offline.sh`를 확장하고 **이전 208 + 신규 7 = 총 215개 unittest/XFAIL 0 (예상)**. 실제 DGX 215개는 아직 **NOT_RUN**.
+- 테스트 역할은 설치된 vLLM 소스의 실제 Qwen4Exp MTP/PLE 경로 후보·MTP/PLE class method 인자명·Mamba/Scheduler block-size·Parser/Responses patch anchor·sha256 drift를 **import/패치 없이 조사**하는 것. **호환성 확정/실제 parser·cache-hit·MTP 출력 검증 아님**. 도구 출력 marker는 `PHASE5_PREVIEW_ABI_SOURCE_AUDIT_DONE_NOT_COMPATIBILITY_CERTIFIED`.
+- 같은 Phase5에서 실행·보고·보완하며 새 Phase 브랜치 생성/PR/Merge하지 않는다. 이전 Phase와 `main` 변경 금지. 기존 운영 컨테이너, weights, HF cache, GPU, 포트 변경 금지.
+
 ## DGX 통합 실기 시험 완료 — 실행 계획 이후 최종 결과
 
 - **정확한 실측 소스 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`**: `PASS_SOURCE_ONLY: 144 tracked file(s)`; **208 tests OK, XFAIL=0**, `PHASE5_SOURCE_AST_OK`, `PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, 최종 `PASS: PHASE5_BUNDLED_DGX_OFFLINE_EXECUTION`.

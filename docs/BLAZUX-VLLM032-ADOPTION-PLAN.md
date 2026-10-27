@@ -6,6 +6,13 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
+## 2026-10-27 Phase 5 동일 브랜치의 read-only preview ABI triage 확장
+
+- 사용자 요청대로 추가 작업도 **Phase 5에 유지**, Phase 증식 금지. 이전 Phase5 synthetic Gate `01c9eb6b...`에서 208/208 PASS를 확인했으나 이는 real prefix hit/real Parser/MTP patch PASS가 아니다.
+- 실제 이미지의 MTP/PLE 모듈 경로가 `ABSENT_OR_RELOCATED`로 나온 **고정 경로 추정 문제**를 해결하기 위해 [Preview 소스 읽기 전용 조사 계획](BLAZUX-PHASE5-PREVIEW-ABI-READONLY-TRIAGE-20261027.md)과 source AST/sha256 조사기, +7 unittest를 같은 Phase에 추가. 소스 비교에는 pinned upstream blazux sha만 사용한다.
+- 조사 결과를 받아 실제 source/ABI patch 가능 범위를 확정할 때까지 `patch_mamba_block_size.py`, Qwen Parser/Responses patch, reduced vocab hook은 **적용하지 않음**. 모델/이미지/캐시/GPU/서빙 변경도 금지. 테스트되지 않은 성능 수치를 만들지 않는다.
+- 이전 브랜치 `main`, P0, Phase1~4 불변. PR이 필요해도 Phase5→Phase4 비병합 Draft review만. `main`으로 PR/merge/squash/cherry-pick/rebase/sync 금지.
+
 ## 2026-10-27 Phase 5 진입 보강 — 우선순위 기능과 Phase 번호 분리
 
 - **Phase(개발 검증 묶음)와 P1/P2/P3(기능 우선순위)는 다르다.** 개발 계획상 Track A는 **Phase 1~4 오프라인 Gate 완료**, 다음 묶음은 **Phase 5 P1 정확성·P2 위험 계약**이며 Phase 6은 승인된 GPU/실 모델 A/B 전용 후보. 이는 *권장 구조*일 뿐 phase 수·검증 통과를 보장하지 않는다. Track B vLLM v0.32는 Go/No-Go를 기다리는 별도 실험 계보.
