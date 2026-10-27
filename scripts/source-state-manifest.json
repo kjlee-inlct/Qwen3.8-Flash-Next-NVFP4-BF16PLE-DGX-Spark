@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 166,
+  "tracked_file_count": 169,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -99,7 +99,8 @@
     "2026-10-27 DGX Phase5 source-only Scheduler block provenance actual command-guarded/tested HEAD 04b871ab632b2a59d55d11f19009c48daa3ce5c0: PHASE5_UNIT_PASS=244 XFAIL0, Source160/160, AST/wrapper PASS; isolated source-only marker PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED and final EXECUTED_NOT_CERTIFIED. Source AST in v1/core/kv_cache_utils.py:640 scheduler_block_size=math.lcm(*group_block_sizes) and :665 hash_block_size=requested or math.gcd(*hashing_sizes), v1/engine/core.py:161 name-based Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size), Scheduler.__init__:174 self.block_size=block_size, Mamba and Scheduler alignment paths still cache_config.block_size. Scan visited 384 Python files 6,448,206 bytes unreadable0 but state PARTIAL due ASSIGN_SITE_LIMIT 64 assignments; import binding and end-to-end return/caller flow UNPROVEN. No runtime patch/ABI/cache correctness/GPU inference/TPS/CI approval. New docs-only SHA/Manifest161 not DGX retested; main/P0/Phase1-4 immutable, no PR/Merge.",
     "2026-10-27 Phase5 narrow EngineCore/KV resolver block-size source-flow bundle from prior docs-only HEAD f61e9dc03162997253e468ab8e33737b680b1b86: fixed-six-source read-only AST, import declaration of resolve_kv_cache_block_sizes/Scheduler, KV group LCM and hash GCD assignment and return, EngineCore resolver call→tuple unpack→Scheduler(block_size=) static candidate, and Mamba/Backend method traces. 15 synthetic stdlib unit tests; previous actual 244 PASS was only at user DGX source HEAD 04b871ab632b2a59d55d11f19009c48daa3ce5c0. New Phase5 code expected total unittest 259/XFAIL0, Manifest164 tracked, but NOT DGX tested and not runtime/caching correctness certified. Static-chain flags always runtime_flow_proven false and patch_approved false. No production vLLM patches/weights/GPU/HTTP/CI; immutable main/P0/Phase1-4, no PR or merge.",
     "2026-10-27 DGX Phase5 narrow KV→EngineCore→Scheduler source-only verified test HEAD bc89de6288889943b50090ac9638ee95c2434a79: Source Manifest 164/164 twice, Wizard mock 38/38, full unittest 259/259 XFAIL0, Source AST + source contracts and isolated narrow AST DONE_NOT_PATCH_APPROVED/EXECUTED_NOT_CERTIFIED. Narrow static_chain 5/6 checks true: KV resolver import, group LCM assignment, return two sizes, EngineCore unpack resolver result and Scheduler ctor block_size kw, while engine_static_imports_scheduler=false due unresolved expected top-level import pattern; status UNRESOLVED_OR_PARTIAL_STATIC_CHAIN, runtime_flow_proven false and patch_approved false. KV resolver has group block sizes g.kv_cache_spec.block_size*dcp for AttentionSpec else unscaled; hash picks prefix-cacheable group subset or all; distinct returns at lines 632/647/657/673 so cannot infer unconditional LCM/GCD. Six source fingerprint SHA256 in report. No runtime engine patch, actual cache correctness, ABI, GPU, model inference, HTTP/TPS, MTP acceptance, PLE throughput or CI. Docs-only report/runbook/handoff/adoption and now 165-file complete Manifest commit NOT itself DGX retested; protect main/P0/Phase1-4 unchanged and no PR/Merge.",
-    "2026-10-27 Phase5 user DGX 3 read-only source inspection outputs from 붙여넣은 텍스트(1)(20261027-114116).txt: CHECK1/CHECK2/CHECK3_SOURCE_INSPECTION_DONE. EngineCore v1/engine/core.py:148 Scheduler=vllm_config.scheduler_config.get_scheduler_cls(), resolving reason why previous direct-import AST check engine_static_imports_scheduler=false, but actual resolved class/override ABI not verified. v1/core/kv_cache_utils.py:627 DCP from parallel config; <=1 KV group returns cache_config.block_size*dcp twice; multi-group AttentionSpec block*dcp vs non-attention spec unscaled and math.lcm; prefix/connector off or Mamba non-align early returns same scheduler/hash size; else prefix-cacheable hashing_sizes or all, prefix_match_unit override or math.gcd, divisibility guard on hashing_sizes. Mamba align Worker add_request:116 uses cache_config.block_size while preprocess Triton uses mamba_spec.block_size and backend kv_cache_spec.block_size; Scheduler alignment uses cache_config.block_size, hash partial uses hash_block_size. Conditional source unit mismatch risk only, NOT observed bug/GPU cache error. Last FULL DGX offline Gate remains tested source bc89de6288889943b50090ac9638ee95c2434a79 with 259/259 unit XFAIL0, Source164/164, Wizard Mock38/38; three source inspections do not rerun full Gate. This docs-only followup Manifest166 HEAD NOT retested on DGX. No runtime/ABI/patch approval, GPU/model/HTTP/TPS/CI operations; main/P0/Phase1-4 unchanged, PR/Merge none."
+    "2026-10-27 Phase5 user DGX 3 read-only source inspection outputs from 붙여넣은 텍스트(1)(20261027-114116).txt: CHECK1/CHECK2/CHECK3_SOURCE_INSPECTION_DONE. EngineCore v1/engine/core.py:148 Scheduler=vllm_config.scheduler_config.get_scheduler_cls(), resolving reason why previous direct-import AST check engine_static_imports_scheduler=false, but actual resolved class/override ABI not verified. v1/core/kv_cache_utils.py:627 DCP from parallel config; <=1 KV group returns cache_config.block_size*dcp twice; multi-group AttentionSpec block*dcp vs non-attention spec unscaled and math.lcm; prefix/connector off or Mamba non-align early returns same scheduler/hash size; else prefix-cacheable hashing_sizes or all, prefix_match_unit override or math.gcd, divisibility guard on hashing_sizes. Mamba align Worker add_request:116 uses cache_config.block_size while preprocess Triton uses mamba_spec.block_size and backend kv_cache_spec.block_size; Scheduler alignment uses cache_config.block_size, hash partial uses hash_block_size. Conditional source unit mismatch risk only, NOT observed bug/GPU cache error. Last FULL DGX offline Gate remains tested source bc89de6288889943b50090ac9638ee95c2434a79 with 259/259 unit XFAIL0, Source164/164, Wizard Mock38/38; three source inspections do not rerun full Gate. This docs-only followup Manifest166 HEAD NOT retested on DGX. No runtime/ABI/patch approval, GPU/model/HTTP/TPS/CI operations; main/P0/Phase1-4 unchanged, PR/Merge none.",
+    "2026-10-27 Track A Phase5 Scheduler dynamic factory and Mamba align state-unit source-only bundle, parent docs-only 3729277eba4d5c7f1e1d6a3603bbbd939ea8661a. Fixed six Python source AST files: config/scheduler.py get_scheduler_cls, EngineCore Scheduler factory local assignment/keyword, Mamba add_request seed vs Mamba group spec/precopy/postprocess align and Scheduler chunk/backend spec; redacted expressions SHA256; never imports installed vLLM. 17 new synthetic stdlib tests including fake block-size boundary arithmetic (16/16 vs 16/32) that is NOT real runtime or bug evidence. Expected full Phase5 unittest 276 XFAIL0 (previous DGX 259 PASS belongs ONLY to source SHA bc89de6288889943b50090ac9638ee95c2434a79); new HEAD DGX NOT_RUN. Source Manifest 169; new source files 3. Always active_scheduler_class_verified false, actual_config_block_equality_verified false, state_slot_correctness_verified false, patch_approved false. No patch/GPU/model/HTTP/TPS/CI, main/P0/Phase1-4 immutable, no PR/Merge."
   ],
   "files": [
     {
@@ -273,9 +274,14 @@
       "blob_sha": "dc5049cc91426a96ee12fa9a15f64a117ec6d5bb"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-SCHEDULER-MAMBA-SLOT-CONTRACT-20261027.md",
+      "mode": "100644",
+      "blob_sha": "739b207a3d15ac97feae17e5f6fcaff43133bdf8"
+    },
+    {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "ae0fda8be3904a379230f1d506acd08f21d43a32"
+      "blob_sha": "a2625e64f1df6b11affef3dd138817298b82eddf"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -290,7 +296,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "fd88451c73c7b2bc473365f70ae70cefd5dfa912"
+      "blob_sha": "98f49d74d764785a2af01b9c41c8f8fe721e7842"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -530,7 +536,7 @@
     {
       "path": "scripts/phase5-check-offline.sh",
       "mode": "100755",
-      "blob_sha": "bf0dd965fcc0e928879eca7e2a0732201efa0674"
+      "blob_sha": "41b926897802c858638cc4b84198a7d7a6bded19"
     },
     {
       "path": "scripts/prepare.sh",
@@ -708,6 +714,11 @@
       "blob_sha": "4d95ef317a76ef49263c57a0b5fd20750761032e"
     },
     {
+      "path": "src/phase5_scheduler_mamba_contract.py",
+      "mode": "100644",
+      "blob_sha": "80fca16a137b7203dd796e7681bd8b0f095d75db"
+    },
+    {
       "path": "src/phase5_scheduler_provenance.py",
       "mode": "100644",
       "blob_sha": "a305d1520601b3902e3ca1f56b52ffee85e4188c"
@@ -836,6 +847,11 @@
       "path": "tests/test_blazux_phase5_preview_abi_audit.py",
       "mode": "100644",
       "blob_sha": "3404d77c77f50d8808861ec7d99a41368c707199"
+    },
+    {
+      "path": "tests/test_blazux_phase5_scheduler_mamba_contract.py",
+      "mode": "100644",
+      "blob_sha": "dc597d92df0793f74d5416496f45dfcda4fa780c"
     },
     {
       "path": "tests/test_blazux_phase5_scheduler_provenance.py",

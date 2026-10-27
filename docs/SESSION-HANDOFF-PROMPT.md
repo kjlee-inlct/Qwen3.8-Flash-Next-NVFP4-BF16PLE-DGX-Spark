@@ -1,12 +1,22 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 최신 3개 소스 검사 결과를 우선한다. Scheduler의 config factory 경유는 확인됐으며 실제 반환 class 및 Mamba state slot 정확성은 미검증. 이전 259/259 DGX Gate PASS는 그대로 보존한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler Dynamic Factory/Mamba Slot 새 Source-only 검증 **준비 상태**를 우선한다. 새 DGX 테스트는 NOT_RUN이고 마지막 실기 259/259 PASS는 기존 소스 SHA에 귀속한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase5 읽기 전용 3개 소스 확인 완료 — 현재 최신
+## 2026-10-27 Phase5 Scheduler Dynamic Factory / Mamba Slot Unit Source Gate — 최신 구현 (DGX 신규 미실행)
+
+- **동일 Phase5 브랜치:** `feature/blazux-phase5-correctness-mtp-offline`. 직전 docs-only HEAD `3729277eba4d5c7f1e1d6a3603bbbd939ea8661a`를 부모로 신규 Source-only 검증 묶음 준비. 새 Phase/PR/Merge 생성 금지. 사용자 DGX에서 실제 **전체** 검증한 마지막 소스 SHA는 `bc89de6288889943b50090ac9638ee95c2434a79`, Source **164/164**, Wizard Mock **38/38**, unit **259/259 XFAIL0**; 이후 3개의 read-only inspection만 실시했으며 unit 재검증 기록은 없음. **이번 신규 분석 코드는 DGX NOT_RUN**.
+- **확정된 3개 source 검사:** `EngineCore.__init__:148` `Scheduler=vllm_config.scheduler_config.get_scheduler_cls()`; 이전 `engine_static_imports_scheduler=false`는 직접 import를 가정한 analyzer의 범위 한계. 실제 Scheduler factory 반환 class/default/override는 아직 미검증. KV resolver은 group count 0/1 `cache_config.block_size*dcp` 두 번 반환; 2+ groups AttentionSpec만 DCP scale 후 LCM; prefix/connector off 또는 Mamba non-align 이면 hash=scheduler로 early return; 나머지 prefix_cacheable group subset GCD/override 및 hashing_sizes divisibility. Mamba `add_request:116`는 `cache_config.block_size` 분모, pre-copy `MAMBA_BLOCK_SIZE=mamba_spec.block_size`, Scheduler aligned split은 `cache_config.block_size`, backend는 `kv_cache_spec.block_size`. 실제 두 값이 다른지 모름.
+- **신규 파일:** `src/phase5_scheduler_mamba_contract.py` 읽기 전용 고정 6파일(AST, SHA, SchedulerConfig.get_scheduler_cls, EngineCore factory assignment, Mamba group·seed·precopy·postprocess, Scheduler and backend spec field). `tests/test_blazux_phase5_scheduler_mamba_contract.py` **신규 17개 synthetic Python/CPU tests** (가상 block-size 16/16, 16/32 경계 비교는 **실제 GPU slot bug의 증거가 아님**). `scripts/phase5-check-offline.sh` Source AST gate 추가. [동일 Phase5 runbook](BLAZUX-PHASE5-SCHEDULER-MAMBA-SLOT-CONTRACT-20261027.md). **전체 목표 unittest 276/XFAIL0, Manifest 169개**, 신규 DGX 미실행. ※ 과거 전체 259 PASS를 신규 276 PASS로 올려 적지 말 것.
+- **적용 승인 경계:** 모든 AST checks true여도 `active_scheduler_class_verified=false`, `actual_config_block_equality_verified=false`, `state_slot_correctness_verified=false`, `patch_approved=false`. 실제 Scheduler class/value, Mamba align context/seed/copy/restore, prefix hits 및 GPU/실 모델 동작 전부 미검증. Blazux 5계열 아무 patch도 설치 엔진에 적용 금지. Docker/weights/HF cache/ports/GPU/HTTP/TPS/CI/서빙 조작 금지.
+- **GitHub 운영 규칙:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` immutable. `main` 대상 PR/merge/rebase/cherry-pick/squash/sync 금지, 현재 PR/Merge 불필요. 동일 Phase5에서만 별도 Source/CPU fixture 보강.
+
+---
+
+## 2026-10-27 Phase5 읽기 전용 3개 소스 확인 완료 — 이전 실측 최신
 
 - **사용자 업로드** `붙여넣은 텍스트(1)(20261027-114116).txt`는 DGX 소스 inspection `CHECK1_SOURCE_INSPECTION_DONE` / `CHECK2_SOURCE_INSPECTION_DONE` / `CHECK3_SOURCE_INSPECTION_DONE` 세 마커. 운영 이미지 ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`에서 별도 read-only, runc, network=none, NVIDIA_VISIBLE_DEVICES=void 컨테이너로 Python AST/source 조회. **이번 3개 검사에는 259 unittest/164 manifest 재실행 내용이 없다.** 최근 독립 전체 Gate PASS는 사용자 DGX 소스 `bc89de6288889943b50090ac9638ee95c2434a79`에서 259/259 XFAIL0, Source164/164, Mock38/38. 해당 실측 문서 이전 docs-only HEAD `17cfbc5b087a9245e2645a44131bd35f47dd7f40`; 이번 보고서/Manifest만 바꾼 새 docs SHA는 DGX 재시험이 아니다.
 - **CHECK1 Scheduler binding 해결된 의문:** `v1/engine/core.py:148`에서 `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`. :157–159에서 `resolve_kv_cache_block_sizes` tuple unpack, :161에서 그 지역 `Scheduler` 호출. 이전 narrow AST의 `engine_static_imports_scheduler=false`는 **직접 import가 아닌 runtime config class factory 설계**를 analyzer가 모델링하지 못해 발생한 한정 false; **실제 선택된 클래스/사용자 설정/ABI는 미확인**. 기존 5/6 기록은 역사적 분석기 출력으로 보존; 새 사실을 근거 없이 6/6 통과로 변경하지 않는다.

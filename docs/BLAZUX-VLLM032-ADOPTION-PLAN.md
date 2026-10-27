@@ -6,7 +6,14 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 Scheduler factory / KV Resolver / Mamba Block 3개 읽기 전용 조사 실측 — 최신
+## 2026-10-27 Phase5 Scheduler Factory / Mamba Slot 블록 크기 Source-only Gate 준비 (신규 DGX NOT_RUN)
+
+- 최근 3개 실제 소스 검사는 `v1/engine/core.py:148` `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`, KV resolver DCP/LCM/GCD/조기 반환, Mamba Worker `cache_config.block_size` seed와 preprocess `mamba_spec.block_size`를 확인. **실제 활성 Scheduler 클래스, cache_config 및 MambaSpec 수치 동일 여부, SSM slot copy/restore 정확성은 미검증**. 마지막 전체 DGX 시험 코드 SHA `bc89de6288889943b50090ac9638ee95c2434a79`에서 259/259 XFAIL0, Source164/164, Mock38/38. 이 값을 신규 시험 결과로 재사용하지 않는다.
+- [동일 Phase5 후속 Source/CPU runbook](BLAZUX-PHASE5-SCHEDULER-MAMBA-SLOT-CONTRACT-20261027.md) — 설치 vLLM import/modify/GPU 없이 `config/scheduler.py` 등의 6파일 AST를 읽어 `SchedulerConfig.get_scheduler_cls` 메서드, EngineCore factory assignment 및 Scheduler ctor, Mamba group/spec/seed/align context/precopy/postprocess/Scheduler/cache backend를 검토. Synthetic `(N-1)//B` 경계 case는 가상 **16=16 / 16!=32** 비교로만 제한; 실제 버그나 slot address mismatch 인증 아님.
+- 신규 **17개 synthetic stdlib 단위시험** 추가, 목표 전체 **276개 XFAIL0**, Source Manifest 목표 **169개**, **새 HEAD DGX NOT_RUN**. 정확한 Scheduler class/default/override와 실제 Model KV group config를 확인하지 않고 `patch_mamba_block_size.py`나 Parser/Responses/MTP hook을 적용하지 않는다. **APPLY_APPROVED=0**.
+- 계속 Phase5 하나만 사용하고 TrackB/Phase6 실제 GPU/엔진 실험은 사용자 별도 승인. 운영 Docker/모델/weights/HF cache/ports/HTTP/TPS/CI 및 `main`·P0·Phase1~4 보호, PR/Merge 금지.
+
+## 2026-10-27 Phase5 Scheduler factory / KV Resolver / Mamba Block 3개 읽기 전용 조사 실측 — 이전 확인
 
 - 사용자 DGX 제공 [3항목 소스 실측 정본](BLAZUX-PHASE5-DGX-THREE-SOURCE-CHECKS-20261027.md): `CHECK1/2/3_SOURCE_INSPECTION_DONE`, 별도 CPU-only read-only 검사. 이 출력은 **259 unittest/164 source Manifest의 재시험이 아니다**. 직전 확정 full DGX test 소스 `bc89de6288889943b50090ac9638ee95c2434a79`, 259/259 XFAIL0, Source164/164, Wizard Mock38/38. 이전 docs-only HEAD `17cfbc5b087a9245e2645a44131bd35f47dd7f40`는 실제 test SHA가 아님.
 - **Scheduler factory:** `v1/engine/core.py:148` `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`를 확인해 기존 `engine_static_imports_scheduler=false`(직접 import 기대)가 false였던 이유를 설명. :157 tuple unpack KV resolver→:161 생성자 block_size 전달. 다만 실제 config가 어떤 클래스를 반환할지는 미확인, 기존 test 5/6을 6/6이라 재표기하면 안 됨.
