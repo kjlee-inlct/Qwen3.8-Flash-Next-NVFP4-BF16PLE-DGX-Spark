@@ -1,8 +1,17 @@
 # Track A Phase5 — Scheduler Dynamic Factory와 Mamba State Slot 블록 단위 Source-only Gate
 
-> 기준 2026-10-27 Asia/Seoul. **신규 분석 코드·17 synthetic tests 준비 / 신규 DGX 실행 NOT_RUN / 실제 blazux patch 적용 승인 0건 / GPU·모델·운영 서비스 미접근.** 기존 `feature/blazux-phase5-correctness-mtp-offline` 브랜치 하나에서 진행.
+> 기준 2026-10-27 Asia/Seoul. **신규 DGX SOURCE/UNIT GATE PASS: 276/276 XFAIL0, Source169/169, source AST 10/10; 실제 patch 승인 0건, active Scheduler/config block equality/state slot 정확성 미검증.** 기존 `feature/blazux-phase5-correctness-mtp-offline` 브랜치 하나에서 진행.
 >
 > 직전 사용자 전체 DGX Gate PASS: code `bc89de6288889943b50090ac9638ee95c2434a79`, unit **259/259 XFAIL0**, Source Manifest **164/164**, Wizard Mock **38/38**. 이후 3개 읽기 전용 확인은 실제 이미지에서 별도로 수행; 해당 사실을 문서화한 기준 **docs-only HEAD `3729277eba4d5c7f1e1d6a3603bbbd939ea8661a`**는 신규 소스의 테스트 SHA가 아니다. [3개 검사 실측 정본](BLAZUX-PHASE5-DGX-THREE-SOURCE-CHECKS-20261027.md). 고정 blazux upstream `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`.
+
+## 사용자 DGX 실측 결과 — 최신 (기존 계획보다 우선)
+
+- **실제 시험 소스 HEAD** `a5376cc06536ce786cdb6db8425e26e21b608910`: `Ran 276 tests`, `PHASE5_UNIT_PASS=276; XFAIL=0`, `PHASE5_SOURCE_AST_OK`, `PASS_SOURCE_ONLY: 169 tracked file(s)` 및 `PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` 출력, `PHASE5_SCHEDULER_MAMBA_CONTRACT_DONE_NOT_PATCH_APPROVED`/최종 `EXECUTED_NOT_CERTIFIED` 정상 종료. 이번 로그에 Wizard Mock의 **개별 수치**는 나오지 않아 38/38을 새 HEAD의 명시적 실측으로 쓰지 않는다.
+- 설치된 6개 Python 소스 AST 모두 `PARSEABLE_ONLY`, **source_checks 10/10 true**, `missing_source_checks=[]`. 그러나 `active_scheduler_class_verified=false`, `actual_config_block_equality_verified=false`, `state_slot_correctness_verified=false`, `patch_approved=false`.
+- `SchedulerConfig.get_scheduler_cls()`에는 **4개 정적 반환 위치**: :175 `AsyncScheduler`, :178 `Scheduler`, :190 `cast(type[...],self.scheduler_cls)`, :191 `resolve_obj_by_qualname(self.scheduler_cls)`. 실제 분기 조건·활성 클래스는 확인하지 않았다.
+- Worker `add_request:116`은 `cache_config.block_size` 분모, `preprocess_state`는 `mamba_spec.block_size` MAMBA_BLOCK_SIZE, `postprocess_state:339`은 `run_fused_postprocess_align`, Scheduler aligned split은 `cache_config.block_size`, backend는 `kv_cache_spec.block_size`. `CacheConfig.__post_init__`의 `METHOD_ABSENT`는 검사 대상으로 지정된 메서드가 없다는 뜻일 뿐 전체 cache config 미구현을 뜻하지 않는다.
+- Synthetic `16/16` vs `16/32`는 토큰 17에서 seed index 1 vs 0을 보여주지만 실제 모델의 block 차이·kernel state slot bug는 **검증하지 않음**.
+- [Phase5 DGX Scheduler/Mamba Source Contract 실측 보고서](BLAZUX-PHASE5-DGX-SCHEDULER-MAMBA-CONTRACT-RESULTS-20261027.md)에 6파일 SHA256·10개 check·미해결 Gate 기록. **문서만 추가한 후속 Git SHA는 DGX에서 276 unit을 다시 시험한 소스 SHA가 아님.** 운영 서비스/GPU/모델/engine patch 미변경.
 
 ## 1. 이번 확인의 근거
 

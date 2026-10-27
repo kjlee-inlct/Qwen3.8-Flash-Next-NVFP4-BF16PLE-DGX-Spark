@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler Dynamic Factory/Mamba Slot 새 Source-only 검증 **준비 상태**를 우선한다. 새 DGX 테스트는 NOT_RUN이고 마지막 실기 259/259 PASS는 기존 소스 SHA에 귀속한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler/Mamba Source Contract **DGX 276/276 PASS 실측 증거**가 최신이다. 소스 검사 10/10 true는 실제 active Scheduler/config block equality/slot correctness 인증이 아니며 패치 승인 0건이다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase5 Scheduler Dynamic Factory / Mamba Slot Unit Source Gate — 최신 구현 (DGX 신규 미실행)
+## 2026-10-27 Phase5 Scheduler/Mamba Source Contract DGX 276 PASS — 현 최신
+
+- **사용자 실제 DGX 소스 HEAD `a5376cc06536ce786cdb6db8425e26e21b608910`**: `Ran 276 tests`, `PHASE5_UNIT_PASS=276; XFAIL=0`, `PHASE5_SOURCE_AST_OK`, `PASS_SOURCE_ONLY: 169 tracked file(s)`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` PASS, isolated `PHASE5_SCHEDULER_MAMBA_CONTRACT_DONE_NOT_PATCH_APPROVED` 및 `EXECUTED_NOT_CERTIFIED`. 설치 6파일 `PARSEABLE_ONLY`, static `source_checks` **10/10 true**, `missing_source_checks=[]`. Wizard Mock 개별 **38/38 수치는 이번 사용자 발췌 로그에는 없으므로 해당 숫자를 새 SHA의 독립 실측으로 기록 금지**. 마지막 259/259은 이전 코드 `bc89de62...`의 역사적 Gate.
+- **Factory의 source 반환 네 분기 위치**: `config/scheduler.py:175` `AsyncScheduler`, :178 `Scheduler`, :190 `cast(type[...],self.scheduler_cls)`, :191 `resolve_obj_by_qualname(self.scheduler_cls)`. `EngineCore.__init__:148`에서 local `Scheduler = vllm_config.scheduler_config.get_scheduler_cls()`, :161 ctor kw call. 그러나 branch predicates/actual config class/override·스케줄러 서빙 ABI는 여전히 미확인. `active_scheduler_class_verified=false`.
+- **Mamba/Cache:** `MambaHybridModelState.add_request:116` seed = `(N-1)//self.cache_config.block_size`, group `_get_mamba_group_info`, align ctx helper `_ensure_align_ctx:135–175`, preprocess `MAMBA_BLOCK_SIZE=mamba_spec.block_size`, `ctx.run_fused_precopy:218`, `self._mamba_ctx.run_fused_postprocess_align:339`, scheduler aligned split `cache_config.block_size`, backend `kv_cache_spec.block_size`. 실제 **`actual_config_block_equality_verified=false`, `state_slot_correctness_verified=false`**. Synthetic 16/16과 16/32의 토큰17 index (1 vs 0)는 math sensitivity일 뿐 실 장애 증거 아님. `CacheConfig.__post_init__` `METHOD_ABSENT`는 그 메서드가 없다는 좁은 의미.
+- **영구 보고서:** [Phase5 DGX Scheduler/Mamba Contract 결과](BLAZUX-PHASE5-DGX-SCHEDULER-MAMBA-CONTRACT-RESULTS-20261027.md) 및 [runbook](BLAZUX-PHASE5-SCHEDULER-MAMBA-SLOT-CONTRACT-20261027.md). 6개 installed preview source SHA256, ten source checks, 상세 AST 및 검사 경계 기록. 해당 보고서/Source Manifest의 **docs-only 후속 Git SHA는 DGX에서 276 테스트를 재실행한 SHA가 아니다.**
+- **다음 같은 Phase5:** Scheduler factory default/override 분기 predicate·active class의 실 config (승인된 read-only 범위), CacheConfig vs MambaSpec block-size 공급자와 실제 값, `_ensure_align_ctx`/precopy/postprocess fused state slot 경계·복원 계약을 Source/합성 CPU로 좁혀 검증. **`patch_approved=false`**, blazux Mamba/Tool/Responses/MTP 5계열 모두 실제 패치 승인 0. 운영 Docker/model/weights/HF cache/ports/GPU/HTTP/CI 및 실 prefix hit/TPS 미검증/미변경.
+- **보호:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` 불변; 현재 PR/Merge 불필요, `main` PR/Merge/Cherry-pick/Rebase/Squash/Sync 영구 금지. 계속 단일 Phase5만 사용.
+
+---
+
+## 2026-10-27 Phase5 Scheduler Dynamic Factory / Mamba Slot Unit Source Gate — 이전 구현 계획 (DGX 당시 미실행)
 
 - **동일 Phase5 브랜치:** `feature/blazux-phase5-correctness-mtp-offline`. 직전 docs-only HEAD `3729277eba4d5c7f1e1d6a3603bbbd939ea8661a`를 부모로 신규 Source-only 검증 묶음 준비. 새 Phase/PR/Merge 생성 금지. 사용자 DGX에서 실제 **전체** 검증한 마지막 소스 SHA는 `bc89de6288889943b50090ac9638ee95c2434a79`, Source **164/164**, Wizard Mock **38/38**, unit **259/259 XFAIL0**; 이후 3개의 read-only inspection만 실시했으며 unit 재검증 기록은 없음. **이번 신규 분석 코드는 DGX NOT_RUN**.
 - **확정된 3개 source 검사:** `EngineCore.__init__:148` `Scheduler=vllm_config.scheduler_config.get_scheduler_cls()`; 이전 `engine_static_imports_scheduler=false`는 직접 import를 가정한 analyzer의 범위 한계. 실제 Scheduler factory 반환 class/default/override는 아직 미검증. KV resolver은 group count 0/1 `cache_config.block_size*dcp` 두 번 반환; 2+ groups AttentionSpec만 DCP scale 후 LCM; prefix/connector off 또는 Mamba non-align 이면 hash=scheduler로 early return; 나머지 prefix_cacheable group subset GCD/override 및 hashing_sizes divisibility. Mamba `add_request:116`는 `cache_config.block_size` 분모, pre-copy `MAMBA_BLOCK_SIZE=mamba_spec.block_size`, Scheduler aligned split은 `cache_config.block_size`, backend는 `kv_cache_spec.block_size`. 실제 두 값이 다른지 모름.
