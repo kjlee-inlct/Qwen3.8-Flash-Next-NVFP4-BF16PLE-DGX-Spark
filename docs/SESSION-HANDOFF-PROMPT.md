@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 4 DGX 실측 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 5 오프라인 작업 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 4 DGX 통합 CPU 검증 PASS — 현 최신 상태
+## 2026-10-27 Track A Phase 5 — P1 정확성 및 P2 MTP 위험 오프라인 통합 (최신)
+
+- **실험 부모와 현재 브랜치:** Phase4 최종 실측 기록 HEAD `69860277122dffe3082c5b065e4361a571317a8e`에서 단일 `feature/blazux-phase5-correctness-mtp-offline` 자식 생성. P0/Phase1/Phase2/Phase3/Phase4 및 `main` ref 불변. User requirement: *가능한 작업은 안전성/rollback 경계 기준으로 묶어 Phase 증가 억제*. Phase5 결과/추가 fixture/수정도 동일 Phase 내 커밋.
+- **이번 구현 범위:** `src/phase5_offline_contracts.py`와 `tests/test_blazux_phase5_contracts.py`의 **Mamba block=1600 vs QSA=16 state index 및 cache alignment CPU reference**, Tool Calling / Chat-vs-Responses **client-side 안전계약·schema·stream terminal event oracle**, **MTP reduced draft vocab 위험 / subset selection·conceptual acceptance 변화 oracle**. 총 신규 stdlib 테스트 **14개(예상)**. 실제 vLLM engine parser/cache/MTP logits patch를 구현했다고 주장하지 않는다.
+- **추가 CPU/읽기 전용 조사:** `src/test_ple_phase5_bench_cpu.py` 합성 PLE OFF/ON small-N CPU wallclock measurement (통계 OFF, 21 repeats/4 warmup, real 95GiB 성능 주장은 금지), `src/phase5_vllm_source_inventory.py`는 import/설치 없이 vLLM Python source SHA/AST symbols를 read-only 확인. 모두 사용자가 실제 DGX에서 실행하기 전에는 **NOT_RUN**. 신규 `scripts/phase5-check-offline.sh`가 Manifest/mock/unit/audit/브랜치 보호 시험을 하나의 Gate로 묶는다.
+- **검증 범위:** [Phase5 통합 오프라인 계획 및 재현 명령](BLAZUX-PHASE5-BUNDLED-CORRECTNESS-AND-MTP-20261027.md) 참고. 기존 unittest **194개+신규 14개=208개(예상)** 및 XFAIL=0, Source Manifest 전체 일치, 기존 Phase3 G2-01/Phase4 4-mode 재실행, CPU microbench·vLLM 소스 목록이 사용자의 DGX에서 실제 출력되기 전까지 Gate PASS를 주장하지 않는다. MTP 축소 vocabulary는 실 quality/acceptance 미검증으로 **적용 보류**.
+- **위험·다음 분기:** installed preview Qwen parser/Responses, hybrid Mamba scheduler, MTP compute logits 실제 ABI는 vendored가 아니므로 BLOCKED_BY_UNVENDORED_UPSTREAM. 실제 GPU/HTTP/모델+MTP acceptance 시험과 Track B vLLM 0.32는 별도 Go/No-Go/사용자 승인 선행. 운영 container/ports 8000·18300, HF cache/model/receipts 절대 변경하지 않는다.
+- **PR/머지 정책:** 현재 **불필요**. 필요하면 `head=feature/blazux-phase5-correctness-mtp-offline` → `base=feature/blazux-phase4-ple-cpu-bundle`의 리뷰 전용 비병합 Draft PR만, **merge하지 않음**. `main` 대상 PR/Merge/Cherry-pick/Rebase/Squash/Sync **영구 금지**.
+
+---
+
+## 2026-10-27 Track A Phase 4 DGX 통합 CPU 검증 PASS — 이전 인수인계
 
 - **실측 소스 HEAD:** `feature/blazux-phase4-ple-cpu-bundle@a90eb081a9d85d290d191674c303d33cadb6f22d`. 사용자가 제공한 DGX 로그: **Source Manifest 137/137, full unit 194/194, XFAIL=0**, 마지막 `PHASE4_BUNDLED_CPU_SOURCE_CONTRACTS` PASS. wrapper에는 mocks/deployment manifest/bash/publication audit/clean checkout/origin 안전검사도 포함되지만, 로그에 개별 mock 개수는 따로 제시되지 않았다.
 - **하나의 CPU 임시 시험 묶음:** 기존 BF16 PLE `workers=1 chunk=1024`·`workers=4 chunk=2` byte-exact PASS, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK`, `PHASE2_PLE_CPU_ALL_OK`; 신규 `VLLM_PLE_FAST_GATHER`와 `VLLM_PLE_PHASE_STATS`의 OFF/OFF, ON/OFF, OFF/ON, ON/ON **4/4 byte_exact PASS**, `PHASE4_CPU_MATRIX_ALL_OK`, `PHASE4_COMBINED_OFFLINE_VERIFICATION`.

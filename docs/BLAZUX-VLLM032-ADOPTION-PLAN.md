@@ -6,6 +6,13 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
+## 2026-10-27 Phase 5 진입 보강 — 우선순위 기능과 Phase 번호 분리
+
+- **Phase(개발 검증 묶음)와 P1/P2/P3(기능 우선순위)는 다르다.** 개발 계획상 Track A는 **Phase 1~4 오프라인 Gate 완료**, 다음 묶음은 **Phase 5 P1 정확성·P2 위험 계약**이며 Phase 6은 승인된 GPU/실 모델 A/B 전용 후보. 이는 *권장 구조*일 뿐 phase 수·검증 통과를 보장하지 않는다. Track B vLLM v0.32는 Go/No-Go를 기다리는 별도 실험 계보.
+- **Phase 5 하나의 브랜치** `feature/blazux-phase5-correctness-mtp-offline` (Phase4 확정 HEAD `69860277122dffe3082c5b065e4361a571317a8e`의 자식): Prefix cache/Mamba state index·Tool Calling/Responses error/event policy·MTP reduced draft vocab 위험을 **합성 CPU oracle으로 검토**. PLE Fast Gather 소형 CPU benchmark, 설치된 preview/vLLM 소스 SHA/AST 읽기 전용 inventory 포함. [Gate5 합본 문서](BLAZUX-PHASE5-BUNDLED-CORRECTNESS-AND-MTP-20261027.md).
+- **현재 구현하지 않는 기능:** Mamba/scheduler 실 코드 패치, Tool Parser/Responses serving monkeypatch, reduced vocab `lm_head` subset patch, GPU pinned H2D, tokenizer/모델 95GiB 직접 접근. 이 영역은 엔진 ABI 검증과 사용자 승인 전 **NOT_IMPLEMENTED/NOT_VERIFIED**. 특히 P1 cache/tool 회귀 oracle 통과를 실제 엔진 정합성 PASS로 표시하지 않는다. MTP reduced vocab은 실제 acceptance/다국어/EOS/클라이언트 품질 및 이전 Orcarouter BF16 MTP 31/31 보존이 입증될 때까지 **REJECT_AS_DEFAULT**.
+- **브랜치/PR 정책:** 이전 Phase와 `main` 영구 불변, 소스 evidence/Manifest 및 raw DGX 로그의 HEAD 분리, `main` 대상 PR/merge/rebase/cherry-pick/squash/sync 절대 금지. 같은 Gate에 속하는 후속 fix/fixture는 새 Phase 대신 현재 Phase 5에 커밋.
+
 ## 2026-10-27 최신 운영 규칙 보강 — Phase 묶음 진행
 
 > 아래 항목이 본 문서 최초 작성 당시의 단계별 Phase 설명보다 **최신**이다. 사용자 요청에 따라 같은 위험·승인·검증 경계를 공유하는 작업은 단일 Phase의 복수 독립 커밋으로 수행한다. 세부 프로그램과 고정 SHA는 [Phase 4 통합 Gate 문서](BLAZUX-PHASE4-BUNDLED-PLE-CPU-20261027.md)를 우선한다.

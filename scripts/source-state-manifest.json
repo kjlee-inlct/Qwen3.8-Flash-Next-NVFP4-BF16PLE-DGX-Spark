@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 138,
+  "tracked_file_count": 144,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -86,7 +86,8 @@
     "2026-10-27 Track A Phase4 bundle feature A commit: independent default-OFF VLLM_PLE_FAST_GATHER (VLLM_PLE_FAST_GATHER_ROWS threshold) for small-N inline CPU gather, preserving baseline dedup/threadpool when off. Pinned external blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa behavior adapted to internal preview contract; CPU/DGX benchmark NOT_RUN. Next Phase4 commit supplies independent stats and combined tests. Protected branches unchanged.",
     "2026-10-27 Track A Phase4 feature B separately commited: VLLM_PLE_PHASE_STATS=0 by default. When enabled, local per-table lock-guarded CPU gather calls/errors/rows/logical returned bytes/elapsed seconds/fast calls, no Prometheus, no background log/timer or claimed NVMe I/O. Stats OFF delegates directly to original gather algorithm (as wrapped in feature A). No GPU/DGX execution yet; combined tests in following Phase4 commit.",
     "2026-10-27 Phase4 bundled Gate A+B: separate feature commits 4aa692624f95008abbd76f808791b524335fb0c7 (default-off VLLM_PLE_FAST_GATHER) and b83ecc66a70e53515fcd0992b51dc705236778e1 (default-off VLLM_PLE_PHASE_STATS) from immutable Phase3 final HEAD 760f227e46a358445db3d3931b5efbe40de5f609. Combined stdlib flags regression and actual NumPy/PyTorch BF16 4-way flag matrix / G2-01 guard CPU test under single Phase4 runner; expect unittest 194 XFAIL=0 but DGX Phase4 NOT_RUN until user tests. No GPU, vLLM ABI port, HTTP bench, madvise, Prometheus, Docker changes. Future same-safety tests/fixes/docs stay inside this Phase to reduce Phase proliferation. Never PR/merge/cherry-pick/rebase to main; protect all previous branches.",
-    "2026-10-27 Phase 4 user DGX measured exact source SHA a90eb081a9d85d290d191674c303d33cadb6f22d: source 137/137 PASS, unittest 194 OK and XFAIL=0, Phase4 offline source PASS, previous PLE BF16 workers 1 and 4 byte-exact, Phase3 duplicate guard PASS, all four combinations of FAST_GATHER and PHASE_STATS byte_exact=1, PHASE4_CPU_MATRIX_ALL_OK, PHASE4_COMBINED_OFFLINE_VERIFICATION PASS. This new docs+Source Manifest SHA was NOT retested on DGX. GPU/model/vLLM/pinned H2D/TPS A-B/CI not run. Phase count kept low: same offline risk/test/rollback tasks stay in Phase4. Previous Phase and main heads protected; no PR/merge."
+    "2026-10-27 Phase 4 user DGX measured exact source SHA a90eb081a9d85d290d191674c303d33cadb6f22d: source 137/137 PASS, unittest 194 OK and XFAIL=0, Phase4 offline source PASS, previous PLE BF16 workers 1 and 4 byte-exact, Phase3 duplicate guard PASS, all four combinations of FAST_GATHER and PHASE_STATS byte_exact=1, PHASE4_CPU_MATRIX_ALL_OK, PHASE4_COMBINED_OFFLINE_VERIFICATION PASS. This new docs+Source Manifest SHA was NOT retested on DGX. GPU/model/vLLM/pinned H2D/TPS A-B/CI not run. Phase count kept low: same offline risk/test/rollback tasks stay in Phase4. Previous Phase and main heads protected; no PR/merge.",
+    "2026-10-27 Phase5 one bundled branch from Phase4 frozen docs HEAD 69860277122dffe3082c5b065e4361a571317a8e. Added synthetic stdlib Mamba state slot/cache alignment, chat/Responses tool-client execution gate & SSE terminal oracle, MTP reduced draft vocabulary risk/acceptance conceptual oracle; 14 new expected tests, 208 expected combined unit tests XFAIL=0 (DGX NOT_RUN). Added synthetic Phase4 FAST_GATHER on/off CPU microbenchmark and installed-vLLM SOURCE ONLY import-free inventory, bundled source/CPU runbook, updated adoption/handoff. No preview runtime patch, MTP head subset, GPU or serving/model mutation; no proof of actual prefix-cache, parser, MTP acceptance or TPS improvement. Prior branches/main remain unchanged; PR/merge prohibited to main."
   ],
   "files": [
     {
@@ -195,9 +196,14 @@
       "blob_sha": "d4b0d8975c4790ee658fbefaa61a3b567e82140e"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-BUNDLED-CORRECTNESS-AND-MTP-20261027.md",
+      "mode": "100644",
+      "blob_sha": "a1c74e7d7b66196c55414016cd3fcf08380eeb45"
+    },
+    {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "356f432c131f79faa03116982a2570082d458633"
+      "blob_sha": "90548c28a119ade4e98c0a3a44b725fb57de779a"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -212,7 +218,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "1f50a0334f33a20ba12a899a05704505fc07aa76"
+      "blob_sha": "b2132c49bc2a8b8524ebebcdeecba557c32cf18a"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -450,6 +456,11 @@
       "blob_sha": "67dc92b018cc6aff4755a4e785f9d2097b2dbeab"
     },
     {
+      "path": "scripts/phase5-check-offline.sh",
+      "mode": "100755",
+      "blob_sha": "19f1238de26c7e3e84435f01a6de82d5020d0839"
+    },
+    {
       "path": "scripts/prepare.sh",
       "mode": "100755",
       "blob_sha": "cdf820715a3869b87aad3559b209114748fe22b4"
@@ -600,6 +611,16 @@
       "blob_sha": "463638adc9be5a984927a7dca24626c8b515f800"
     },
     {
+      "path": "src/phase5_offline_contracts.py",
+      "mode": "100644",
+      "blob_sha": "0f63fe6b4bf94918fc65981733a156788b897641"
+    },
+    {
+      "path": "src/phase5_vllm_source_inventory.py",
+      "mode": "100644",
+      "blob_sha": "4ebbdc55320aa858e7eaee71712a3bc91e4e0b6b"
+    },
+    {
       "path": "src/recipe/__init__.py",
       "mode": "100644",
       "blob_sha": "6dd1e25d5a5d1afbe11e8049b21c82223016b0e9"
@@ -660,6 +681,11 @@
       "blob_sha": "3888c3fd0838a9220ce0a4b195c0299d8f1526b3"
     },
     {
+      "path": "src/test_ple_phase5_bench_cpu.py",
+      "mode": "100644",
+      "blob_sha": "17b7d2465cdf6e943667077310ff8003c2bbd36f"
+    },
+    {
       "path": "src/vllm_ple_mmap.py",
       "mode": "100644",
       "blob_sha": "a348a2b8c3b0814c5d8657f3444ce5d39f830987"
@@ -688,6 +714,11 @@
       "path": "tests/test_blazux_phase4_flags.py",
       "mode": "100644",
       "blob_sha": "e3c51085325677bc2069fd2243826c13e87eb320"
+    },
+    {
+      "path": "tests/test_blazux_phase5_contracts.py",
+      "mode": "100644",
+      "blob_sha": "a80c3088daebc3b24ad001b0f2765840c97f6508"
     },
     {
       "path": "tests/test_ci_contract.py",
