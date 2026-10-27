@@ -110,7 +110,8 @@
     "2026-10-28 mandatory evergreen handoff synchronization rule: newly observed user rule, DGX result, error, blockers, missing handoff, test command must update SESSION-HANDOFF-PROMPT.md, adoption plan, canonical evidence/exit report and entire Source Manifest in same Phase5 commit; exact tested SHA must be distinguished from later code/docs SHA. Latest DGX ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5: Source177 PASS, mock38 PASS, unittest Ran310 FAILED(errors=15) owing to new G8 bound-method cls.f implicit self (tiled_spans expects 6 got7), Group B/G1-G8 NOT_RUN. Fix test by cls.f = staticmethod(pure_oracles()['tiled_spans']) and guard existing test against descriptor regression. Local standalone synthetic G8 13824 cases PASS, 23552 copy spans; fixed GitHub HEAD full DGX test NOT_RUN. Last fully DGX PASSED SHA 3c36420998061f7a3e656eb77390c04b7d2ef935 with 300/300 XFAIL0, source176, G1-G7; no runtime/GPU/model/CI/patched/PR/Merge and protected refs unchanged.",
     "2026-10-28 COMPLETE PHASE5 OFFLINE G1-G8 PASS - DGX tested exact source SHA 780b780fc7572226a6a9ff2e52cd8e1921c8738b, user log 붙여넣은 텍스트(1)(20261027-171555).txt: Source Manifest177/177 PASS twice, Wizard Mock38/38, unittest310/310 XFAIL0, source AST+offline wrapper PASS, isolated pinned source G1-G8 PASS, G8 CPU synthetic alignment/tiling 13824 cases, 23552 spans, BATCH_SOURCE_CPU_CHECKS_PASS=25528 (not independent unittest count), original _memcpy_u64_tiled L40-119 printed, final PHASE5_FINAL_OFFLINE_GATE_COMPLETED. Previous ff1f66a DGX unit310 FAILED(errors=15) due Python descriptor auto-self fixed at 780b780; history retained. PHASE5 CPU/offline exit PASS only. Actual active block equality/groups/physical tensor bounds, GPU/Triton state rollback/prefix-cache hit, MTP/Tool/Responses HTTP/bench/CI NOT_VERIFIED; blazux patches ZERO. Latest new docs-only commit has NOT been DGX retested. User rule: always synchronize new rules/evidence/errors/handoff/next steps across SESSION-HANDOFF, ADOPTION, authoritative reports, exit gate, full manifest in SAME authorized branch commit; GitHub CAS direct, ff-only pull and grouped scripts, no download. main/P0/Phase1-4 unchanged, no Phase6 branch, no PR/Merge or operational changes.",
     "2026-10-28 current-work-only new-session handoff anchor added: Phase5 source/CPU DONE only at exact DGX-tested 780b780fc7572226a6a9ff2e52cd8e1921c8738b (unittest310/310, mock38/38, source177, G1-G8); latest prior docs-only HEAD a205a3f958c250e2e30cb20fc99424666b2e0ff5 was not DGX retested. Current task exclusively Phase6 approval/scope and staged grouped Gate oracle design (P6-A read-only active config/ABI, P6-B isolated GPU state/prefix, P6-C MTP/Tool/Responses, P6-D correctness-then-performance). All real runtime/GPU/model/CI Phase6 tasks NOT_RUN/BLOCKED, no Phase6 branch/PR/Merge/patch approval. GitHub open PR 0, Actions runs 0, commit statuses 0 at review. New session must reread current refs/status and documents, avoid copying prior phase histories; follow same-commit handoff/adoption/exit/manifest synchronization, CAS commit and guarded DGX ff-only workflow after scoped approval. This note and successor commit docs-only, not a new DGX Gate PASS.",
-    "2026-10-28: Phase6 branch from Phase5 docs-only 11fd777e; user approved offline gate code/tests/docs GitHub commit only. P6-A supplied snapshot contract is not active runtime; P6-A/B/C/D BLOCKED, DGX/GPU/CI/model/serving/patch/PR/merge NOT_RUN/NOT_APPROVED. See docs/BLAZUX-PHASE6-GATE-PLAN.md and docs/BLAZUX-PHASE6-RESULTS.md. Exact Phase5 DGX tested source 780b780 unchanged."
+    "2026-10-28: Phase6 branch from Phase5 docs-only 11fd777e; user approved offline gate code/tests/docs GitHub commit only. P6-A supplied snapshot contract is not active runtime; P6-A/B/C/D BLOCKED, DGX/GPU/CI/model/serving/patch/PR/merge NOT_RUN/NOT_APPROVED. See docs/BLAZUX-PHASE6-GATE-PLAN.md and docs/BLAZUX-PHASE6-RESULTS.md. Exact Phase5 DGX tested source 780b780 unchanged.",
+    "Phase6 runner enforces exact Phase6 branch independently and invokes non-strict source verifier because strict is release/main-only; non-strict still checks tracked blobs/modes and origin. Do not expand release allowlist."
   ],
   "files": [
     {
@@ -321,7 +322,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "6034e44d1e275639c70e444f313ec573d49adf7a"
+      "blob_sha": "23fbf3b088cb77c1ddebd3248746c474601a6ba4"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
@@ -596,7 +597,7 @@
     {
       "path": "scripts/phase6-gate.sh",
       "mode": "100755",
-      "blob_sha": "cd36b698ad779069b40842227792d95dc27048f3"
+      "blob_sha": "325be49e2c5677df1221b7be96cb2c53d8e5327d"
     },
     {
       "path": "scripts/prepare.sh",

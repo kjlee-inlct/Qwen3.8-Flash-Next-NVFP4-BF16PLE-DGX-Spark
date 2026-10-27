@@ -18,6 +18,8 @@ P6-A -> P6-B -> P6-C -> P6-D. A FAIL/BLOCKED prohibits B; B FAIL/BLOCKED prohibi
 
 ## First integrated bundle and limitations
 
-`scripts/phase6-gate.sh` runs Phase6-specific offline tests and strict source-manifest verification only. Optional `--snapshot PATH` evaluates an operator-supplied *offline JSON snapshot*; its PASS is **snapshot contract PASS only**, never real active configuration P6-A PASS. Without an independently approved, implemented, provenance-verified DGX observer, **P6-A runtime remains BLOCKED**. P6-B/C/D have explicit BLOCKED stubs, not simulated passes. No Docker, GPU, HTTP, CI, model, weights, HF cache, port, production or patch actions.
+`scripts/phase6-gate.sh` runs Phase6-specific offline tests and complete blob/mode source-manifest verification (without release-only strict branch allowlist) only. Optional `--snapshot PATH` evaluates an operator-supplied *offline JSON snapshot*; its PASS is **snapshot contract PASS only**, never real active configuration P6-A PASS. Without an independently approved, implemented, provenance-verified DGX observer, **P6-A runtime remains BLOCKED**. P6-B/C/D have explicit BLOCKED stubs, not simulated passes. No Docker, GPU, HTTP, CI, model, weights, HF cache, port, production or patch actions.
 
 Separate later approval is required for DGX read-only access, GPU execution, model startup, API/ports, performance, CI, patches, PR, and merge. GitHub writes on this branch only; main/P0/Phase1–4/Phase5 protected.
+
+The legacy verifier's `--strict` option intentionally permits only the release/main allowlist; Phase6 runner instead enforces its exact Phase6 branch itself and calls non-strict verification, which still validates all tracked blobs/modes and approved origin. Do not broaden the release allowlist.

@@ -6,7 +6,7 @@ cd "$ROOT"
 [[ "$(git branch --show-current)" == "feature/blazux-phase6-runtime-gates" ]] || { echo "BLOCKED: wrong branch"; exit 2; }
 [[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]] || { echo "BLOCKED: dirty checkout"; exit 2; }
 python3 -m unittest discover -s tests -p 'test_blazux_phase6_*.py' -v
-python3 scripts/verify-source-state.py --strict
+python3 scripts/verify-source-state.py
 echo "PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN"
 # No automatic runtime execution; explicitly supplied snapshot is evaluated as data only.
 if [[ "${1:-}" == "--snapshot" && -n "${2:-}" ]]; then
