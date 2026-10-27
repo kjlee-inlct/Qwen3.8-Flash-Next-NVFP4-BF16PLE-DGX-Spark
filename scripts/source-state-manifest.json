@@ -82,7 +82,8 @@
     "2026-10-27 Track A Phase2 forked from final Phase1 docs HEAD a50fc53721f3d23325dca44eb799f0f388d65951. Added stdlib synthetic BF16 safetensors parser/layout regression, known duplicate-shard XFAIL, real module PyTorch/NumPy CPU-only gather/forward byte-exact fixture, MTP name/dtype 31/31, standalone QSA CPU oracle, isolated runner and Gate2/handoff docs. NOT_RUN: DGX new test scripts, CI, GPU inference, runtime optimizations. No main/P0/Phase1 modifications. Re-verify in dedicated Phase2 DGX checkout.",
     "2026-10-27 DGX Phase2 user-provided logs for exact source HEAD fd9d8cfb6938b82ae979c9804386ffbe084cc81d: source 129/129 twice, wizard mocks 38/38, repository unit 188 completed OK with 1 known expectedFailure in duplicate PLE shard fail-closed regression, bash syntax/publication audit PASS, isolated CPU/PyTorch PLE byte-exact workers=1 and workers=4 output PHASE2_PLE_CPU_ALL_OK. G2-01 OPEN, not full fail-closed PASS. This docs/manifest-only commit has a new SHA; DGX tests not re-run for it. GPU, model inference, performance A/B and CI not verified.",
     "2026-10-27 Track A Phase3 created from immutable Phase2 final docs HEAD 76588845d7742703475ae1f49d5e8f5c174bb77a. G2-01 fix only: src/vllm_ple_mmap.py::_find_shards rejects repeated scanned PLE shard indices before overwrite with ValueError; Phase2 XFAIL promoted to PASS, indexed secondary-header case added, production torch CPU fixture asserts rejection, phase3 runner fails if any unittest XFAIL remains. No Docker/model/weights/serving installation change; DGX Phase3 tests, CI and GPU NOT_RUN. Preserve main/P0/Phase1/Phase2 refs, no PR/merge to main.",
-    "2026-10-27 Phase3 DGX evidence (user-provided) for exact tested source HEAD cb1de387b09786d6be35fec838c6549a78e5417c: source 132/132, 189 unit tests OK, XFAIL=0, PASS PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0. Follow-up CPU fixture stdout: BF16 mmap gather+forward byte-exact workers=1 chunk=1024 and workers=4 chunk=2 PASS, PHASE3_PLE_DUPLICATE_GUARD_ALL_OK, PHASE2_PLE_CPU_ALL_OK. G2-01 CLOSED only for synthetic CPU regressions; serving/GPU/performance/CI NOT_RUN. This docs-only evidence/manifest commit is a new Git HEAD not itself DGX re-tested; protected main/P0/Phase1/Phase2 remain frozen, no PR/merge."
+    "2026-10-27 Phase3 DGX evidence (user-provided) for exact tested source HEAD cb1de387b09786d6be35fec838c6549a78e5417c: source 132/132, 189 unit tests OK, XFAIL=0, PASS PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0. Follow-up CPU fixture stdout: BF16 mmap gather+forward byte-exact workers=1 chunk=1024 and workers=4 chunk=2 PASS, PHASE3_PLE_DUPLICATE_GUARD_ALL_OK, PHASE2_PLE_CPU_ALL_OK. G2-01 CLOSED only for synthetic CPU regressions; serving/GPU/performance/CI NOT_RUN. This docs-only evidence/manifest commit is a new Git HEAD not itself DGX re-tested; protected main/P0/Phase1/Phase2 remain frozen, no PR/merge.",
+    "2026-10-27 Track A Phase4 bundle feature A commit: independent default-OFF VLLM_PLE_FAST_GATHER (VLLM_PLE_FAST_GATHER_ROWS threshold) for small-N inline CPU gather, preserving baseline dedup/threadpool when off. Pinned external blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa behavior adapted to internal preview contract; CPU/DGX benchmark NOT_RUN. Next Phase4 commit supplies independent stats and combined tests. Protected branches unchanged."
   ],
   "files": [
     {
@@ -638,7 +639,7 @@
     {
       "path": "src/vllm_ple_mmap.py",
       "mode": "100644",
-      "blob_sha": "8fc211eb85dc9e2b30779ebdbbc77e448df77798"
+      "blob_sha": "f15c44d19bd57332af253bd7ca742777a6638cf1"
     },
     {
       "path": "tests/phase2_ple_fixtures.py",

@@ -30,6 +30,8 @@ Knobs (env):
   VLLM_PLE_MMAP=1            enable
   VLLM_PLE_MMAP_WORKERS=32   gather threads (page faults overlap across threads)
   VLLM_PLE_MMAP_CHUNK=2048   rows per gather task
+  VLLM_PLE_FAST_GATHER=0    1 = opt in to decode-sized inline CPU gather (default OFF)
+  VLLM_PLE_FAST_GATHER_ROWS=512  max rows in opt-in inline path (not applied when OFF)
   VLLM_PLE_MMAP_PREWARM=0    1 = stream the whole table once at load to fill the
                              page cache with whatever memory is free. Keep this
                              at 0 for a 95.37 GiB BF16 table on a 128 GB system.
@@ -91,6 +93,11 @@ def enabled() -> bool:
     return os.environ.get(ENV_ENABLE, "0").lower() in ("1", "true", "yes")
 
 
+def _env_flag(name: str) -> bool:
+    """Explicit opt-in only; no effect when unset or invalid."""
+    return os.environ.get(name, "0").strip().lower() in ("1", "true", "yes")
+
+
 def _env_int(name: str, default: int) -> int:
     try:
         return int(os.environ.get(name, default))
@@ -144,12 +151,35 @@ class MmapPleTable:
             )
             self.rows_total += rows
         self.pool = ThreadPoolExecutor(max_workers=max(1, int(workers)))
+        # Independent, default-OFF switch: preserve the original dedup+pool
+        # gather contract unless the caller explicitly opts into fast gather.
+        self.fast_gather_rows = (
+            max(0, _env_int("VLLM_PLE_FAST_GATHER_ROWS", 512))
+            if _env_flag("VLLM_PLE_FAST_GATHER") else 0
+        )
 
     def gather(self, ids: np.ndarray) -> np.ndarray:
         """ids: int64 [N] global row ids -> uint8 [N, row_bytes] (a fresh array)."""
         ids = np.ascontiguousarray(ids, dtype=np.int64).reshape(-1)
         if ids.size == 0:
             return np.empty((0, self.row_bytes), dtype=np.uint8)
+        if ids.size <= self.fast_gather_rows:
+            # Opt-in small-N path: no sort/inverse and no ThreadPoolExecutor.
+            # Preserve all caller row order and duplicate IDs byte-for-byte.
+            lo, hi = int(ids.min()), int(ids.max())
+            if lo < 0 or hi >= self.shard_size * len(self.mm):
+                raise IndexError(
+                    f"PLE row id out of range: [{lo}, {hi}] for {self.rows_total} rows"
+                )
+            shard = ids // self.shard_size
+            out = np.empty((ids.size, self.row_bytes), dtype=np.uint8)
+            for si in np.unique(shard):
+                mm = self.mm[int(si)]
+                if mm is None:
+                    raise IndexError(f"PLE shard {int(si)} missing")
+                mask = shard == si
+                out[mask] = mm[ids[mask] - int(si) * self.shard_size]
+            return out
         # Dedupe + sort: repeated n-grams are common, and sorted rows improve
         # locality inside a shard.
         uniq, inverse = np.unique(ids, return_inverse=True)
