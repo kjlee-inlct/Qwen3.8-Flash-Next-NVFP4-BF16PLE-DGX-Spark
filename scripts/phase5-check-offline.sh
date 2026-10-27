@@ -55,12 +55,14 @@ for name in (
     "src/phase5_patch_readiness.py",
     "src/phase5_dependency_trace.py",
     "src/phase5_scheduler_provenance.py",
+    "src/phase5_block_flow_narrow.py",
     "src/test_ple_phase5_bench_cpu.py",
     "tests/test_blazux_phase5_contracts.py",
     "tests/test_blazux_phase5_preview_abi_audit.py",
     "tests/test_blazux_phase5_patch_readiness.py",
     "tests/test_blazux_phase5_dependency_trace.py",
     "tests/test_blazux_phase5_scheduler_provenance.py",
+    "tests/test_blazux_phase5_block_flow_narrow.py",
 ):
     ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
 print("PHASE5_SOURCE_AST_OK")
@@ -73,6 +75,7 @@ scripts/verify-source-state.sh
   echo "STOP: tests modified checkout" >&2; exit 2;
 }
 echo "PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS"
+echo "NOTE: targeted Scheduler LCM/return/consumer block flow runs in isolated CPU-only image"
 echo "NOTE: Scheduler ctor block-size source provenance runs in isolated CPU-only image"
 echo "NOTE: focused source dependency trace runs separately in isolated CPU-only image"
 echo "NOTE: source patch preflight runs separately in isolated CPU-only image"

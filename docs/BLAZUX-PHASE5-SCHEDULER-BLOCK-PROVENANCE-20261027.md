@@ -7,6 +7,12 @@
 >
 > 외부 blazux pinned `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`와 설치 preview vLLM의 패치 호환 여부는 **아직 결정하지 않는다**.
 
+## 동일 Phase5 다음 Gate — EngineCore ↔ KV resolver 좁은 AST 연결 (신규 DGX NOT_RUN)
+
+- 사용자 DGX `04b871ab632b2a59d55d11f19009c48daa3ce5c0`의 244 unit PASS, Source160/160는 **이전 실측**. Source scanner `ASSIGN_SITE_LIMIT=64`로 PARTIAL이므로 광역 스캔을 단순 확장하지 않고 [6파일만 추적하는 소스 분석](BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md)을 추가한다.
+- `src/phase5_block_flow_narrow.py`, `tests/test_blazux_phase5_block_flow_narrow.py`(+15 fixture), AST gate/Source Manifest 업데이트. 새 HEAD 목표 **259 unit/XFAIL0**, 164 source이며 실제 신규 DGX는 **NOT_RUN**.
+- 정적 resolver import, KV LCM assignment, KV return, EngineCore tuple assignment, Scheduler ctor의 각 단계를 분리하며, 모두 일치해도 runtime flow/GPU/SSM slot correctness/patch approval을 주장하지 않는다. 기존 5개 blazux patch family는 여전히 미승인.
+
 ## DGX Source-only 실제 실행 결과 (최신, 이전 실행 계획보다 우선)
 
 - 사용자 첨부 `붙여넣은 텍스트(1)(20261027-102956).txt`: **실측 소스 HEAD `04b871ab632b2a59d55d11f19009c48daa3ce5c0`**, 전체 unittest `PHASE5_UNIT_PASS=244; XFAIL=0`, Source Manifest **160/160**, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`, `PHASE5_SCHEDULER_PROVENANCE_SOURCE_ONLY_DONE_NOT_PATCH_APPROVED` 및 최종 `PHASE5_SCHEDULER_PROVENANCE_EXECUTED_NOT_CERTIFIED` PASS.

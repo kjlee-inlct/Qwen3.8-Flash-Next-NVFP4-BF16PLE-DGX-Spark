@@ -1,8 +1,18 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Scheduler/LCM 소스 추적의 사용자 DGX 244/244 PASS 실측 스냅샷을 우선한다. Source-only 분석은 PARTIAL이고 패치 적용 승인은 없다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 LCM/return/EngineCore 좁은 범위 Source-only trace 최신 준비 상태를 우선한다. 직전 DGX 244 PASS는 검증됐지만 신규 259 unit은 아직 NOT_RUN이다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
+
+---
+
+## 2026-10-27 Phase5 LCM → 반환 → EngineCore 생성자 정밀 조사 구현 — 현재 최신, DGX 실행 전
+
+- **브랜치:** `feature/blazux-phase5-correctness-mtp-offline`, 직전 문서 HEAD `f61e9dc03162997253e468ab8e33737b680b1b86`. 사용자 DGX에서 실제 시험된 Source HEAD는 `04b871ab632b2a59d55d11f19009c48daa3ce5c0`: unit **244/244 XFAIL0**, Source **160/160**, Scheduler provenance AST 종료. 조사 범위는 `ASSIGN_SITE_LIMIT=64`로 **PARTIAL**이었다. 이전 실측과 이번 새 코드의 시험 결과는 절대 혼합하지 않는다.
+- **출처 확보 내용:** `v1/core/kv_cache_utils.py:640`의 `scheduler_block_size=math.lcm(*group_block_sizes)`, :665 `hash_block_size=requested or math.gcd(*hashing_sizes)`와 `v1/engine/core.py:161`의 `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)`는 각각 별개 소스 단서. 실제 KV resolver 반환→EngineCore 지역 변수 대입→Scheduler 생성자 연결, 정확한 imports와 branch 조건은 미확정. Mamba worker `add_request:116`와 Scheduler `_mamba_block_aligned_split:392`는 계속 KV config block_size 사용.
+- **같은 Phase5 신규 구현:** `src/phase5_block_flow_narrow.py` = 설치된 vLLM을 import하지 않는 고정 6 Python 파일 AST 분석. EngineCore 관련 함수 import/variable assignment/ctor keyword와 KV resolver group LCM/GCD/return, Mamba/Scheduler/Backend static traces. `tests/test_blazux_phase5_block_flow_narrow.py` = **신규 15 stdlib synthetic tests**. `scripts/phase5-check-offline.sh` AST gate 포함. [단일 실행 Runbook](BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md). 전체 기대 unit **259/XFAIL0**, Source Manifest **164 tracked**, **현재 신규 HEAD DGX NOT_RUN**.
+- **차단 정책:** 정적 6조건이 다 참이면 `STATIC_CHAIN_CANDIDATE_NOT_RUNTIME_CERTIFIED`, 아니면 `UNRESOLVED_OR_PARTIAL_STATIC_CHAIN`. 반드시 `runtime_flow_proven=false`, `patch_approved=false`. Mamba cache group/LCM/state slot/SSM restore 및 parser/Responses/MTP runtime 미검증. 실제 blazux patch·GPU·운영 Docker·모델·ports·HF cache·HTTP/TPS/CI 금지.
+- **GitHub 보호:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...`, Phase4 `69860277...` immutable. 현재 PR/Merge 불필요, `main` PR/merge/cherry-pick/rebase/squash/sync 영구 금지. 새 Phase 만들지 않고 동일 Phase5에서 계속.
 
 ---
 

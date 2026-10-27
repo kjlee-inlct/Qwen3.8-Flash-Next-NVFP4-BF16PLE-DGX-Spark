@@ -6,7 +6,13 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 Scheduler block-size LCM/생성자 DGX Source-only 실측 (최신)
+## 2026-10-27 Phase5 EngineCore/KV LCM-to-Scheduler 좁은 범위 Source AST Gate (준비, DGX NOT_RUN)
+
+- 직전 실제 사용자 DGX: Source `04b871ab632b2a59d55d11f19009c48daa3ce5c0`, unit **244/244 XFAIL0**, Manifest **160/160**, Scanner `PARTIAL` (일반 block_size 대입 64개 제한). `v1/core/kv_cache_utils.py`의 LCM/GCD 정의 및 `v1/engine/core.py`의 Scheduler ctor 인자는 각각 정적 후보일 뿐 실제 import·반환·변수 대입 경로는 아직 미검증.
+- 이번에도 **Phase5 하나**에서 [좁은 범위 AST 연결 분석](BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md): 고정 6개 설치 source import-free 조회, KV resolver group block-size 구성/LCM/GCD·return, EngineCore의 resolver 호출/tuple unpack 및 Scheduler ctor 키워드 인자를 6개 static check로 분리. 합성 CPU **15 unittest** 추가, 이전 244+15 = **259 expected**, Manifest **164 expected**, 이번 HEAD 실제 DGX 아직 NOT_RUN.
+- 모든 정적 check 일치 시에도 `STATIC_CHAIN_CANDIDATE_NOT_RUNTIME_CERTIFIED`일 뿐이며 Mamba state slot/SSM group/실 cache correctness/Tool/Responses/MTP/GPU/TPS는 별도 검증. **patch_approved=false**. 운영 GPU/model/이미지/weights/ports/HF cache/CI 변경 금지, main/P0/Phase1~4 immutable, PR/Merge 안 함.
+
+## 2026-10-27 Phase5 Scheduler block-size LCM/생성자 DGX Source-only 실측 (이전 실측)
 
 - **사용자 DGX 실제 소스 HEAD `04b871ab632b2a59d55d11f19009c48daa3ce5c0`**: Source Manifest 160/160, `PHASE5_UNIT_PASS=244; XFAIL=0`, Source AST/Wrapper PASS, Scheduler AST tool 종료 marker. [실측 근거 보고서](BLAZUX-PHASE5-DGX-SCHEDULER-PROVENANCE-RESULTS-20261027.md).
 - `kv_cache_utils.py:640` `scheduler_block_size=math.lcm(*group_block_sizes)`; `kv_cache_utils.py:665` `hash_block_size=requested if requested is not None else math.gcd(*hashing_sizes)`; `v1/engine/core.py:161` `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)`; Scheduler ctor `self.block_size=block_size`. **서로 다른 파일의 수식·변수 같은 이름을 실제 call/return flow로 확정하면 안 됨**.
