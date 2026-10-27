@@ -5,6 +5,12 @@
 >
 > 기준: 개인 Fork `feature/blazux-phase5-correctness-mtp-offline` (이 단계의 부모 `f3e5fa32a30cb258acd66a9700c6db2a78eb71cc`), 이전 사용자 실기 소스 HEAD `01c9eb6ba311e3ace5f68ecc49fa56f8e0b37d94`. 원래 Phase4/Phase3/P0/main immutable.
 
+## 다음 Phase5 묶음 — blazux pinned patch source preflight (구현만 완료, DGX 미실행)
+
+- 같은 Phase5 브랜치의 source-only 도구 `src/phase5_patch_readiness.py`와 신규 8 unittest `tests/test_blazux_phase5_patch_readiness.py`를 추가했다. 12개 설치 Python source의 SHA256, class/method AST fingerprint, 함수 인자, 핵심 patch anchor 개수만 보고하며 **원문/절대 경로, 모델/가중치는 수집하지 않는다**. `vllm` import/소스 수정/GPU/운영 Docker 변경 금지.
+- Pinned blazux `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`의 Mamba/Scheduler block, Tool Argument Schema, Literal Marker, Responses terminal, MTP draft vocab **5개 patch-family**의 **source 전제조건/누락/호환성 차단 요소**를 별도 상태로 분류. **어떤 결과도 APPLY_APPROVED가 아니다**.
+- [Phase5 Patch Preflight 읽기 전용 계획·실행 절차](BLAZUX-PHASE5-PATCH-PREFLIGHT-READONLY-20261027.md). 기존 215+8 = **223 unit tests / XFAIL 0 예상**, 실측 전 NOT_RUN. 새로운 결과가 오면 같은 Phase5에서 원본 실기 SHA·docs-only SHA 분리해 영구 기록하고, 작은 작업마다 Phase 번호를 늘리지 않는다.
+
 ## DGX 읽기 전용 ABI triage 실측 완료 — 최초 실행 계획보다 우선
 
 - 검증된 정확한 소스 `9e2d1647357938f6d465eb9b3ce473d03e38e779`, `PASS_SOURCE_ONLY: 148 tracked file(s)`, Wizard Mock **38/38**, unittest **215/215 XFAIL=0**, `PHASE5_SOURCE_AST_OK`, `PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS` 및 `PHASE5_READONLY_ABI_TRIAGE_EXECUTED_NOT_CERTIFIED` 확인.

@@ -52,9 +52,11 @@ for name in (
     "src/phase5_offline_contracts.py",
     "src/phase5_vllm_source_inventory.py",
     "src/phase5_preview_abi_audit.py",
+    "src/phase5_patch_readiness.py",
     "src/test_ple_phase5_bench_cpu.py",
     "tests/test_blazux_phase5_contracts.py",
     "tests/test_blazux_phase5_preview_abi_audit.py",
+    "tests/test_blazux_phase5_patch_readiness.py",
 ):
     ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
 print("PHASE5_SOURCE_AST_OK")
@@ -67,6 +69,7 @@ scripts/verify-source-state.sh
   echo "STOP: tests modified checkout" >&2; exit 2;
 }
 echo "PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS"
+echo "NOTE: source patch preflight runs separately in isolated CPU-only image"
 echo "NOTE: preview ABI triage script is separate; must run in isolated CPU image"
 echo "NOT_VERIFIED: installed vLLM parser/cache ABI, real prefix hit, HTTP APIs,"
 echo "NOT_VERIFIED: MTP acceptance, real PLE throughput, GPU/serving, CI"
