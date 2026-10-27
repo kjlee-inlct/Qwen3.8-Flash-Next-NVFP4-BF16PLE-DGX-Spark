@@ -1,5 +1,14 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+## 2026-10-28 DGX Phase5 G1–G8 오프라인 종료 PASS — 현재 정본 (Phase6 준비)
+
+- **최신 전체 DGX PASS의 정확한 실행 소스 SHA: `780b780fc7572226a6a9ff2e52cd8e1921c8738b`** (별도 Phase5 checkout, user-provided `붙여넣은 텍스트(1)(20261027-171555).txt`): Wizard Mock **38/38**, Python **310/310 XFAIL=0**, Source Manifest **177/177**, AST/오프라인 전체 wrapper PASS, 설치 이미지 고정 소스 검사 **G1–G8 모두 PASS**, **G8 13,824 synthetic alignment/tiling cases / 23,552 spans**, `BATCH_SOURCE_CPU_CHECKS_PASS=25528` (독립 unittest 수 아님), `PHASE5_MAMBA_BATCH_SOURCE_CPU_DONE_NOT_CERTIFIED`, `PASS: PHASE5_BATCH_OFFLINE_AND_PINNED_SOURCE_EXECUTED_NOT_CERTIFIED`, 사용자 쉘 `PHASE5_FINAL_OFFLINE_GATE_COMPLETED`. **Log final status 0; error/traceback 없음.**
+- [DGX 통합 결과 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md), [Phase5 종료 기준과 Phase6 인계](BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md). 첫 G8 실패 SHA `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`의 `310 unittest FAILED(errors=15)`는 Python `staticmethod` binding 오류였으며 **고친 후 `780b780fc7572226a6a9ff2e52cd8e1921c8738b`에서 재시험 PASS로 해결**. 역사적 FAIL 기록을 삭제하지 않는다.
+- **현재 결론: Phase5 scope=소스·CPU 오프라인 Gate PASS 및 마감 가능**. CUDA/Triton 실 GPU 복사, 활성 `CacheConfig.block_size` vs `MambaSpec.block_size` 값, 실제 Mamba 그룹/텐서·물리 블록 범위, prefix-hit/rollback, MTP acceptance, Parser/Tool/Responses HTTP, TPS 및 CI는 **Phase5 PASS에 포함되지 않은 Phase6 후보**, 현재 `NOT_RUN/BLOCKED`. **이것을 검증 없이 패치 승인이나 Phase6 실환경 완료로 주장 금지.**
+- **다음 묶음 Phase6 승인 제안**: (P6-A) 읽기 전용 actual config/group/block table과 Scheduler/Mamba division provenance/ABI evidence, (P6-B) 최소 재현 GPU Mamba pre/postprocess/prefix-hit 및 state integrity, (P6-C) MTP speculative acceptance·Tool/Responses 및 오류 계약, (P6-D) 정확성 전제 충족 뒤 baseline 대비 PP/TG/TPS/메모리/안정성. 운영 컨테이너/모델/weights/HF cache/포트/환경/CI/패치 변경 및 Phase6 브랜치·PR/머지는 **개별 범위 명시 승인 전 금지**. 우선 순서와 각 P6 Gate의 오라클/전제조건을 확정하고 한 번씩 묶어 실행할 것.
+- **문서 동기화 영구 규칙 유지**: 사용자 새 지시, DGX 실측, FAIL/fix, 미해결·연기·다음 Gate마다 동일 브랜치/커밋에서 `SESSION-HANDOFF-PROMPT.md` + `BLAZUX-VLLM032-ADOPTION-PLAN.md` + 정본 결과/종료 기준 + 전체 `source-state-manifest.json` 동기화. GitHub 직접 CAS/FF-only 커밋 → DGX 전용 checkout에서 `pull --ff-only` → 저장소 tracked 통합 스크립트 실행; 파일 다운로드/붙여넣기 배포 금지. **DGX 실측 SHA와 이후 docs-only 기록 커밋 SHA 분리**; docs-only 커밋에서 신규 DGX unit PASS 주장 금지. main/P0/Phase1–4 HEAD 불변, PR/CI 상태 확인.
+
+
 ## 2026-10-28 Phase5 G8 최초 DGX 실패 및 수정 (증거와 규칙 영구 동기화)
 
 - [DGX Group A/G8 오류를 추가 기록한 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md): 새 Gate `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5` **Source177/177, Mock38/38 PASS**이나 **310 unit FAILED(errors=15)**. 원인은 새 `tiled_spans` 함수의 Python descriptor 자동 `self` 주입으로 인한 `TypeError: ... takes 6 positional arguments but 7 were given`. Group B/G1–G8는 실행되지 않았으며 **절대로 G8 PASS로 보고하지 않는다**.

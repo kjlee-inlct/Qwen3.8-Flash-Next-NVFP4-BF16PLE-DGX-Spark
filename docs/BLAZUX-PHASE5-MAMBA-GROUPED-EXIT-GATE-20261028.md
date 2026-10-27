@@ -1,5 +1,13 @@
 # Track A Phase 5 — Mamba physical-address grouped Gate / Phase 6 readiness
 
+## 2026-10-28 Exit decision (CURRENT): Phase5 SOURCE/CPU OFFLINE PASS, Phase6 runtime NOT_RUN
+
+- **DGX tested code `780b780fc7572226a6a9ff2e52cd8e1921c8738b`**: Manifest **177/177**, Wizard **38/38**, unit **310/310 XFAIL0**, AST/offline wrapper PASS, source/CPU G1–G8 PASS, G8 **13,824 synthetic configurations / 23,552 spans**, embedded `25528` checks, required final shell marker PASS. This resolves the *historical* `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5` G8 descriptor FAIL. [Newest evidence](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md).
+- **Phase5 offline exit status: PASS, scoped only to pinned preview source contracts and CPU synthetic oracles.** Original physical GPU buffer access, actual config equality/group/slot bounds, real speculative state and prefix hits, HTTP/MTP/Parser/Responses, performance and CI remain NOT_RUN/BLOCKED. Neither patches nor Phase6 GPU testing are approved by this evidence.
+- **Phase6 grouped entry plan awaiting separate scope approval**: P6-A read-only active config/block size/group/ABI observation; P6-B guarded GPU Mamba state rollback/prefix correctness on isolated reproducer; P6-C real MTP acceptance and Tool/Responses protocol; P6-D benchmark regression/stability only after correctness. Define PASS/FAIL/BLOCKED/NOT_RUN + exact model/runtime/image fingerprint; do not mistake static/synthetic for runtime. Never create Phase6 branch or alter serving/GPU/weights/CI/PR before explicit approval.
+- **Persistent operating rule**: any new rule, result, error and handoff delta must be committed together to source manifest, handoff, adoption plan, this exit gate, and authoritative evidence on current approved branch. Do not force user to download tools; GitHub CAS commit then dedicated checkout fast-forward pull. Keep tested SHA vs later documentation-only SHA separate and protect main/P0/Phase1–4.
+
+
 ## 2026-10-28 G8 fail-closed 및 새 영구 문서 규칙
 
 `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`의 첫 G8 DGX 시도: Source177/177와 Wizard38/38 PASS, 전체 310 unittest는 **FAILED(errors=15)**; Python descriptor 함수 바인딩 `cls.f`에 암묵적 `self` 전달된 신규 테스트 코드 오류. **Group B/G1–G8 NOT_RUN**. 같은 Phase5에서 `staticmethod`로 수정, 기존 test에서 descriptor를 검사하도록 보강. 로컬 참고값 13,824/13,824 synthetic fixture PASS는 **DGX 전체 Gate PASS가 아님**. 완료된 마지막 실제 DGX 전부 PASS `3c364209`: 300/300, Source176, G1–G7. 신규 Github 수정 HEAD 재실행 전 Phase5 G8 종료 주장 금지.
@@ -49,4 +57,4 @@ Evaluate each as **PASS / FAIL / BLOCKED / NOT_RUN**, rather than allowing empty
 5. **Explicitly NOT verified** by this batch: active running CacheConfig and MambaSpec values, actual group inventory and branch reachability, concrete state tensor physical bounds, CUDA copy/rollback/prefix cache hit, real inference or MTP acceptance, Parser/Responses, TPS and CI. These remain visible requirements if Phase 6 scope needs them.
 6. **Phase 6 boundary**: completion of this Phase 5 source/CPU suite means only that those *offline* gates are ready. Do not create Phase 6 or launch real model/GPU/CI/tests, deploy patches, modify service/weights/cache, or alter protected refs without separate explicit user authorization of that scope.
 
-On the next DGX log, record complete G1–G7 and offline Gate output against its exact tested SHA, including unresolved statuses. Batch follow-up checks instead of serial one-by-one probes. Do not make duplicate evidence commits.
+The full G1–G8 offline DGX log has now been recorded at exact tested SHA 780b780f (310/310, Source177, G8 13,824). Future runs should be Phase6 scope-approved and grouped, not redundant Phase5 source/CPU reruns. Keep remaining risks visible, do not make duplicate evidence commits.

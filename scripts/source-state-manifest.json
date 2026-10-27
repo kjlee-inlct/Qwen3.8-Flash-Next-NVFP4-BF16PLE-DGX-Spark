@@ -107,7 +107,8 @@
     "2026-10-28 Phase5 installed DGX CPU-only source P1/P2 log 붙여넣은 텍스트(1)(20261027-161759).txt confirms SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3, _copy_mamba_state_block 122-252 and MambaSpecDecodeGPUContext._populate_metadata 843-957 entire functions, OUTPUT_PARTIAL=False. Helper selects group-local int32 block table pointer; batch table row and logical column produce int64 physical id, state base + physical id*block_stride_bytes, DS/SD conv bias and temporal src_col+token_bias; metadata group-layer-state ordering, actual tensor data_ptr, stride(0)*elem_size, group pointer data_ptr and shared table stride(0). No full new DGX unit or manifest Gate, active config equality, helper _memcpy_u64_tiled body, runtime/GPU address values, CI or patch approval. Last verified unit276/source169 still a5376cc. Current docs-only commit not retested. Main/P0/Phase1-4 immutable, no PR/Merge/operational change.",
     "2026-10-28 Phase5 grouped Mamba batch Gate added scripts/phase5-mamba-batch-check.sh and 24 new stdlib tests in tests/test_blazux_phase5_mamba_batch_gate.py plus Phase5->Phase6 readiness runbook. Script guards origin/branch/clean checkout/protected Phase4 ancestor, executes complete phase5-check-offline.sh, then isolates installed preview four-source SHA/AST, physical copy/meta/pre-post anchors, V1/V2 mapping, multi-group address, SD/DS conv, temporal natural stride, Bcache/Bmamba synthetic mismatch sensitivity, accepted bias, zero/tail/OOB synthetic oracle; prints original _memcpy_u64_tiled bounded source. New 24 synthetic unit tests PASS locally in separate staging only; full new DGX Source/Unit Gate NOT_RUN. No GPU/model/running config/CI, patch approval ZERO; last DGX full test code a5376cc (unit276, Source169). Phase6 work requires separately explicit user approval; main/P0/Phase1-4 and operations unchanged, no PR/Merge.",
     "2026-10-28 DGX actual code HEAD 3c36420998061f7a3e656eb77390c04b7d2ef935 grouped Phase5: 300/300 unittest XFAIL0, Wizard Mock 38/38, Source Manifest176/176, AST/offline wrapper PASS, G1-G7 source/synthetic 343 embedded check counter PASS, installed mamba_utils.py _memcpy_u64_tiled lines40-119 entirely printed, final PHASE5_GROUPED_GATE_EXECUTION_COMPLETED. New G8 tests are follow-up code NOT DGX executed: uint64 aligned head/body/tail and mismatched byte fallback tiles, synthetic 8x8x4x3x18=13824 combinations locally modeled PASS, plus 10 regression units. CUDA/runtime actual config/real group allocation/GPU state/MTP/Responses/serving/CI unverified; patches ZERO; main/P0/Phase1-4 unchanged; no Phase6 branch or PR/Merge. Report and G8 commit is NOT the DGX-tested code SHA.",
-    "2026-10-28 mandatory evergreen handoff synchronization rule: newly observed user rule, DGX result, error, blockers, missing handoff, test command must update SESSION-HANDOFF-PROMPT.md, adoption plan, canonical evidence/exit report and entire Source Manifest in same Phase5 commit; exact tested SHA must be distinguished from later code/docs SHA. Latest DGX ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5: Source177 PASS, mock38 PASS, unittest Ran310 FAILED(errors=15) owing to new G8 bound-method cls.f implicit self (tiled_spans expects 6 got7), Group B/G1-G8 NOT_RUN. Fix test by cls.f = staticmethod(pure_oracles()['tiled_spans']) and guard existing test against descriptor regression. Local standalone synthetic G8 13824 cases PASS, 23552 copy spans; fixed GitHub HEAD full DGX test NOT_RUN. Last fully DGX PASSED SHA 3c36420998061f7a3e656eb77390c04b7d2ef935 with 300/300 XFAIL0, source176, G1-G7; no runtime/GPU/model/CI/patched/PR/Merge and protected refs unchanged."
+    "2026-10-28 mandatory evergreen handoff synchronization rule: newly observed user rule, DGX result, error, blockers, missing handoff, test command must update SESSION-HANDOFF-PROMPT.md, adoption plan, canonical evidence/exit report and entire Source Manifest in same Phase5 commit; exact tested SHA must be distinguished from later code/docs SHA. Latest DGX ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5: Source177 PASS, mock38 PASS, unittest Ran310 FAILED(errors=15) owing to new G8 bound-method cls.f implicit self (tiled_spans expects 6 got7), Group B/G1-G8 NOT_RUN. Fix test by cls.f = staticmethod(pure_oracles()['tiled_spans']) and guard existing test against descriptor regression. Local standalone synthetic G8 13824 cases PASS, 23552 copy spans; fixed GitHub HEAD full DGX test NOT_RUN. Last fully DGX PASSED SHA 3c36420998061f7a3e656eb77390c04b7d2ef935 with 300/300 XFAIL0, source176, G1-G7; no runtime/GPU/model/CI/patched/PR/Merge and protected refs unchanged.",
+    "2026-10-28 COMPLETE PHASE5 OFFLINE G1-G8 PASS - DGX tested exact source SHA 780b780fc7572226a6a9ff2e52cd8e1921c8738b, user log 붙여넣은 텍스트(1)(20261027-171555).txt: Source Manifest177/177 PASS twice, Wizard Mock38/38, unittest310/310 XFAIL0, source AST+offline wrapper PASS, isolated pinned source G1-G8 PASS, G8 CPU synthetic alignment/tiling 13824 cases, 23552 spans, BATCH_SOURCE_CPU_CHECKS_PASS=25528 (not independent unittest count), original _memcpy_u64_tiled L40-119 printed, final PHASE5_FINAL_OFFLINE_GATE_COMPLETED. Previous ff1f66a DGX unit310 FAILED(errors=15) due Python descriptor auto-self fixed at 780b780; history retained. PHASE5 CPU/offline exit PASS only. Actual active block equality/groups/physical tensor bounds, GPU/Triton state rollback/prefix-cache hit, MTP/Tool/Responses HTTP/bench/CI NOT_VERIFIED; blazux patches ZERO. Latest new docs-only commit has NOT been DGX retested. User rule: always synchronize new rules/evidence/errors/handoff/next steps across SESSION-HANDOFF, ADOPTION, authoritative reports, exit gate, full manifest in SAME authorized branch commit; GitHub CAS direct, ff-only pull and grouped scripts, no download. main/P0/Phase1-4 unchanged, no Phase6 branch, no PR/Merge or operational changes."
   ],
   "files": [
     {
@@ -233,7 +234,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md",
       "mode": "100644",
-      "blob_sha": "8ff4dc3b95374d29809e3846b4aab2600a05338b"
+      "blob_sha": "890779ddbd37ba8201843c9f9c0a43c50618a12a"
     },
     {
       "path": "docs/BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md",
@@ -288,7 +289,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "98d692383a4593f98ab2541b85a530407c79c16a"
+      "blob_sha": "8b7a59b1f003af837ee62ee052818992a6597408"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -318,7 +319,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "8b7aeb302ee418a594fab62f94e08f130378ba00"
+      "blob_sha": "1e1a4af70e0695fd2862c12525b66f3a2a2c13da"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -333,7 +334,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "df2fb551393dd22ef7c4290d3c0f4adeb4fab791"
+      "blob_sha": "4f339af8999752131dcf9155f1b76e20e5e49486"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

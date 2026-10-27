@@ -1,5 +1,17 @@
 # Track A Phase 5 — DGX Group A + G1–G7 Mamba physical-state offline 결과 (2026-10-28)
 
+## 2026-10-28 최신 종료 증거: G1–G8 전체 실제 DGX PASS (`780b780fc7572226a6a9ff2e52cd8e1921c8738b`)
+
+> **PHASE5_OFFLINE_GATE_PASS / DGX_TESTED_SHA_EXACT / SOURCE177 / MOCK38 / UNIT310_XFAIL0 / G1–G8_PASS / CUDA_RUNTIME_NOT_CERTIFIED.** 이 최신 결과는 아래 G8 최초 실패와 이전 G1–G7 통과 기록을 대체하는 **현재 Gate 상태**이며, 과거 실패 원인·시도 기록은 그대로 보존한다.
+
+- 사용자 DGX 로그 `붙여넣은 텍스트(1)(20261027-171555).txt` (531개 실제 텍스트 줄), 전용 checkout 브랜치 `feature/blazux-phase5-correctness-mtp-offline`, 이미 `EXPECTED=780b780fc7572226a6a9ff2e52cd8e1921c8738b` 상태여서 `git pull --ff-only` 응답은 "이미 업데이트 상태입니다". 실행 `PHASE5_BATCH_SOURCE_HEAD` 및 `PHASE5_SOURCE_HEAD` 모두 동일한 전체 SHA.
+- **Group A PASS**: `PASS_SOURCE_ONLY:177 tracked file(s)` 2회; Wizard Mock `Ran 38 tests ... OK`, 전체 unit `Ran 310 tests in 0.360s / OK`, `PHASE5_UNIT_PASS=310; XFAIL=0`, `PHASE5_SOURCE_AST_OK`, `PASS: PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS`. 전체 mock/AST/manifest/publication wrapper 완료.
+- **Group B G1–G8 PASS**: 설치 이미지 ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`; pinned 설치 Python source SHA/AST, Mamba state physical and metadata anchors, V1/V2 batch-row/request-slot mapping and sentinel, multi-group table byte/element address, conv SD/DS temporal bias/padded page, equal/mismatched synthetic blocks (224 mismatched reference positions), speculative same-col/invalid/boundary, G8 `u64/u8 alignment+tiling coverage 13824 cases, 23552 spans (synthetic)` 모두 PASS.
+- 원본 `_memcpy_u64_tiled L40-L119` 전체 소스 출력 (u64 aligned head/body/tail와 misaligned byte fallback). `BATCH_SOURCE_CPU_CHECKS_PASS=25528`는 source/CPU embedded check counter이며 **25,528개 독립 unittest 또는 GPU test가 아니다**. `SOURCE_ONLY=True`, `SYNTHETIC_CPU_ONLY=True`, `RUNTIME_CORRECTNESS_VERIFIED=False`, `ACTIVE_BLOCK_EQUALITY_VERIFIED=False`, `PATCH_APPROVED=False`; 성공 마커 `PHASE5_MAMBA_BATCH_SOURCE_CPU_DONE_NOT_CERTIFIED`, `PASS: PHASE5_BATCH_OFFLINE_AND_PINNED_SOURCE_EXECUTED_NOT_CERTIFIED`, `PHASE5_FINAL_OFFLINE_GATE_COMPLETED`.
+- 과거 G8 첫 시도 `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`의 Python `TypeError`/310 unit FAILED(errors=15)는 `staticmethod` 바인딩 수정으로 해결됨. 아래 이전 FAIL 보고서도 기록 당시의 정확한 상태로 유지. **새 정본 작성 커밋은 docs-only이므로 310 PASS는 오직 실행 소스 SHA `780b780fc7572226a6a9ff2e52cd8e1921c8738b`에 귀속**.
+- **Phase5 범위 종료:** Source/CPU offline only. 활성 실제 CacheConfig/MambaSpec block equality·group inventory/physical state bounds, true CUDA/Triton copy/rollback/prefix hit, MTP/Parser/Tool/Responses API, actual TPS/CI 모두 NOT_VERIFIED. Phase6에서 개별 승인 범위에 따라 묶음 실험할 것. 현재 branch를 넘어가는 변경·실제 runtime patch·PR/Merge 금지.
+
+
 ## 2026-10-28 G8 최초 DGX 실행 결과 — 실패 (회귀시험 함수 바인딩)
 
 - 실행 브랜치 `feature/blazux-phase5-correctness-mtp-offline`, 실제 **실패 SHA `ff1f66a7928aa5191d9574ccb4fbcba8c6f4d6f5`**. `git fetch` + `git pull --ff-only` Fast-forward PASS.
