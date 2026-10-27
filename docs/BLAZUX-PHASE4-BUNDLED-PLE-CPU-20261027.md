@@ -1,10 +1,18 @@
 # Track A Phase 4 — 두 가지 기본 OFF PLE 개선을 하나의 Phase로 통합
 
-> 2026-10-27 (Asia/Seoul). **CODE_AND_OFFLINE_TESTS_PREPARED / DGX_PHASE4_NOT_RUN / GPU_NOT_RUN / CI_NOT_VERIFIED.** GitHub 코드 반영 ≠ CPU/DGX 실측 PASS. 두 플래그의 성능상 이점도 아직 실측하지 않았다.
+> 2026-10-27 (Asia/Seoul). **PHASE4_DGX_CPU_OFFLINE_PASS / UNIT_194_XFAIL_0 / FLAG_MATRIX_4_OF_4_BYTE_EXACT / GPU_NOT_RUN / CI_NOT_VERIFIED.** GitHub 코드 반영 ≠ CPU/DGX 실측 PASS. 두 플래그의 성능상 이점도 아직 실측하지 않았다.
 >
 > 기준 개인 Fork `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`; Phase 3 확정 docs HEAD `760f227e46a358445db3d3931b5efbe40de5f609`에서 Phase 4 단일 자식 `feature/blazux-phase4-ple-cpu-bundle` 생성. 이전 `main/P0/Phase1/Phase2/Phase3` ref 변경 금지.
 >
 > 외부 참조 blazux [PIN 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa](https://github.com/blazux/qwen3.8-Flash-DGX/tree/8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa) 의 CPU small-N gather 및 per-phase 계측 아이디어를 내부 preview PLE ABI에 **선별 적응**. upstream vLLM 0.32 class/constructor/Prometheus/pinned H2D/GPU inverse를 복사하지 않았다.
+
+## 최신 DGX 실측 판정 — 초기 시험 계획보다 우선
+
+- 실제 DGX 실기 코드 HEAD `a90eb081a9d85d290d191674c303d33cadb6f22d`에서 **137/137 Source Manifest, unittest 194 OK, XFAIL=0, `PASS: PHASE4_BUNDLED_CPU_SOURCE_CONTRACTS`** 확인.
+- 기존 PLE 합성 BF16 mmap/torch workers 1·4 바이트 동일성 **PASS**, Phase 3 duplicate shard 가드 `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK` 확인.
+- FAST/STATS 설정 네 조합 **OFF/OFF, ON/OFF, OFF/ON, ON/ON** 각각 `byte_exact=1`, 최종 `PHASE4_CPU_MATRIX_ALL_OK`, `PHASE4_COMBINED_OFFLINE_VERIFICATION` 확인.
+- **판정: Gate 4의 CPU 오프라인 출력 정합성 PASS. 성능 향상은 NOT_MEASURED.** GPU inference·실 weights·pinned H2D·KV/Mamba·TPS/TTFT·CI는 NOT_RUN. 후속 문서 전용 SHA를 DGX에서 다시 시험한 것은 아님.
+- [Phase 4 DGX 실측 영구 보고서](BLAZUX-PHASE4-DGX-VALIDATION-RESULTS-20261027.md)에 정확한 SHA, 사용자 로그, 결과 해석 및 보호 규칙을 별도로 보존한다.
 
 ## 1. Phase 수 줄이기 — 실행 원칙 변경
 

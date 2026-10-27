@@ -1,12 +1,23 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 4 통합 진행 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 4 DGX 실측 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Track A Phase 4 — 두 기능 통합, Phase 수 감축 (최신)
+## 2026-10-27 Track A Phase 4 DGX 통합 CPU 검증 PASS — 현 최신 상태
+
+- **실측 소스 HEAD:** `feature/blazux-phase4-ple-cpu-bundle@a90eb081a9d85d290d191674c303d33cadb6f22d`. 사용자가 제공한 DGX 로그: **Source Manifest 137/137, full unit 194/194, XFAIL=0**, 마지막 `PHASE4_BUNDLED_CPU_SOURCE_CONTRACTS` PASS. wrapper에는 mocks/deployment manifest/bash/publication audit/clean checkout/origin 안전검사도 포함되지만, 로그에 개별 mock 개수는 따로 제시되지 않았다.
+- **하나의 CPU 임시 시험 묶음:** 기존 BF16 PLE `workers=1 chunk=1024`·`workers=4 chunk=2` byte-exact PASS, `PHASE3_PLE_DUPLICATE_GUARD_ALL_OK`, `PHASE2_PLE_CPU_ALL_OK`; 신규 `VLLM_PLE_FAST_GATHER`와 `VLLM_PLE_PHASE_STATS`의 OFF/OFF, ON/OFF, OFF/ON, ON/ON **4/4 byte_exact PASS**, `PHASE4_CPU_MATRIX_ALL_OK`, `PHASE4_COMBINED_OFFLINE_VERIFICATION`.
+- **적용 경계:** 두 옵션은 서로 독립적인 기본 OFF이며 별도 커밋 `4aa692624f95008abbd76f808791b524335fb0c7`, `b83ecc66a70e53515fcd0992b51dc705236778e1`; CPU synthetic 정확성 검증이지 GPU·실 모델/Pinned H2D·vLLM 0.32·KV/Mamba/SSM·실제 95.37GiB PLE·TPS/A·B·CI 확인이 아님. 운영 이미지/모델 교체는 수행하지 않는다.
+- **정본 결과:** [Phase 4 DGX 실측 보고서](BLAZUX-PHASE4-DGX-VALIDATION-RESULTS-20261027.md), [Phase 4 통합 Gate 계획서](BLAZUX-PHASE4-BUNDLED-PLE-CPU-20261027.md). `a90eb081...`는 **DGX 실측 코드 SHA**이고, 이번 기록·Manifest를 더한 후속 GitHub docs-only HEAD는 **실기 재검증되지 않은 SHA**이다. 원격 branch HEAD에서 후속 SHA를 확인한다.
+- **Phase 최소화:** 같은 CPU-only/rollback/승인 범위의 추가 fixture·오류 수정·측정 계획·보고서 작업은 새 Phase 없이 Phase 4 내부에서 처리한다. GPU/실 weights/운영 컨테이너·포트·HF cache·receipt 변경에는 별도 사용자 승인 및 격리 시험 계획 요구.
+- **보호 정책:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf...`, Phase1 `a50fc537...`, Phase2 `76588845...`, Phase3 `760f227e...` 고정. 지금 PR/Merge 불필요; 리뷰가 필요하면 Phase 4 head→Phase 3 base의 Draft **비병합** PR만. `main` 대상 PR·merge·cherry-pick·rebase·squash·sync 영구 금지.
+
+---
+
+## 2026-10-27 Track A Phase 4 — 두 기능 통합, Phase 수 감축 (과거 스냅샷)
 
 - **사용자 우선 규칙 변경:** 작은 버그·기능·시험마다 새 Phase를 만들지 않는다. 위험/검증/rollback 범위가 같으면 **같은 Phase에 복수 기능별 독립 커밋**을 축적하고 공용 offline/GPU 승인 게이트를 적용한다. Phase 간 분기는 ABI/실험 안전 범위/별도 승인 변화가 있을 때만 한다. Phase 3 확정 부모 `760f227e46a358445db3d3931b5efbe40de5f609`를 원본으로 유지.
 - **Phase4 브랜치:** `feature/blazux-phase4-ple-cpu-bundle`. 기본 OFF 기능 A `VLLM_PLE_FAST_GATHER=0`/행 512 기준 small-N inline gather; 독립 기본 OFF 기능 B `VLLM_PLE_PHASE_STATS=0`의 per-table CPU gather calls/errors/rows/logical_bytes/gather_s/fast_calls. **서로 다른 2개 커밋**으로 나누어 별도 rollback·on/off 비교 가능. 원래 BF16 PLE, G2-01 duplicate fail-closed, MTP 이름 31개 보호 유지.

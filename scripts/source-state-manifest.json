@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 137,
+  "tracked_file_count": 138,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -85,7 +85,8 @@
     "2026-10-27 Phase3 DGX evidence (user-provided) for exact tested source HEAD cb1de387b09786d6be35fec838c6549a78e5417c: source 132/132, 189 unit tests OK, XFAIL=0, PASS PHASE3_G2_01_OFFLINE_CONTRACTS_XFAIL_0. Follow-up CPU fixture stdout: BF16 mmap gather+forward byte-exact workers=1 chunk=1024 and workers=4 chunk=2 PASS, PHASE3_PLE_DUPLICATE_GUARD_ALL_OK, PHASE2_PLE_CPU_ALL_OK. G2-01 CLOSED only for synthetic CPU regressions; serving/GPU/performance/CI NOT_RUN. This docs-only evidence/manifest commit is a new Git HEAD not itself DGX re-tested; protected main/P0/Phase1/Phase2 remain frozen, no PR/merge.",
     "2026-10-27 Track A Phase4 bundle feature A commit: independent default-OFF VLLM_PLE_FAST_GATHER (VLLM_PLE_FAST_GATHER_ROWS threshold) for small-N inline CPU gather, preserving baseline dedup/threadpool when off. Pinned external blazux 8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa behavior adapted to internal preview contract; CPU/DGX benchmark NOT_RUN. Next Phase4 commit supplies independent stats and combined tests. Protected branches unchanged.",
     "2026-10-27 Track A Phase4 feature B separately commited: VLLM_PLE_PHASE_STATS=0 by default. When enabled, local per-table lock-guarded CPU gather calls/errors/rows/logical returned bytes/elapsed seconds/fast calls, no Prometheus, no background log/timer or claimed NVMe I/O. Stats OFF delegates directly to original gather algorithm (as wrapped in feature A). No GPU/DGX execution yet; combined tests in following Phase4 commit.",
-    "2026-10-27 Phase4 bundled Gate A+B: separate feature commits 4aa692624f95008abbd76f808791b524335fb0c7 (default-off VLLM_PLE_FAST_GATHER) and b83ecc66a70e53515fcd0992b51dc705236778e1 (default-off VLLM_PLE_PHASE_STATS) from immutable Phase3 final HEAD 760f227e46a358445db3d3931b5efbe40de5f609. Combined stdlib flags regression and actual NumPy/PyTorch BF16 4-way flag matrix / G2-01 guard CPU test under single Phase4 runner; expect unittest 194 XFAIL=0 but DGX Phase4 NOT_RUN until user tests. No GPU, vLLM ABI port, HTTP bench, madvise, Prometheus, Docker changes. Future same-safety tests/fixes/docs stay inside this Phase to reduce Phase proliferation. Never PR/merge/cherry-pick/rebase to main; protect all previous branches."
+    "2026-10-27 Phase4 bundled Gate A+B: separate feature commits 4aa692624f95008abbd76f808791b524335fb0c7 (default-off VLLM_PLE_FAST_GATHER) and b83ecc66a70e53515fcd0992b51dc705236778e1 (default-off VLLM_PLE_PHASE_STATS) from immutable Phase3 final HEAD 760f227e46a358445db3d3931b5efbe40de5f609. Combined stdlib flags regression and actual NumPy/PyTorch BF16 4-way flag matrix / G2-01 guard CPU test under single Phase4 runner; expect unittest 194 XFAIL=0 but DGX Phase4 NOT_RUN until user tests. No GPU, vLLM ABI port, HTTP bench, madvise, Prometheus, Docker changes. Future same-safety tests/fixes/docs stay inside this Phase to reduce Phase proliferation. Never PR/merge/cherry-pick/rebase to main; protect all previous branches.",
+    "2026-10-27 Phase 4 user DGX measured exact source SHA a90eb081a9d85d290d191674c303d33cadb6f22d: source 137/137 PASS, unittest 194 OK and XFAIL=0, Phase4 offline source PASS, previous PLE BF16 workers 1 and 4 byte-exact, Phase3 duplicate guard PASS, all four combinations of FAST_GATHER and PHASE_STATS byte_exact=1, PHASE4_CPU_MATRIX_ALL_OK, PHASE4_COMBINED_OFFLINE_VERIFICATION PASS. This new docs+Source Manifest SHA was NOT retested on DGX. GPU/model/vLLM/pinned H2D/TPS A-B/CI not run. Phase count kept low: same offline risk/test/rollback tasks stay in Phase4. Previous Phase and main heads protected; no PR/merge."
   ],
   "files": [
     {
@@ -186,7 +187,12 @@
     {
       "path": "docs/BLAZUX-PHASE4-BUNDLED-PLE-CPU-20261027.md",
       "mode": "100644",
-      "blob_sha": "e8a9f69f2d5f033b49fe07cd4050c1b26654cbd6"
+      "blob_sha": "f37fde5cc6ff649716f49d9138903ed7e8ba2d12"
+    },
+    {
+      "path": "docs/BLAZUX-PHASE4-DGX-VALIDATION-RESULTS-20261027.md",
+      "mode": "100644",
+      "blob_sha": "d4b0d8975c4790ee658fbefaa61a3b567e82140e"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -206,7 +212,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "fae5e9a3dfa1b23168ceff99d7f5dea22e332ce5"
+      "blob_sha": "1f50a0334f33a20ba12a899a05704505fc07aa76"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
