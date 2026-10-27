@@ -32,6 +32,7 @@ Knobs (env):
   VLLM_PLE_MMAP_CHUNK=2048   rows per gather task
   VLLM_PLE_FAST_GATHER=0    1 = opt in to decode-sized inline CPU gather (default OFF)
   VLLM_PLE_FAST_GATHER_ROWS=512  max rows in opt-in inline path (not applied when OFF)
+  VLLM_PLE_PHASE_STATS=0    opt-in CPU gather timing/counters (no Prometheus/I-O bytes)
   VLLM_PLE_MMAP_PREWARM=0    1 = stream the whole table once at load to fill the
                              page cache with whatever memory is free. Keep this
                              at 0 for a 95.37 GiB BF16 table on a 128 GB system.
@@ -51,6 +52,8 @@ import os
 import re
 import struct
 import sys
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Iterable
@@ -157,9 +160,59 @@ class MmapPleTable:
             max(0, _env_int("VLLM_PLE_FAST_GATHER_ROWS", 512))
             if _env_flag("VLLM_PLE_FAST_GATHER") else 0
         )
+        # Off by default. Scoped per-table, never global Prometheus counters.
+        self.phase_stats_enabled = _env_flag("VLLM_PLE_PHASE_STATS")
+        self._stats_lock = threading.Lock() if self.phase_stats_enabled else None
+        self._stats = (
+            {
+                "calls": 0, "errors": 0, "rows": 0, "logical_bytes": 0,
+                "gather_s": 0.0, "fast_calls": 0,
+            }
+            if self.phase_stats_enabled else None
+        )
+
+    def stats_snapshot(self) -> dict[str, int | float] | None:
+        """Best-effort per-table CPU gather counters, or None if disabled.
+
+        logical_bytes counts returned bytes, not physical NVMe I/O.
+        There is no Prometheus endpoint, background timer, or GPU measurement.
+        """
+        if not self.phase_stats_enabled:
+            return None
+        assert self._stats_lock is not None and self._stats is not None
+        with self._stats_lock:
+            return dict(self._stats)
+
+    def _record_gather_stats(
+        self, count: int, elapsed_s: float, failed: bool, fast: bool
+    ) -> None:
+        assert self._stats_lock is not None and self._stats is not None
+        with self._stats_lock:
+            self._stats["calls"] += 1
+            self._stats["errors"] += int(failed)
+            self._stats["gather_s"] += elapsed_s
+            if not failed:
+                self._stats["rows"] += count
+                self._stats["logical_bytes"] += count * self.row_bytes
+                self._stats["fast_calls"] += int(fast)
 
     def gather(self, ids: np.ndarray) -> np.ndarray:
-        """ids: int64 [N] global row ids -> uint8 [N, row_bytes] (a fresh array)."""
+        """CPU row gather; flag OFF preserves baseline dedup+pool behavior."""
+        if not self.phase_stats_enabled:
+            return self._gather_rows(ids)
+        started = time.perf_counter()
+        n = int(np.asarray(ids).size)
+        fast = bool(n > 0 and n <= self.fast_gather_rows)
+        try:
+            result = self._gather_rows(ids)
+        except Exception:
+            self._record_gather_stats(n, time.perf_counter() - started, True, fast)
+            raise
+        self._record_gather_stats(n, time.perf_counter() - started, False, fast)
+        return result
+
+    def _gather_rows(self, ids: np.ndarray) -> np.ndarray:
+        """ids: int64 [N] global row ids -> uint8 [N, row_bytes] (fresh)."""
         ids = np.ascontiguousarray(ids, dtype=np.int64).reshape(-1)
         if ids.size == 0:
             return np.empty((0, self.row_bytes), dtype=np.uint8)
