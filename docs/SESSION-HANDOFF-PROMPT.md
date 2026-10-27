@@ -1,12 +1,21 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 최신 스냅샷을 우선한다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase 2 최신 스냅샷을 우선한다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase 1 DGX 오프라인 검증 PASS — 현재 최신 스냅샷
+## 2026-10-27 Track A Phase 2 — 합성 BF16/CPU Gate 2 구현 진행 (최신 스냅샷)
+
+- **정확한 계보:** P0 `feature/blazux-vllm032-evaluation-20261027@966ec7cf0741734b844b1cea938d56678a756469` → Phase 1 최종 `feature/blazux-phase1-source-compare@a50fc53721f3d23325dca44eb799f0f388d65951` → **Phase 2 `feature/blazux-phase2-offline-fixtures`**, 그 SHA로 신규 생성. Phase 1의 실제 DGX 테스트 대상은 `8555a0a5...`; Phase 1 docs-only 확정 HEAD는 `a50fc537...`.
+- **Phase 2 코드:** 표준 라이브러리 기반 합성 BF16 safetensors 13×7/4 shards, 원본 PLE parser/layout AST 함수의 오프라인 회귀, 실제 PyTorch/NumPy PLE mmap gather+forward byte-by-byte CPU fixture, MTP 31/31 guard, QSA *독립* CPU TopK oracle, 독립 브랜치/원격/Manifest fail-closed 검증 wrapper. [Gate 2 계획·실행·위험 보고서](BLAZUX-PHASE2-GATE2-OFFLINE-20261027.md). 기존 모델/serving 코드/설치/운영 컨테이너는 변경하지 않는다.
+- **검증 경계:** GitHub에서 코드 및 Source Manifest blob/path/mode가 일치해도 **DGX Phase 2 Python 테스트 실행은 아직 NOT_RUN**. 실제 테스트 결과를 받기 전 PASS 숫자나 완성 판정 금지. Stdlib suite에는 중복 PLE shard 인덱스 기존 덮어쓰기 결함을 드러낸 `@unittest.expectedFailure`가 **1개 예상**되며 이를 보호 기능 PASS로 주장하지 않는다. GPU, API/ABI, vLLM parser, MTP real tensor shape, 실제 95GiB PLE 성능, CI는 NOT_RUN.
+- **PR/merge 알림 규칙:** Phase 2 DGX 결과 수집·문서 검토 후 필요하면 `base=feature/blazux-phase1-source-compare`, `head=feature/blazux-phase2-offline-fixtures` **리뷰 전용 draft PR만** 제안. Phase 1 immutable branch를 보호하기 위해 해당 PR도 **merge하지 않는다**. 후속 Phase 3는 검증된 Phase 2 최종 HEAD에서 새로운 자식 branch. `main` 대상 PR/merge/cherry-pick/squash/rebase/sync는 상황 무관 **영구 금지**.
+- **현재 GitHub 인증 상태:** Phase 2 실험 브랜치 커밋 후 최신 SHA와 Manifest 및 `main`, P0, Phase 1 불변 여부를 다시 검증할 것. GitHub Actions CI 체크 기록 0이며 `CI_NOT_VERIFIED`.
+
+---
+## 2026-10-27 Phase 1 DGX 오프라인 검증 PASS — 과거 최신 스냅샷
 
 - **실제 DGX 검증 출처:** 사용자 제공 terminal transcript, `feature/blazux-phase1-source-compare` **정확한 실측 HEAD `8555a0a5a73d6bf390eeeb3495a01257c0ca3327`**. [Phase 1 DGX 검증 보고서](BLAZUX-PHASE1-DGX-VALIDATION-RESULTS-20261027.md)를 최우선으로 확인한다.
 - **실기 결과:** `PASS_SOURCE_ONLY` 122/122 (시작·종료 2회), deployment manifest 4 target OK, Wizard fake/mock **38/38**, 전체 repo **172/172**, bash syntax 및 publication audit PASS. 기존 이미지의 격리 CPU 컨테이너에서 기존 PLE FP8/BF16 synthetic fixture **ALL OK**; Python test `torch=2.13.0+cu130`, `numpy=2.2.6`. 기존 main `66051cd`에서의 과거 172/172이 아니라 **새 Phase 1 실측**이다.
