@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 172,
+  "tracked_file_count": 173,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -103,7 +103,8 @@
     "2026-10-27 Track A Phase5 Scheduler dynamic factory and Mamba align state-unit source-only bundle, parent docs-only 3729277eba4d5c7f1e1d6a3603bbbd939ea8661a. Fixed six Python source AST files: config/scheduler.py get_scheduler_cls, EngineCore Scheduler factory local assignment/keyword, Mamba add_request seed vs Mamba group spec/precopy/postprocess align and Scheduler chunk/backend spec; redacted expressions SHA256; never imports installed vLLM. 17 new synthetic stdlib tests including fake block-size boundary arithmetic (16/16 vs 16/32) that is NOT real runtime or bug evidence. Expected full Phase5 unittest 276 XFAIL0 (previous DGX 259 PASS belongs ONLY to source SHA bc89de6288889943b50090ac9638ee95c2434a79); new HEAD DGX NOT_RUN. Source Manifest 169; new source files 3. Always active_scheduler_class_verified false, actual_config_block_equality_verified false, state_slot_correctness_verified false, patch_approved false. No patch/GPU/model/HTTP/TPS/CI, main/P0/Phase1-4 immutable, no PR/Merge.",
     "2026-10-27 Phase5 user DGX verified tested source HEAD a5376cc06536ce786cdb6db8425e26e21b608910: Ran 276 tests, PHASE5_UNIT_PASS=276 XFAIL0, PASS_SOURCE_ONLY 169 tracked and PHASE5_SOURCE_AST_OK, PHASE5_OFFLINE_ORACLES_AND_SOURCE_CONTRACTS, isolated PHASE5_SCHEDULER_MAMBA_CONTRACT_DONE_NOT_PATCH_APPROVED and final EXECUTED_NOT_CERTIFIED. Six pinned installed vLLM sources PARSEABLE_ONLY and 10/10 source_checks true with missing_source_checks empty. SchedulerConfig.get_scheduler_cls has returns AsyncScheduler:175 Scheduler:178 cast(...,self.scheduler_cls):190 resolve_obj_by_qualname(self.scheduler_cls):191; runtime predicates and chosen class not verified. Mamba add_request seed uses cache_config.block_size; preprocess uses MAMBA_BLOCK_SIZE=mamba_spec.block_size; Scheduler aligned split uses cache_config.block_size and backend kv_cache_spec.block_size. Synthetic 16/16 and 16/32 token index arithmetic NOT actual config mismatch or GPU slot bug. active_scheduler_class_verified=false actual_config_block_equality_verified=false state_slot_correctness_verified=false patch_approved=false. This log excerpt does not show individual wizard mock count, and new docs-only HEAD/Manifest170 NOT DGX retested. No patch/runtime ABI/correctness/GPU/model/serving/HTTP/TPS/CI and protect main/P0/Phase1-4, no PR/Merge.",
     "2026-10-27 Phase5 user DGX three independent read-only source inspections from 붙여넣은 텍스트(1)(20261027-145706).txt: CHECK1 exact SchedulerConfig.get_scheduler_cls default async(true→AsyncScheduler) vs sync(false→Scheduler), custom object/string qualname; active class unknown. CHECK2 PARTIAL (SCAN_OUTPUT_LIMIT_REACHED after 162 files, 3,571,805 bytes, 103 matches) found v1/engine/core.py:321–324 cache_config.block_size=min(group.kv_cache_spec.block_size) assignment path, MambaSpec separate group size, position-indexed align block table and Mamba group/CacheConfig default; active values and execution unknown. CHECK3 352 Python files, target defs: add_request seed uses cache_config.block_size; preprocess_mamba_align_fused_kernel state_idx new=(computed_after+MAMBA_BLOCK_SIZE-1)//MAMBA_BLOCK_SIZE-1 from mamba_spec.block_size; pre-copy uses saved src_col=old idx; postprocess calls fused kernel block_size=self.block_size, whose assignment and actual precopy_mamba_align_fused_kernel/postprocess_mamba_fused_kernel bodies were not searched. No full new unit Gate in current source inspections. Last actual DGX full 276/276 XFAIL0, Source169/169 belongs solely to code SHA a5376cc06536ce786cdb6db8425e26e21b608910; previous docs-only SHA 321d979eca30b20e5724afbddfe15fe6bf962fbe, new docs-only manifest171 NOT retested. No real block-size mismatch observed, runtime correctness/ABI/patch approval false. Keep main/P0/Phase1-4 immutable, no PR/Merge/GPU/model/serving/CI changes.",
-    "2026-10-27 Phase5 user DGX read-only isolated source inspection of installed v1/worker/mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3: BOTH precopy_mamba_align_fused_kernel lines437-519 and postprocess_mamba_fused_kernel lines255-388 inspected; MambaSpecDecodeGPUContext.create:772 passes block_size=mamba_spec.block_size to cls constructor, context V1/V2 postprocess passes block_size=self.block_size to kernel, so source block size supply is MambaSpec, not unknown. Precopy uses old src_col/new dst_col, skips fresh/same, negative idx_mapping skip, otherwise common _copy_mamba_state_block; postprocess align floor new computed to context block size, computes dest_idx=aligned/B-1, needs_copy and accepted-token bias, also invokes same _copy helper. OUTPUT_PARTIAL=False, CHECK marker PHASE5_MAMBA_KERNEL_SOURCE_INSPECTION_DONE, PATCH_APPROVED=False, RUNTIME_CORRECTNESS_VERIFIED=False. Source still does not inspect _copy_mamba_state_block physical pointers/strides or _populate_metadata body, nor actual active cache_config.block_size vs mamba_spec.block_size equality, nor GPU kernel execution; no applied patches. Latest full source/unit DGX Gate 276/276 XFAIL0, Source169/169 belongs only to tested code a5376cc06536ce786cdb6db8425e26e21b608910; previous docs-only HEAD 2def41755c2b55e95a094acabcaf1bd90d5e3259 had Manifest171; followup docs-only Manifest172 SHA not DGX tested. main/P0/Phase1-4 immutable, no PR/Merge, runtime/weights/GPU/HTTP/CI untouched."
+    "2026-10-27 Phase5 user DGX read-only isolated source inspection of installed v1/worker/mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3: BOTH precopy_mamba_align_fused_kernel lines437-519 and postprocess_mamba_fused_kernel lines255-388 inspected; MambaSpecDecodeGPUContext.create:772 passes block_size=mamba_spec.block_size to cls constructor, context V1/V2 postprocess passes block_size=self.block_size to kernel, so source block size supply is MambaSpec, not unknown. Precopy uses old src_col/new dst_col, skips fresh/same, negative idx_mapping skip, otherwise common _copy_mamba_state_block; postprocess align floor new computed to context block size, computes dest_idx=aligned/B-1, needs_copy and accepted-token bias, also invokes same _copy helper. OUTPUT_PARTIAL=False, CHECK marker PHASE5_MAMBA_KERNEL_SOURCE_INSPECTION_DONE, PATCH_APPROVED=False, RUNTIME_CORRECTNESS_VERIFIED=False. Source still does not inspect _copy_mamba_state_block physical pointers/strides or _populate_metadata body, nor actual active cache_config.block_size vs mamba_spec.block_size equality, nor GPU kernel execution; no applied patches. Latest full source/unit DGX Gate 276/276 XFAIL0, Source169/169 belongs only to tested code a5376cc06536ce786cdb6db8425e26e21b608910; previous docs-only HEAD 2def41755c2b55e95a094acabcaf1bd90d5e3259 had Manifest171; followup docs-only Manifest172 SHA not DGX tested. main/P0/Phase1-4 immutable, no PR/Merge, runtime/weights/GPU/HTTP/CI untouched.",
+    "2026-10-28 Phase5 installed DGX CPU-only source P1/P2 log 붙여넣은 텍스트(1)(20261027-161759).txt confirms SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3, _copy_mamba_state_block 122-252 and MambaSpecDecodeGPUContext._populate_metadata 843-957 entire functions, OUTPUT_PARTIAL=False. Helper selects group-local int32 block table pointer; batch table row and logical column produce int64 physical id, state base + physical id*block_stride_bytes, DS/SD conv bias and temporal src_col+token_bias; metadata group-layer-state ordering, actual tensor data_ptr, stride(0)*elem_size, group pointer data_ptr and shared table stride(0). No full new DGX unit or manifest Gate, active config equality, helper _memcpy_u64_tiled body, runtime/GPU address values, CI or patch approval. Last verified unit276/source169 still a5376cc. Current docs-only commit not retested. Main/P0/Phase1-4 immutable, no PR/Merge/operational change."
   ],
   "files": [
     {
@@ -242,6 +243,11 @@
       "blob_sha": "a5c76d384ef498c5e17164da25f94fce2dccb479"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-DGX-PHYSICAL-STATE-METADATA-RESULTS-20261028.md",
+      "mode": "100644",
+      "blob_sha": "75d9358c270fb8d7530a8ad57590b5cb33b68fc4"
+    },
+    {
       "path": "docs/BLAZUX-PHASE5-DGX-PREVIEW-ABI-TRIAGE-RESULTS-20261027.md",
       "mode": "100644",
       "blob_sha": "2cdc8bb613931baff33eeb54eb6cc61dbb5fc60d"
@@ -299,7 +305,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "b0a002d37b2695031d6c1f2c5d541ebd67bc049c"
+      "blob_sha": "3ca23f291a7bc046204e97816d9cbddcce2ddf61"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -314,7 +320,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "01aa7363931368260218107e9d2a63c89fa110e2"
+      "blob_sha": "b6ea8351dce1b20d3e591b894a2960b6a189a1dc"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

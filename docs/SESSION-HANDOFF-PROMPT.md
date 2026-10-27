@@ -1,5 +1,12 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 Phase5 Mamba P1/P2 실물리 State address + Metadata source inspection — 최신
+
+- [정본 P1/P2 전체 본문 실측 보고서](BLAZUX-PHASE5-DGX-PHYSICAL-STATE-METADATA-RESULTS-20261028.md): 사용자 DGX 로그 `붙여넣은 텍스트(1)(20261027-161759).txt`에서 설치 `mamba_utils.py` SHA256 `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3` 고정, `_copy_mamba_state_block:122–252` 및 `_populate_metadata:843–957` **전체 본문**, `OUTPUT_PARTIAL=False`, physical pointer/index/stride, DS/SD conv vs temporal bias 및 group-local metadata/table ptr 공급 확인.
+- Group table `int32*` + `bt_row_idx*block_table_stride_req`(elements) + logical column → physical block ID(`int64`) → `state_base_addr + physical_id*state_block_stride_bytes`. DS conv는 row-stride와 element bias, SD conv는 `inner_size*elem_size` bias, temporal은 `src_col+token_bias` 물리 블록 ID와 natural copy size 사용. Metadata는 group→layer→state 순서로 수집하며 group-local index, tensor data_ptr/stride/element_size, 동일한 group table `stride(0)` 요구.
+- **여전히 미확정:** helper 내부의 포괄적인 bounds guard 부재는 OOB 증거가 아님; active `B_cache==B_mamba`, `_memcpy_u64_tiled` 본체, 실제 tensor physical ranges, GPU/serving correctness, CI, patch 승인 전부 미검증. 다음은 여러 정적+합성 CPU 경계검사를 **한 번의 batch Gate**로 수행. 마지막 전체 DGX PASS `a5376cc`: unit 276/XFAIL0 Source169; 이번 소스 검사와 docs-only HEAD는 전체 unit 재시험 아님. main/P0/Phase1–4 불변, PR/Merge/patch/GPU/운영 금지.
+
+
 > 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 DGX Mamba 두 Triton 커널 및 Context block-size 설정 읽기 전용 검사 결과가 최신이다. 마지막 전체 276/276 Gate PASS는 소스 a5376cc...에 귀속하고, 신규 docs-only HEAD에서 재실행된 것이 아니다. 실제 active block equality/slot correctness 및 패치 승인은 여전히 없다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
