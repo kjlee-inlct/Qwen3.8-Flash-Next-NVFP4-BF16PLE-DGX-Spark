@@ -1,8 +1,17 @@
 # Track A Phase 5 — KV-group LCM → EngineCore → Scheduler 정밀 Source-only 추적
 
-> 2026-10-27 / **신규 코드 준비 완료, DGX 실행 NOT_RUN, blazux patch 승인 0건, GPU·모델·운영 미사용**. 동일 Phase5 브랜치만 사용하며 Phase/PR/Merge 생성 안 함.
+> 2026-10-27 / **신규 DGX Source-only 검증 PASS (259/259 XFAIL0, Source164/164, Mock38/38), static_chain 5/6, Scheduler import unresolved, 패치 적용 승인 0건**. 동일 Phase5 브랜치만 사용하며 Phase/PR/Merge 생성 안 함.
 >
 > 고정 blazux upstream `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`. 직전 사용자 DGX 실제 PASS: `04b871ab632b2a59d55d11f19009c48daa3ce5c0`의 unittest **244/244 XFAIL0**, Source **160/160**. 이를 문서화한 이전 docs-only HEAD는 `f61e9dc03162997253e468ab8e33737b680b1b86`이며 별도 DGX 재시험한 SHA 아님.
+
+## 사용자 DGX Narrow Block Flow 실측 — 최신 결과 (이전 실행 전 계획보다 우선)
+
+- **실제 시험 소스 HEAD `bc89de6288889943b50090ac9638ee95c2434a79`**: Source Manifest **164/164**, Wizard Mock **38/38**, 전체 unittest **259/259 XFAIL0**, AST + 전체 offline wrapper PASS, `PHASE5_NARROW_BLOCK_FLOW_DONE_NOT_PATCH_APPROVED` 및 최종 `PHASE5_NARROW_BLOCK_FLOW_EXECUTED_NOT_CERTIFIED`. 후속 문서만 수정한 Git HEAD는 259개를 재실행한 SHA가 아님.
+- `static_chain.checks`는 **6개 중 5개 true**: KV resolver 정적 import, LCM 대입, tuple 반환, EngineCore tuple assignment, Scheduler ctor keyword 변수 사용 true. `engine_static_imports_scheduler=false` 하나가 남고 `status=UNRESOLVED_OR_PARTIAL_STATIC_CHAIN`, `runtime_flow_proven=false`, `patch_approved=false`이다.
+- `kv_cache_utils.py:634`: `AttentionSpec` 그룹 `g.kv_cache_spec.block_size * dcp`, 다른 그룹 `g.kv_cache_spec.block_size`. :640 LCM, :659 prefix_cacheable 그룹 hashing subset(없으면 전체), :665 requested 또는 GCD. `return`에는 **632/647/657행 조기 반환**과 **673행 일반 반환**이 공존해 실제 값 전달에 분기 조건 확인이 필수.
+- `engine/core.py:157`는 `scheduler_block_size, hash_block_size = resolve_kv_cache_block_sizes(kv_cache_config, vllm_config)`, :161에서 `Scheduler(...,block_size=scheduler_block_size,hash_block_size=hash_block_size)`. 원래 AST 수식 연결은 확보했지만 `Scheduler` **실제 import/binding 형태가 이번 scanner 기대 패턴과 일치하는지 불명**. 실패를 단순 존재 버그나 실제 잘못된 바인딩으로 오인 금지.
+- 이번 6파일 모두 `PARSEABLE_ONLY`, `bounded_output_truncated=false`. 이는 **좁은 파일 범위**에 한한 결과; 원래 384파일 광역 scan의 `ASSIGN_SITE_LIMIT`/PARTIAL 이력과 분리.
+- [DGX 실측 정본 보고서](BLAZUX-PHASE5-DGX-NARROW-BLOCK-FLOW-RESULTS-20261027.md)에 6파일 SHA256 및 세부 source line·검증 경계 기록. **다음 같은 Phase5**는 Scheduler binding의 정확한 선언·alias, KV resolver 조기 반환 조건/`dcp` 공급, Mamba group spec/slot alignment의 CPU fixture 검증; blazux patch 실제 적용/GPU·HTTP 실험은 여전히 금지.
 
 ## 1. 문제와 범위
 

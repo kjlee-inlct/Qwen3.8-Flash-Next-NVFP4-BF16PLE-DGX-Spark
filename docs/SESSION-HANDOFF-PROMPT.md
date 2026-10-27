@@ -1,12 +1,24 @@
 # SESSION-HANDOFF-PROMPT.md
 
-> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 LCM/return/EngineCore 좁은 범위 Source-only trace 최신 준비 상태를 우선한다. 직전 DGX 244 PASS는 검증됐지만 신규 259 unit은 아직 NOT_RUN이다.  
+> 기준: **2026-10-27 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다. 2026-10-26 Wizard 시험은 역사적 운영 증거이며, **blazux Track A Phase 1 Gate 1 / DGX 오프라인 테스트는 완료**했다. 아래 Phase5 Narrow Block Flow의 DGX Source-only 259/259 PASS 실측 결과를 최신 스냅샷으로 우선한다. Scheduler import/binding·Mamba slot correctness는 아직 미확정.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
 
 ---
 
-## 2026-10-27 Phase5 LCM → 반환 → EngineCore 생성자 정밀 조사 구현 — 현재 최신, DGX 실행 전
+## 2026-10-27 Phase5 Narrow KV LCM → EngineCore Source-only DGX PASS — 최신
+
+- **사용자 DGX 실제 시험 소스** `feature/blazux-phase5-correctness-mtp-offline@bc89de6288889943b50090ac9638ee95c2434a79`. 사용자가 제공한 `붙여넣은 텍스트(1)(20261027-112439).txt`: **Manifest 164/164**, **Wizard Mock 38/38**, 전체 unittest **259/259 XFAIL0**, AST/wrapper PASS, `PHASE5_NARROW_BLOCK_FLOW_DONE_NOT_PATCH_APPROVED` 및 `PHASE5_NARROW_BLOCK_FLOW_EXECUTED_NOT_CERTIFIED`. 보고서/Manifest만 추가한 **docs-only 후속 SHA는 DGX에서 재시험하지 않음**.
+- **정적 6조건 중 5 true**: `engine_static_imports_resolver=true`, `kv_scheduler_size_lcm_assignment=true`, `kv_function_returns_both_sizes=true`, `engine_assigns_scheduler_size_from_resolver=true`, `engine_ctor_uses_scheduler_size_variable=true`; **`engine_static_imports_scheduler=false`** 하나 남아 `status=UNRESOLVED_OR_PARTIAL_STATIC_CHAIN`. 좁은 6파일 검사 `bounded_output_truncated=false`, `runtime_flow_proven=false`, `patch_approved=false`. False는 analyzer가 기대하는 모듈 최상위 `vllm.v1.core.sched.scheduler.Scheduler` import 패턴을 못 찾았다는 뜻이지 실제 import/dispatch 오류 확정 아님.
+- **실제 코드 경로:** `v1/core/kv_cache_utils.py:634`에서 AttentionSpec은 `kv_cache_spec.block_size * dcp`, 나머지 group은 `kv_cache_spec.block_size`로 `group_block_sizes`. :640 `math.lcm(*group_block_sizes)`. :659 cacheable group을 먼저 골라 hash sizes 구성(없으면 전체). :665 requested 또는 `math.gcd(*hashing_sizes)`. :673 `return scheduler_block_size, hash_block_size`; **632/647/657행 별도 early return** 존재하므로 unconditional LCM/GCD 주장은 금지. `v1/engine/core.py:157` tuple unpack resolver 결과 → :161 `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)`. `Scheduler.__init__:174`는 `self.block_size=block_size`.
+- **상태 구분:** 259 unit PASS는 **합성 검증과 Source AST gate**에 한하며 실제 model/GPU/prefix cache hit/SSM state restore/Responses/MTP acceptance/TPS/CI는 미검증. 위 5개 true를 실 runtime block 크기/slot correctness로 과대 해석 금지.
+- **영구 문서:** [2026-10-27 Phase5 DGX Narrow Block Flow 보고서](BLAZUX-PHASE5-DGX-NARROW-BLOCK-FLOW-RESULTS-20261027.md), [실행 Gate/Runbook](BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md). 좁은 source SHA256 6개 및 세부 불일치·분기 기록.
+- **다음 같은 Phase5:** `EngineCore`의 Scheduler 실제 import/binding 패턴/alias를 확인하고, `resolve_kv_cache_block_sizes`의 early return 조건 및 `dcp` 공급 경로, Mamba hybrid group spec·state slot seed/pre/postprocess 정렬을 **소스+합성 CPU**로 검증. 새 Phase 만들지 않는다. blazux 패치 5개 계열 적용 승인 여전히 **0건**.
+- **GitHub 보호:** `main@2847e39b4131eb8aff78bf86ffce98892401722a`, P0 `966ec7cf0741734b844b1cea938d56678a756469`, Phase1 `a50fc53721f3d23325dca44eb799f0f388d65951`, Phase2 `76588845d7742703475ae1f49d5e8f5c174bb77a`, Phase3 `760f227e46a358445db3d3931b5efbe40de5f609`, Phase4 `69860277122dffe3082c5b065e4361a571317a8e` 불변. 현재 PR/Merge 불필요, blazux→`main` PR/merge/cherry-pick/rebase/squash/sync 영구 금지. 원본 Docker/serving/ports/model/weights/HF cache/GPU/HTTP/CI 사용자 별도 승인 전 미변경.
+
+---
+
+## 2026-10-27 Phase5 LCM → 반환 → EngineCore 생성자 정밀 조사 구현 — 이전 계획 (DGX 실행 전)
 
 - **브랜치:** `feature/blazux-phase5-correctness-mtp-offline`, 직전 문서 HEAD `f61e9dc03162997253e468ab8e33737b680b1b86`. 사용자 DGX에서 실제 시험된 Source HEAD는 `04b871ab632b2a59d55d11f19009c48daa3ce5c0`: unit **244/244 XFAIL0**, Source **160/160**, Scheduler provenance AST 종료. 조사 범위는 `ASSIGN_SITE_LIMIT=64`로 **PARTIAL**이었다. 이전 실측과 이번 새 코드의 시험 결과는 절대 혼합하지 않는다.
 - **출처 확보 내용:** `v1/core/kv_cache_utils.py:640`의 `scheduler_block_size=math.lcm(*group_block_sizes)`, :665 `hash_block_size=requested or math.gcd(*hashing_sizes)`와 `v1/engine/core.py:161`의 `Scheduler(block_size=scheduler_block_size,hash_block_size=hash_block_size)`는 각각 별개 소스 단서. 실제 KV resolver 반환→EngineCore 지역 변수 대입→Scheduler 생성자 연결, 정확한 imports와 branch 조건은 미확정. Mamba worker `add_request:116`와 Scheduler `_mamba_block_aligned_split:392`는 계속 KV config block_size 사용.

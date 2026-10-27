@@ -6,7 +6,15 @@
 >
 > 최상위 결정: **기존 Orcarouter NVFP4/BF16 PLE/BF16 MTP=2 서비스의 정식 성능 Baseline을 먼저 확보하고 GitHub에 보존한다.** Smoke Test와 별도로 정식 Baseline **12조건×3회=36회 측정**이 완료되었고, [PR #5](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/5)에서 [원본 result.json](../results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json)을 `main`에 보존했다. 단, 신규 Bash runner는 사용자 요청으로 실행 시험을 생략했다.
 
-## 2026-10-27 Phase5 EngineCore/KV LCM-to-Scheduler 좁은 범위 Source AST Gate (준비, DGX NOT_RUN)
+## 2026-10-27 Phase5 KV LCM → EngineCore source-only DGX 실측 PASS — 최신
+
+- **실제 사용자 DGX 소스 HEAD** `bc89de6288889943b50090ac9638ee95c2434a79`에서 **Wizard Mock 38/38**, Source Manifest **164/164**, 전체 unittest **259/259 XFAIL0**, 정밀 source AST 완료. [DGX 정본 결과](BLAZUX-PHASE5-DGX-NARROW-BLOCK-FLOW-RESULTS-20261027.md). 문서 전용 후속 SHA는 DGX 재시험하지 않았다.
+- **Static check 5/6:** KV resolver import, group LCM assignment, KV 반환 tuple, EngineCore resolver tuple 대입, Scheduler ctor keyword 인자 true. `engine_static_imports_scheduler=false` (모듈 최상위 import의 분석기 허용 경로와 일치하지 않음); `UNRESOLVED_OR_PARTIAL_STATIC_CHAIN`, `runtime_flow_proven=false`, `patch_approved=false`. 어떤 이름 기반 정적 증거도 실제 serving correct/ABI 승인으로 승격하지 않음.
+- **주의할 값/분기:** `v1/core/kv_cache_utils.py:634` AttentionSpec group은 `kv_cache_spec.block_size * dcp`, 타 group은 `kv_cache_spec.block_size`. :640 group LCM, :659 prefix_cacheable group hashing 우선, :665 requested 또는 GCD. :632/647/657 **early returns**, :673 일반 tuple return. 조기 반환 조건/`dcp`/Mamba group 실 값 확인 전 **항상 LCM/GCD라고 주장 금지**.
+- EngineCore :157은 `scheduler_block_size, hash_block_size = resolve_kv_cache_block_sizes(kv_cache_config,vllm_config)`, :161 Scheduler keyword 인자 사용. import/binding 정확한 선언, runtime branch, Mamba state slot/Sched aligned prefix hit/real correctness는 미검증.
+- **다음 같은 Phase5 작업:** Scheduler import/alias 증거, KV resolver의 조기 반환 조건/`dcp` 출처, Mamba state index와 spec.slot/pre/postprocess 정렬 CPU oracle에 집중. blazux Mamba/Tool/Responses/MTP patch 계열 **승인 0건**. 운영 Docker/GPU/모델/ports/cache/HTTP/TPS/CI 별도 승인 전 미변경; main/P0/Phase1~4 불변, PR/Merge 금지.
+
+## 2026-10-27 Phase5 EngineCore/KV LCM-to-Scheduler 좁은 범위 Source AST Gate (기존 실행 전 계획)
 
 - 직전 실제 사용자 DGX: Source `04b871ab632b2a59d55d11f19009c48daa3ce5c0`, unit **244/244 XFAIL0**, Manifest **160/160**, Scanner `PARTIAL` (일반 block_size 대입 64개 제한). `v1/core/kv_cache_utils.py`의 LCM/GCD 정의 및 `v1/engine/core.py`의 Scheduler ctor 인자는 각각 정적 후보일 뿐 실제 import·반환·변수 대입 경로는 아직 미검증.
 - 이번에도 **Phase5 하나**에서 [좁은 범위 AST 연결 분석](BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md): 고정 6개 설치 source import-free 조회, KV resolver group block-size 구성/LCM/GCD·return, EngineCore의 resolver 호출/tuple unpack 및 Scheduler ctor 키워드 인자를 6개 static check로 분리. 합성 CPU **15 unittest** 추가, 이전 244+15 = **259 expected**, Manifest **164 expected**, 이번 HEAD 실제 DGX 아직 NOT_RUN.
