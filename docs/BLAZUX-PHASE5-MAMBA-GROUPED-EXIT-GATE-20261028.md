@@ -1,6 +1,6 @@
 # Track A Phase 5 — Mamba physical-address grouped Gate / Phase 6 readiness
 
-> **NEW GATE COMMITTED / DGX NOT_RUN / GPU-RUNTIME NOT_CERTIFIED / PATCH_APPROVAL ZERO.** This is a Phase 5 check and does not itself authorize a new phase, real GPU/model access, CI, or runtime patching.
+> **G1–G7 DGX PASS at 3c364209 / G8 NEW HEAD DGX NOT_RUN / GPU-RUNTIME NOT_CERTIFIED / PATCH_APPROVAL ZERO.** This is a Phase 5 check and does not itself authorize a new phase, real GPU/model access, CI, or runtime patching.
 
 ## Evidence provenance
 
@@ -26,6 +26,7 @@ The tracked script rejects wrong origin/branch, dirty checkout and missing Phase
 | G4 | Multiple Mamba group table selection, int32 element offset, int64 physical ID, byte stride | Synthetic physical arithmetic |
 | G5 | SD/DS conv accepted bias, temporal selection, page padding/natural payload | Synthetic byte-copy |
 | G6 | B_cache=B_mamba and unequal, zero, resumed, boundary and partial-tail | Math sensitivity, **not an observed bug** |
+| G8 | 8×8 source/destination alignment, u64 head/body/tail vs byte fallback; 13,824 synthetic tile-partition combinations, no gaps/overlap | CPU proof only; not actual Triton GPU memcpy |
 | G7 | Spec acceptance, self-column+bias, zero/negative/OOB and partial tail | Stronger CPU oracle bounds, **not Triton guards** |
 
 The bounded `_memcpy_u64_tiled` original function **body** is also printed; synthetic byte-tail PASS alone does **not** certify Triton uint64 alignment, masking, aliasing or tiled runtime correctness. The final expected marker is `PASS: PHASE5_BATCH_OFFLINE_AND_PINNED_SOURCE_EXECUTED_NOT_CERTIFIED`. Every earlier group must finish for the wrapper to print it. Record actual test count, Source Manifest count and source SHA from output; never pre-label new HEAD as DGX PASS.

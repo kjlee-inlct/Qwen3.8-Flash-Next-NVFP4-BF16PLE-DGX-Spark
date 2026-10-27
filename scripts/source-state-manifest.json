@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 176,
+  "tracked_file_count": 177,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -105,7 +105,8 @@
     "2026-10-27 Phase5 user DGX three independent read-only source inspections from 붙여넣은 텍스트(1)(20261027-145706).txt: CHECK1 exact SchedulerConfig.get_scheduler_cls default async(true→AsyncScheduler) vs sync(false→Scheduler), custom object/string qualname; active class unknown. CHECK2 PARTIAL (SCAN_OUTPUT_LIMIT_REACHED after 162 files, 3,571,805 bytes, 103 matches) found v1/engine/core.py:321–324 cache_config.block_size=min(group.kv_cache_spec.block_size) assignment path, MambaSpec separate group size, position-indexed align block table and Mamba group/CacheConfig default; active values and execution unknown. CHECK3 352 Python files, target defs: add_request seed uses cache_config.block_size; preprocess_mamba_align_fused_kernel state_idx new=(computed_after+MAMBA_BLOCK_SIZE-1)//MAMBA_BLOCK_SIZE-1 from mamba_spec.block_size; pre-copy uses saved src_col=old idx; postprocess calls fused kernel block_size=self.block_size, whose assignment and actual precopy_mamba_align_fused_kernel/postprocess_mamba_fused_kernel bodies were not searched. No full new unit Gate in current source inspections. Last actual DGX full 276/276 XFAIL0, Source169/169 belongs solely to code SHA a5376cc06536ce786cdb6db8425e26e21b608910; previous docs-only SHA 321d979eca30b20e5724afbddfe15fe6bf962fbe, new docs-only manifest171 NOT retested. No real block-size mismatch observed, runtime correctness/ABI/patch approval false. Keep main/P0/Phase1-4 immutable, no PR/Merge/GPU/model/serving/CI changes.",
     "2026-10-27 Phase5 user DGX read-only isolated source inspection of installed v1/worker/mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3: BOTH precopy_mamba_align_fused_kernel lines437-519 and postprocess_mamba_fused_kernel lines255-388 inspected; MambaSpecDecodeGPUContext.create:772 passes block_size=mamba_spec.block_size to cls constructor, context V1/V2 postprocess passes block_size=self.block_size to kernel, so source block size supply is MambaSpec, not unknown. Precopy uses old src_col/new dst_col, skips fresh/same, negative idx_mapping skip, otherwise common _copy_mamba_state_block; postprocess align floor new computed to context block size, computes dest_idx=aligned/B-1, needs_copy and accepted-token bias, also invokes same _copy helper. OUTPUT_PARTIAL=False, CHECK marker PHASE5_MAMBA_KERNEL_SOURCE_INSPECTION_DONE, PATCH_APPROVED=False, RUNTIME_CORRECTNESS_VERIFIED=False. Source still does not inspect _copy_mamba_state_block physical pointers/strides or _populate_metadata body, nor actual active cache_config.block_size vs mamba_spec.block_size equality, nor GPU kernel execution; no applied patches. Latest full source/unit DGX Gate 276/276 XFAIL0, Source169/169 belongs only to tested code a5376cc06536ce786cdb6db8425e26e21b608910; previous docs-only HEAD 2def41755c2b55e95a094acabcaf1bd90d5e3259 had Manifest171; followup docs-only Manifest172 SHA not DGX tested. main/P0/Phase1-4 immutable, no PR/Merge, runtime/weights/GPU/HTTP/CI untouched.",
     "2026-10-28 Phase5 installed DGX CPU-only source P1/P2 log 붙여넣은 텍스트(1)(20261027-161759).txt confirms SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3, _copy_mamba_state_block 122-252 and MambaSpecDecodeGPUContext._populate_metadata 843-957 entire functions, OUTPUT_PARTIAL=False. Helper selects group-local int32 block table pointer; batch table row and logical column produce int64 physical id, state base + physical id*block_stride_bytes, DS/SD conv bias and temporal src_col+token_bias; metadata group-layer-state ordering, actual tensor data_ptr, stride(0)*elem_size, group pointer data_ptr and shared table stride(0). No full new DGX unit or manifest Gate, active config equality, helper _memcpy_u64_tiled body, runtime/GPU address values, CI or patch approval. Last verified unit276/source169 still a5376cc. Current docs-only commit not retested. Main/P0/Phase1-4 immutable, no PR/Merge/operational change.",
-    "2026-10-28 Phase5 grouped Mamba batch Gate added scripts/phase5-mamba-batch-check.sh and 24 new stdlib tests in tests/test_blazux_phase5_mamba_batch_gate.py plus Phase5->Phase6 readiness runbook. Script guards origin/branch/clean checkout/protected Phase4 ancestor, executes complete phase5-check-offline.sh, then isolates installed preview four-source SHA/AST, physical copy/meta/pre-post anchors, V1/V2 mapping, multi-group address, SD/DS conv, temporal natural stride, Bcache/Bmamba synthetic mismatch sensitivity, accepted bias, zero/tail/OOB synthetic oracle; prints original _memcpy_u64_tiled bounded source. New 24 synthetic unit tests PASS locally in separate staging only; full new DGX Source/Unit Gate NOT_RUN. No GPU/model/running config/CI, patch approval ZERO; last DGX full test code a5376cc (unit276, Source169). Phase6 work requires separately explicit user approval; main/P0/Phase1-4 and operations unchanged, no PR/Merge."
+    "2026-10-28 Phase5 grouped Mamba batch Gate added scripts/phase5-mamba-batch-check.sh and 24 new stdlib tests in tests/test_blazux_phase5_mamba_batch_gate.py plus Phase5->Phase6 readiness runbook. Script guards origin/branch/clean checkout/protected Phase4 ancestor, executes complete phase5-check-offline.sh, then isolates installed preview four-source SHA/AST, physical copy/meta/pre-post anchors, V1/V2 mapping, multi-group address, SD/DS conv, temporal natural stride, Bcache/Bmamba synthetic mismatch sensitivity, accepted bias, zero/tail/OOB synthetic oracle; prints original _memcpy_u64_tiled bounded source. New 24 synthetic unit tests PASS locally in separate staging only; full new DGX Source/Unit Gate NOT_RUN. No GPU/model/running config/CI, patch approval ZERO; last DGX full test code a5376cc (unit276, Source169). Phase6 work requires separately explicit user approval; main/P0/Phase1-4 and operations unchanged, no PR/Merge.",
+    "2026-10-28 DGX actual code HEAD 3c36420998061f7a3e656eb77390c04b7d2ef935 grouped Phase5: 300/300 unittest XFAIL0, Wizard Mock 38/38, Source Manifest176/176, AST/offline wrapper PASS, G1-G7 source/synthetic 343 embedded check counter PASS, installed mamba_utils.py _memcpy_u64_tiled lines40-119 entirely printed, final PHASE5_GROUPED_GATE_EXECUTION_COMPLETED. New G8 tests are follow-up code NOT DGX executed: uint64 aligned head/body/tail and mismatched byte fallback tiles, synthetic 8x8x4x3x18=13824 combinations locally modeled PASS, plus 10 regression units. CUDA/runtime actual config/real group allocation/GPU state/MTP/Responses/serving/CI unverified; patches ZERO; main/P0/Phase1-4 unchanged; no Phase6 branch or PR/Merge. Report and G8 commit is NOT the DGX-tested code SHA."
   ],
   "files": [
     {
@@ -229,6 +230,11 @@
       "blob_sha": "a452933fc9af503dc912e663f1e11ba1a1249b33"
     },
     {
+      "path": "docs/BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md",
+      "mode": "100644",
+      "blob_sha": "69b51a9a4d266c8041261628aab566ea09b037af"
+    },
+    {
       "path": "docs/BLAZUX-PHASE5-DGX-MAMBA-FUSED-KERNEL-BODIES-RESULTS-20261027.md",
       "mode": "100644",
       "blob_sha": "89c20a6555441ea3c0ab75fb555f47ccac2239f3"
@@ -281,7 +287,7 @@
     {
       "path": "docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md",
       "mode": "100644",
-      "blob_sha": "5c7ca75687ddfeb2eef772ba376eaa24e5dc615d"
+      "blob_sha": "703d83ea821071c4229ef74c8ebc877158bbe567"
     },
     {
       "path": "docs/BLAZUX-PHASE5-NARROW-BLOCK-FLOW-20261027.md",
@@ -311,7 +317,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "23f296f406574c0315a872978303722ca118320d"
+      "blob_sha": "e7a816248a0b23e93e14f1dc5ae9f202c769e274"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -326,7 +332,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "9a52e7b092873c232abc0696601c22b3636cb295"
+      "blob_sha": "37a6163087ee40d6988961f4e9776b32751d7a6e"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -571,7 +577,7 @@
     {
       "path": "scripts/phase5-mamba-batch-check.sh",
       "mode": "100755",
-      "blob_sha": "1d96dd49f784fd823d9525d1819404fd6118f953"
+      "blob_sha": "17415d7920204b33d0a59759497133ce21f6d5bc"
     },
     {
       "path": "scripts/prepare.sh",
@@ -876,7 +882,7 @@
     {
       "path": "tests/test_blazux_phase5_mamba_batch_gate.py",
       "mode": "100644",
-      "blob_sha": "5b3b3986939618f35f96ab315ad81fee4aef0c2e"
+      "blob_sha": "f9b4c6183af5fe11034cd56a35e20adf309bdc48"
     },
     {
       "path": "tests/test_blazux_phase5_patch_readiness.py",

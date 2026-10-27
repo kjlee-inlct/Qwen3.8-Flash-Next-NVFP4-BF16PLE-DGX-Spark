@@ -1,5 +1,12 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 DGX Phase5 grouped G1–G7 전체 PASS 및 마지막 G8 alignment/tile CPU 보강 — 최신
+
+- [새 DGX 실측 정본](BLAZUX-PHASE5-DGX-GROUPED-GATE-RESULTS-20261028.md): **실제 DGX 검증 코드 SHA `3c36420998061f7a3e656eb77390c04b7d2ef935`**, Source Manifest **176/176**, Wizard Mock **38/38**, 전체 Python unit **300/300 XFAIL0**, Source AST/Bash/audit wrapper PASS, G1–G7 PASS, CPU source internal 343개 check PASS. 설치 vLLM `_memcpy_u64_tiled:40–119` 전체 본문 확인, 최종 `PHASE5_GROUPED_GATE_EXECUTION_COMPLETED`. 이는 CUDA GPU correctness/활성 블록 설정값/Tool·Responses·MTP 실동작 증명이 아님.
+- 같은 Phase5 후속 **G8**: `_memcpy_u64_tiled` 소스의 aligned uint64 head/body/tail, misaligned uint8 fallback, tile rounding/mask에서 누락·중복 byte coverage 여부를 **8×8 정렬×4 tiles×3 copy chunks×18 length = 13,824개 합성 조합**으로 검증. 기존 `scripts/phase5-mamba-batch-check.sh`에 G8 연결, `tests/test_blazux_phase5_mamba_batch_gate.py`에 표준 라이브러리 시험 10개 보강. standalone local CPU oracle 13,824 조합 PASS이나 **새 GitHub HEAD에서의 DGX 전체 Gate는 NOT_RUN**. 다음 DGX에서 한번의 `scripts/phase5-mamba-batch-check.sh`로 그룹 A + G1–G8 전체 실행할 것.
+- Phase5 source/CPU exit PASS ≠ **Phase6/runtime/patch 승인**. 운영 CacheConfig와 MambaSpec numeric block equality, active Mamba group topology, state tensor actual bounds, GPU state rollback/prefix hit, Parser/Responses/MTP runtime, inference/TPS 및 CI는 Phase6 승인 이후 각각 명시적으로 검증해야 할 사항. main/P0/Phase1–4 보호, Phase5 PR/Merge 없음, 외부 patch 0.
+
+
 ## 2026-10-28 Phase5 grouped Mamba G1–G7 exit Gate — DGX NOT_RUN
 
 - [단일 검증/Phase6 readiness runbook](BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md): `scripts/phase5-mamba-batch-check.sh`를 **동일 Phase5 브랜치에 커밋**, 사용자는 전용 clean Phase5 checkout에서 fast-forward pull 후 **스크립트 한 번만** 실행. 스크립트는 전체 `scripts/phase5-check-offline.sh`(Source Manifest/mock/unit/AST/audit)와 설치 vLLM pinned SHA4파일/물리 주소/metadata/helper + V1/V2 mapping/multi-group/SD·DS conv/temporal/token bias/zero-boundary/negative-sentinel의 **G1–G7 CPU-only 합성 Gate**를 묶는다. `_memcpy_u64_tiled` 본체도 bound 내 출력해 누락 여부를 확인한다.

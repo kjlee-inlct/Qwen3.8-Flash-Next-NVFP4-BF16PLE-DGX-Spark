@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Track A Phase5: G1-G7 grouped, source-only/stdlib synthetic CPU verification.
+# Track A Phase5: G1-G8 grouped, source-only/stdlib synthetic CPU verification.
 # Reads installed vLLM only inside isolated runc CPU container; does not touch service.
 set -Eeuo pipefail
 
@@ -26,7 +26,7 @@ export PYTHONDONTWRITEBYTECODE=1
 echo "PHASE5_BATCH_SOURCE_HEAD=$(git rev-parse HEAD)"
 echo "=== PHASE5 GROUP A: MANIFEST / MOCK / UNIT / AST / AUDIT ==="
 scripts/phase5-check-offline.sh
-echo "=== PHASE5 GROUP B: PINNED INSTALLED SOURCE + SYNTHETIC CPU G1-G7 ==="
+echo "=== PHASE5 GROUP B: PINNED INSTALLED SOURCE + SYNTHETIC CPU G1-G8 ==="
 CONTAINER="qwen38-flash-orca-uncensored-bf16-mtp"
 IMAGE="$(docker inspect --format '{{.Image}}' "$CONTAINER")"
 echo "SOURCE_IMAGE=$IMAGE"
@@ -117,6 +117,42 @@ def rejects(call):
     except (ValueError, IndexError):
         return True
     return False
+
+
+
+def tiled_spans(src_addr, dst_addr, copy_size, tile_idx, num_tiles, copy_block_size):
+    """CPU reference to the source's alignment-dependent tile ranges, not CUDA."""
+    ints = (src_addr, dst_addr, copy_size, tile_idx, num_tiles, copy_block_size)
+    if any(type(x) is not int for x in ints):
+        raise ValueError("integer inputs required")
+    if (min(src_addr, dst_addr, copy_size, tile_idx) < 0 or num_tiles <= 0 or
+            copy_block_size <= 0 or copy_block_size & (copy_block_size - 1) or
+            tile_idx >= num_tiles):
+        raise ValueError("invalid synthetic pointer, tile or block")
+    spans = []
+    if ((src_addr ^ dst_addr) & 7) == 0:
+        head = min((-dst_addr) & 7, copy_size)
+        if tile_idx == 0 and head:
+            spans.append((0, head, "u8_head"))
+        body_u64 = (copy_size - head) // 8
+        raw = (body_u64 + num_tiles - 1) // num_tiles
+        per = ((raw + copy_block_size - 1) // copy_block_size) * copy_block_size
+        start = tile_idx * per
+        end = min(start + per, body_u64)
+        if start < end:
+            spans.append((head + start * 8, (end - start) * 8, "u64_body"))
+        if tile_idx == 0:
+            tail_start = head + body_u64 * 8
+            if tail_start < copy_size:
+                spans.append((tail_start, copy_size - tail_start, "u8_tail"))
+    else:
+        raw = (copy_size + num_tiles - 1) // num_tiles
+        per = ((raw + copy_block_size - 1) // copy_block_size) * copy_block_size
+        start = tile_idx * per
+        end = min(start + per, copy_size)
+        if start < end:
+            spans.append((start, end - start, "u8_fallback"))
+    return spans
 
 
 spec = importlib.util.find_spec("vllm")
@@ -263,10 +299,55 @@ chunks = [list(range(i,min(i+1024,2051))) for i in range(0,2051,1024)]
 check(len(chunks)==3 and [j for c in chunks for j in c]==list(range(2051)), "partial-tail chunk coverage")
 print("G7 PASS: speculative bias, self-copy decision, invalid ranges, zero and partial-tail (synthetic)")
 
+
+# G8: exact CPU coverage oracle for source fast(u64)/slow(u8) tile partition math.
+# Does NOT test actual Triton loads/stores, CUDA alignment exceptions or alias races.
+memcpy_src = ast.get_source_segment(src, memcpy)
+require_pieces(memcpy_src, [
+    "((src_addr_i ^ dst_addr_i) & 7) == 0",
+    "head_bytes = tl.minimum", "body_u64 = body_bytes // 8",
+    "per_tile_u64 = tl.cdiv", "tail_bytes = copy_size - tail_start",
+    "per_tile_bytes = tl.cdiv", "mask = (i + offsets) < tile_end",
+    "tl.pointer_type(tl.uint64)", "tl.pointer_type(tl.uint8)"
+], "memcpy-alignment-source")
+from itertools import product
+g8_cases = 0
+g8_spans = 0
+for src_mod, dst_mod, tiles, bs, n in product(
+        range(8), range(8), (1, 2, 3, 7), (8, 32, 1024),
+        (0, 1, 2, 7, 8, 9, 15, 16, 31, 32, 33,
+         63, 64, 65, 1023, 1024, 1025, 2051)):
+    covered = bytearray(n)
+    for tile in range(tiles):
+        for start, length, kind in tiled_spans(
+                0x10000 + src_mod, 0x20000 + dst_mod, n, tile, tiles, bs):
+            check(0 <= start and 0 < length and start + length <= n,
+                  "tiled span bounds")
+            if kind == "u64_body":
+                check((src_mod + start) % 8 == 0 and
+                      (dst_mod + start) % 8 == 0 and length % 8 == 0,
+                      "u64 alignment after byte head")
+            for pos in range(start, start + length):
+                if covered[pos] != 0:
+                    raise AssertionError("G8: overlapping synthetic tiled spans")
+                covered[pos] = 1
+            g8_spans += 1
+    if not all(covered):
+        raise AssertionError("G8: uncovered synthetic tiled copy span")
+    g8_cases += 1
+check(g8_cases == 13824, "G8 matrix completeness")
+check(rejects(lambda: tiled_spans(0, 0, -1, 0, 1, 8)),
+      "reject negative length")
+check(rejects(lambda: tiled_spans(0, 0, 8, 3, 2, 8)),
+      "reject out-of-range tile")
+check(rejects(lambda: tiled_spans(0, 0, 8, 0, 2, 7)),
+      "reject non-power-of-two copy block")
+print(f"G8 PASS: u64/u8 alignment+tiling coverage {g8_cases} cases, {g8_spans} spans (synthetic)")
+
 count = memcpy.end_lineno-memcpy.lineno+1
 if count > 160:
     raise SystemExit("STOP: _memcpy_u64_tiled body exceeds bounded output; do not truncate")
-print(f"\n=== UNINSPECTED HELPER BODY: _memcpy_u64_tiled L{memcpy.lineno}-L{memcpy.end_lineno} ===")
+print(f"\n=== PINNED ORIGINAL HELPER BODY: _memcpy_u64_tiled L{memcpy.lineno}-L{memcpy.end_lineno} ===")
 for n in range(memcpy.lineno,memcpy.end_lineno+1):
     print(f"{n:5d}: {lines[n-1]}")
 print("\nBATCH_SOURCE_CPU_CHECKS_PASS=",checks)

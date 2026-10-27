@@ -150,5 +150,86 @@ class Phase5MambaPhysicalBatchGateTests(unittest.TestCase):
         self.assertEqual(len(spans), 3)
 
 
+
+class Phase5MemcopyTiledPartitionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.f = pure_oracles()["tiled_spans"]
+
+    def test_g8_is_in_pinned_batch_gate(self):
+        code = embedded_python()
+        self.assertIn("G8 PASS:", code)
+        self.assertIn('g8_cases == 13824', code)
+        self.assertIn("((src_addr_i ^ dst_addr_i) & 7) == 0", code)
+
+    def test_zero_length_all_tiles_empty(self):
+        for tile in range(7):
+            self.assertEqual(self.f(0x10003, 0x20003, 0, tile, 7, 8), [])
+
+    def test_equal_modulo_alignment_takes_u64_body(self):
+        chunks = self.f(0x10003, 0x20003, 37, 0, 1, 8)
+        self.assertIn((5, 32, "u64_body"), chunks)
+        self.assertIn((0, 5, "u8_head"), chunks)
+
+    def test_different_alignment_uses_u8_fallback(self):
+        chunks = self.f(0x10003, 0x20004, 37, 0, 1, 8)
+        self.assertTrue(chunks)
+        self.assertEqual({kind for _, _, kind in chunks}, {"u8_fallback"})
+
+    def test_short_aligned_bytes_do_not_form_u64_body(self):
+        chunks = self.f(0x10001, 0x20001, 5, 0, 1, 8)
+        self.assertEqual(chunks, [(0, 5, "u8_head")])
+
+    def test_tail_byte_range_owned_by_tile_zero(self):
+        first = self.f(0x10000, 0x20000, 2051, 0, 3, 8)
+        later = sum((self.f(0x10000, 0x20000, 2051, t, 3, 8)
+                     for t in (1, 2)), [])
+        self.assertIn((2048, 3, "u8_tail"), first)
+        self.assertFalse(any(kind == "u8_tail" for _, _, kind in later))
+
+    def test_late_tiles_can_be_empty(self):
+        spans = [self.f(0x10000, 0x20000, 9, t, 7, 1024)
+                 for t in range(7)]
+        self.assertTrue(any(not s for s in spans[1:]))
+
+    def test_fast_and_slow_partition_cover_exact_bytes(self):
+        for sm, dm in ((0, 0), (7, 7), (0, 7), (7, 0)):
+            for n in (0, 1, 7, 8, 9, 31, 32, 1025, 2051):
+                for tiles in (1, 2, 3, 7):
+                    coverage = [0] * n
+                    for t in range(tiles):
+                        for off, size, _ in self.f(
+                                0x10000+sm, 0x20000+dm, n, t, tiles, 32):
+                            self.assertGreater(size, 0)
+                            for byte in range(off, off+size):
+                                self.assertLess(byte, n)
+                                coverage[byte] += 1
+                    self.assertEqual(coverage, [1] * n)
+
+    def test_u64_spans_have_aligned_both_addresses(self):
+        for mod in range(8):
+            for tile in range(3):
+                for off, length, kind in self.f(
+                        0x10000+mod, 0x20000+mod, 2051, tile, 3, 8):
+                    if kind == "u64_body":
+                        self.assertEqual((mod+off) % 8, 0)
+                        self.assertEqual(length % 8, 0)
+
+    def test_reject_invalid_tiling_inputs(self):
+        samples = [
+            (-1, 0, 8, 0, 1, 8),
+            (0, 0, -1, 0, 1, 8),
+            (0, 0, 8, -1, 1, 8),
+            (0, 0, 8, 0, 0, 8),
+            (0, 0, 8, 2, 2, 8),
+            (0, 0, 8, 0, 1, 7),
+            (True, 0, 8, 0, 1, 8),
+        ]
+        for values in samples:
+            with self.subTest(values=values), self.assertRaises(ValueError):
+                self.f(*values)
+
+
+
 if __name__ == "__main__":
     unittest.main()
