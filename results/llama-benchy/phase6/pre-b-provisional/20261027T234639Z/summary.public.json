@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "description": "Phase6 existing-service PRE-B provisional DGX operator-reported numeric result summary; NOT full raw output",
+  "phase": "phase6-pre-b-provisional",
+  "classification": "PROVISIONAL_NOT_A_GATE_NOT_P6_D",
+  "record_provenance": "2026-10-28 user-provided DGX terminal stdout of approved one-time benchmark",
+  "operator_tested_source_commit": "d031d4196eab1f5f1603d6541eaf5a31b02192c0",
+  "runner_git_sha": "e9be344578cec17745066b220798b80a0d2686d3",
+  "model_id": "qwen3.8-flash-next-orca-uncensored-bf16-mtp",
+  "corpus_sha256_current_cached_preflight": "8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c",
+  "tokenizer_sha256": "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523",
+  "benchmark_parameters": {
+    "pp": [
+      2048,
+      8192
+    ],
+    "tg": [
+      128,
+      256
+    ],
+    "context_depth": [
+      0,
+      4096,
+      16384
+    ],
+    "concurrency": 1,
+    "warmup_runs_per_condition": 1,
+    "measured_runs_per_condition": 3,
+    "prompt_seed": 20261027,
+    "exact_tg": true,
+    "latency_mode": "generation"
+  },
+  "operator_reported_status": "PASS_PROVISIONAL_PRE_B_36",
+  "total_conditions": 12,
+  "total_measured_repeats": 36,
+  "operator_reported_private_result_json_sha256": "35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d",
+  "raw_result_json_in_this_repository": false,
+  "raw_json_independently_examined_by_github_update": false,
+  "historical_strict_a_b_equivalence": "UNVERIFIED_CORPUS_SAMPLER_KV_CACHE",
+  "actual_p6_a_runtime_abi": "BLOCKED",
+  "p6_b_c_d": "NOT_RUN",
+  "metrics": [
+    {
+      "depth": 0,
+      "pp": 2048,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 667.173,
+      "tg_decode_tokens_per_second": 32.778,
+      "e2e_ttft_ms": 3236.184
+    },
+    {
+      "depth": 0,
+      "pp": 2048,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 668.434,
+      "tg_decode_tokens_per_second": 30.946,
+      "e2e_ttft_ms": 3275.206
+    },
+    {
+      "depth": 0,
+      "pp": 8192,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 1455.77,
+      "tg_decode_tokens_per_second": 33.2,
+      "e2e_ttft_ms": 6572.308
+    },
+    {
+      "depth": 0,
+      "pp": 8192,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 906.417,
+      "tg_decode_tokens_per_second": 36.713,
+      "e2e_ttft_ms": 9204.701
+    },
+    {
+      "depth": 4096,
+      "pp": 2048,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 826.221,
+      "tg_decode_tokens_per_second": 31.563,
+      "e2e_ttft_ms": 7655.009
+    },
+    {
+      "depth": 4096,
+      "pp": 2048,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 985.086,
+      "tg_decode_tokens_per_second": 32.315,
+      "e2e_ttft_ms": 6512.844
+    },
+    {
+      "depth": 4096,
+      "pp": 8192,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 876.705,
+      "tg_decode_tokens_per_second": 33.689,
+      "e2e_ttft_ms": 14179.975
+    },
+    {
+      "depth": 4096,
+      "pp": 8192,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 885.994,
+      "tg_decode_tokens_per_second": 31.551,
+      "e2e_ttft_ms": 14132.565
+    },
+    {
+      "depth": 16384,
+      "pp": 2048,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 852.802,
+      "tg_decode_tokens_per_second": 30.726,
+      "e2e_ttft_ms": 21828.964
+    },
+    {
+      "depth": 16384,
+      "pp": 2048,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 841.979,
+      "tg_decode_tokens_per_second": 32.611,
+      "e2e_ttft_ms": 22053.947
+    },
+    {
+      "depth": 16384,
+      "pp": 8192,
+      "tg": 128,
+      "pp_estimate_tokens_per_second": 935.012,
+      "tg_decode_tokens_per_second": 32.378,
+      "e2e_ttft_ms": 26441.901
+    },
+    {
+      "depth": 16384,
+      "pp": 8192,
+      "tg": 256,
+      "pp_estimate_tokens_per_second": 1013.813,
+      "tg_decode_tokens_per_second": 30.996,
+      "e2e_ttft_ms": 24951.241
+    }
+  ]
+}
