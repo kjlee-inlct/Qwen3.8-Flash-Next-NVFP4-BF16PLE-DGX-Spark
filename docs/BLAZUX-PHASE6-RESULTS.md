@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 actual DGX e7a4cc4: streaming generator AttributeError
+
+- **Operator DGX result:** exact `e7a4cc47851228b9290ce6ef954a5107e34f3f16`, isolated `p1-real-responses` bundle. Unit **183/183 PASS**; Source **247/247 PASS**; PLE CPU and Phase4 four combinations PASS; Phase5 synthetic **14/14 PASS**. Real Qwen3 Parser→Responses Serving integrated streaming **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_GENERATOR_AttributeError_BLOCKED`, `STOP: isolated CPU test failed (exit=2)`. This is NOT actual HTTP, model, GPU, operational or success verification.
+- **Next source-only diagnostic commit (new HEAD DGX_NOT_RUN):** keep strict real processor output-item requirement. Check whether installed `SimpleContext.streamed_output_items` exists, and report only fixed allowlisted `AttributeError.name` and traceback function-family labels. No raw exception message, traceback, model/tool data, or installed Preview changes. Existing 3 pinned temp-only patches, same CPU bundle, same terminal and schema criteria remain. Determine the exact missing attribute before proposing a fix; do not infer compatibility from upstream vLLM source. **P2 still prohibited without explicit approval.**
+
 ## 2026-10-28 P1 actual DGX d262c0d: streaming validation still blocked
 
 - **Actual operator DGX execution:** `d262c0d1a9db30278eb058c7cc5dadf43ce41646`, `p1-real-responses`: Phase6 unit **183/183 PASS**, source manifest **247/247 PASS**, PLE CPU/Phase4 4/4 and Phase5 synthetic 14/14 PASS. Parser→Responses integrated stream **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_TOOL_ValidationError_RESPONSE_BLOCKED`; final runner `STOP: isolated CPU test failed (exit=2)`, no final success marker. Neither API nor model/GPU/legacy service was validated or changed by the fixture. Report supplied by operator on 2026-10-28.

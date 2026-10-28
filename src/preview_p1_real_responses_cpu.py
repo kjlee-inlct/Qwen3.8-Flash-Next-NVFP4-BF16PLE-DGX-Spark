@@ -230,6 +230,11 @@ def _child(root: Path) -> dict:
         # Recreating it for every chunk, or passing None to the generator,
         # does not exercise the installed Preview serving contract.
         context = serving.SimpleContext(response_parser=parser_instance)
+        # Diagnosing a pinned Preview ABI, never assume upstream context
+        # properties are present in the installed package.
+        print("P1_DIAG_CONTEXT_ITEMS=" +
+              ("PRESENT" if hasattr(context, "streamed_output_items")
+               else "ABSENT"), flush=True)
         events = []
 
         async def contexts():
@@ -244,9 +249,11 @@ def _child(root: Path) -> dict:
                 yield context
 
         async def completed(self, req, params, *args, **kwargs):
+            print("P1_DIAG_TERMINAL_ENTERED=YES", flush=True)
             # The engine is a fixture, but terminal output must reflect real
             # completed typed items emitted by the serving stream processor.
-            if context.streamed_output_items is None:
+            if (not hasattr(context, "streamed_output_items")
+                    or context.streamed_output_items is None):
                 raise StageBlocked("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_MISSING")
             # Reuse the exact typed items retained by the real installed
             # SimpleStreamingEventProcessor; do not rebuild final output.
@@ -336,6 +343,53 @@ def main(args: list[str]) -> int:
                 # Only the exception *type*, never message, traceback, paths,
                 # tool inputs, model contents, or user data.
                 print("P1_DIAG_EXCEPTION=" + type(exc).__name__, flush=True)
+                if type(exc).__name__ == "AttributeError":
+                    # Python's AttributeError.name and traceback frame names
+                    # can be attacker-controlled: emit only fixed labels.
+                    attr_names = {
+                        "streamed_output_items": "CTX_ITEMS",
+                        "last_output": "LAST_OUTPUT",
+                        "final_output": "FINAL_OUTPUT",
+                        "response_parser": "PARSER",
+                        "outputs": "OUTPUTS",
+                        "prompt_token_ids": "PROMPT_TOKENS",
+                        "token_ids": "TOKEN_IDS",
+                        "text": "TEXT",
+                        "finish_reason": "FINISH_REASON",
+                        "logprobs": "LOGPROBS",
+                        "id": "ID",
+                        "call_id": "CALL_ID",
+                        "name": "NAME",
+                        "function": "FUNCTION",
+                        "arguments": "ARGUMENTS",
+                        "streamed_items_by_message": "STREAM_ITEMS",
+                    }
+                    print("P1_DIAG_ATTR=" +
+                          attr_names.get(getattr(exc, "name", None), "OTHER"),
+                          flush=True)
+                    frame_names = {
+                        "completed": "COMPLETED",
+                        "contexts": "CONTEXTS",
+                        "stream_model": "STREAM_MODEL",
+                        "_process_simple_streaming_events": "PROCESSOR",
+                        "responses_stream_generator": "SERVING",
+                        "parse_delta": "PARSER",
+                        "emit_delta": "EMIT_DELTA",
+                        "open": "OPEN",
+                        "close_current": "CLOSE",
+                        "emit_simple_tool_call_open": "TOOL_OPEN",
+                        "emit_simple_tool_call_delta": "TOOL_DELTA",
+                        "emit_simple_tool_call_done": "TOOL_DONE",
+                        "__getattr__": "GETATTR",
+                    }
+                    frame = "OTHER"
+                    current = exc.__traceback__
+                    while current is not None:
+                        candidate = frame_names.get(current.tb_frame.f_code.co_name)
+                        if candidate is not None:
+                            frame = candidate
+                        current = current.tb_next
+                    print("P1_DIAG_ATTR_FRAME=" + frame, flush=True)
                 if type(exc).__name__ == "ValidationError":
                     # Pydantic field names are static allowlisted metadata;
                     # never emit the message, input, ctx, model text or traceback.
@@ -432,8 +486,33 @@ def main(args: list[str]) -> int:
                                 event_kind = candidate
                 event_suffix = ("_" + event_kind
                                 if stage == "STREAM_VALID_WIRE" else "")
+                attr_suffix = ""
+                if error_type == "AttributeError":
+                    allowed_attrs = {
+                        "CTX_ITEMS", "LAST_OUTPUT", "FINAL_OUTPUT", "PARSER",
+                        "OUTPUTS", "PROMPT_TOKENS", "TOKEN_IDS", "TEXT",
+                        "FINISH_REASON", "LOGPROBS", "ID", "CALL_ID", "NAME",
+                        "FUNCTION", "ARGUMENTS", "STREAM_ITEMS", "OTHER",
+                    }
+                    allowed_frames = {
+                        "COMPLETED", "CONTEXTS", "STREAM_MODEL", "PROCESSOR",
+                        "SERVING", "PARSER", "EMIT_DELTA", "OPEN", "CLOSE",
+                        "TOOL_OPEN", "TOOL_DELTA", "TOOL_DONE", "GETATTR",
+                        "OTHER",
+                    }
+                    attr = frame = "OTHER"
+                    for line in child.stdout.splitlines():
+                        if line.startswith("P1_DIAG_ATTR="):
+                            candidate = line.partition("=")[2]
+                            if candidate in allowed_attrs:
+                                attr = candidate
+                        elif line.startswith("P1_DIAG_ATTR_FRAME="):
+                            candidate = line.partition("=")[2]
+                            if candidate in allowed_frames:
+                                frame = candidate
+                    attr_suffix = "_" + attr + "_" + frame
                 raise StageBlocked("REAL_RESPONSES_" + stage + "_" + error_type
-                                   + suffix + event_suffix + "_BLOCKED")
+                                   + suffix + event_suffix + attr_suffix + "_BLOCKED")
             if "PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED" not in child.stdout:
                 raise StageBlocked("REAL_RESPONSES_SUCCESS_MARKER_MISSING")
             for line in child.stdout.splitlines():

@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "418ee762ed73c33b3de468cfae54632cf97fe8b0"
+      "blob_sha": "8ea057d4f8d18c1548fefa50c3bef4df38802eda"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -1061,7 +1061,7 @@
     {
       "path": "src/preview_p1_real_responses_cpu.py",
       "mode": "100644",
-      "blob_sha": "d1e246b1b1603212844100b03864caba95245025"
+      "blob_sha": "3267930d622af3063d331eee226736d5fb66e442"
     },
     {
       "path": "src/preview_p1_tool_responses_stage.py",
@@ -1291,7 +1291,7 @@
     {
       "path": "tests/test_blazux_phase6_real_responses_cpu.py",
       "mode": "100644",
-      "blob_sha": "b086ced6af1702266feb31c5e53dc8c934a41603"
+      "blob_sha": "e3d1665be0c6e6e16a5b84db21e97db99b2123cd"
     },
     {
       "path": "tests/test_ci_contract.py",
