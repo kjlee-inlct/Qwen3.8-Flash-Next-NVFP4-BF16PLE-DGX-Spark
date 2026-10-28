@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 DGX 80ee4dd: third patch still rejects, preserve evidence and diagnose stage
+
+- **Latest real DGX operator log:** exact `80ee4dd7dae5d816d0bf4091601b9916dda7bee0`, isolated `p1-real-responses`. Phase6 **183/183 unit PASS**, Source **247/247 PASS**, Phase4 four CPU combinations PASS, Phase5 synthetic **14/14 PASS**. The existing third temp-only Preview Responses patch still rejected with `PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE`, exit 2; connected real Parser→Serving was **NOT_RUN**. Earlier apparent hunk-old-context equivalence was insufficient to prove GNU patch applicability.
+- **Next diagnostic-only code commit (new HEAD DGX_NOT_RUN):** do **not** modify Preview patch, source preimage pins, test acceptance rules, stage invocation or runner isolation. Parse the existing `patch --fuzz=0` captured stdout/stderr into fixed allowlisted file/hunk or malformed-line category, with generic fallback. Never print raw patch output/reject context, user/model/tool data, arbitrary paths or untrusted error messages. Add source unit assertions and update manifest. The next isolated DGX log is needed to distinguish a malformed diff from a specific failed hunk before any further correction. No operating Docker/GPU/HTTP/model/port 8000, CI, PR, merge or P2 actions.
+
 ## 2026-10-29 P1 DGX a806a5a: temporary Responses patch hunk mismatch
 
 - **Operator DGX run:** exact `a806a5ac33b9f83c15bfc8e10d4b31a6c598a875`, same isolated `p1-real-responses` runner. 183/183 Phase6 unit PASS, 247/247 Source manifest PASS, PLE/Phase4 4-combo/Phase5 synthetic 14/14 PASS. The temporary third Preview patch failed with `PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE` and runner exited 2. Thus actual Parser→Serving and wire retest DID NOT RUN. No operational changes/certification.

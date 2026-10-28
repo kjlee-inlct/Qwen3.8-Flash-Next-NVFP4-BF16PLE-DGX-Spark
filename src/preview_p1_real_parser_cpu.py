@@ -13,6 +13,7 @@ import ast
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -53,6 +54,31 @@ def _environment() -> None:
         raise StageBlocked("ISOLATION_ENV_MISSING")
 
 
+
+def _responses_patch_failure_code(stdout: bytes, stderr: bytes) -> str:
+    """Report only fixed patch-failure tokens, never source, paths or rejects."""
+    which = "OTHER"
+    for line in stdout[:16384].decode("utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line == "patching file vllm/entrypoints/openai/responses/protocol.py":
+            which = "PROTOCOL"
+        elif line == "patching file vllm/entrypoints/openai/responses/serving.py":
+            which = "SERVING"
+        match = re.fullmatch(r"Hunk #([1-9][0-9]?) FAILED at [0-9]+\\.", line)
+        if match and 1 <= int(match.group(1)) <= 14:
+            return "PREVIEW_RESPONSES_PATCH_" + which + "_HUNK_" + match.group(1) + "_FAILED"
+    error = stderr[:16384].decode("utf-8", errors="replace")
+    line_match = re.search(r"malformed patch at line ([1-9][0-9]{0,3})", error)
+    if line_match and int(line_match.group(1)) <= 1024:
+        return "PREVIEW_RESPONSES_PATCH_MALFORMED_LINE_" + line_match.group(1)
+    if "unexpected end of file" in error:
+        return "PREVIEW_RESPONSES_PATCH_TRUNCATED"
+    if any(x in error for x in ("Only garbage was found",
+                               "missing line number", "malformed patch")):
+        return "PREVIEW_RESPONSES_PATCH_FORMAT_REJECTED"
+    return "PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE"
+
+
 def _stage(site: Path, sandbox: Path) -> None:
     if (site / NEW_MODULE).exists():
         raise StageBlocked("INSTALLED_SCHEMA_MODULE_ALREADY_PRESENT")
@@ -76,7 +102,8 @@ def _stage(site: Path, sandbox: Path) -> None:
         capture_output=True, timeout=12, check=False,
     )
     if patched.returncode:
-        raise StageBlocked("PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE")
+        raise StageBlocked(_responses_patch_failure_code(
+            patched.stdout, patched.stderr))
     for name in TARGETS | {NEW_MODULE}:
         src = sandbox / name
         if src.is_symlink() or not src.is_file():

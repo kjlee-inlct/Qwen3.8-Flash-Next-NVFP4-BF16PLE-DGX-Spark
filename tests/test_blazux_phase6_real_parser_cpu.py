@@ -23,6 +23,27 @@ class RealParserCPUPlanTests(unittest.TestCase):
             self.assertRegex(m.SOURCE_PINS[path], r"^[0-9a-f]{64}$")
         self.assertRegex(m.RESPONSES_SHA256, r"^[0-9a-f]{64}$")
 
+    def test_typed_responses_patch_failure_is_sanitized(self):
+        fn = m._responses_patch_failure_code
+        self.assertEqual(
+            fn(b"patching file vllm/entrypoints/openai/responses/protocol.py\\n"
+               b"Hunk #4 FAILED at 843.\\n", b"secret input or reject context"),
+            "PREVIEW_RESPONSES_PATCH_PROTOCOL_HUNK_4_FAILED")
+        self.assertEqual(
+            fn(b"patching file vllm/entrypoints/openai/responses/serving.py\\n"
+               b"Hunk #8 FAILED at 1573.\\n", b""),
+            "PREVIEW_RESPONSES_PATCH_SERVING_HUNK_8_FAILED")
+        self.assertEqual(
+            fn(b"", b"patch: **** malformed patch at line 53: PRIVATE"),
+            "PREVIEW_RESPONSES_PATCH_MALFORMED_LINE_53")
+        self.assertEqual(
+            fn(b"", b"patch: **** unexpected end of file in patch"),
+            "PREVIEW_RESPONSES_PATCH_TRUNCATED")
+        self.assertEqual(
+            fn(b"secret payload\\n", b"token=PRIVATE"),
+            "PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE")
+        self.assertNotIn("PRIVATE", fn(b"", b"patch: **** malformed patch at line 53: PRIVATE"))
+
     def test_no_implicit_execution_or_model_gpu_network_commands(self):
         content = Path(m.__file__).read_text()
         self.assertIn('args != ["--verify-installed"]', content)
