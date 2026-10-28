@@ -24,6 +24,7 @@ import vllm_ple_mmap as ple  # noqa: E402
 
 OLD_KEYS = {"calls", "errors", "rows", "logical_bytes", "gather_s", "fast_calls"}
 PHASE_KEYS = ("normalize_s", "dedup_s", "gather_work_s", "wait_s", "stage_s")
+FORWARD_PHASES = ("ids_to_host_s", "tensor_view_s", "device_copy_call_s")
 
 
 def run() -> None:
@@ -99,6 +100,38 @@ def run() -> None:
                         assert newer["rows"] == old["rows"]
                         assert newer["logical_bytes"] == old["logical_bytes"]
                         assert newer["fast_calls"] == old["fast_calls"]
+
+                        # Real existing embedding.forward() CPU path, not just
+                        # a gather-only synthetic oracle. Verify byte identity
+                        # and count a rejected forward without crediting rows.
+                        model = ple._MmapNgramEmbedding(fixture.vocab, width)
+                        model.table = table
+                        input_ids = torch.tensor([[12, 4, 12], [0, 7, 8]],
+                                                 dtype=torch.int64)
+                        observed = model(input_ids)
+                        expected = oracle(input_ids.numpy().reshape(-1))
+                        assert observed.shape == (2, 3, width)
+                        assert observed.dtype == torch.bfloat16
+                        assert observed.contiguous().view(torch.uint8).numpy().tobytes() == expected.tobytes()
+                        recorded = table.stats_snapshot()
+                        assert recorded["forward_calls"] == 1
+                        assert recorded["forward_errors"] == 0
+                        assert recorded["forward_s"] >= 0.0
+                        assert all(0 <= recorded[k] <= recorded["forward_s"] + 1
+                                   for k in FORWARD_PHASES)
+                        assert recorded["h2d_transfer_s"] == "NOT_INSTRUMENTED"
+                        assert recorded["nvme_read_bytes"] == "NOT_INSTRUMENTED"
+                        try:
+                            model(torch.tensor([fixture.vocab], dtype=torch.int64))
+                        except IndexError:
+                            pass
+                        else:
+                            raise AssertionError("invalid forward input accepted")
+                        rejected = table.stats_snapshot()
+                        assert (rejected["forward_calls"], rejected["forward_errors"]) == (2, 1)
+                        assert rejected["rows"] == recorded["rows"]
+                        assert rejected["logical_bytes"] == recorded["logical_bytes"]
+                        assert rejected["errors"] == recorded["errors"] + 1
                     finally:
                         table.pool.shutdown(wait=True)
 
@@ -140,6 +173,8 @@ def run() -> None:
                 assert (s["calls"], s["errors"], s["rows"]) == (24, 0, 24 * len(ids))
                 assert s["logical_bytes"] == s["rows"] * fixture.row_bytes
                 assert all(s[k] >= 0 for k in PHASE_KEYS)
+                assert (s["forward_calls"], s["forward_errors"]) == (0, 0)
+                assert all(s[k] == 0 for k in FORWARD_PHASES)
             finally:
                 table.pool.shutdown(wait=True)
 

@@ -169,6 +169,12 @@ class MmapPleTable:
                 "gather_s": 0.0, "fast_calls": 0,
                 "normalize_s": 0.0, "dedup_s": 0.0,
                 "gather_work_s": 0.0, "wait_s": 0.0, "stage_s": 0.0,
+                # Forward-path timings only when VLLM_PLE_PHASE_STATS=1.
+                # device_copy_call_s is CPU time inside Tensor.to(), never a
+                # CUDA transfer-completion measurement or kernel timing.
+                "forward_calls": 0, "forward_errors": 0,
+                "forward_s": 0.0, "ids_to_host_s": 0.0,
+                "tensor_view_s": 0.0, "device_copy_call_s": 0.0,
                 # Scope markers prevent reporting asynchronous H2D completion,
                 # kernel duration or physical NVMe I/O as if observed.
                 "h2d_transfer_s": "NOT_INSTRUMENTED",
@@ -190,6 +196,13 @@ class MmapPleTable:
         stage_s: CPU output allocation and inverse-order restoration only.
             NOT a measurement of H2D upload, CUDA sync, or GPU staging.
         nvme_read_bytes: NOT_INSTRUMENTED; logical_bytes counts returned bytes.
+        forward_s: inclusive _MmapNgramEmbedding.forward() wall time.
+        ids_to_host_s: blocking CPU-side input-ID detach/device-to-host call.
+        tensor_view_s: CPU time constructing/viewing the row-result tensor.
+        device_copy_call_s: time in the output Tensor.to(device) call.
+            On CUDA, this is at most enqueue/host-call timing; no
+            synchronization, completed H2D latency, or GPU time is measured.
+        forward counters exclude calls using the dummy/no-table fallback.
         Phase totals are non-additive, especially with concurrent workers.
         """
         if not self.phase_stats_enabled:
@@ -215,6 +228,18 @@ class MmapPleTable:
                 self._stats["rows"] += count
                 self._stats["logical_bytes"] += count * self.row_bytes
                 self._stats["fast_calls"] += int(fast)
+
+    def _record_forward_stats(
+        self, elapsed_s: float, failed: bool, phases: dict[str, float],
+    ) -> None:
+        """Atomic per-table forward counters; never touches CUDA or tensors."""
+        assert self._stats_lock is not None and self._stats is not None
+        with self._stats_lock:
+            self._stats["forward_calls"] += 1
+            self._stats["forward_errors"] += int(failed)
+            self._stats["forward_s"] += elapsed_s
+            for key, duration in phases.items():
+                self._stats[key] += duration
 
     def gather(self, ids: np.ndarray) -> np.ndarray:
         """CPU row gather; stats OFF keeps the original dispatch path."""
@@ -429,11 +454,37 @@ class _MmapNgramEmbedding(nn.Module):
                 dtype=self._zeros_dtype,
                 device=ids.device,
             )
-        ids_np = ids.detach().to("cpu", non_blocking=False).numpy().reshape(-1)
-        rows = table.gather(ids_np)  # uint8 [N, row_bytes], fresh & writable
-        out = torch.from_numpy(rows).view(table.torch_dtype)
-        out = out.to(ids.device, non_blocking=True)
-        return out.reshape(*ids.shape, self.embedding_dim)
+        if not table.phase_stats_enabled:
+            # Preserve the exact existing OFF path: no time sampling or lock.
+            ids_np = ids.detach().to("cpu", non_blocking=False).numpy().reshape(-1)
+            rows = table.gather(ids_np)  # uint8 [N, row_bytes], fresh & writable
+            out = torch.from_numpy(rows).view(table.torch_dtype)
+            out = out.to(ids.device, non_blocking=True)
+            return out.reshape(*ids.shape, self.embedding_dim)
+
+        phases = {"ids_to_host_s": 0.0, "tensor_view_s": 0.0,
+                  "device_copy_call_s": 0.0}
+        started = time.perf_counter()
+        failed = False
+        try:
+            t = time.perf_counter()
+            ids_np = ids.detach().to("cpu", non_blocking=False).numpy().reshape(-1)
+            phases["ids_to_host_s"] += time.perf_counter() - t
+            rows = table.gather(ids_np)
+            t = time.perf_counter()
+            out = torch.from_numpy(rows).view(table.torch_dtype)
+            phases["tensor_view_s"] += time.perf_counter() - t
+            t = time.perf_counter()
+            out = out.to(ids.device, non_blocking=True)
+            phases["device_copy_call_s"] += time.perf_counter() - t
+            return out.reshape(*ids.shape, self.embedding_dim)
+        except Exception:
+            failed = True
+            raise
+        finally:
+            table._record_forward_stats(
+                time.perf_counter() - started, failed, phases
+            )
 
 
 # --------------------------------------------------------------------------- #
