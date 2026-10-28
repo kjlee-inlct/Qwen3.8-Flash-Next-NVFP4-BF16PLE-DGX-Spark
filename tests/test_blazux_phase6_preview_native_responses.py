@@ -13,6 +13,8 @@ class NativeResponsesTests(unittest.TestCase):
         files = [line[6:] for line in data.decode().splitlines() if line.startswith('+++ b/')]
         self.assertEqual(set(files), {responses.SERVING, responses.PROTOCOL})
         self.assertEqual(len(files), 2)
+        self.assertIn(b'| ResponseFunctionCallArgumentsDeltaEvent', data)
+        self.assertIn(b'| ResponseFunctionCallArgumentsDoneEvent', data)
 
     def test_source_syntax_and_explicit_guard(self):
         ast.parse(Path(responses.__file__).read_bytes())

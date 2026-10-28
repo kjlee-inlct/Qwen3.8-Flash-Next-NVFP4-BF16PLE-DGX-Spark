@@ -43,6 +43,8 @@ class RealResponsesCPUPlanTests(unittest.TestCase):
         self.assertIn("include_input=False", source)
         self.assertIn("include_context=False", source)
         self.assertIn("P1_DIAG_VALIDATION_FIELD=", source)
+        self.assertIn("get_args(protocol.StreamingResponsesResponse)", source)
+        self.assertIn("REAL_RESPONSES_FUNCTION_SSE_TYPES_MISSING", source)
         self.assertIn("STREAM_VALID_GENERATOR", source)
         self.assertIn("STREAM_VALID_WIRE", source)
         self.assertIn("P1_DIAG_EVENT_KIND=", source)

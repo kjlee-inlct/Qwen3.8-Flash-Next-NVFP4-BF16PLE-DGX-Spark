@@ -1,16 +1,18 @@
 --- a/vllm/entrypoints/openai/responses/protocol.py
 +++ b/vllm/entrypoints/openai/responses/protocol.py
-@@ -38,6 +38,9 @@
+@@ -38,6 +38,11 @@
      ResponseCompletedEvent as OpenAIResponseCompletedEvent,
  )
  from openai.types.responses import ResponseCreatedEvent as OpenAIResponseCreatedEvent
++from openai.types.responses import ResponseFunctionCallArgumentsDeltaEvent
++from openai.types.responses import ResponseFunctionCallArgumentsDoneEvent
 +from openai.types.responses import ResponseFailedEvent as OpenAIResponseFailedEvent
 +from openai.types.responses import ResponseIncompleteEvent as OpenAIResponseIncompleteEvent
 +from openai.types.responses.response_error import ResponseError
  from openai.types.responses import (
      ResponseInProgressEvent as OpenAIResponseInProgressEvent,
  )
-@@ -642,7 +645,7 @@
+@@ -642,7 +647,7 @@
  class ResponsesResponse(OpenAIBaseModel):
      id: str = Field(default_factory=lambda: f"resp_{random_uuid()}")
      created_at: int = Field(default_factory=lambda: int(time.time()))
@@ -19,7 +21,7 @@
      incomplete_details: IncompleteDetails | None = None
      instructions: str | None = None
      metadata: Metadata | None = None
-@@ -834,6 +837,14 @@
+@@ -834,6 +839,14 @@
      response: ResponsesResponse  # type: ignore[override]
  
  
@@ -34,7 +36,7 @@
  class ResponseCreatedEvent(OpenAIResponseCreatedEvent):
      response: ResponsesResponse  # type: ignore[override]
  
-@@ -843,7 +854,9 @@
+@@ -843,8 +856,12 @@
  
  
  StreamingResponsesResponse: TypeAlias = (
@@ -45,6 +47,9 @@
      | ResponseInProgressEvent
      | ResponseCompletedEvent
      | ResponseOutputItemAddedEvent
+     | ResponseOutputItemDoneEvent
++    | ResponseFunctionCallArgumentsDeltaEvent
++    | ResponseFunctionCallArgumentsDoneEvent
 --- a/vllm/entrypoints/openai/responses/serving.py
 +++ b/vllm/entrypoints/openai/responses/serving.py
 @@ -64,6 +64,9 @@

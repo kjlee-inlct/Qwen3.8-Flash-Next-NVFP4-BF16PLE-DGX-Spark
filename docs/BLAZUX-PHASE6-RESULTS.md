@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 DGX 5a48a1c: missing real function-call SSE union members
+
+- **User DGX exact `5a48a1c01e2f6fee9039df072bd933bd3157a78f`:** Phase6 **183/183 PASS**, source **247/247 PASS**, isolated PLE CPU/Phase4 4-combo PASS, Phase5 synthetic **14/14 PASS**. Parser→Serving generated and structurally validated actual tool output and completed event, but JSON wire roundtrip **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_WIRE_ValidationError_RESPONSE_ARG_DELTA_BLOCKED`, exit 2, no runner completion marker. No HTTP, GPU, model or operational functionality is certified.
+- **Pinned-compatible vLLM 0.32 source-root cause:** `SimpleStreamingEventProcessor` emits `ResponseFunctionCallArgumentsDeltaEvent` and `...DoneEvent`, but `StreamingResponsesResponse` TypeAlias excluded both, causing Pydantic union validation to reject an actual valid function arguments SSE event. Existing temp-only third Preview Responses patch now adds exactly two SDK imports and two union variants; changes its SHA256 pin, statically checks patch and verifies both members in the actual patched protocol at CPU runtime. The other two temp Preview patches and all installed-source SHA preimages are preserved; no alternate test union, skipped SSE, relaxed success, extra gate, production Docker/API/GPU/model changes, PR/merge/P2. **New HEAD DGX_NOT_RUN.**
+
 ## 2026-10-29 P1 actual DGX ac89f32: exact stream completion prerequisite blocked
 
 - **Actual DGX operator execution:** `ac89f322933dd8e5936eed797819aaff0771c6fc`, isolated CPU-only `p1-real-responses`: **183/183 unit PASS**, Source **247/247 PASS**, PLE CPU and Phase4 four combinations PASS, Phase5 synthetic **14/14 PASS**. Integrated patched Preview Parser→Serving stream **BLOCKED** with `REAL_RESPONSES_STREAM_VALID_GENERATOR_StageBlocked_BLOCKED`; isolated runner exited 2 and had no final success marker. Source inspection narrows this to the terminal fixture requirement that `SimpleContext.streamed_output_items` exist and not be None; log suppresses original StageBlocked code. Whether installed Preview has the property or doesn't populate it remains unproven by this log.

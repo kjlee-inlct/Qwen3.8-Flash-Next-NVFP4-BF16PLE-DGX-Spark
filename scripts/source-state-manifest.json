@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "b9d9447de4626b7b8f673bb5c2f68c9453030861"
+      "blob_sha": "f1bd12aa3db47ec10d3e7f70f0b9f5a66d5dd432"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -1011,7 +1011,7 @@
     {
       "path": "src/preview_p1_native_responses_verify.py",
       "mode": "100644",
-      "blob_sha": "a89344e3c4bdca8ee688a6ded79a7bc1d2bc66f0"
+      "blob_sha": "d86311062c1292401627d310e2005a55e8513aff"
     },
     {
       "path": "src/preview_p1_native_schema_verify.py",
@@ -1026,7 +1026,7 @@
     {
       "path": "src/preview_p1_patches/qwen-preview-native-responses.patch",
       "mode": "100644",
-      "blob_sha": "d2c78dbed21ec7bc874749dce0a1b4cb0df3d320"
+      "blob_sha": "09364d4f9a1506618865d57839a861f1856b5805"
     },
     {
       "path": "src/preview_p1_patches/qwen-preview-native-schema.patch",
@@ -1061,7 +1061,7 @@
     {
       "path": "src/preview_p1_real_responses_cpu.py",
       "mode": "100644",
-      "blob_sha": "e4ed9d78851a5ce09c3a6dcc372e4cd2d188b237"
+      "blob_sha": "ef3b0c8311d467f6de80bd1d0cbedbcb4e87d4e0"
     },
     {
       "path": "src/preview_p1_tool_responses_stage.py",
@@ -1266,7 +1266,7 @@
     {
       "path": "tests/test_blazux_phase6_preview_native_responses.py",
       "mode": "100644",
-      "blob_sha": "8a4fd0bab01632d031f0c1e382226204610572d5"
+      "blob_sha": "d52235d5e41a5a4ed2d39b6849efba70b1c86f1d"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_schema.py",
@@ -1291,7 +1291,7 @@
     {
       "path": "tests/test_blazux_phase6_real_responses_cpu.py",
       "mode": "100644",
-      "blob_sha": "31ddabd14218084d4974e7a815c287f1ea61856d"
+      "blob_sha": "c4e55dc6a21aa346184886ef160d550035b60e7c"
     },
     {
       "path": "tests/test_ci_contract.py",

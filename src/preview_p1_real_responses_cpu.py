@@ -55,6 +55,20 @@ def _child(root: Path) -> dict:
     from vllm.sampling_params import SamplingParams
     from vllm.entrypoints.generate.base.serving import GenerationError
     from pydantic import TypeAdapter
+    from typing import get_args
+    from openai.types.responses import (
+        ResponseFunctionCallArgumentsDeltaEvent,
+        ResponseFunctionCallArgumentsDoneEvent,
+    )
+    # Check actual patched Preview protocol union, not a permissive
+    # fixture-local alias that would hide the missing SSE variants.
+    required_function_events = {
+        ResponseFunctionCallArgumentsDeltaEvent,
+        ResponseFunctionCallArgumentsDoneEvent,
+    }
+    if not required_function_events.issubset(
+            set(get_args(protocol.StreamingResponsesResponse))):
+        raise StageBlocked("REAL_RESPONSES_FUNCTION_SSE_TYPES_MISSING")
 
     request = protocol.ResponsesRequest(input="offline-test", stream=True,
                                         model="offline-test", tools=[])

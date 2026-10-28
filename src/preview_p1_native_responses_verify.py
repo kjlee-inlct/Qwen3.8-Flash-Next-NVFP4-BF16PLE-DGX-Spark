@@ -30,7 +30,7 @@ from src.preview_p1_native_schema_verify import (
 from src.preview_p1_native_marker_verify import PINNED as MARKER_PINS
 
 RESPONSES_PATCH = Path(__file__).resolve().parent / "preview_p1_patches/qwen-preview-native-responses.patch"
-RESPONSES_SHA256 = "91a0aef246c7d7f507c2167adf7124923a4ff7dd8f58d6279a22d1bb05c8cad4"
+RESPONSES_SHA256 = "2925f3991492125098b74404d51aeba16c8afe082c501e0261bffabee72f3e65"
 PROTOCOL = "vllm/entrypoints/openai/responses/protocol.py"
 SERVING = "vllm/entrypoints/openai/responses/serving.py"
 TARGETS = frozenset(SCHEMA_TARGETS | {PROTOCOL})
@@ -51,7 +51,12 @@ def behavioral_test(serving_source: Path, protocol_source: Path) -> int:
     """Test the actual patched serving methods, not a standalone event oracle."""
     proto = protocol_source.read_text()
     for token in ('error: ResponseError | None = None', 'class ResponseFailedEvent(',
-                  'class ResponseIncompleteEvent(', '| ResponseIncompleteEvent', '    ResponseFailedEvent\n    | ResponseIncompleteEvent'):
+                  'class ResponseIncompleteEvent(', '| ResponseIncompleteEvent',
+                  '    ResponseFailedEvent\n    | ResponseIncompleteEvent',
+                  'ResponseFunctionCallArgumentsDeltaEvent',
+                  'ResponseFunctionCallArgumentsDoneEvent',
+                  '| ResponseFunctionCallArgumentsDeltaEvent',
+                  '| ResponseFunctionCallArgumentsDoneEvent'):
         if token not in proto:
             raise StageBlocked("RESPONSES_TYPED_PROTOCOL_MISSING")
     class GenerationError(Exception):
