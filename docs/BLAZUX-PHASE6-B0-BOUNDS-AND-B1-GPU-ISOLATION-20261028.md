@@ -1,5 +1,16 @@
 # Phase 6 P6-B0: CPU bounds rehearsal / P6-B1 GPU isolation gate
 
+## 2026-10-28 P6-B1a 무부하 격리·자원 관측기 준비
+
+DGX에서 소스 3aa40292f96427d3592ebdba971b31484c2a6079의 Phase6 124/124, Source220/220 및 B0 독립 25/25 PASS를 확인했다. B0 CPU 합성 Gate는 완료됐으나 **활성 P6-A ABI=BLOCKED, 실제 B1 GPU=NOT_RUN, 정식 B=BLOCKED, P6-C/D=NOT_RUN**은 변하지 않는다.
+
+신규 [P6-B1a 읽기 전용 자원·격리 가능성 검사 정본](BLAZUX-PHASE6-B1A-READONLY-FEASIBILITY-20261028.md)과 src/phase6_b1_readonly_feasibility.py, tests/test_blazux_phase6_b1_readonly_feasibility.py, scripts/phase6-b1a-readonly-feasibility.sh를 준비했다. 이전 A3a 파서를 재사용하여 Docker 고정 이미지·실행 식별자(ID/StartedAt) 전후 일치, 호스트 MemAvailable 2회 관측 시 각각 최소 8192 MiB(메타데이터 검사 보호 하한), NVML 읽기 전용 수치의 가용/부분 상태를 기록한다. 호스트 가용 메모리와 NVML 숫자는 실제 GB10 GPU 통합 메모리 할당 가능량을 인증하지 않는다. 성립해도 결과는 PASSIVE_METADATA_COLLECTED_NOT_GPU_READY뿐이며 GPU 승인·실행·정식 B PASS가 아니다.
+
+신규 23개 오프라인 시험을 포함한 예상 전체 Phase6 147개, Manifest 224개는 신규 코드 DGX 실행 전 **예상값/NOT_RUN**이다. 실제 DGX 확인 명령은 B1a 정본에만 있으며 운영 Docker stop/restart/exec/run, 새 GPU 모델, torch/vLLM/CUDA 실행, 추론/벤치, 기존 PRE-B 재실행, CI·PR·merge, blazux patch를 수행하지 않는다. 정식 GPU 단계는 별도 리소스·격리 증거와 명시적 승인 필요.
+
+---
+
+
 ## 2026-10-28 DGX B0 실제 전체 오프라인 PASS — SHA 고정 영수증
 
 - **DGX 실행 소스 SHA**: `3aa40292f96427d3592ebdba971b31484c2a6079` (`feature/blazux-phase6-runtime-gates`), 사용자 제공 전체 터미널 로그에서 `6afade4..3aa4029` fast-forward 확인.
