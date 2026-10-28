@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 actual DGX ac89f32: exact stream completion prerequisite blocked
+
+- **Actual DGX operator execution:** `ac89f322933dd8e5936eed797819aaff0771c6fc`, isolated CPU-only `p1-real-responses`: **183/183 unit PASS**, Source **247/247 PASS**, PLE CPU and Phase4 four combinations PASS, Phase5 synthetic **14/14 PASS**. Integrated patched Preview Parser→Serving stream **BLOCKED** with `REAL_RESPONSES_STREAM_VALID_GENERATOR_StageBlocked_BLOCKED`; isolated runner exited 2 and had no final success marker. Source inspection narrows this to the terminal fixture requirement that `SimpleContext.streamed_output_items` exist and not be None; log suppresses original StageBlocked code. Whether installed Preview has the property or doesn't populate it remains unproven by this log.
+- **Next limited source correction (new HEAD DGX_NOT_RUN):** Build terminal output *only* from `response.output_item.done` typed events emitted by the actual streaming processor, fail closed if absent, and compare full JSON of those items against context's `streamed_output_items` whenever populated. This avoids requiring an upstream-specific context attribute without accepting invented output or weakening the final Tool identity, schema, sequence, and JSON checks. Show only allowlisted `StageBlocked` diagnostic codes. Three temporary Preview patches and legacy Docker, GPU, HTTP, model, weights, cache, port 8000 unchanged; no P2.
+
 ## 2026-10-29 P1 actual DGX e7a4cc4: streaming generator AttributeError
 
 - **Operator DGX result:** exact `e7a4cc47851228b9290ce6ef954a5107e34f3f16`, isolated `p1-real-responses` bundle. Unit **183/183 PASS**; Source **247/247 PASS**; PLE CPU and Phase4 four combinations PASS; Phase5 synthetic **14/14 PASS**. Real Qwen3 Parser→Responses Serving integrated streaming **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_GENERATOR_AttributeError_BLOCKED`, `STOP: isolated CPU test failed (exit=2)`. This is NOT actual HTTP, model, GPU, operational or success verification.

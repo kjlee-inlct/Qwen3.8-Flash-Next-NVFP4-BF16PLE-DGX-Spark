@@ -250,14 +250,22 @@ def _child(root: Path) -> dict:
 
         async def completed(self, req, params, *args, **kwargs):
             print("P1_DIAG_TERMINAL_ENTERED=YES", flush=True)
-            # The engine is a fixture, but terminal output must reflect real
-            # completed typed items emitted by the serving stream processor.
-            if (not hasattr(context, "streamed_output_items")
-                    or context.streamed_output_items is None):
-                raise StageBlocked("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_MISSING")
-            # Reuse the exact typed items retained by the real installed
-            # SimpleStreamingEventProcessor; do not rebuild final output.
-            finished_items = list(context.streamed_output_items)
+            # Terminal output must be the exact typed items emitted by the
+            # installed event processor, not synthetic or reparsed items.
+            # Preview ABI variants may not retain these on SimpleContext.
+            finished_items = [
+                ev.item for ev in events if ev.type == "response.output_item.done"
+            ]
+            if not finished_items:
+                raise StageBlocked("REAL_RESPONSES_STREAM_PROCESSOR_DONE_ITEMS_MISSING")
+            # If the installed Preview DOES publish context items, require
+            # content/ordering identity with the emitted done events.
+            stored_items = getattr(context, "streamed_output_items", None)
+            if stored_items is not None and (
+                    len(stored_items) != len(finished_items)
+                    or any(a.model_dump(mode="json") != b.model_dump(mode="json")
+                           for a, b in zip(stored_items, finished_items))):
+                raise StageBlocked("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_CONFLICT")
             return protocol.ResponsesResponse.from_request(
                 req, params, model_name="offline-test",
                 created_time=123456, output=finished_items,
@@ -343,6 +351,17 @@ def main(args: list[str]) -> int:
                 # Only the exception *type*, never message, traceback, paths,
                 # tool inputs, model contents, or user data.
                 print("P1_DIAG_EXCEPTION=" + type(exc).__name__, flush=True)
+                if isinstance(exc, StageBlocked):
+                    # Never echo a StageBlocked message without an exact
+                    # allowlist: source, paths and payloads are confidential.
+                    blocked_codes = {
+                        "REAL_RESPONSES_STREAM_PROCESSOR_DONE_ITEMS_MISSING":
+                            "DONE_ITEMS_MISSING",
+                        "REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_CONFLICT":
+                            "ITEMS_CONFLICT",
+                    }
+                    print("P1_DIAG_BLOCKED_CODE=" +
+                          blocked_codes.get(str(exc), "OTHER"), flush=True)
                 if type(exc).__name__ == "AttributeError":
                     # Python's AttributeError.name and traceback frame names
                     # can be attacker-controlled: emit only fixed labels.
@@ -511,8 +530,19 @@ def main(args: list[str]) -> int:
                             if candidate in allowed_frames:
                                 frame = candidate
                     attr_suffix = "_" + attr + "_" + frame
+                blocked_suffix = ""
+                if error_type == "StageBlocked":
+                    blocked_codes = {"DONE_ITEMS_MISSING", "ITEMS_CONFLICT", "OTHER"}
+                    blocked_code = "OTHER"
+                    for line in child.stdout.splitlines():
+                        if line.startswith("P1_DIAG_BLOCKED_CODE="):
+                            candidate = line.partition("=")[2]
+                            if candidate in blocked_codes:
+                                blocked_code = candidate
+                    blocked_suffix = "_" + blocked_code
                 raise StageBlocked("REAL_RESPONSES_" + stage + "_" + error_type
-                                   + suffix + event_suffix + attr_suffix + "_BLOCKED")
+                                   + suffix + event_suffix + attr_suffix
+                                   + blocked_suffix + "_BLOCKED")
             if "PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED" not in child.stdout:
                 raise StageBlocked("REAL_RESPONSES_SUCCESS_MARKER_MISSING")
             for line in child.stdout.splitlines():
