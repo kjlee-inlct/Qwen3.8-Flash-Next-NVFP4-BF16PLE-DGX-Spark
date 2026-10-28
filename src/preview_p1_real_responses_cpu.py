@@ -226,32 +226,38 @@ def _child(root: Path) -> dict:
     # -> actual Responses SSE events; only the model token source is a fixture.
     async def stream_model(text_chunks):
         parser_instance = make_parser()
+        # The serving stream consumes one mutable SimpleContext per request.
+        # Recreating it for every chunk, or passing None to the generator,
+        # does not exercise the installed Preview serving contract.
+        context = serving.SimpleContext(response_parser=parser_instance)
+        events = []
 
         async def contexts():
             for idx, chunk in enumerate(text_chunks):
-                # The real generator explicitly requires a SimpleContext;
-                # no GPU RequestOutput/engine initialization is performed.
-                ctx = object.__new__(serving.SimpleContext)
-                ctx.response_parser = parser_instance
-                ctx.last_output = SimpleNamespace(
+                context.last_output = SimpleNamespace(
                     outputs=[SimpleNamespace(
                         text=chunk, token_ids=[], logprobs=None,
                         finish_reason="stop" if idx == len(text_chunks) - 1 else None,
                     )],
-                    prompt_token_ids=[],
+                    prompt_token_ids=[] if idx == 0 else None,
                 )
-                yield ctx
+                yield context
 
         async def completed(self, req, params, *args, **kwargs):
+            # The engine is a fixture, but terminal output must reflect real
+            # completed typed items emitted by the serving stream processor.
+            finished_items = [
+                ev.item for ev in events if ev.type == "response.output_item.done"
+            ]
             return protocol.ResponsesResponse.from_request(
                 req, params, model_name="offline-test",
-                created_time=123456, output=[], status="completed", usage=None,
+                created_time=123456, output=finished_items,
+                status="completed", usage=None,
             )
 
         actual_service.responses_full_generator = MethodType(completed, actual_service)
-        events = []
         async for event in actual_service.responses_stream_generator(
-                typed_request, sampling, contexts(), None,
+                typed_request, sampling, contexts(), context,
                 "offline-test", tokenizer, None, created_time=123456):
             events.append(event)
         return events
@@ -268,6 +274,16 @@ def _child(root: Path) -> dict:
         raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_EVENTS_MISSING")
     if any(i != ev.sequence_number for i, ev in enumerate(streamed)):
         raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_SEQUENCE_INVALID")
+    finalized = [item for item in streamed[-1].response.output
+                 if item.type == "function_call"]
+    done_items = [ev.item for ev in streamed
+                  if ev.type == "response.output_item.done"
+                  and ev.item.type == "function_call"]
+    if (len(finalized) != 1 or len(done_items) != 1
+            or finalized[0].name != "weather"
+            or json.loads(finalized[0].arguments) != {"city": "Seoul"}
+            or finalized[0].call_id != done_items[0].call_id):
+        raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_FINAL_TOOL_WRONG")
     for event in streamed:
         if adapter.validate_json(event.model_dump_json()).type != event.type:
             raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_WIRE_INVALID")
@@ -303,6 +319,28 @@ def main(args: list[str]) -> int:
                 # Only the exception *type*, never message, traceback, paths,
                 # tool inputs, model contents, or user data.
                 print("P1_DIAG_EXCEPTION=" + type(exc).__name__, flush=True)
+                if type(exc).__name__ == "ValidationError":
+                    # Pydantic field names are static allowlisted metadata;
+                    # never emit the message, input, ctx, model text or traceback.
+                    safe_fields = {
+                        "arguments", "call_id", "content", "delta", "function",
+                        "item", "name", "namespace", "output", "output_index",
+                        "response", "sequence_number", "status", "tool_calls",
+                        "tools", "type",
+                    }
+                    field = "OTHER"
+                    try:
+                        errors = exc.errors(include_input=False,
+                                            include_context=False,
+                                            include_url=False)
+                        if errors:
+                            for part in reversed(errors[0].get("loc", ())):
+                                if isinstance(part, str) and part in safe_fields:
+                                    field = part.upper()
+                                    break
+                    except (TypeError, ValueError, AttributeError):
+                        pass
+                    print("P1_DIAG_VALIDATION_FIELD=" + field, flush=True)
                 raise
             print(json.dumps(result, sort_keys=True))
             print("PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED")
@@ -346,8 +384,23 @@ def main(args: list[str]) -> int:
                         candidate = line.partition("=")[2]
                         if candidate in safe_types:
                             error_type = candidate
+                validation_field = "OTHER"
+                if error_type == "ValidationError":
+                    known_fields = {
+                        "ARGUMENTS", "CALL_ID", "CONTENT", "DELTA", "FUNCTION",
+                        "ITEM", "NAME", "NAMESPACE", "OUTPUT", "OUTPUT_INDEX",
+                        "RESPONSE", "SEQUENCE_NUMBER", "STATUS", "TOOL_CALLS",
+                        "TOOLS", "TYPE", "OTHER",
+                    }
+                    for line in child.stdout.splitlines():
+                        if line.startswith("P1_DIAG_VALIDATION_FIELD="):
+                            candidate = line.partition("=")[2]
+                            if candidate in known_fields:
+                                validation_field = candidate
+                suffix = ("_" + validation_field
+                          if error_type == "ValidationError" else "")
                 raise StageBlocked("REAL_RESPONSES_" + stage + "_" + error_type
-                                   + "_BLOCKED")
+                                   + suffix + "_BLOCKED")
             if "PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED" not in child.stdout:
                 raise StageBlocked("REAL_RESPONSES_SUCCESS_MARKER_MISSING")
             for line in child.stdout.splitlines():
