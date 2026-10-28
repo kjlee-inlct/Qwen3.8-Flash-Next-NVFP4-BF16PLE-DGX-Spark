@@ -1,5 +1,11 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 DGX 7464448: exact third Preview protocol union hunk #4 rejected
+
+- **Actual DGX operator execution**: `7464448a8f20d2badb39c567f16ac666be327d19`, `p1-real-responses` isolated CPU (runc, network none, GPU void, read-only, 1 GiB). **184/184 unit PASS**, **247/247 tracked source PASS**, PLE/Phase4 four combinations PASS, Phase5 synthetic **14/14 PASS**. New narrow diagnostic identified `PREVIEW_RESPONSES_PATCH_PROTOCOL_HUNK_4_FAILED`; runner exit 2, so real Parser→Serving integration not run on this SHA. No production/GPU/HTTP/model work.
+- **Reproduction of cause, separate from DGX evidence**: local GNU `patch --fuzz=0` against a synthetic file built from the exact pinned-compatible union hunk preimage: appending the two new SDK argument SSE variants *after* `ResponseOutputItemAddedEvent` leaves the modified hunk with **zero original trailing context lines** and is rejected; arranging both additions directly after `ResponseCreatedEvent` preserves three unchanged trailing context lines and applies successfully. The original hunk old-side content, both event imports, all SHA-pinned installed source preimages and the other two temporary Preview patches remain unchanged. Add a regression test that runs the exact hunk with `patch --fuzz=0` against an ephemeral reconstructed preimage, change only hunk insertion ordering, refresh Responses patch SHA-256, ledger and 247-entry Source Manifest.
+- **Status:** new GitHub HEAD **DGX_NOT_RUN**; synthetic hunk test does not certify actual Preview patch application or Parser→Serving behavior, and P1 remains BLOCKED until isolated actual-run terminal success. No PR/merge/P2 or live-service changes.
+
 ## 2026-10-29 P1 DGX 80ee4dd: third patch still rejects, preserve evidence and diagnose stage
 
 - **Latest real DGX operator log:** exact `80ee4dd7dae5d816d0bf4091601b9916dda7bee0`, isolated `p1-real-responses`. Phase6 **183/183 unit PASS**, Source **247/247 PASS**, Phase4 four CPU combinations PASS, Phase5 synthetic **14/14 PASS**. The existing third temp-only Preview Responses patch still rejected with `PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE`, exit 2; connected real Parser→Serving was **NOT_RUN**. Earlier apparent hunk-old-context equivalence was insufficient to prove GNU patch applicability.

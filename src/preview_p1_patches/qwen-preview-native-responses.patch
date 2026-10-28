@@ -44,11 +44,11 @@
 +    ResponseFailedEvent
 +    | ResponseIncompleteEvent
 +    | ResponseCreatedEvent
++    | ResponseFunctionCallArgumentsDeltaEvent
++    | ResponseFunctionCallArgumentsDoneEvent
      | ResponseInProgressEvent
      | ResponseCompletedEvent
      | ResponseOutputItemAddedEvent
-+    | ResponseFunctionCallArgumentsDeltaEvent
-+    | ResponseFunctionCallArgumentsDoneEvent
 --- a/vllm/entrypoints/openai/responses/serving.py
 +++ b/vllm/entrypoints/openai/responses/serving.py
 @@ -64,6 +64,9 @@
