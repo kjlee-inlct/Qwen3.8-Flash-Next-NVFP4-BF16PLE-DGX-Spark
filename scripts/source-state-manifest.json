@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 226,
+  "tracked_file_count": 227,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -132,7 +132,8 @@
     "2026-10-28 P6-B1a passive resource feasibility code: reuse existing A3a /proc/meminfo+NVML parsers, two pinned Docker inspect ID/StartedAt observations, host MemAvailable metadata floor 8192MiB before/after. Pure stdout redacted; PARTIAL/N/A does not prove GPU budget, even full telemetry cannot authorize allocation. 23 added offline unit cases; expected Phase6 147 tests, Source224 (new DGX NOT_RUN). B0 actual 124/220 and 25 targeted PASS at exact 3aa40292. P6-A ACTIVE remains BLOCKED, B1 GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN; no Docker exec/run/stop, model/GPU/API/benchmark/CI/PR/merge.",
     "2026-10-28 DGX P6-B1a operator full log source SHA 37b883793bdd33f8aa2d4810947a94fef3aa5c20: Phase6 147/147 OK, Source Manifest 224/224 PASS twice, stable running pinned Docker identity, host MemAvailable before 14620MiB and after 14609MiB, GPU NVML telemetry PARTIAL, status PASSIVE_METADATA_COLLECTED_NOT_GPU_READY, reasons empty. GPU unified memory headroom NOT proven, second model feasible NOT proven, GPU allocation not authorized; A BLOCKED, B0 PASS prior source, B1 real GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs+manifest receipt commit not DGX-tested. No extra bench/model/GPU/CI/PR/merge.",
     "2026-10-28 user explicitly identified delivery drift: repeated offline source/CPU sub-gates and docs for blazux Phase5-6 without demonstrating any of 8 planned new blazux features deployed in service. Assistant admitted planning/process error and introduced canonical DELIVERY-DRIFT-POSTMORTEM guardrails. Future work: outcome-first feature implementation, classify implementation/CPU/GPU/API/deployed evidence separately; stop-loop after repeated ABI-resource BLOCKED without new evidence/approval, avoid B1b/B1c proliferation; next P1 candidates PLE phased wait/dedup/gather/stage statistics and Preview Tool/Responses CPU compatibility. Replace stale active handoff prompt that instructed re-running already consumed 36 PRE-B bench. Preserve last DGX at 37b883793bdd33f8aa2d4810947a94fef3aa5c20 147/147 Source224/224 and B0 3aa40292 124/220 PASS; no runtime/GPU/bench/CI/PR/merge approvals or execution. This docs-only correction commit untested on DGX.",
-    "2026-10-28 P1 PLE CPU phase timings code/test on Phase6 branch: legacy gather counters preserved, opt-in normalize/dedup/worker-result-wait/CPU-stage timings; H2D/NVMe explicitly NOT_INSTRUMENTED. New code DGX_NOT_RUN; existing service and blazux runtime NOT_APPLIED; offline test needs exact-SHA execution."
+    "2026-10-28 P1 PLE CPU phase timings code/test on Phase6 branch: legacy gather counters preserved, opt-in normalize/dedup/worker-result-wait/CPU-stage timings; H2D/NVMe explicitly NOT_INSTRUMENTED. New code DGX_NOT_RUN; existing service and blazux runtime NOT_APPLIED; offline test needs exact-SHA execution.",
+    "2026-10-28 P1 PLE disposable pinned-image CPU-only runner added, with explicit --execute and SHA gate, no serving container exec, no GPU/network/model. New runner itself DGX_NOT_RUN; source verification and isolated CPU test require operator execution at exact new SHA."
   ],
   "files": [
     {
@@ -769,6 +770,11 @@
       "path": "scripts/phase6-readonly-preflight.sh",
       "mode": "100755",
       "blob_sha": "79bd65dfab4686d2945769d31c78303b91198ef2"
+    },
+    {
+      "path": "scripts/ple-phase-stats-cpu-container.sh",
+      "mode": "100755",
+      "blob_sha": "9a9479d55d09708f07334ec05106e6a53f807eaa"
     },
     {
       "path": "scripts/prepare.sh",
