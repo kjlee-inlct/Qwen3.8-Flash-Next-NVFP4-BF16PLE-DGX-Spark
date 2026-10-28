@@ -1,5 +1,12 @@
 # Phase6 P6-D frozen benchmark rules (PLAN_ONLY; no benchmark authorized)
 
+## 2026-10-28 DGX 실제 로그 반영 — P6-A 부분 관찰 / 신규 PRE-B 1회 완료
+
+**P6-D 공식 benchmark는 계속 PLAN_ONLY/NOT_RUN**이며 한 번 승인됐던 별개 **P6-AB provisional** 기존 서비스 12×3/36 실측만 `d031d419...`에서 완료됐다. 새 result SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d`; 재실행 금지. 엄밀 A/B 동등성(과거 corpus/sampler/KV 등) 미확정, 개선율 계산 금지. [RESULTS](BLAZUX-PHASE6-RESULTS.md) 참조.
+
+---
+
+
 ## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
 
 - **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).

@@ -121,7 +121,8 @@
     "2026-10-28 user DGX Phase6 A3b1 exact SHA 0ad5e62caab2e95c57813cc6401d2f00622f3f4f 57/57 Phase6 unittest PASS, Source200/200 PASS, bounded disposable 1CPU/512MiB CPU-only runc pinned-source AST probe PASS with 8 AST components, 7 historical SHA matches (KV resolver file SHA unpinned), P6-A3B1_BEFORE and AFTER pinned legacy running, MemAvailable14064 MiB; final PHASE6_A3B1_DGX_SOURCE_PROBE_COMPLETED. Source-only: no active Scheduler/CacheConfig/MambaSpec/groups/GPU physical state observed. A runtime BLOCKED, B/C/D NOT_RUN. User requests to freeze a performance benchmark between P6-A and P6-B: optional PRE-B checkpoint, not gate bypass/P6-D; pre-blazux immutable 12x3/36 measured raw baseline SHA256 25f6abf3968efbf94cf08b02297140f7be2e8b29f8f2192b1d246e7432959edf. New Python stdlib/no-load baseline hash, provenance, exact 36 metric rows verifier + Bash plan-only + 13 tests + authoritative plan, full handoff/benchmark/adoption/Phase6/results/Phase5 docs synchronized. Expected next Phase6 70 unittest and tracked Source204, NOT DGX RUN on new SHA. Fresh PRE-B 12x3 after ACTUAL A PASS and separate explicit target/HTTP/GPU/benchmark approval only; no production port8000 load or legacy benchmark wrapper now, no model/GPU/API/CI/patch/PR/merge. Historical corpus SHA, sampling/KV still unverified; strict old-vs-new comparison BLOCKED. Main/P0/Phase1-5 and original pre-blazux baseline immutable.",
     "2026-10-28: Operator DGX ran Phase6 exact source SHA fb5deae540812a300cb8404a53a202e505c40577 after ff-only pull: Phase6 offline unittest 70/70 OK, Source Manifest204/204 PASS. P6-AB-0 read-only immutable pre-blazux baseline checksum+runner+tokenizer+environment and 12 conditions x 3 measured repeats=36 numeric source matrix verified. Returned SOURCE_BASELINE_MATRIX_VALIDATED, original_sha256_match=true, runner_sha_match=true, tokenizer_sha_match=true, provenance_matrix_match=true, PLAN_READY_NOT_EXECUTED, pre_b_checkpoint_run=NOT_RUN, performance_benchmark_authorized=false, PHASE6_AB_BENCH_BASELINE_LOCKED_NEW_BENCH_NOT_RUN and final PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD. No new model/GPU/API/HTTP/Docker/benchmark run. Active P6-A ABI still BLOCKED, B/C/D NOT_RUN; historic corpus SHA absent and sampling/KV parity unverified, so historical strict A/B blocked. A->B benchmark checkpoint is reference-only until P6-A actual PASS and separate target/HTTP/GPU/benchmark authorization; original pre-blazux result preserved. This subsequent docs+manifest receipt commit is DGX NOT_RUN and must not inherit 70/204 evidence. Do not touch main/P0/Phase1-5, service/port/model/cache, PR/merge/CI.",
     "2026-10-28: User explicitly requested actual P6-A ABI observation attempt, new real baseline-script execution even though historic 12x3 raw exists, and modernization of stale Phase1/benchmark docs. Previous exact operator-tested Phase6 SHA fb5deae540812a300cb8404a53a202e505c40577: 70/70 unit PASS, Source204/204 PASS, original historic 12x3/36 SHA and runner/tokenizer/source contract verified PLAN_READY_NOT_EXECUTED. New Phase6 code builds existing localhost /metrics and /v1/models read-only observational P6-A probe (only exposed CacheConfig block/prefix/gpu-util allowed; effective Scheduler class, MambaSpec group/table/GPU physical pointers NOT_OBSERVED -> P6-A ACTIVE BLOCKED). Separately user-approved only once resource-watched existing operational model API generation performance 12x3/36 to validate pinned legacy llama-benchy launcher, 8GiB fresh RAM preflight, 4GiB watch floor/1h timeout/strict Docker running id+image+StartedAt, pinned runner/corpus and immutable original result. New private phase6-pre-b-provisional staging + 9-file SHA256SUMS and redacted metrics; never run old launcher directly, never touch service container or new model. Only provisional script-validation result, not A PASS/B GO/P6-D/strict old-vs-new A/B; historical corpus SHA and sampling/KV remain UNVERIFIED. Adds 12 live-metric fixture tests, 17 provisional launcher+private SHA result fixture tests, seven new tracked files; expect total Phase6 99 unit and Source211 tracked on NEW HEAD, but DGX NOT_RUN until operator log. Updated current handoff Phase6 replacing stale historical P0/Phase1 startup instructions and baseline PR NOT_RUN historical status without changing original benchmark data. main/P0/Phase1-5 protected, no CI/PR/merge/patch/GPU new model.",
-    "2026-10-28 new-chat handoff-only receipt: create docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md (current ongoing Phase6 live active ABI observability + one approved provisional 12x3 existing-service script test only) and prepend authoritative link to docs/SESSION-HANDOFF-PROMPT.md. User requested copying current work without duplicating evergreen rules/completed history. Existing code SHA d031d4196eab1f5f1603d6541eaf5a31b02192c0, new live/PRE-B paths 99 expected Phase6 unit tests and manifest211 before this documentation commit; neither new code SHA nor new handoff commit DGX verified yet. Last actual DGX operator tested exact source fb5deae540812a300cb8404a53a202e505c40577: 70/70 Phase6 unit and Source204/204; baseline checksum/36 numeric results PASS, fresh bench NOT_RUN. New doc-only HEAD expects Source212 and Phase6 unit99 but NOT_RUN on DGX; never inherit earlier test PASS. Phase6 branch open PR0, commit combined statuses empty, PR-triggered workflow runs empty at prior code HEAD (NOT CI PASS). P6-A actual scheduler/Mamba groups/physical state BLOCKED, B/C/D NOT_RUN, historic corpus/sampler/KV comparability missing; one user-approved 12x3 existing-service benchmark allowed only through guarded wrapper and must not be repeated automatically. Current work restricted to Phase6; no PR/merge/CI/main/P0/Phase1-5/old baseline/model/legacy Docker change."
+    "2026-10-28 new-chat handoff-only receipt: create docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md (current ongoing Phase6 live active ABI observability + one approved provisional 12x3 existing-service script test only) and prepend authoritative link to docs/SESSION-HANDOFF-PROMPT.md. User requested copying current work without duplicating evergreen rules/completed history. Existing code SHA d031d4196eab1f5f1603d6541eaf5a31b02192c0, new live/PRE-B paths 99 expected Phase6 unit tests and manifest211 before this documentation commit; neither new code SHA nor new handoff commit DGX verified yet. Last actual DGX operator tested exact source fb5deae540812a300cb8404a53a202e505c40577: 70/70 Phase6 unit and Source204/204; baseline checksum/36 numeric results PASS, fresh bench NOT_RUN. New doc-only HEAD expects Source212 and Phase6 unit99 but NOT_RUN on DGX; never inherit earlier test PASS. Phase6 branch open PR0, commit combined statuses empty, PR-triggered workflow runs empty at prior code HEAD (NOT CI PASS). P6-A actual scheduler/Mamba groups/physical state BLOCKED, B/C/D NOT_RUN, historic corpus/sampler/KV comparability missing; one user-approved 12x3 existing-service benchmark allowed only through guarded wrapper and must not be repeated automatically. Current work restricted to Phase6; no PR/merge/CI/main/P0/Phase1-5/old baseline/model/legacy Docker change.",
+    "2026-10-28 Phase6 operator DGX tested exact d031d4196eab1f5f1603d6541eaf5a31b02192c0: 99/99 offline unit PASS and full source 211/211 PASS; readonly /metrics startup cache block_size=8, prefix=false, utilization=.8 and pinned legacy identity. P6-A real active Scheduler/MambaSpec/group physical table/GPU ABI not observed, BLOCKED. User-approved one 12x3/36 existing-service provisional PRE-B benchmark completed exactly once PASS_PROVISIONAL_PRE_B_36, result SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d from console (not independently rehashed in GitHub). Approval consumed: no repeat. Strict historical AB comparison UNVERIFIED and official P6-D NOT_RUN; B/C NOT_RUN. Subsequent 13668e0 docs-only HEAD 212 tracked files was not operator tested, and this docs-only recording commit is also not DGX-tested. No operational modification or model work from GitHub."
   ],
   "files": [
     {
@@ -332,7 +333,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md",
       "mode": "100644",
-      "blob_sha": "a1bda30a960224ceb73280a223d766f134232bd8"
+      "blob_sha": "a27b2fb67cab9a7e6a9f7ced60f041e0dc3fa023"
     },
     {
       "path": "docs/BLAZUX-PHASE6-A3-RESOURCE-OBSERVATION.md",
@@ -352,22 +353,22 @@
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
-      "blob_sha": "926705f52701c57d9630b0da8db564788fe33fc4"
+      "blob_sha": "c1f19246469759c8a6474098908f6bd79f633f7b"
     },
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "d0d2845d4b22293913e4f59aab59e37abe72de2d"
+      "blob_sha": "f483cd0796297793a846fae2d28f7b67accf5e8e"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
       "mode": "100644",
-      "blob_sha": "30cacfd33384c20ff395ea60161d46816aa0ab6b"
+      "blob_sha": "d42c1dff40d2b6d93c2cfed69b3b89893cd5ac64"
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "739327117693f692b7f64ecb8c47c740bdfaa353"
+      "blob_sha": "92f858db3766c6c9acab5043f79138ac6c394949"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -387,12 +388,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "16125bfbc09339d23fc99c5624e2d2b787eb4a3e"
+      "blob_sha": "3486ef95d0367afdcb130422ad089f26bd0afc67"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "9787c45196bc91905f46ae499b4c66bc7f8a7290"
+      "blob_sha": "c2f1d727592585d40ab8a075c18b4516771dc528"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

@@ -1,5 +1,14 @@
 # blazux Track A Phase 6 — Approval-gated runtime verification
 
+## 2026-10-28 DGX 실제 로그 반영 — P6-A 부분 관찰 / 신규 PRE-B 1회 완료
+
+**2026-10-28 DGX 신규 증거 반영:** `d031d419...`에서 99/99 tests + Source211/211 PASS, P6-A 시작 시 cache metric `block_size=8`, `enable_prefix_caching=false`, `gpu_memory_utilization=0.8`만 노출; **실물 ABI BLOCKED**. 승인된 PRE-B 기존 서비스 신규 12×3/36회가 **`PASS_PROVISIONAL_PRE_B_36`**로 1회 완료됐으며 `result.json` SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d` (콘솔 보고; GitHub에서 원본 별도 재해시 아님). **추가 실행/재시도 금지**. `13668e0...` 및 본 문서만 변경하는 후속 HEAD는 DGX NOT_RUN, P6-B/C/D NOT_RUN. 자세한 영수증: [BLAZUX-PHASE6-RESULTS.md](BLAZUX-PHASE6-RESULTS.md).
+
+**Gate 의존성 불변:** 노출된 캐시 메타데이터 및 PRE-B 잠정 36회 성공은 P6-A 실제 ABI correctness 통과가 아니므로 P6-B·P6-C·P6-D를 시작할 수 없다. 다음은 무부하 소스/공개 인터페이스 조사와 별도 승인용 실제 ABI 관측 설계뿐이다.
+
+---
+
+
 ## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
 
 - **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).

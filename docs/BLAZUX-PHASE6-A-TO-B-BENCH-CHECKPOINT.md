@@ -1,5 +1,12 @@
 # Phase6 A→B performance checkpoint — baseline freeze before GPU correctness gate
 
+## 2026-10-28 DGX 실제 로그 반영 — P6-A 부분 관찰 / 신규 PRE-B 1회 완료
+
+**실측 잠정 체크포인트 확보(정식 A→B Gate 아님)**. `d031d419...`에서 사용자 승인 1회 12×3 신규 측정 36/36이 완료되었으며 `PASS_PROVISIONAL_PRE_B_36`, result SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d`가 DGX 콘솔에 보고됐다. 과거 Baseline은 분리/보호된다. 예전 아래의 `NEW_BENCHMARK_NOT_RUN`은 최초 계획 시점만 설명한다. **재측정 금지**, P6-A active ABI `BLOCKED` / P6-B/C/D `NOT_RUN`, 역사적 corpus/sampling/KV/cache strict 동등성 `UNVERIFIED`. 12조건 PP/TG/TTFT 공개 요약은 [RESULTS](BLAZUX-PHASE6-RESULTS.md) 참조.
+
+---
+
+
 ## 2026-10-28 최신 Phase6 실제 A 관찰 시도 + 승인된 기존 서비스 벤치 스크립트 검증 — 선행 상태
 
 - **사용자 신규 실행 승인**: 실제 P6-A ABI 검증을 시도하고 이미 과거 Baseline이 있더라도 신규 벤치를 **스크립트 검증 목적**으로 수행, 오래된 문서를 갱신. 이 승인은 운영 서비스 재시작/변경·새 GPU 모델·blazux patch/CI/PR/Merge 권한이 아님. **DGX는 사용자 조작**, GitHub가 제공하는 스크립트를 검사해 실행하고 결과를 수집한다. [현재 실행·안전 경계 정본](BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md).

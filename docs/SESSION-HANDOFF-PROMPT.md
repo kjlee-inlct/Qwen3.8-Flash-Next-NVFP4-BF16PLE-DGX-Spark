@@ -1,5 +1,14 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 DGX 실제 로그 반영 — P6-A 부분 관찰 / 신규 PRE-B 1회 완료
+
+**2026-10-28 DGX 신규 증거 반영:** `d031d419...`에서 99/99 tests + Source211/211 PASS, P6-A 시작 시 cache metric `block_size=8`, `enable_prefix_caching=false`, `gpu_memory_utilization=0.8`만 노출; **실물 ABI BLOCKED**. 승인된 PRE-B 기존 서비스 신규 12×3/36회가 **`PASS_PROVISIONAL_PRE_B_36`**로 1회 완료됐으며 `result.json` SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d` (콘솔 보고; GitHub에서 원본 별도 재해시 아님). **추가 실행/재시도 금지**. `13668e0...` 및 본 문서만 변경하는 후속 HEAD는 DGX NOT_RUN, P6-B/C/D NOT_RUN. 자세한 영수증: [BLAZUX-PHASE6-RESULTS.md](BLAZUX-PHASE6-RESULTS.md).
+
+기존 이력·상시 운영 규칙은 아래에 원문을 유지한다.
+
+---
+
+
 ## 현재 진행 작업만 인수인계할 때 읽을 우선 문서 (2026-10-28)
 
 - **새 대화에 바로 붙여 넣을 현재 작업 전용 프롬프트**: [PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md). 이 요약은 지금 진행 중인 Phase6 실서비스 ABI 관찰 + 승인된 기존 서비스 벤치 재측정만 다루고, 본 문서 아래에 누적된 과거 확정 사실·완료 이력·운영 금지 규칙은 링크로 참조한다.
