@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 PLE 단계별 계측 — 일회성 CPU Docker 실제 DGX PASS (정확한 SHA)
+
+- **사용자가 제공한 실제 DGX 로그:** `feature/blazux-phase6-runtime-gates` 소스 `47c8aa819bcdca5c6938831a091190bea075610a`. `git pull --ff-only`로 `518e805..47c8aa8` fast-forward 후, `scripts/ple-phase-stats-cpu-container.sh --expected-head 47c8aa8... --execute` 실행 완료.
+- **Host 표준 라이브러리:** Phase 6 **147/147 OK**, Source Manifest **227/227 PASS**, `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`.
+- **독립 CPU-only 일회용 컨테이너:** `PLE_CPU_CONTAINER_PREFLIGHT_PASS`, `RUNC_CPU_ONLY_NETWORK_NONE_GPU_VOID_READONLY_MEMORY_1G`; 신규 단계별 계측 `PLE_PHASE_STATS_CPU_PASS byte_exact=1 concurrency=24`; Phase 4 FAST/STATS OFF/OFF, ON/OFF, OFF/ON, ON/ON 모두 `byte_exact=1`, `PHASE4_CPU_MATRIX_ALL_OK`; 최종 `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`.
+- **소형 warm synthetic CPU 샘플:** stats OFF median **116.606 μs**, stats ON median **114.607 μs**. 단기 측정 잡음/테스트 환경의 영향이 가능하며 **계측 ON 성능 향상·계측 오버헤드 0·운영 TPS 개선을 증명하지 않는다**.
+- **기능별 판정:** P1 PLE 단계 계측 `CPU_VERIFIED_AT_SHA_47c8aa8`; 실제 운영 엔진 활성화 `NOT_APPLIED`, 실서비스 프로파일/인퍼런스/실 NVMe 성능/GPU H2D `NOT_RUN`. 그 밖의 7개 기능 구현 완료 근거로 계산하지 않는다. 이후 GitHub 문서/스크립트 HEAD는 별도 DGX 실행 전까지 `DGX_NOT_RUN`.
+
+
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
 
 **사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.

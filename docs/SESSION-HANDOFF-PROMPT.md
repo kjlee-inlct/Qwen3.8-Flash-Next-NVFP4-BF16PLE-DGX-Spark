@@ -1,5 +1,32 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 상시 운영 규칙 — CPU-only 일회용 Docker + 기능 묶음 처리
+
+**근거:** 2026-10-28 사용자 요청 및 DGX `47c8aa819bcdca5c6938831a091190bea075610a`의 일회성 PLE CPU 회귀 PASS. 증거 해석은 [Phase6 결과](BLAZUX-PHASE6-RESULTS.md)의 해당 SHA를 참조. 이 규칙은 기존 운영 컨테이너 `docker exec/run/stop/restart`에 대한 포괄 승인도, GPU 실험/모델/HTTP/CI/PR/merge 승인도 아니다.
+
+1. **공유 실행 환경 우선:** 호스트 Python에 NumPy/torch 등이 없으면 호스트 `pip install`이나 운영 컨테이너 `docker exec` 대신, **사용자가 해당 실행을 명시적으로 승인한 경우에만** 고정된 **기존 이미지 digest**로 별도의 `docker run --rm --pull=never` 일회용 CPU-only 컨테이너를 사용한다. GPU/모델/캐시/serving 네트워크는 노출하지 않는다. 가능하면 같은 의존성·동일 CPU-only 위험 경계·동일 이미지/자원 예산의 여러 기능 회귀를 **한 번의 컨테이너에서 순차 처리**한다.
+2. **실행 경계 보존:** 안전한 runner는 exact 브랜치/HEAD/개인 fork origin/clean tree/Manifest를 사전에 확인하고, 고정 운영 컨테이너 이미지/Running/StartedAt 식별자와 호스트 가용 메모리를 실행 전후 검증한다. `--runtime=runc`, `--network=none`, GPU void/`CUDA_VISIBLE_DEVICES=-1`, read-only 소스 mount, nonroot, cap-drop ALL, no-new-privileges, read-only rootfs, `--pull=never`, CPU/memory/pids/tmpfs 상한, offline 환경변수, 명시적 `--execute`와 허용목록된 고정 시험만 사용. **같은 이미지라도 별도 모델/GPU/커널 실행은 금지**. 주기적 재실행 및 권한의 일반화 금지.
+3. **묶음 기준 및 정직한 증거:** 하나의 테스트 묶음은 **같은 의존성/실행 위험/실험 소유권/승인 범위**에 한정하며, 표준 라이브러리 계약은 가능하면 호스트에서 1회, NumPy/torch CPU 실험과 Preview Parser **소스만 읽는 AST/해시 검사**는 일회용 이미지에서 1회. 각 기능마다 `SOURCE_REVIEWED`, `IMPLEMENTED_OFFLINE`, `CPU_VERIFIED`, `GPU_VERIFIED`, `API_VERIFIED`, `DEPLOYED_VERIFIED` 중 증거로 뒷받침되는 상태를 별도로 기재한다. 함께 실행했다는 사실은 엔진 호환성/성능/통합/운영 적용을 뜻하지 않는다.
+4. **한 묶음에서 다수 구현:** 같은 소스 브랜치의 서로 독립적인 작은 P1 기능 코드/정확성 테스트는 **한 개발·CPU 검증 주기**에 함께 준비하되, 성공 기준·rollback·필요한 환경은 기능마다 분리한다. 형식적인 Phase/Gate/PR/문서 커밋을 늘리지 않는다. CPU-only 결과를 확인하기 전에 다음 GPU/운영 단계로 자동 승격하지 않는다.
+5. **실제 번들 진입점:** `scripts/ple-phase-stats-cpu-container.sh --expected-head <정확한 SHA> --execute`는 기존 PLE 단독 모드이며, 같은 스크립트의 `--expected-head <정확한 SHA> --bundle p1-offline --execute`는 PLE 계측/Phase4 CPU + 기존 Phase5 Tool/Responses/Prefix/MTP **합성 계약 시험** + 설치된 Preview Parser **읽기 전용 소스 점검**을 하나의 일회용 CPU 컨테이너에 묶는다. Phase5 합성 계약은 **실제 Parser 수정·호환성 PASS, Prefix-cache 정확성 PASS, MTP acceptance PASS의 증거가 아니다**. 두 모드는 승인·소스 SHA에 종속되며 자동 반복하지 않는다.
+6. **절대 혼합하지 않을 조건:** 실제 Prefix-cache의 active Scheduler/Mamba block ABI, GPU 정합성·MTP/PLE 실성능, vLLM v0.32 별도 이미지/overlay, HF checkpoint 변환, YaRN 500K, Hybrid FP8, 운영 API/추론은 위 CPU 묶음에서 **실행하지 않는다**. 새로운 위험/다른 자원 경계는 별도 실행 환경과 새 명시적 승인·중단 조건을 요구한다. 기존 PRE-B 36회 재실행 금지, main/P0/Phase1–5/고정 운영 자산 불변.
+
+### 기능 우선순위와 묶음 적용 경계
+
+| 우선순위 | 기능 | 기대 효과 | 현재 가능한 묶음 범위 | 실모델/운영 적용의 남은 차단 |
+|---|---|---|---|---|
+| P1 | PLE mmap 단계별 계측 | BF16 PLE CPU 병목 식별 | **CPU_VERIFIED** at `47c8aa8`; CPU 회귀·기존 옵션 | 실제 운영 활성화/계측/성능 미검증 |
+| P1 | Prefix-cache 정확성 회귀 | 캐시 사용 시 출력 불일치 검출 | Phase5 합성 contract만 CPU 묶음 | active block ABI 미관측, GPU 정확성 `DEFERRED_BY_EVIDENCE` |
+| P1 | Tool Calling/Responses | Pi Agent 신뢰성 개선 | 합성 JSON/스트림 oracle와 Preview AST 소스 확인만 CPU 묶음 | 실제 Preview Parser 경로에 대한 통합 코드·API 검증 필요 |
+| P2 | MTP reduced draft vocabulary | draft 대역폭 절감 가능성 | 합성 후보 검증만 CPU 묶음 | acceptance/다국어/품질 실모델 `NOT_RUN` |
+| P2 | PLE Gather 최적화 | Prefill/Decode 개선 가능성 | 기존 Fast/Stats OFF/ON CPU 바이트 검증 | 실제 BF16/FP8 및 실 workload 성능 비교 필요 |
+| P2 | 별도 vLLM v0.32 | upstream 활용 | 현 브랜치 CPU 묶음으로는 미지원 | 독립 이미지/overlay/ABI 이식·별도 승인 |
+| P3 | YaRN 500K | 긴 context | CPU 묶음에서 제외 | 긴 문맥 정확성/M-RoPE/메모리·실모델 실행 |
+| P3 | Hybrid FP8 | Dense 메모리 절감 | CPU 묶음에서 제외 | Orcarouter compressed-tensors 불일치·변환 검증 |
+
+**우선순위:** P1 Tool/Responses의 **실제 Preview Parser API 호환 구현**을 다음 기능 구현 목표로 유지. CPU 묶음이 이미 있는 합성 시험만 반복하는 것을 기능 진전으로 세지 않는다. 안전한 작업은 묶되 서로 다른 환경/권한을 가진 GPU 작업은 묶지 않는다.
+
+
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
 
 **사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.

@@ -133,7 +133,8 @@
     "2026-10-28 DGX P6-B1a operator full log source SHA 37b883793bdd33f8aa2d4810947a94fef3aa5c20: Phase6 147/147 OK, Source Manifest 224/224 PASS twice, stable running pinned Docker identity, host MemAvailable before 14620MiB and after 14609MiB, GPU NVML telemetry PARTIAL, status PASSIVE_METADATA_COLLECTED_NOT_GPU_READY, reasons empty. GPU unified memory headroom NOT proven, second model feasible NOT proven, GPU allocation not authorized; A BLOCKED, B0 PASS prior source, B1 real GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs+manifest receipt commit not DGX-tested. No extra bench/model/GPU/CI/PR/merge.",
     "2026-10-28 user explicitly identified delivery drift: repeated offline source/CPU sub-gates and docs for blazux Phase5-6 without demonstrating any of 8 planned new blazux features deployed in service. Assistant admitted planning/process error and introduced canonical DELIVERY-DRIFT-POSTMORTEM guardrails. Future work: outcome-first feature implementation, classify implementation/CPU/GPU/API/deployed evidence separately; stop-loop after repeated ABI-resource BLOCKED without new evidence/approval, avoid B1b/B1c proliferation; next P1 candidates PLE phased wait/dedup/gather/stage statistics and Preview Tool/Responses CPU compatibility. Replace stale active handoff prompt that instructed re-running already consumed 36 PRE-B bench. Preserve last DGX at 37b883793bdd33f8aa2d4810947a94fef3aa5c20 147/147 Source224/224 and B0 3aa40292 124/220 PASS; no runtime/GPU/bench/CI/PR/merge approvals or execution. This docs-only correction commit untested on DGX.",
     "2026-10-28 P1 PLE CPU phase timings code/test on Phase6 branch: legacy gather counters preserved, opt-in normalize/dedup/worker-result-wait/CPU-stage timings; H2D/NVMe explicitly NOT_INSTRUMENTED. New code DGX_NOT_RUN; existing service and blazux runtime NOT_APPLIED; offline test needs exact-SHA execution.",
-    "2026-10-28 P1 PLE disposable pinned-image CPU-only runner added, with explicit --execute and SHA gate, no serving container exec, no GPU/network/model. New runner itself DGX_NOT_RUN; source verification and isolated CPU test require operator execution at exact new SHA."
+    "2026-10-28 P1 PLE disposable pinned-image CPU-only runner added, with explicit --execute and SHA gate, no serving container exec, no GPU/network/model. New runner itself DGX_NOT_RUN; source verification and isolated CPU test require operator execution at exact new SHA.",
+    "2026-10-28 operator DGX at exact 47c8aa819bcdca5c6938831a091190bea075610a confirmed PLE phase stats CPU (24 parallel calls, bytes identical) + Phase4 four flag combinations + Phase6 147/147 and Source227/227. Tiny synthetic CPU medians OFF 116.606us / ON 114.607us are not a performance improvement claim. P1 PLE CPU_VERIFIED only, not deployed. New docs plus optional p1-offline one-container batch of existing synthetic Tool/Responses/Prefix/MTP contracts and preview source audit; new HEAD DGX_NOT_RUN. No service/GPU/model/API/benchmark operation."
   ],
   "files": [
     {
@@ -409,7 +410,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "63d7fab18437022d6218e55630bb8b029b87e1e8"
+      "blob_sha": "43eb12f368620e2cda73657d1b658192c79e1652"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -429,12 +430,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "ced11034f0fe9743e33836e3972e27d6eb3dc5d3"
+      "blob_sha": "a67b0de6613422b575e8626d6c2564d426810751"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "11ba6f8d61e86ff5250fe45057bdd5dab7280d4a"
+      "blob_sha": "e58ea3aed72d57fe8fc0ac7a74dcd13f32907c37"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -774,7 +775,7 @@
     {
       "path": "scripts/ple-phase-stats-cpu-container.sh",
       "mode": "100755",
-      "blob_sha": "9a9479d55d09708f07334ec05106e6a53f807eaa"
+      "blob_sha": "18964dbc8a11cb1cc9f6d13677accd96c9661586"
     },
     {
       "path": "scripts/prepare.sh",

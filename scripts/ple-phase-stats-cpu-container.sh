@@ -13,9 +13,21 @@ readonly MIN_AFTER_KIB=4194304     # 4 GiB after, NOT GPU headroom.
 
 stop() { echo "STOP: $*" >&2; exit 2; }
 
-[[ $# -eq 3 && "${1:-}" == "--expected-head" && "${3:-}" == "--execute" ]] ||
-  stop "usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> --execute"
+# Allow exactly the old two-test PLE invocation, or a fixed CPU-only
+# P1 synthetic/source bundle. No arbitrary command/profile injection.
+readonly USAGE="usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> [--bundle p1-offline] --execute"
+BUNDLE="ple"
+if [[ $# -eq 3 && "${1:-}" == "--expected-head" && "${3:-}" == "--execute" ]]; then
+  :
+elif [[ $# -eq 5 && "${1:-}" == "--expected-head" &&
+        "${3:-}" == "--bundle" && "${4:-}" == "p1-offline" &&
+        "${5:-}" == "--execute" ]]; then
+  BUNDLE="p1-offline"
+else
+  stop "$USAGE"
+fi
 readonly EXPECTED_HEAD="$2"
+readonly BUNDLE
 [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]] || stop "invalid expected HEAD"
 [[ -d "$ROOT/.git" && ! -L "$ROOT" ]] || stop "not a regular repository checkout"
 cd -- "$ROOT"
@@ -60,6 +72,7 @@ bash scripts/phase6-gate.sh
 
 echo "PLE_CPU_CONTAINER_PREFLIGHT_PASS"
 echo "PLE_CPU_CONTAINER_POLICY=RUNC_CPU_ONLY_NETWORK_NONE_GPU_VOID_READONLY_MEMORY_1G"
+echo "PLE_CPU_CONTAINER_BUNDLE=$BUNDLE"
 rc=0
 docker run --rm --pull=never \
   --runtime=runc --network=none --read-only \
@@ -80,11 +93,21 @@ docker run --rm --pull=never \
   --env OMP_NUM_THREADS=1 \
   --env OPENBLAS_NUM_THREADS=1 \
   --env MKL_NUM_THREADS=1 \
+  --env PLE_CPU_TEST_BUNDLE="$BUNDLE" \
   --entrypoint /bin/sh "$IMAGE" -c '
     set -eu
     python3 src/test_ple_phase_stats_cpu.py
     python3 src/test_ple_phase4_cpu.py
     echo PLE_CPU_CONTAINER_TESTS_PASS
+    if [ "$PLE_CPU_TEST_BUNDLE" = "p1-offline" ]; then
+      # Existing independent synthetic client oracles: NOT the real parser.
+      PYTHONPATH=.:src python3 -m unittest discover \
+        -s tests -p "test_blazux_phase5_contracts.py" -v
+      echo P1_TOOL_RESPONSES_PREFIX_MTP_SYNTHETIC_CONTRACTS_PASS_ONLY
+      # Read-only installed vLLM source AST/hash triage, never imports vLLM.
+      python3 src/phase5_preview_abi_audit.py
+      echo P1_PREVIEW_PARSER_SOURCE_TRIAGE_DONE_NOT_API_VERIFIED
+    fi
   ' || rc=$?
 
 legacy_after="$(legacy_identity 2>/dev/null)" ||

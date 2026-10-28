@@ -1,5 +1,13 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 최신 P1 CPU 계측 완료 및 일회용 Docker 묶음 규칙
+
+- **실제 DGX-tested SHA** `47c8aa819bcdca5c6938831a091190bea075610a`: PLE phase stats CPU byte-exact/24 concurrent calls PASS, Phase4 4-flag matrix PASS, Phase6 147/147 PASS, Source Manifest 227/227 PASS. 최종 `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 중앙값 OFF 116.606 μs / ON 114.607 μs는 warm synthetic 샘플일 뿐 운영 성능 비교가 아니다. **P1 PLE 계측 `CPU_VERIFIED`, 운영 `NOT_APPLIED`**.
+- **상시 규칙:** [SESSION-HANDOFF-PROMPT.md](SESSION-HANDOFF-PROMPT.md)의 **2026-10-28 CPU-only 일회용 Docker + 기능 묶음 처리** 절을 적용. 고정 이미지·읽기 전용·GPU/네트워크/모델 차단·자원 상한·예상 HEAD 확인·사용자 명시 승인. 기존 컨테이너 `exec` 금지. 한 번의 컨테이너에서 같은 격리 조건의 시험 묶음 실행 가능, 실제 GPU/운영 검증은 포함되지 않음.
+- **신규 묶음 진입점:** `scripts/ple-phase-stats-cpu-container.sh --expected-head <SHA> --bundle p1-offline --execute` (기존 `--execute` PLE 단독 모드도 유지). P1 PLE + Phase5 합성 Tool/Responses/Prefix/MTP 계약과 설치된 Preview 소스 AST/해시 triage만; **실 Preview Parser 호환/API 실행 및 Prefix/GPU 정확성은 아직 `NOT_RUN`**.
+- 다음에는 먼저 **실제 Tool Calling/Responses Preview Parser 적응 코드와 오프라인 fixture**를 전진시킨다. 사용자 요청의 8기능별 묶음 가능성은 영구 핸드오프 표를 정본으로 하며, Phase6 A/B1/GPU 차단을 신규 합성 Gate로 반복하지 않는다. 이번 후속 docs/runner HEAD는 정확한 새 SHA에서 DGX 실행하기 전 `DGX_NOT_RUN`; 47c8aa8 결과를 자동 귀속하지 않는다.
+
+
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
 
 **사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.
