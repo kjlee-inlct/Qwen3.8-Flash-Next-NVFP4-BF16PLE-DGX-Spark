@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 Responses native terminal 3rd patch — 실기 CPU 검증 대기
+
+- 사용자 제공 실제 DGX `db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118`: Phase6 169/169, Source240/240, PLE/Phase4/Phase5 synthetic 및 schema extracted-method CPU12/12 PASS. No installed source/GPU/service/model modification.
+- 현재 P1 브랜치 신규 파일: `src/preview_p1_patches/qwen-preview-native-responses.patch`와 `src/preview_p1_native_responses_verify.py`, `tests/test_blazux_phase6_preview_native_responses.py`. `--bundle p1-responses`는 정확한 설치 Preview 9개 preimage를 temp로 복사→marker→schema→Responses 3개 zero-fuzz source patch→AST→실제 수정된 serving 메서드 18개 CPU 사례 실행. 신규 HEAD 자체 DGX NOT_RUN. 이는 API/실제 engine certification 아님.
+- 다음 대화 첫 순서: DGX user log 검토, 안전한 isolate CPU 통과 여부 표시, 실패하면 근본 원인 기능수정. P1 실제 Parser/Responses API 통합과 Prefix Cache gate 아직 미해결. **P1 종료 후 P2 자동 전환 금지, 사용자 별도 명시 지시 대기.** PR/CI/merge/운영 GPU/서비스 변경 별도 승인.
+
+
 ## 2026-10-28 실제 DGX marker 검증 → P1 Schema strict Responses native 포팅
 
 - **마지막 operator DGX source:** `07c031e708cede07cd2842d1fd1e752336cbb567`. Phase6 165/165, Source237/237, PLE/Phase4/Phase5 synthetic 모두 PASS. `PREVIEW_P1_NATIVE_QWEN_MARKER_CPU_PASS_NOT_API_OR_DEPLOYED`: 실제 수정된 StreamingParserEngine 메서드 CPU 5 사례 PASS. 엔진/API/서빙 기능 적용 증거는 아님.

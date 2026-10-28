@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 240,
+  "tracked_file_count": 243,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -139,7 +139,8 @@
     "2026-10-28 DGX exact 4efed48136278acb195231bb2b1a79a91ce62c5f: Phase6 157/157 + Source233/233 + P1 PLE/Phase4 + Phase5 synthetic 14/14 + Preview audit PASS; stage BLOCKED_NOT_APPLIED PREVIEW_SHA_DRIFT due assistant hardcoded qwen3.py SHA being 54 chars instead of observed 64 chars. Correct pin and add preflight static pin/audit sync regression and allowlisted first rejected patch hunk locator. New head not run on DGX; no GPU/service/model/API/CI/PR changes.",
     "2026-10-28 actual operator DGX 10fc574ff60afb7d8a09728ef4e547c3a6774001: Phase6 159/159, Source233/233, PLE/Phase4/Phase5 synthetic PASS; original v0.32 patch1 CONTEXT_MISMATCH parser_engine_config.py old_line_103, no installation/GPU change. New allowlisted source exporter reads 10 installed Preview Python patch targets in one pinned CPU-only disposable container, into HOME 0600 tar.gz for native four-patch port. New HEAD DGX_NOT_RUN, CPU export NOT_RUN, no runtime/CI/PR/merge.",
     "2026-10-28 user uploaded 9-file pinned Preview source snapshot; all 9 plain .py members and 6 known pins verified. New real Preview-native Qwen marker/preamble patch, 4 allowlisted preimage files, applied to temporary user-provided snapshot with fuzz=0 and AST plus 5 actual patched-method CPU fixture checks locally (not DGX); new p1-native-marker one-shot container bundle NOT_RUN on DGX. Tool JSON schema/Responses remaining separate and no full parser import/API/service GPU or deployment. Operator DGX latest previous source 10fc574 159 tests/233 inventory; new code unverified there.",
-    "2026-10-28 exact DGX 07c031e708cede07cd2842d1fd1e752336cbb567: Phase6 165/165 Source237/237 PLE Phase4 Phase5 synthetic 14/14, patched native marker extracted-method CPU 5/5 PASS, no service GPU model change. New real Preview-native Qwen3 strict Responses schema patch + temp-only two-patch validator, source SHA pins and CPU 12 case checks PASS in developer isolated snapshot, new HEAD DGX_NOT_RUN. Full vLLM parser/API/serving compatibility and terminal errors not certified, not deployed. No CI/PR/merge."
+    "2026-10-28 exact DGX 07c031e708cede07cd2842d1fd1e752336cbb567: Phase6 165/165 Source237/237 PLE Phase4 Phase5 synthetic 14/14, patched native marker extracted-method CPU 5/5 PASS, no service GPU model change. New real Preview-native Qwen3 strict Responses schema patch + temp-only two-patch validator, source SHA pins and CPU 12 case checks PASS in developer isolated snapshot, new HEAD DGX_NOT_RUN. Full vLLM parser/API/serving compatibility and terminal errors not certified, not deployed. No CI/PR/merge.",
+    "2026-10-28 DGX operator db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118 Phase6 169/169 Source240/240, schema modified-method 12/12 CPU PASS. Committed Preview-native Responses terminal-status 3rd source patch (marker+schema+responses) and one-shot p1-responses isolated CPU validator; operator-provided Preview 9-file snapshot 3 zero-fuzz patches + AST10/10 + extracted real serving methods 18/18 PASS in local analysis. New HEAD DGX_NOT_RUN; expected 173/173 units Source243/243 subject to actual verification. Installed serving vLLM/GPU/model/API unchanged, no CI/PR/merge. Stay P1; do not start P2 without explicit user instruction."
   ],
   "files": [
     {
@@ -415,7 +416,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "f82034e14075ee417f6dde145376d75139d57a60"
+      "blob_sha": "f05514653c59d0ba3f643ca1bd4d10c8db5a574b"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -435,7 +436,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "3897b1ad32b40be071dbca1d1c3875b77d7d2bf3"
+      "blob_sha": "1b8d7fc4d64a68e6a9cc7101a44aa3c13a7bd819"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -780,7 +781,7 @@
     {
       "path": "scripts/ple-phase-stats-cpu-container.sh",
       "mode": "100755",
-      "blob_sha": "ce717cc1268b4a7803d45312b04b43bb461ce617"
+      "blob_sha": "5c2a328cde5d08cea388b4551994c6de060d6c15"
     },
     {
       "path": "scripts/prepare.sh",
@@ -1003,6 +1004,11 @@
       "blob_sha": "ddebd15e5c80578947ae3f857c48e8ac141b0d2d"
     },
     {
+      "path": "src/preview_p1_native_responses_verify.py",
+      "mode": "100644",
+      "blob_sha": "a89344e3c4bdca8ee688a6ded79a7bc1d2bc66f0"
+    },
+    {
       "path": "src/preview_p1_native_schema_verify.py",
       "mode": "100644",
       "blob_sha": "bb6266b4bd1c317167b884b2820ace7b548974db"
@@ -1011,6 +1017,11 @@
       "path": "src/preview_p1_patches/qwen-preview-native-marker.patch",
       "mode": "100644",
       "blob_sha": "e8ca6d2b354cf6cb2f95308df399da6a072c1b1f"
+    },
+    {
+      "path": "src/preview_p1_patches/qwen-preview-native-responses.patch",
+      "mode": "100644",
+      "blob_sha": "d2c78dbed21ec7bc874749dce0a1b4cb0df3d320"
     },
     {
       "path": "src/preview_p1_patches/qwen-preview-native-schema.patch",
@@ -1236,6 +1247,11 @@
       "path": "tests/test_blazux_phase6_preview_native_marker.py",
       "mode": "100644",
       "blob_sha": "1871009b18ec8305b6514609e2950fbfdeee2cdf"
+    },
+    {
+      "path": "tests/test_blazux_phase6_preview_native_responses.py",
+      "mode": "100644",
+      "blob_sha": "8a4fd0bab01632d031f0c1e382226204610572d5"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_schema.py",

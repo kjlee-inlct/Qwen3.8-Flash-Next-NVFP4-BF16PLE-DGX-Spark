@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Responses terminal 처리 Preview-native 포팅 — 사용자 DGX schema PASS 후
+
+- **마지막 실제 operator DGX HEAD:** `db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118` — Phase6 **169/169 PASS**, Source Manifest **240/240 PASS**, PLE/Phase4 회귀 및 합성계약 14/14 PASS, **Preview-native Qwen JSON Schema 실제 수정 메서드 12/12 CPU PASS**. `PREVIEW_P1_NATIVE_TOOL_SCHEMA_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE` 확인. 단지 CPU-only source/modified-method 테스트이며 **실제 vLLM Parser/API 인증 아님**.
+- **신규 P1 실기 검증 후보:** `src/preview_p1_patches/qwen-preview-native-responses.patch` (SHA256 `91a0aef246c7d7f507c2167adf7124923a4ff7dd8f58d6279a22d1bb05c8cad4`), `src/preview_p1_native_responses_verify.py`, `tests/test_blazux_phase6_preview_native_responses.py`, 기존 `scripts/ple-phase-stats-cpu-container.sh --bundle p1-responses`. Responses completed/incomplete/failed terminal 분리, 무내용 stop 및 실패 후 성공 이벤트 방지, background SSE terminal 처리, 검증 실패 시 모델/파서 본문 비노출. 기존 schema 경로와 다른 vLLM 기능은 유지.
+- **이번 분석 환경에서 직접 수행:** 사용자가 첨부한 실제 Preview 9개 원본을 임시 복사한 다음 marker→schema→Responses **3개 패치를 GNU patch --fuzz=0으로 3/3 적용**, 10개 Python AST 검사 PASS, 실제 수정된 OpenAIServingResponses 메서드 바디 **18/18 CPU behavior cases PASS**. 이는 mock-backed extracted-method 검사이지 vLLM import/실제 HTTP/API/GPU 추론 시험이 아님.
+- **신규 GitHub HEAD의 DGX 시험은 아직 NOT_RUN:** Source manifest는 신규 코드 해시 반영, 예상 source-only 단위시험 173개 / tracked 243개(실제 DGX 실행 확인 전 기대값). 패치 3개를 실제 설치 소스에 적용하거나 운영 Docker/GPU/모델/API를 실행·수정하지 않음. CI/PR/merge 수행하지 않음. 사용자 요청에 따라 **P1이 완료되어도 P2로 넘어가지 말 것.**
+
+
 ## 2026-10-28 P1 native Qwen schema — 실제 DGX marker PASS 및 추가 Preview-native 포팅
 
 - **정확한 operator DGX SHA:** `07c031e708cede07cd2842d1fd1e752336cbb567`. Phase6 **165/165 PASS**, Source **237/237 PASS**, PLE phase byte-exact/concurrency24/Phase4 four flags PASS, Phase5 synthetic 14/14 PASS. **네이티브 마커 코드의 임시 source patch/수정 메서드 CPU 5 사례 PASS**, `PREVIEW_P1_NATIVE_QWEN_MARKER_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 운영/GPU/model/HTTP unchanged.
