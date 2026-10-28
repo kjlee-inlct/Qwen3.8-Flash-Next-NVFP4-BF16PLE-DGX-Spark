@@ -1,5 +1,11 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 유지보수창: 사용자 stop 허가, 신규 legacy stop-only 스크립트 준비 — DGX NOT_RUN
+
+- 사용자: 기존 서비스를 일시 정지한 Prefix-cache 실제 GPU/모델 검증 허용. **운영 중지는 만들어진 스크립트로만**, model/cache/image 보존과 복구 선행.
+- 조사: 현재 Wizard `scripts/stop.sh`는 Wizard-owned 신규 컨테이너 전용. 기존 YSLAB `uninstall.sh --keep-image`는 container를 `docker rm -f`로 삭제하므로 일시 stop에 부적합. 안전 소유권 우회/삭제를 수행하지 않음.
+- 기능 브랜치에 `scripts/p1-legacy-service-window.sh`, `src/p1_legacy_service_window.py`, `tests/test_blazux_phase6_legacy_window.py`, [runbook](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md) 추가: 정확한 기존 full container ID/image digest/recipe-target label/2 bind mounts/port/restart policy 및 YSLAB receipt 일치 여부 fail-closed; 명시적 stop-only/ID-preserving start. **현재 코드는 준비 상태이며 DGX 검증/실 stop/실 restart/Prefix GPU 모두 NOT_RUN.** 후보 모델 런처와 자동 복구가 준비되기 전 실제 stop 금지. P2/P3와 CI/PR/merge 승인 없음.
+
 ## 2026-10-29 DGX Prefix-cache two-site candidate source-only PASS — source SHA 13e91348d4ef2575789d5ac3630581587e022605
 
 - **User-provided operator completion markers:** `P1_PREFIX_CANDIDATE_PINNED_PREVIEW_SOURCE_ONLY_PASS_NOT_APPLIED` and `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. This is the explicit previously supplied `--expected-head 13e91348d4ef2575789d5ac3630581587e022605 --bundle p1-prefix-candidate --execute` test path; the user pasted only the final two markers (not the complete terminal log). The runner guards exact checkout/HEAD, Source Manifest and legacy state, enters an isolated CPU-only pinned-image source staging mode, and returns the final marker only after a successful command exit and unaltered legacy identity. Thus **the two SHA-pinned installed Preview files accepted exactly the candidate source edits on disposable copies**, and the candidate source-only check completed. Do not fabricate a fresh test count or an unrelated real Responses CPU run for this bundle because they were not shown in the pasted excerpt.

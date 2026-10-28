@@ -1,4 +1,6 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
+> **2026-10-29 P1 운영 중지 승인·안전 제한:** 사용자는 Prefix-cache 실제 검증을 위해 기존 서비스를 스크립트로 중단할 수 있다고 승인했다. [전용 유지보수 준비](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md) 문서 참고. 현 `scripts/stop.sh`는 Wizard 전용, 원본 `uninstall.sh --keep-image`는 컨테이너를 삭제하므로 **둘 다 사용 금지**. 신규 `scripts/p1-legacy-service-window.sh`는 동일 legacy ID·이미지·label·mount·port를 강제하는 preflight/stop/start만 지원한다. **후속 GPU 후보 및 복구 테스트 준비 전에는 stop하지 않음. 현재 신규 코드 DGX_NOT_RUN, STOP_NOT_RUN.**
+
 > **2026-10-29 P1 Prefix 후보 DGX 소스 검증 PASS:** `src/preview_p1_prefix_candidate.py`는 기존 DGX에서 SHA를 확인한 Preview `mamba_hybrid.py` / `scheduler.py`의 **정확히 두 표현식**만 `/tmp` 임시 사본에서 바꾼 뒤 AST로 재검증하는 독립 후보이다. `scripts/ple-phase-stats-cpu-container.sh --expected-head <new-head> --bundle p1-prefix-candidate --execute`로 사용자가 명시 실행할 때만 고정 이미지의 설치 Python 소스와 두 원본 SHA를 검증하며, 운영 vLLM에는 절대 기록하지 않는다. **DGX에서 정확한 후보 코드 HEAD `13e91348d4ef2575789d5ac3630581587e022605`의 마지막 두 성공 마커 확인: `P1_PREFIX_CANDIDATE_PINNED_PREVIEW_SOURCE_ONLY_PASS_NOT_APPLIED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 실제 설치된 Preview 원본 2파일을 SHA-pinned 상태로 읽어 임시 사본 2개에서만 AST 패치를 완료; 설치 소스·운영 Docker 불변. 패치 설치 승인/active ABI/Prefix-hit/GPU 정합성 PASS는 여전히 아님. 전체 시험 건수는 발췌 로그에 없으므로 본 기록에서 주장하지 않음.** 자세한 근거는 [최신 upstream 비교](BLAZUX-UPSTREAM-COMPARISON-20261029.md)·[결과 장부](BLAZUX-PHASE6-RESULTS.md)에 연결한다.
 
 

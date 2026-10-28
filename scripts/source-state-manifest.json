@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 250,
+  "tracked_file_count": 254,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "412e8cbf31671ce8609ae712722b8ec3e942b58c"
+      "blob_sha": "0af06122570ddb524799e9dc26284a5454f3f10d"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -444,9 +444,14 @@
       "blob_sha": "203a5cf1de74f91af11db2d036e0473197607775"
     },
     {
+      "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
+      "mode": "100644",
+      "blob_sha": "e99ee38fc3cfc941255828fe1971e955122ee24c"
+    },
+    {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "6a17ac6393e7a130fb7886470fc75d3f49b90d00"
+      "blob_sha": "976d9d144830b16a3d031cd4beb0f046c0dda04b"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -709,6 +714,11 @@
       "blob_sha": "de7afca67b1cf7f63ca363f070b79f7233c8d882"
     },
     {
+      "path": "scripts/p1-legacy-service-window.sh",
+      "mode": "100755",
+      "blob_sha": "08428a7afac01d8ac72e1801d7ea164f1d9b70df"
+    },
+    {
       "path": "scripts/phase2-check-offline.sh",
       "mode": "100755",
       "blob_sha": "161a589d5ebf792788ba912a1915b139ca43d1b1"
@@ -892,6 +902,11 @@
       "path": "scripts/wizard/state.py",
       "mode": "100644",
       "blob_sha": "711cab1809240183102e069f8c057047e01285d8"
+    },
+    {
+      "path": "src/p1_legacy_service_window.py",
+      "mode": "100644",
+      "blob_sha": "44e0194185c2201f1292b5f1c4895850728762dc"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1267,6 +1282,11 @@
       "path": "tests/test_blazux_phase6_gate.py",
       "mode": "100644",
       "blob_sha": "535ce7a71fb5312d9ec137c3643f5468ccc69548"
+    },
+    {
+      "path": "tests/test_blazux_phase6_legacy_window.py",
+      "mode": "100644",
+      "blob_sha": "a01a04efb0ed475c653c3d815e768dcdffd7d13d"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_candidate.py",
