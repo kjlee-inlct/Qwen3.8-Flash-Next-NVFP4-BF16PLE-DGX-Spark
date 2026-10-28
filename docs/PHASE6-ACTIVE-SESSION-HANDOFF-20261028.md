@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 최신 P1 실제 Parser CPU PASS → 실제 Responses Serving 이벤트 타입 검증 대기
+
+- 사용자 DGX `fd544615c370dd1cbb1ad0764388c3d21f9b465c`에서 Phase6 177/177, Source245/245, PLE/Phase4 synthetic, actual installed patched Qwen Parser CPU 6/6 PASS. No serving API/GPU/service changes.
+- 신규 `src/preview_p1_real_responses_cpu.py`와 `--bundle p1-real-responses`: 3 SHA-pinned patches temp only, 실제 설치 `OpenAIServingResponses`/Pydantic wire events import, CPU fixture 기반 6 cases. 신규 HEAD DGX_NOT_RUN; 실패는 모듈 import 또는 event serialization/behavior로 분리. 실제 HTTP/GPU/model/API/production NOT_CERTIFIED.
+- 기존 레거시 Docker/PLE는 절대 자동 stop/replace/remove하지 않는다. `scripts/stop.sh`는 Wizard-owned 전용이다. 실제 전환은 별도 사용자 승인/기존 status/doctor/health 및 rollback 계획 후. **P1 종료 후 P2 자동 전환 금지.**
+
+
 ## 2026-10-28 P1 DGX Responses PASS → 실제 Preview Qwen3 Parser CPU import 단계
 
 - 최신 사용자 DGX 결과 `ab00f94f25b3bd8dcbb359056cd08a533281711b`에서 Phase6 173/173, Source243/243, PLE/Phase4/Phase5 synthetic, Responses patched methods 18/18 PASS 및 양쪽 종료 마커 확인. 실제 Parser/HTTP 통합 인증 불가.

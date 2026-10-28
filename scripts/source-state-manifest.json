@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 245,
+  "tracked_file_count": 247,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -141,7 +141,8 @@
     "2026-10-28 user uploaded 9-file pinned Preview source snapshot; all 9 plain .py members and 6 known pins verified. New real Preview-native Qwen marker/preamble patch, 4 allowlisted preimage files, applied to temporary user-provided snapshot with fuzz=0 and AST plus 5 actual patched-method CPU fixture checks locally (not DGX); new p1-native-marker one-shot container bundle NOT_RUN on DGX. Tool JSON schema/Responses remaining separate and no full parser import/API/service GPU or deployment. Operator DGX latest previous source 10fc574 159 tests/233 inventory; new code unverified there.",
     "2026-10-28 exact DGX 07c031e708cede07cd2842d1fd1e752336cbb567: Phase6 165/165 Source237/237 PLE Phase4 Phase5 synthetic 14/14, patched native marker extracted-method CPU 5/5 PASS, no service GPU model change. New real Preview-native Qwen3 strict Responses schema patch + temp-only two-patch validator, source SHA pins and CPU 12 case checks PASS in developer isolated snapshot, new HEAD DGX_NOT_RUN. Full vLLM parser/API/serving compatibility and terminal errors not certified, not deployed. No CI/PR/merge.",
     "2026-10-28 DGX operator db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118 Phase6 169/169 Source240/240, schema modified-method 12/12 CPU PASS. Committed Preview-native Responses terminal-status 3rd source patch (marker+schema+responses) and one-shot p1-responses isolated CPU validator; operator-provided Preview 9-file snapshot 3 zero-fuzz patches + AST10/10 + extracted real serving methods 18/18 PASS in local analysis. New HEAD DGX_NOT_RUN; expected 173/173 units Source243/243 subject to actual verification. Installed serving vLLM/GPU/model/API unchanged, no CI/PR/merge. Stay P1; do not start P2 without explicit user instruction.",
-    "2026-10-28 User DGX ab00f94f25b3bd8dcbb359056cd08a533281711b: 173/173 Phase6, Source243/243, PLE/Phase4/Phase5 synthetic, installed native Responses source 3-patch/temp-only actual modified serving methods 18/18 CPU PASS. NEW stage p1-real-parser on runc CPU only: imports real pinned Preview Qwen3 Parser and dependencies from staged temp overlay for 6 XML/schema/chunk tests. New HEAD DGX_NOT_RUN, no production/GPU/model/API; do not progress P2 without user instruction."
+    "2026-10-28 User DGX ab00f94f25b3bd8dcbb359056cd08a533281711b: 173/173 Phase6, Source243/243, PLE/Phase4/Phase5 synthetic, installed native Responses source 3-patch/temp-only actual modified serving methods 18/18 CPU PASS. NEW stage p1-real-parser on runc CPU only: imports real pinned Preview Qwen3 Parser and dependencies from staged temp overlay for 6 XML/schema/chunk tests. New HEAD DGX_NOT_RUN, no production/GPU/model/API; do not progress P2 without user instruction.",
+    "2026-10-28 user DGX fd544615c370dd1cbb1ad0764388c3d21f9b465c 177/177 Phase6, Source245/245, true pinned Preview Qwen Parser CPU XML/schema/chunked 6/6 PASS. Add p1-real-responses test using actual imported patched Preview Serving and Pydantic Responses events with CPU inert fixtures, 6 cases planned. New HEAD DGX_NOT_RUN, expected181 tests and Source247 entries. No HTTP/GPU/model/operational mutation or CI/PR/merge; P1 only, legacy Docker preserved, no P2 without explicit approval."
   ],
   "files": [
     {
@@ -417,7 +418,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "302cfc2debf8d915c9799d974cfd4bc61882134f"
+      "blob_sha": "f7aae7fcc22371990c69cd5bc20cb9d42825bcd6"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -437,7 +438,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "7c406a2601565ad53d6d6c1a231fc45cfa7c7c85"
+      "blob_sha": "03fde310b02b0c6dcdc5d8fc0c7e1001bdcd497c"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -782,7 +783,7 @@
     {
       "path": "scripts/ple-phase-stats-cpu-container.sh",
       "mode": "100755",
-      "blob_sha": "fe3001e12089b25c629ffda8fb1a9112195c31ef"
+      "blob_sha": "09c17c52991d584e596068c8fd174631819da215"
     },
     {
       "path": "scripts/prepare.sh",
@@ -1055,6 +1056,11 @@
       "blob_sha": "ef988a444e2ce9078058fe6855107724eb4c29c0"
     },
     {
+      "path": "src/preview_p1_real_responses_cpu.py",
+      "mode": "100644",
+      "blob_sha": "ad7127a39d8d41803f8854f1982b42c6a6ff6c8d"
+    },
+    {
       "path": "src/preview_p1_tool_responses_stage.py",
       "mode": "100644",
       "blob_sha": "3190ad6dd3a2d2266cea551f7094710dec8174b8"
@@ -1278,6 +1284,11 @@
       "path": "tests/test_blazux_phase6_real_parser_cpu.py",
       "mode": "100644",
       "blob_sha": "bb3daac0e7446154bd3db66134b5938f5bd16046"
+    },
+    {
+      "path": "tests/test_blazux_phase6_real_responses_cpu.py",
+      "mode": "100644",
+      "blob_sha": "fff24f4a2bd0d9168d60e243e225945af62cd858"
     },
     {
       "path": "tests/test_ci_contract.py",

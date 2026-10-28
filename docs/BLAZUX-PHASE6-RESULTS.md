@@ -1,5 +1,12 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 실제 Parser CPU 통과 → 실제 Responses Serving/Pydantic CPU 검사 준비
+
+- **DGX 사용자 로그 최신 확인:** `fd544615c370dd1cbb1ad0764388c3d21f9b465c` Phase6 **177/177 PASS**, Source **245/245 PASS**, PLE/Phase4 4 combinations/Phase5 synthetic14 PASS. 실제 설치 Preview Qwen3 Parser imported, XML + schema + literal + chunked streaming **6/6 PASS**. `PREVIEW_P1_REAL_PARSER_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. Triton driver INFO는 no-GPU runc에서 예상 가능. 설치 vLLM/GPU/기존 서빙 변경 없으며 HTTP 미검증.
+- **새 P1 검사, NEW HEAD DGX_NOT_RUN:** `src/preview_p1_real_responses_cpu.py` 및 `tests/test_blazux_phase6_real_responses_cpu.py`, existing CPU runner `--bundle p1-real-responses`. `src/preview_p1_real_parser_cpu._stage`의 정확한 원본 9파일 SHA pin과 marker→schema→responses 세 패치를 그대로 재사용. 패치된 **실제 Preview `OpenAIServingResponses` 클래스 및 실제 OpenAI/Pydantic Responses event 모델** import 후 빈 고정 engine/processor fixture로 completed/incomplete/failed 3 상태 + processor/final/unknown failure 3 사례의 이벤트 타입/시퀀스/JSON roundtrip/내부 메시지 비노출을 확인. 실패 시 fail-closed, 예외 본문 미노출, 설치 source 수정 금지. 이는 real API route, model inference, HTTP, GPU/production 검증이 아님.
+- 별개 사용자 언급의 **기존 PLE/Docker 중지·이관은 이 P1 CPU 검사 범위 외**이며 현 단계에서 수행 금지. 향후 별도 명시 승인 시 `scripts/status.sh`, `doctor.sh`, `health.sh` 등 기존 스크립트로 preflight, Wizard 소유 stop과 legacy 보존을 구별. **P1 후 P2 자동 시작 금지**.
+
+
 ## 2026-10-28 P1 Responses source CPU success → 실제 Qwen3 Parser 격리 실행 준비
 
 - **확정된 사용자 DGX 검증:** feature HEAD `ab00f94f25b3bd8dcbb359056cd08a533281711b`의 `--bundle p1-responses --execute`, **Phase6 173/173 PASS**, **Source243/243 PASS**, PLE/Phase4 4 cases/Phase5 synthetic 14/14 PASS. **Preview-native 실제 수정 Responses 메서드 CPU 18/18 PASS**, `PREVIEW_P1_NATIVE_RESPONSES_TERMINALS_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 설치 소스/기존 운영/GPU/API 변경 없음. 이것은 실제 Parser import/HTTP 호환성 PASS가 아님.
