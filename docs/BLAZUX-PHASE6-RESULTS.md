@@ -1,5 +1,11 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Parser→Responses handoff actual DGX FAILED; no deployment
+
+- **DGX 실제 로그 `041d5871249746cf029f1e453ec9fab2a4d56d3e`:** `p1-real-responses` 전체 Phase6 **181/181 PASS**, Source **247/247 PASS**, PLE CPU/Phase4/Phase5 synthetic PASS; **새 실제 Parser→Serving 연결 검증 FAILED**: `BLOCKED_NOT_APPLIED: REAL_RESPONSES_EVENT_BEHAVIOR_FAILED`; `STOP: isolated CPU test failed (exit=2)`. 기존 실제 Serving Pydantic terminal 6/6 및 실제 Parser 6/6은 과거 확인 결과이며, **새 8개 handoff 중 어느 지점인지 아직 진단 불가**. Runner 최종 NO_SERVICE_CHANGE 성공 마커 미출력; 운영 변경 성공을 추론하지 말 것.
+- **같은 P1 CPU-only 번들 진단 수정:** 기존 `src/preview_p1_real_responses_cpu.py`에 Pydantic request→valid Tool→wire→invalid Tool→plaintext→SSE→invalid SSE의 8개 제한된 stage 코드를 추가하고, child 예외 클래스만 허용목록으로 출력. 미검증 입력/모델 본문/파일 경로/원시 stack/예외 메시지 출력하지 않음. 기존 14개 행동 검사 성공조건·원본 pinned 3-patch·운영보존 정책 **불변**, 더 이상의 합성 gate 증가 없음. **새 HEAD DGX_NOT_RUN**; 이번 실행 결과에 따라 P1 실제 오류를 고치고 동일 bundle 재검증. **P2 자동 진입 금지**, 운영 레거시 Docker stop/변경 금지.
+
+
 ## 2026-10-28 P1 Responses Serving 실제 Pydantic 6/6 PASS → Parser→Serving 기능 연결 확대
 
 - **사용자 DGX 확인된 최신 실행 증거:** `9011910bd369ce6d685a1c453e5c6a9a8fdd70dc`, `--bundle p1-real-responses --execute`에서 Phase6 **181/181 PASS**, Source **247/247 PASS**, PLE CPU/Phase4 4가지/Phase5 합성 14/14 PASS. 실제 패치된 Preview `OpenAIServingResponses` import, OpenAI/Pydantic typed terminal events 및 JSON roundtrip **6/6 PASS**. `PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE` 확인. 실제 HTTP/모델/GPU/운영 배포 시험은 하지 않음.

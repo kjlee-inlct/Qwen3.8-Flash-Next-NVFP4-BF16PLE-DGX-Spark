@@ -132,6 +132,7 @@ def _child(root: Path) -> dict:
     # Real connected Qwen -> OpenAIServingResponses conversion: use typed
     # Pydantic request/tools, actual parser, converter and output-item builder.
     # These paths were not covered by the earlier isolated parser/serving tests.
+    print('P1_DIAG_STAGE=IMPORT_PARSER_HANDOFF', flush=True)
     from types import SimpleNamespace
     from vllm.entrypoints.openai.responses.protocol import ResponsesResponse
     from vllm.parser.qwen3 import Qwen3Parser
@@ -154,6 +155,7 @@ def _child(root: Path) -> dict:
         "additionalProperties": False,
     }
     # No model_construct: this is an actual validated HTTP-shaped request.
+    print('P1_DIAG_STAGE=VALIDATE_TYPED_REQUEST', flush=True)
     typed_request = protocol.ResponsesRequest(
         input="weather", model="offline-test", stream=True,
         tools=[{"type": "function", "name": "weather",
@@ -185,11 +187,13 @@ def _child(root: Path) -> dict:
             typed_request, final, tokenizer, parser=make_parser(),
         )
 
+    print('P1_DIAG_STAGE=NONSTREAM_VALID_TOOL', flush=True)
     result = output_items(xml("Seoul"))
     funcs = [i for i in result if getattr(i, "type", "") == "function_call"]
     if (len(funcs) != 1 or funcs[0].name != "weather"
             or json.loads(funcs[0].arguments) != {"city": "Seoul"}):
         raise StageBlocked("REAL_PARSER_TO_RESPONSES_FUNCTION_CALL_WRONG")
+    print('P1_DIAG_STAGE=NONSTREAM_WIRE', flush=True)
     wire = ResponsesResponse.from_request(
         typed_request, sampling, model_name="offline-test",
         created_time=123456, output=result, status="completed", usage=None,
@@ -200,6 +204,7 @@ def _child(root: Path) -> dict:
         raise StageBlocked("REAL_PARSER_TO_RESPONSES_WIRE_ROUNDTRIP_FAILED")
     cases += 1
 
+    print('P1_DIAG_STAGE=NONSTREAM_REJECTIONS', flush=True)
     for bad in (xml("Mars"), xml("Seoul", name="not_offered"), ""):
         try:
             output_items(bad)
@@ -209,6 +214,7 @@ def _child(root: Path) -> dict:
             raise StageBlocked("REAL_PARSER_TO_RESPONSES_UNSAFE_SUCCESS")
         cases += 1
 
+    print('P1_DIAG_STAGE=NONSTREAM_PLAINTEXT', flush=True)
     for harmless in ("Hello from a model.", "Example: <function=weather> literal"):
         output = output_items(harmless)
         if (not output or any(o.type == "function_call" for o in output)
@@ -250,6 +256,7 @@ def _child(root: Path) -> dict:
             events.append(event)
         return events
 
+    print('P1_DIAG_STAGE=STREAM_VALID_TOOL', flush=True)
     chunks = ["<tool_call>\n", "<function=weather>", "\n<parameter=city>",
               "Se", "oul", "</parameter>", "\n</function>", "\n</tool_call>"]
     streamed = asyncio.run(stream_model(chunks))
@@ -266,6 +273,7 @@ def _child(root: Path) -> dict:
             raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_WIRE_INVALID")
     cases += 1
 
+    print('P1_DIAG_STAGE=STREAM_REJECT_INVALID', flush=True)
     invalid_stream = asyncio.run(stream_model(
         ["<tool_call>\n<function=weather>\n<parameter=city>",
          "Mars</parameter>\n</function>\n</tool_call>"]
@@ -289,7 +297,13 @@ def main(args: list[str]) -> int:
     try:
         _environment()
         if len(args) == 2 and args[0] == "--child":
-            result = _child(Path(args[1]))
+            try:
+                result = _child(Path(args[1]))
+            except Exception as exc:
+                # Only the exception *type*, never message, traceback, paths,
+                # tool inputs, model contents, or user data.
+                print("P1_DIAG_EXCEPTION=" + type(exc).__name__, flush=True)
+                raise
             print(json.dumps(result, sort_keys=True))
             print("PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED")
             return 0
@@ -306,10 +320,34 @@ def main(args: list[str]) -> int:
                 capture_output=True, text=True, timeout=90,
             )
             if child.returncode:
-                phase = ("EVENT_BEHAVIOR" if "P1_RESPONSES_AFTER_IMPORT" in child.stdout
-                         else "SERVING_IMPORT" if "P1_RESPONSES_BEFORE_IMPORT" in child.stdout
-                         else "CHILD_START")
-                raise StageBlocked("REAL_RESPONSES_" + phase + "_FAILED")
+                # Stable, allowlisted diagnostic codes without user/model data.
+                allowed = {
+                    "IMPORT_PARSER_HANDOFF", "VALIDATE_TYPED_REQUEST",
+                    "NONSTREAM_VALID_TOOL", "NONSTREAM_WIRE",
+                    "NONSTREAM_REJECTIONS", "NONSTREAM_PLAINTEXT",
+                    "STREAM_VALID_TOOL", "STREAM_REJECT_INVALID",
+                }
+                stage = "CHILD_START"
+                if "P1_RESPONSES_BEFORE_IMPORT" in child.stdout:
+                    stage = "SERVING_IMPORT"
+                if "P1_RESPONSES_AFTER_IMPORT" in child.stdout:
+                    stage = "EVENT_BEHAVIOR"
+                for line in child.stdout.splitlines():
+                    if line.startswith("P1_DIAG_STAGE="):
+                        candidate = line.partition("=")[2]
+                        if candidate in allowed:
+                            stage = candidate
+                safe_types = {"TypeError", "AttributeError", "ValidationError",
+                              "ValueError", "KeyError", "AssertionError",
+                              "StageBlocked", "RuntimeError", "IndexError"}
+                error_type = "OTHER"
+                for line in child.stdout.splitlines():
+                    if line.startswith("P1_DIAG_EXCEPTION="):
+                        candidate = line.partition("=")[2]
+                        if candidate in safe_types:
+                            error_type = candidate
+                raise StageBlocked("REAL_RESPONSES_" + stage + "_" + error_type
+                                   + "_BLOCKED")
             if "PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED" not in child.stdout:
                 raise StageBlocked("REAL_RESPONSES_SUCCESS_MARKER_MISSING")
             for line in child.stdout.splitlines():

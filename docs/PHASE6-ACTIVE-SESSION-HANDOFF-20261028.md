@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 real handoff failed: stage-specific redacted diagnostic DGX 대기
+
+- 사용자 DGX `041d5871249746cf029f1e453ec9fab2a4d56d3e`: Phase6 181/181, Source247/247, PLE CPU/Phase4/Phase5 합성 PASS, **Parser→Serving 실제 handoff FAILED `REAL_RESPONSES_EVENT_BEHAVIOR_FAILED`**. 3 patches staging/Serving import 완료, 검사 내부에서 실패. 실기 CPU-only runner exit=2, 운영 NO_SERVICE_CHANGE 최종 마커 없음. 정상 통합이라고 선언하지 말 것.
+- 동일 `p1-real-responses`에 8개 phase 체크포인트 + 예외클래스 허용목록 경계만 추가한 정확한 진단 개선을 commit. 신규 HEAD DGX_NOT_RUN. 사용자 log에서 `REAL_RESPONSES_<STAGE>_<CLASS>_BLOCKED` 확인 후 실제 코드/fixture 문제를 바로 교정. 모델/token/파서 내용/트레이스 출력 금지, 운영 컨테이너는 불변.
+- 기존 PLE 종료·Docker 전환은 여전히 별도 승인 후 기존 status/doctor/health·검증된 소유권·rollback 절차로 수행, stop.sh는 Wizard-owned 전용. P1 완료 선언·P2 진입 금지.
+
+
 ## 2026-10-28 P1 실제 Serving typed-events CPU 6/6 PASS → Parser→Serving 연결 시험 DGX 대기
 
 - 사용자 제공 DGX `9011910bd369ce6d685a1c453e5c6a9a8fdd70dc`: 전체 Phase6 **181/181**, Source **247/247**, PLE/Phase4/Phase5 synthetic, 실제 Preview Serving 6 typed status/roundtrip **6/6 PASS**. 기존 컨테이너 identity 이전/이후 일치. 실제 HTTP/API/모델/GPU NOT_RUN.
