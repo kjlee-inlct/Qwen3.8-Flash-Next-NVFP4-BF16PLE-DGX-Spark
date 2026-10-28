@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 실제 Serving typed-events CPU 6/6 PASS → Parser→Serving 연결 시험 DGX 대기
+
+- 사용자 제공 DGX `9011910bd369ce6d685a1c453e5c6a9a8fdd70dc`: 전체 Phase6 **181/181**, Source **247/247**, PLE/Phase4/Phase5 synthetic, 실제 Preview Serving 6 typed status/roundtrip **6/6 PASS**. 기존 컨테이너 identity 이전/이후 일치. 실제 HTTP/API/모델/GPU NOT_RUN.
+- 새 동일 번들 `p1-real-responses`: `src/preview_p1_real_responses_cpu.py`의 CPU 사례 **6→14**로 확대. 실제 검증된 `ResponsesRequest` + Qwen3 XML tool/schema→실제 `_make_response_output_items`→Pydantic output/wire, 실제 Qwen3 chunked Parser→`SimpleStreamingEventProcessor`→Responses SSE/Schema 실패 경로. 모델 생성 only dummy, 실제 3패치 temp overlay + 기존 CPU-only 격리. **신규 HEAD DGX_NOT_RUN**. 실패시 축약된 단계 오류만 반환; P1 기능 보정 우선.
+- 사용자가 언급한 legacy PLE/Docker 종료는 아직 승인·실행하지 않음. `stop.sh`는 신규 Wizard-owned 전용; 저장소의 `status.sh`·`doctor.sh`·`health.sh`를 추후 전환 preflight에 재사용, 원본 캐시·이미지 및 rollback 보존. P1 완료 후 P2 자동 착수 금지.
+
+
 ## 2026-10-28 최신 P1 실제 Parser CPU PASS → 실제 Responses Serving 이벤트 타입 검증 대기
 
 - 사용자 DGX `fd544615c370dd1cbb1ad0764388c3d21f9b465c`에서 Phase6 177/177, Source245/245, PLE/Phase4 synthetic, actual installed patched Qwen Parser CPU 6/6 PASS. No serving API/GPU/service changes.

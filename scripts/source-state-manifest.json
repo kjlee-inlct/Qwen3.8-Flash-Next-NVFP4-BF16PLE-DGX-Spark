@@ -142,7 +142,8 @@
     "2026-10-28 exact DGX 07c031e708cede07cd2842d1fd1e752336cbb567: Phase6 165/165 Source237/237 PLE Phase4 Phase5 synthetic 14/14, patched native marker extracted-method CPU 5/5 PASS, no service GPU model change. New real Preview-native Qwen3 strict Responses schema patch + temp-only two-patch validator, source SHA pins and CPU 12 case checks PASS in developer isolated snapshot, new HEAD DGX_NOT_RUN. Full vLLM parser/API/serving compatibility and terminal errors not certified, not deployed. No CI/PR/merge.",
     "2026-10-28 DGX operator db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118 Phase6 169/169 Source240/240, schema modified-method 12/12 CPU PASS. Committed Preview-native Responses terminal-status 3rd source patch (marker+schema+responses) and one-shot p1-responses isolated CPU validator; operator-provided Preview 9-file snapshot 3 zero-fuzz patches + AST10/10 + extracted real serving methods 18/18 PASS in local analysis. New HEAD DGX_NOT_RUN; expected 173/173 units Source243/243 subject to actual verification. Installed serving vLLM/GPU/model/API unchanged, no CI/PR/merge. Stay P1; do not start P2 without explicit user instruction.",
     "2026-10-28 User DGX ab00f94f25b3bd8dcbb359056cd08a533281711b: 173/173 Phase6, Source243/243, PLE/Phase4/Phase5 synthetic, installed native Responses source 3-patch/temp-only actual modified serving methods 18/18 CPU PASS. NEW stage p1-real-parser on runc CPU only: imports real pinned Preview Qwen3 Parser and dependencies from staged temp overlay for 6 XML/schema/chunk tests. New HEAD DGX_NOT_RUN, no production/GPU/model/API; do not progress P2 without user instruction.",
-    "2026-10-28 user DGX fd544615c370dd1cbb1ad0764388c3d21f9b465c 177/177 Phase6, Source245/245, true pinned Preview Qwen Parser CPU XML/schema/chunked 6/6 PASS. Add p1-real-responses test using actual imported patched Preview Serving and Pydantic Responses events with CPU inert fixtures, 6 cases planned. New HEAD DGX_NOT_RUN, expected181 tests and Source247 entries. No HTTP/GPU/model/operational mutation or CI/PR/merge; P1 only, legacy Docker preserved, no P2 without explicit approval."
+    "2026-10-28 user DGX fd544615c370dd1cbb1ad0764388c3d21f9b465c 177/177 Phase6, Source245/245, true pinned Preview Qwen Parser CPU XML/schema/chunked 6/6 PASS. Add p1-real-responses test using actual imported patched Preview Serving and Pydantic Responses events with CPU inert fixtures, 6 cases planned. New HEAD DGX_NOT_RUN, expected181 tests and Source247 entries. No HTTP/GPU/model/operational mutation or CI/PR/merge; P1 only, legacy Docker preserved, no P2 without explicit approval.",
+    "2026-10-28 Operator DGX 9011910: Phase6 181/181 Source247/247; actual Preview Serving/Pydantic 6/6 PASS; no live mutation. Same CPU-only p1-real-responses runner now has 8 additional actual validated ResponsesRequest→Qwen3 Parser→real Serving output/SSE integration cases; new HEAD DGX_NOT_RUN. No HTTP/model/GPU/deployment, CI/PR/merge; legacy protected; remain P1, no automatic P2."
   ],
   "files": [
     {
@@ -418,7 +419,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "f7aae7fcc22371990c69cd5bc20cb9d42825bcd6"
+      "blob_sha": "50f6fd7a34eb1e8eb02834eb517fccc114b9f6f2"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -438,7 +439,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "03fde310b02b0c6dcdc5d8fc0c7e1001bdcd497c"
+      "blob_sha": "4a574b5e9356f9287fe80f42612c80c3aef7c211"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -1058,7 +1059,7 @@
     {
       "path": "src/preview_p1_real_responses_cpu.py",
       "mode": "100644",
-      "blob_sha": "ad7127a39d8d41803f8854f1982b42c6a6ff6c8d"
+      "blob_sha": "adbe2001bcaf70bd9d70baef375d6600de671663"
     },
     {
       "path": "src/preview_p1_tool_responses_stage.py",

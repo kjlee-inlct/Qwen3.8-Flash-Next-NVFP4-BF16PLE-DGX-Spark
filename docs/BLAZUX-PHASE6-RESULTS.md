@@ -1,5 +1,12 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Responses Serving 실제 Pydantic 6/6 PASS → Parser→Serving 기능 연결 확대
+
+- **사용자 DGX 확인된 최신 실행 증거:** `9011910bd369ce6d685a1c453e5c6a9a8fdd70dc`, `--bundle p1-real-responses --execute`에서 Phase6 **181/181 PASS**, Source **247/247 PASS**, PLE CPU/Phase4 4가지/Phase5 합성 14/14 PASS. 실제 패치된 Preview `OpenAIServingResponses` import, OpenAI/Pydantic typed terminal events 및 JSON roundtrip **6/6 PASS**. `PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE` 확인. 실제 HTTP/모델/GPU/운영 배포 시험은 하지 않음.
+- **새 P1 실기 검증 후보 (GitHub 신규 HEAD DGX_NOT_RUN):** 같은 `src/preview_p1_real_responses_cpu.py`에 **6→14 CPU 동작 사례**로 실제 Qwen3 Parser→Serving 연결 시험 추가. 기존 6개 typed terminal 검사는 보존. 새 8개: 정상 XML tool → 실제 `_make_response_output_items`/Pydantic FunctionCall + 최종 `ResponsesResponse` JSON, schema 위반·미등록 도구·빈 stop의 fail-close, 정상 텍스트·인용된 리터럴 마커 보존, 분할 XML streaming → 실제 `SimpleStreamingEventProcessor`→Pydantic SSE, streaming schema 오류 시 terminal failed 및 함수 인자 비노출. `model_construct` 대신 **실제 Pydantic 검증된 `ResponsesRequest`** 사용; fake 모델 token source만 전달. 기존 3-patch temp-only/read-only runc CPU 경계 유지. 기존 번들 `--bundle p1-real-responses` 재사용(별도 Gate/runner 증식 없음).
+- 유효한 실제 HTTP/모델 테스트가 아니라 **actual Parser+Serving 연결의 CPU 시험**으로만 기록. 기존 PLE/legacy Docker/weights/cache/port 8000에 손대지 않음. 운영 전환은 별도 승인과 기존 wizard 스크립트/rollback 계획 활용. **P1 후 P2 자동 착수 금지.**
+
+
 ## 2026-10-28 P1 실제 Parser CPU 통과 → 실제 Responses Serving/Pydantic CPU 검사 준비
 
 - **DGX 사용자 로그 최신 확인:** `fd544615c370dd1cbb1ad0764388c3d21f9b465c` Phase6 **177/177 PASS**, Source **245/245 PASS**, PLE/Phase4 4 combinations/Phase5 synthetic14 PASS. 실제 설치 Preview Qwen3 Parser imported, XML + schema + literal + chunked streaming **6/6 PASS**. `PREVIEW_P1_REAL_PARSER_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. Triton driver INFO는 no-GPU runc에서 예상 가능. 설치 vLLM/GPU/기존 서빙 변경 없으며 HTTP 미검증.
