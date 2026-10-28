@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Preview-native Qwen tool-marker port — uploaded real source archive
+
+- 사용자 첨부 `preview-p1-source-vjEAFR9W.tar.gz`에서 **9개의 실제 설치 Preview 파일**을 검사, path/file과 sha256 확인(새 `argument_validation.py`는 원본에 존재하지 않아 9개가 정상). 내부 6개 핀과 일치, 추가 `nemotron_v3.py`는 sha256 `9d77b45debb4fb820cc448dfbeeccb53b384f8124b0ef6627ddba9777dcfa6df`.
+- **실제 기능 코드:** `src/preview_p1_patches/qwen-preview-native-marker.patch` — vLLM v0.32용 원본을 맹목적으로 적용하는 대신, 사용자 **정확한 Preview 소스**에서 직접 생성한 native source diff. `parser_engine_config.py`, `streaming_parser_engine.py`, `qwen3.py`, `nemotron_v3.py` 네 파일 수정. tool wrapper preamble을 확인 전까지 보류하고, 인용/코드 펜스/중간 문장 도구 마커를 보호. EOF의 확정 안 된 preamble은 내용으로 돌려준다. 기본 Qwen3만 opt-in, Nemotron은 OFF.
+- **현재 세션 로컬 독립 검사(운영 DGX 아님):** 업로드된 정확한 원본을 `patch --batch --fuzz=0 -p1`로 **임시 복사본 4개 파일에만** 적용했고 AST 유효성 PASS. 수정된 `StreamingParserEngine`의 실제 메서드 바디를 추출해 stdlib CPU mock으로 **5개 행동 반례 PASS** (mid-line bare function / fenced literal / 정상 tool wrapper / 잘못된 tool wrapper 내용 반환 / tilde fence). `CPU_VERIFIED_EXTRACTED_METHODS_ONLY` — **전체 vLLM Parser import/API/serving 검증 아님**.
+- 새 도구 `src/preview_p1_native_marker_verify.py` 및 기존 CPU-only 1회용 컨테이너의 **새 독립 `--bundle p1-native-marker` 모드**로 4개 SHA 확인→읽기 전용 temp patch→AST→실제 메서드 CPU 검사. **신규 GitHub HEAD 자체는 DGX NOT_RUN**; 운영 컨테이너/모델/GPU/HTTP/CI/PR 변경 없고 새 기능 운영 적용=0.
+- **남은 같은 P1 묶음:** `qwen-safe-output.patch` (Responses 실패/미완료/빈 stop)와 `qwen-tool-argument-schema.patch` (schema/JSON wrapper) 그리고 실제 API harness/Parser 통합. 기존 P6-A active block GPU 미해결은 그대로 별도.
+
+
 ## 2026-10-28 P1 Tool/Responses — 원본 패치 1 문맥 불일치 확인, 전체 Preview 소스 획득 필요
 
 - 실제 사용자 DGX 소스 `10fc574ff60afb7d8a09728ef4e547c3a6774001`: Phase6 **159/159 PASS**, Source **233/233 PASS**, PLE byte-exact/Phase4 4 combinations PASS, Phase5 Tool/Responses/Prefix/MTP synthetic **14/14 PASS**.

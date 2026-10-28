@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 Preview-native Qwen 마커 코드 실물 포팅 — 첨부 아카이브 기반
+
+- 사용자 제공 `preview-p1-source-vjEAFR9W.tar.gz` 9개 파일 SHA/유형 검사 완료. `src/preview_p1_patches/qwen-preview-native-marker.patch`는 정확한 Preview preimage를 대상으로 별도 작성한 4-file native source patch로, Qwen3 preamble/literal tool marker 동작만 포함한다(원본 blazux v0.32 patch #1/#2를 그대로 적용하지 않음).
+- 현재 분석 환경에서 실제 첨부 preimage의 임시 복사본 `patch --fuzz=0` 및 AST PASS; 변경된 메서드의 CPU stub 5개 동작 PASS. **전체 Parser/HTTP/운영 인증은 아니다.** 신규 `src/preview_p1_native_marker_verify.py`, 4 offline regression, `--bundle p1-native-marker`은 새 GitHub HEAD DGX NOT_RUN. 사용자는 별도 명시적 일회 CPU Docker 승인 후 실행 가능.
+- 다음은 Responses safe output/Tool argument schema 실제 Preview 포팅(남은 두 패치), 이후 isolated 실제 vLLM parser CPU 및 Pi Agent API 검증에 별도 승인. main/P0/Phase1–5/운영 Docker/GPU/model untouched.
+
+
 ## 2026-10-28 P1 Preview-native Tool/Responses 포팅 — 전체 설치 소스 일괄 확보
 
 - latest DGX actual source `10fc574ff60afb7d8a09728ef4e547c3a6774001`: Phase6 **159/159**·Source **233/233**·PLE/Phase4·Phase5 synthetic **14/14** PASS. Stage `PREVIEW_PATCH_1_CONTEXT_MISMATCH:vllm/parser/engine/parser_engine_config.py:old_line_103`, 설치 원본 수정/GPU 없음.

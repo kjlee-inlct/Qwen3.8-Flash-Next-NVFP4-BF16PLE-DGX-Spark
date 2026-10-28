@@ -15,12 +15,12 @@ stop() { echo "STOP: $*" >&2; exit 2; }
 
 # Allow exactly the old two-test PLE invocation, or a fixed CPU-only
 # P1 synthetic/source bundle. No arbitrary command/profile injection.
-readonly USAGE="usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> [--bundle p1-offline|p1-tool-stage] --execute"
+readonly USAGE="usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> [--bundle p1-offline|p1-tool-stage|p1-native-marker] --execute"
 BUNDLE="ple"
 if [[ $# -eq 3 && "${1:-}" == "--expected-head" && "${3:-}" == "--execute" ]]; then
   :
 elif [[ $# -eq 5 && "${1:-}" == "--expected-head" &&
-        "${3:-}" == "--bundle" && ( "${4:-}" == "p1-offline" || "${4:-}" == "p1-tool-stage" ) &&
+        "${3:-}" == "--bundle" && ( "${4:-}" == "p1-offline" || "${4:-}" == "p1-tool-stage" || "${4:-}" == "p1-native-marker" ) &&
         "${5:-}" == "--execute" ]]; then
   BUNDLE="$4"
 else
@@ -99,7 +99,7 @@ docker run --rm --pull=never \
     python3 src/test_ple_phase_stats_cpu.py
     python3 src/test_ple_phase4_cpu.py
     echo PLE_CPU_CONTAINER_TESTS_PASS
-    if [ "$PLE_CPU_TEST_BUNDLE" = "p1-offline" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-tool-stage" ]; then
+    if [ "$PLE_CPU_TEST_BUNDLE" = "p1-offline" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-tool-stage" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-native-marker" ]; then
       # Existing independent synthetic client oracles: NOT the real parser.
       PYTHONPATH=.:src python3 -m unittest discover \
         -s tests -p "test_blazux_phase5_contracts.py" -v
@@ -111,6 +111,11 @@ docker run --rm --pull=never \
         # Real upstream source patches: apply only to ephemeral copied vLLM source.
         # Expected Preview drift must fail without patching the installed package.
         python3 src/preview_p1_tool_responses_stage.py --stage-preview-source-only
+      fi
+      if [ "$PLE_CPU_TEST_BUNDLE" = "p1-native-marker" ]; then
+        # Stages ACTUAL pinned Preview-native code against a temporary copy and
+        # executes extracted parser methods under stdlib CPU fakes, not vLLM.
+        PYTHONPATH=.:src python3 src/preview_p1_native_marker_verify.py --verify-installed
       fi
     fi
   ' || rc=$?
