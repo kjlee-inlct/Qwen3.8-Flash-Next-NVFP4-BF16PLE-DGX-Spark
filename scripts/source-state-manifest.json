@@ -127,7 +127,8 @@
     "2026-10-28 Phase6 PRE-B original 533082-byte result.json archived SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d Git SHA1 f963d6003f954bbc90c650a92104fddb34b38bbf; verified 12x3 and timeseries. Private environment/logs not published; one-time benchmark approval consumed; P6-A BLOCKED, P6-D NOT_RUN. Original 882b590 offline 99/212 PASS cannot be attributed to this new commit.",
     "2026-10-28 Phase6 A5 observability feasibility: existing approved Docker inspect and GET /v1/models,/metrics expose startup block_size 8 only, not live Scheduler factory/effective group spec, table physical IDs or GPU tensor storage bounds; real active P6-A remains BLOCKED (missing evidence, not observed FAIL). Separate scoped approval required for future in-process attestation or isolated GPU reproduction. No live/bench/GPU operation or CI; existing DGX 99/212 PASS only at 882b590.",
     "2026-10-28 P6-A5 DGX operator offline receipt exact SHA 6afade42bdf40f73c644f96ecbc17b4f3ad36f7f, git fast-forward from 882b590, Phase6 99/99 tests OK, source manifest 216/216 PASS, PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN, PHASE6_A5_OFFLINE_SOURCE_VALIDATION_COMPLETED. Provenance limited to source and unit tests; actual ABI P6-A BLOCKED, P6-B/C/D NOT_RUN, no operations authorized. Following documentation-only manifest commit untested on DGX.",
-    "2026-10-28 explicit user request to proceed P6-B with P6-A active ABI still BLOCKED. Introduce P6-B0 independent stdlib-only synthetic byte-block copy bounds rehearsal with 25 new Phase6 unittest cases and guarded offline-only wrapper; planned new Phase6 unit count 124, Source manifest 220, DGX NOT_RUN on new HEAD. Formal P6-B and B1 real GPU remain BLOCKED/NOT_RUN pending true A evidence plus separately approved resource-isolated GPU environment. P6-C/D NOT_RUN. Historical tested A5 6afade42 99/216 PASS only. No model/Docker/GPU/API/benchmark/PR/CI/merge changes."
+    "2026-10-28 explicit user request to proceed P6-B with P6-A active ABI still BLOCKED. Introduce P6-B0 independent stdlib-only synthetic byte-block copy bounds rehearsal with 25 new Phase6 unittest cases and guarded offline-only wrapper; planned new Phase6 unit count 124, Source manifest 220, DGX NOT_RUN on new HEAD. Formal P6-B and B1 real GPU remain BLOCKED/NOT_RUN pending true A evidence plus separately approved resource-isolated GPU environment. P6-C/D NOT_RUN. Historical tested A5 6afade42 99/216 PASS only. No model/Docker/GPU/API/benchmark/PR/CI/merge changes.",
+    "2026-10-28 user DGX full terminal log exact SHA 3aa40292f96427d3592ebdba971b31484c2a6079 after ff-only: Phase6 124/124 unit OK, Source220/220 PASS, targeted B0 25/25 OK and Source220/220 repeated; 2 synthetic groups/2 state/2 copy ops; B0 CPU synthetic PASS only, actual P6-A ACTIVE BLOCKED, B1 GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs/manifest GitHub commit NOT tested on DGX; no GPU/model/runtime, consumed benchmark approval unchanged."
   ],
   "files": [
     {
@@ -363,7 +364,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-B0-BOUNDS-AND-B1-GPU-ISOLATION-20261028.md",
       "mode": "100644",
-      "blob_sha": "955b7b8ef36402f9423ce8aa4db1b5bfb25d30e1"
+      "blob_sha": "a7bb9bacda3515cee0155920d81dd267e6b21323"
     },
     {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
@@ -373,7 +374,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "cb9bebdb38b11aefeeb69d8cf7c525465183ad42"
+      "blob_sha": "03e9fa01762f4f46fbe8e9da3855afe075aeea81"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -383,7 +384,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "3b39dfdae6b9dfe4425acc3ffef1062846bf299e"
+      "blob_sha": "5b53a1fddd0b533346dc54c397e2611ba43e032e"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -403,12 +404,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "69da7ca2b7bf415fe7db308ad182831e568965ba"
+      "blob_sha": "18902845f01df6b0123d6172e22a6c1aa44af181"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "8847c22f27c148376173ab88ba8aad6469e0dae7"
+      "blob_sha": "a6888cc61c8f846fbeffd8e6f98bbe7cada78e1c"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
