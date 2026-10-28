@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 248,
+  "tracked_file_count": 250,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -421,12 +421,12 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "c99816a7fa1b987c09bcd54238804eb40599c0bc"
+      "blob_sha": "edc197d089d02487e2e7e1774bd9e842735476bc"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "c6f5efa6096aff3f7de8af94bb2bd1101ae5de26"
+      "blob_sha": "06813db24849c9faf0ef3bbcd82188fb047b46e9"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -446,7 +446,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "dfeb7ab57e2ebbc7b88d6ff3b830d0f62882bbc0"
+      "blob_sha": "fc858e789e28c16682f872c0a94a9507390d0c84"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -791,7 +791,7 @@
     {
       "path": "scripts/ple-phase-stats-cpu-container.sh",
       "mode": "100755",
-      "blob_sha": "09c17c52991d584e596068c8fd174631819da215"
+      "blob_sha": "5adcc490edffb7176d125f2a142cad14e5ff4395"
     },
     {
       "path": "scripts/prepare.sh",
@@ -1059,6 +1059,11 @@
       "blob_sha": "e4b14c758a74ace9a7363bb28368515af08e8b70"
     },
     {
+      "path": "src/preview_p1_prefix_candidate.py",
+      "mode": "100644",
+      "blob_sha": "a6fabe47e94e4a1df5139c0592a62f9021bb5975"
+    },
+    {
       "path": "src/preview_p1_real_parser_cpu.py",
       "mode": "100644",
       "blob_sha": "251982fedb0eda8dbc4840efdc881a667bf3bebf"
@@ -1262,6 +1267,11 @@
       "path": "tests/test_blazux_phase6_gate.py",
       "mode": "100644",
       "blob_sha": "535ce7a71fb5312d9ec137c3643f5468ccc69548"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_candidate.py",
+      "mode": "100644",
+      "blob_sha": "0cf498e70f9e3576065f180d3d3ad22f63f8bf50"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_marker.py",

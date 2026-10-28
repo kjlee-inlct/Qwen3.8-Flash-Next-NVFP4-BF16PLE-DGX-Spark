@@ -34,6 +34,8 @@ GitHub [`8bb7a..7e63dbe` 비교](https://github.com/blazux/qwen3.8-Flash-DGX/com
 
 ### P1-A Prefix-cache: 후보 diff는 좁히되 '실행 중 ABI PASS'로 승격 금지
 
+**2026-10-29 후보 코드 준비:** `src/preview_p1_prefix_candidate.py`에 Preview SHA `mamba_hybrid.py=2e65f1da0a440f11a784bd36afe9206a7a2f674d522c047b838ad604e4c6acc0`, `scheduler.py=c710f49e41e974e5b7b8f1cd2f5fb9722523f4da0165252e16351199ebd03124`를 고정했다. 첫 후보는 `MambaHybridModelState.add_request`의 `_align_mode`/state-slot fill_ 분모를 `self.cache_config.block_size` → `self.cache_config.mamba_block_size`; 두 번째는 `Scheduler._mamba_block_aligned_split`에서 `block_size = self.cache_config.block_size` → `block_size = self.block_size`만 바꾼다. 실제 설치 파일의 SHA·class·method·AST 앵커와 일치하지 않으면 fail-closed. 코드 저장 장소는 일회용 컨테이너의 Python `TemporaryDirectory`뿐이며 **운영 Docker, vLLM 설치 파일, GPU, HTTP 및 캐시·모델 불변**. `p1-prefix-candidate` CPU-only 명시 번들은 **후보 소스 자체의 실제 pinned Preview 대조**로서 기존 Phase5 정적 메타데이터 반복과 다르지만, 실제 `mamba_block_size` 존재·런타임 값·Cache-hit 정합성은 독립 검증 전 여전히 BLOCKED다. **신규 HEAD DGX_NOT_RUN, P2 미착수**.
+
 원본 [patch_mamba_block_size.py](https://github.com/blazux/qwen3.8-Flash-DGX/blob/7e63dbe5761448ea833ed28781c1d32ce0d56f4c/src/patch_mamba_block_size.py)는 두 앵커를 사용한다.
 
 1. `v1/worker/gpu/model_states/mamba_hybrid.py`: 이전 cache-config block 대신 `mamba_block_size`로 state-slot 계산. **v0.32의 native worker 분기 존재 여부는 원본 포트의 관측**이며 우리 Preview와 동일하다는 증거가 아니다.

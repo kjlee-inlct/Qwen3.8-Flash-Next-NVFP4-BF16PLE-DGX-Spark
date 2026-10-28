@@ -1,4 +1,6 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
+> **2026-10-29 P1 Prefix 후보 코드 준비:** `src/preview_p1_prefix_candidate.py`는 기존 DGX에서 SHA를 확인한 Preview `mamba_hybrid.py` / `scheduler.py`의 **정확히 두 표현식**만 `/tmp` 임시 사본에서 바꾼 뒤 AST로 재검증하는 독립 후보이다. `scripts/ple-phase-stats-cpu-container.sh --expected-head <new-head> --bundle p1-prefix-candidate --execute`로 사용자가 명시 실행할 때만 고정 이미지의 설치 Python 소스와 두 원본 SHA를 검증하며, 운영 vLLM에는 절대 기록하지 않는다. **신규 코드 DGX_NOT_RUN; 패치 적용 승인/실 ABI/Prefix-hit/GPU 정합성 PASS 아님.** 자세한 근거는 [최신 upstream 비교](BLAZUX-UPSTREAM-COMPARISON-20261029.md)·[결과 장부](BLAZUX-PHASE6-RESULTS.md)에 연결한다.
+
 
 > **최신 외부 원본 비교:** [blazux 7e63dbe ↔ 우리 Preview BF16 PLE/MTP 8개 기능 비교](BLAZUX-UPSTREAM-COMPARISON-20261029.md). 원본 `patch_mamba_block_size.py`의 **worker Mamba state-slot + scheduler split** 두 수정 지점은 P1 후보 diff의 기준이지만, 우리 활성 ABI/Prefix-cache가 검증됐거나 수정됐다는 뜻이 아니다. 다음 코딩 후보는 **두 함수의 정확한 pinned Preview source 대비 최소 격리 diff**이며, 실제 GPU/HTTP/운영 적용은 별도 승인 전까지 금지한다. upstream v0.32/DFlash2 성능 수치는 본 Orcarouter 구성에 전이하지 않는다.
 
