@@ -1,15 +1,10 @@
-# P1 Tool Calling/Responses CPU 통합 검증 종료 기록 — 2026-10-29
+# P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
-> **기존 2026-10-28 활성 인수인계 종료.** 이 문서는 이 세션의 완료 상태만 남긴다. 이전에 열려 있던 `REAL_RESPONSES_*` 오류 재현·CPU runner 재실행 지시는 **현재 작업 지시가 아니다.** 영구 운영 규칙은 `docs/SESSION-HANDOFF-PROMPT.md`, 상세 원본 증거 및 지난 실패 기록은 `docs/BLAZUX-PHASE6-RESULTS.md`, 재발 방지 규칙은 `docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md`를 따른다.
+> 기능별 최신 정확한 DGX SHA와 성공/차단 판정은 `docs/BLAZUX-PHASE6-RESULTS.md`; 영구 운영 규칙은 `docs/SESSION-HANDOFF-PROMPT.md`; 재발 방지는 `docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md`를 따른다. 이 문서에는 현재 P1의 **진행 가능 경계만** 유지한다.
 
-## 이번 P1 작업의 검증된 종료 상태
-
-- 저장소: `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`, 브랜치: `feature/blazux-phase6-runtime-gates`, DGX checkout: `$HOME/Workspace/llm/blazux-phase6-gates`.
-- **마지막 실제 DGX-tested 코드 SHA: `7d46167bbd325df203a471bfb214b22c16d74ce5`.** 격리 CPU-only `--bundle p1-real-responses --execute`: Phase6 **185/185** PASS, Source Manifest **247/247** PASS, Phase4 four CPU flag cases PASS, Phase5 synthetic **14/14** PASS. 실 Preview Qwen3 Parser→Responses Serving 연결 및 Pydantic SSE wire roundtrip **14 cases PASS**. 최종 `REAL_PINNED_PREVIEW_RESPONSES_SERVING_CPU_PASS`, `PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`.
-- 세 Preview 패치는 정확한 원본 SHA 검사 후 임시 source overlay에만 적용했다. **설치된 vLLM, 운영 Docker/모델/GPU/HTTP/API, port 8000, 체크포인트, 캐시는 수정·실행하지 않았다.** 실제 HTTP, 추론, 배포 또는 GPU 성능은 **NOT_RUN / NOT_CERTIFIED**.
-- **이 P1 CPU-only 통합 작업은 완료.** 다른 P1 기능(Prefix-cache active Scheduler/Mamba ABI, GPU 정합성, 운영계측 등)은 본 결과로 자동 완료되지 않는다. **P2 자동 진행 금지.**
-- 로그 확인 뒤의 결과 문서/Source Manifest 수정 커밋은 **docs-only / DGX_NOT_RUN**이다. GitHub 최신 HEAD는 반드시 별도 조회하며 **DGX-tested SHA와 혼동 금지**. PR/CI/merge 검증 및 실행은 별도 상태·승인 필요.
-
-## 재개 조건
-
-사용자가 별도 후속 작업을 지정하면 GitHub에서 최신 HEAD, 영구 규칙, 해당 기능의 실증 증거를 다시 확인하고 범위를 명시한다. 본 P1 CPU 검증을 마친 사실만으로 운영 반영, 새 GPU 실험, CI, PR 생성/머지 또는 P2 추진을 승인받은 것으로 해석하지 않는다.
+- **Repository/branch:** `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` / `feature/blazux-phase6-runtime-gates`. DGX checkout `$HOME/Workspace/llm/blazux-phase6-gates`.
+- **최신 DGX-tested 기능 코드 SHA:** `29e78cdc1dccf82667d0a9c227a7b4b0629c3136`. Isolated `p1-real-responses` CPU-only bundle: Phase6 `185/185` unit PASS; Source `247/247`; PLE mmap `forward()` 신규 host-side 계측 및 gather 단계별 계측 PASS, Phase4 FAST/STATS `4/4` byte-exact PASS, 24 concurrent calls PASS; Phase5 synthetic `14/14`; 실제 Preview Qwen3 Parser→Responses Serving CPU fixture `14` cases, native Pydantic SSE roundtrip PASS. 완료 마커 `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`.
+- **확인된 두 P1 CPU 기능:** `VLLM_PLE_PHASE_STATS` opt-in/default-OFF gather+forward CPU 계측은 `CPU_VERIFIED`; Preview-native Qwen3 Tool Calling/Responses Parser→Serving 격리 통합도 `CPU_VERIFIED`. **실 HTTP/API/실모델 GPU/운영 적용/실 BF16 PLE 성능은 NOT_RUN**. `device_copy_call_s`는 전송 완료 시간이 아니며 GPU 동기화 없음.
+- **남은 P1 Prefix-cache 실제 정확성:** `P6-A ACTIVE ABI=BLOCKED_MISSING_IN_PROCESS_EVIDENCE`. 현재 서비스의 Scheduler 선택, 분기·group block 단위, 실제 Mamba state/physical table/stride 및 활성 캐시 hit를 직접 관측할 검증된 경로가 없다. 기존 `/metrics`의 `enable_prefix_caching=false` startup 설정·source AST·합성 CPU oracle만으로 실 Prefix-cache correctness를 증명하지 않는다. 추가 반복 CPU 합성 시험이나 Config block-size 추측으로 PASS 승격하지 않는다.
+- **새 허가가 필요한 유일한 실질 다음 단계:** (a) 별도 승인된 정비창에서 실제 EngineCore/worker 안의 최소 redacted ABI observer를 추가해 process-owned 실제 상태를 캡처하고 cold/cache-hit 동일 출력 비교를 준비하거나, (b) 충분한 독립 자원·격리 검토 후 별도 승인된 후보 GPU/model 환경에서 동일 검증을 수행한다. 기존 단일 DGX 운영 서비스에 model 추가, GPU/trace, restart, `docker exec`, patch 또는 HTTP inference를 현 승인으로 수행할 수 없다.
+- **브랜치 증거/작업 경계:** GitHub 결과 문서+Manifest-only SHA는 DGX 재시험된 HEAD가 아니다. 최신 branch/ref/CI/PR 상태를 재조회하며, CPU PASS SHA `29e78cd`와 구분한다. P2 자동 착수 금지, 기능 PR/merge/CI 무승인 진행 금지, 운영 서비스·모델·캐시·원본 benchmark 보존.
