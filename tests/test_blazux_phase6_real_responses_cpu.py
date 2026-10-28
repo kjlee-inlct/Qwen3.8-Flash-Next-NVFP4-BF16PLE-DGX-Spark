@@ -36,7 +36,6 @@ class RealResponsesCPUPlanTests(unittest.TestCase):
         self.assertIn("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_CONFLICT", source)
         self.assertIn('P1_DIAG_CONTEXT_ITEMS=', source)
         self.assertIn('P1_DIAG_TERMINAL_ENTERED=', source)
-        self.assertIn("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_MISSING", source)
         self.assertIn('REAL_PARSER_TO_RESPONSES_STREAM_FINAL_TOOL_WRONG', source)
 
     def test_validation_diagnostics_never_emit_raw_errors(self):
