@@ -1,5 +1,17 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 DGX P6-B1a 실제 무부하 관측 완료 — 147/224 PASS, GPU 미인증
+
+- **정확한 DGX 테스트 소스 SHA:** `37b883793bdd33f8aa2d4810947a94fef3aa5c20`, `feature/blazux-phase6-runtime-gates`. 사용자 제공 전체 DGX 실행 로그에서 `git pull --ff-only`가 `이미 업데이트 상태`이며, 사용자 `git rev-parse HEAD` pin 검사 이후 종료 마커까지 성공했음을 확인.
+- **Phase 6 오프라인 검증:** `Ran 147 tests in 0.018s` / `OK`; `PASS_SOURCE_ONLY: 224 tracked file(s)`를 `scripts/phase6-gate.sh` 및 B1a 래퍼에서 **2회**, 동일 HEAD에서 확인. `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`.
+- **B1a 실제 passive snapshot:** `status=PASSIVE_METADATA_COLLECTED_NOT_GPU_READY`, `pinned_legacy_identity_stable=true`, `reasons=[]`; `host_available_mib_before=14620`, `after=14609`, **8192 MiB는 읽기 전용 메타데이터 검사 보호 하한이지 GPU 할당 보증치가 아님**; `gpu_telemetry_scope=PARTIAL` (NVML 완전한 메모리 telemetry 미확보). `unified_memory_headroom_proven=false`, `second_model_feasible_proven=false`, `gpu_allocation_authorized=false`. 개인 컨테이너 ID/시작 시각·비공개 상태 원문은 기록하지 않음.
+- **실제 종료 마커:** `PHASE6_B1A_PASSIVE_FEASIBILITY_DONE_NOT_GPU_APPROVAL` → `PHASE6_B1A_READONLY_METADATA_CHECK_COMPLETED_NOT_GPU_PASS` → `PHASE6_B1A_DGX_PASSIVE_OBSERVATION_FINISHED_NO_GPU`.
+- **Gate 판정:** `P6_B0_CPU_SYNTHETIC=PASS_AT_PRIOR_SHA_3aa4029`, `P6_B1A_PASSIVE_METADATA=OBSERVED_AT_SHA_37b8837`; **`P6_A_ACTIVE_ABI=BLOCKED`, `P6_B1_REAL_GPU=NOT_RUN`, `P6_B_FORMAL=BLOCKED`, `P6_C_D=NOT_RUN`**. 이 관측은 CUDA/Triton kernel 실행, 모델 GPU 메모리 실측, 두 번째 모델 공존성, prefix/rollback/canary 정합성 검증이 아니다.
+- **다음 결정:** 승인 없는 GPU 작업이나 두 번째 모델 기동을 금지한다. 다음에는 최소 메모리 사용량이 상한으로 고정된 synthetic CUDA/Triton copy + canary를 **GPU를 전혀 실행하지 않고 설계·소스 검증**할 수 있으나, 실제 실행에는 단일 DGX 서비스 간섭 위험·통합 메모리 할당 예산을 독립적으로 평가하고 사용자에게 정확한 GPU 실행 범위에 관한 **새 명시적 승인**을 받아야 한다. 이미 승인 소진된 PRE-B 36회 재실행 금지. 이 결과를 기록하는 후속 GitHub docs/Manifest 커밋은 DGX 미시험임.
+
+---
+
+
 ## 2026-10-28 P6-B1a 무부하 격리·자원 관측기 준비
 
 DGX에서 소스 3aa40292f96427d3592ebdba971b31484c2a6079의 Phase6 124/124, Source220/220 및 B0 독립 25/25 PASS를 확인했다. B0 CPU 합성 Gate는 완료됐으나 **활성 P6-A ABI=BLOCKED, 실제 B1 GPU=NOT_RUN, 정식 B=BLOCKED, P6-C/D=NOT_RUN**은 변하지 않는다.
