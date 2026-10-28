@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 227,
+  "tracked_file_count": 233,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -134,7 +134,8 @@
     "2026-10-28 user explicitly identified delivery drift: repeated offline source/CPU sub-gates and docs for blazux Phase5-6 without demonstrating any of 8 planned new blazux features deployed in service. Assistant admitted planning/process error and introduced canonical DELIVERY-DRIFT-POSTMORTEM guardrails. Future work: outcome-first feature implementation, classify implementation/CPU/GPU/API/deployed evidence separately; stop-loop after repeated ABI-resource BLOCKED without new evidence/approval, avoid B1b/B1c proliferation; next P1 candidates PLE phased wait/dedup/gather/stage statistics and Preview Tool/Responses CPU compatibility. Replace stale active handoff prompt that instructed re-running already consumed 36 PRE-B bench. Preserve last DGX at 37b883793bdd33f8aa2d4810947a94fef3aa5c20 147/147 Source224/224 and B0 3aa40292 124/220 PASS; no runtime/GPU/bench/CI/PR/merge approvals or execution. This docs-only correction commit untested on DGX.",
     "2026-10-28 P1 PLE CPU phase timings code/test on Phase6 branch: legacy gather counters preserved, opt-in normalize/dedup/worker-result-wait/CPU-stage timings; H2D/NVMe explicitly NOT_INSTRUMENTED. New code DGX_NOT_RUN; existing service and blazux runtime NOT_APPLIED; offline test needs exact-SHA execution.",
     "2026-10-28 P1 PLE disposable pinned-image CPU-only runner added, with explicit --execute and SHA gate, no serving container exec, no GPU/network/model. New runner itself DGX_NOT_RUN; source verification and isolated CPU test require operator execution at exact new SHA.",
-    "2026-10-28 operator DGX at exact 47c8aa819bcdca5c6938831a091190bea075610a confirmed PLE phase stats CPU (24 parallel calls, bytes identical) + Phase4 four flag combinations + Phase6 147/147 and Source227/227. Tiny synthetic CPU medians OFF 116.606us / ON 114.607us are not a performance improvement claim. P1 PLE CPU_VERIFIED only, not deployed. New docs plus optional p1-offline one-container batch of existing synthetic Tool/Responses/Prefix/MTP contracts and preview source audit; new HEAD DGX_NOT_RUN. No service/GPU/model/API/benchmark operation."
+    "2026-10-28 operator DGX at exact 47c8aa819bcdca5c6938831a091190bea075610a confirmed PLE phase stats CPU (24 parallel calls, bytes identical) + Phase4 four flag combinations + Phase6 147/147 and Source227/227. Tiny synthetic CPU medians OFF 116.606us / ON 114.607us are not a performance improvement claim. P1 PLE CPU_VERIFIED only, not deployed. New docs plus optional p1-offline one-container batch of existing synthetic Tool/Responses/Prefix/MTP contracts and preview source audit; new HEAD DGX_NOT_RUN. No service/GPU/model/API/benchmark operation.",
+    "2026-10-28 DGX exact 389903179f9ce81b2f846c657b877b190750e3c1 P1 p1-offline bundled CPU: Phase6 147/147, source227/227, PLE byte-exact/concurrency24/Phase4 4 flags, Phase5 synthetic 14/14 PASS; installed Preview parser AST hashes confirmed but patch hooks missing. New pinned blazux v0.32 4-source-patch family and Preview temporary-only no-write source staging introduced; newly committed source DGX_NOT_RUN, actual Preview patch context unknown, runtime/API not applied. No GPU/model/service/CI/PR/merge."
   ],
   "files": [
     {
@@ -410,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "43eb12f368620e2cda73657d1b658192c79e1652"
+      "blob_sha": "e34d1bdbae0fe0c2b80b137d5b244b24dc5cc362"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -430,12 +431,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "a67b0de6613422b575e8626d6c2564d426810751"
+      "blob_sha": "08fd9fe9e1536a14d7c15366e3cec512efde0225"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "e58ea3aed72d57fe8fc0ac7a74dcd13f32907c37"
+      "blob_sha": "587718a90700f29272f63b4d02ae8387424fe1ec"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -775,7 +776,7 @@
     {
       "path": "scripts/ple-phase-stats-cpu-container.sh",
       "mode": "100755",
-      "blob_sha": "18964dbc8a11cb1cc9f6d13677accd96c9661586"
+      "blob_sha": "0d1f6af57cc752cf48cd86efb6c64605f52f5c74"
     },
     {
       "path": "scripts/prepare.sh",
@@ -988,6 +989,31 @@
       "blob_sha": "face7d73c50017c3188dd2a8eaa78b93fd86d82a"
     },
     {
+      "path": "src/preview_p1_patches/qwen-safe-output.patch",
+      "mode": "100644",
+      "blob_sha": "569b2c7365d58e888f7d586cb39605ff745957d4"
+    },
+    {
+      "path": "src/preview_p1_patches/qwen-tool-argument-schema.patch",
+      "mode": "100644",
+      "blob_sha": "deeba34bf816d25b558ac76c200f8adba4293097"
+    },
+    {
+      "path": "src/preview_p1_patches/qwen-tool-marker-guard.patch",
+      "mode": "100644",
+      "blob_sha": "aba9e03608c9cb0a85b3992383dcd491a01a0ac3"
+    },
+    {
+      "path": "src/preview_p1_patches/qwen-tool-preamble.patch",
+      "mode": "100644",
+      "blob_sha": "e4b14c758a74ace9a7363bb28368515af08e8b70"
+    },
+    {
+      "path": "src/preview_p1_tool_responses_stage.py",
+      "mode": "100644",
+      "blob_sha": "4b30fa9106d4b9065bf1a963549bd98d72fdd557"
+    },
+    {
       "path": "src/recipe/__init__.py",
       "mode": "100644",
       "blob_sha": "6dd1e25d5a5d1afbe11e8049b21c82223016b0e9"
@@ -1176,6 +1202,11 @@
       "path": "tests/test_blazux_phase6_gate.py",
       "mode": "100644",
       "blob_sha": "535ce7a71fb5312d9ec137c3643f5468ccc69548"
+    },
+    {
+      "path": "tests/test_blazux_phase6_preview_p1_stage.py",
+      "mode": "100644",
+      "blob_sha": "d7e59de6f7473ce652f940b3cfc445107b31cd07"
     },
     {
       "path": "tests/test_blazux_phase6_readonly_preflight.py",

@@ -1,5 +1,8 @@
 # SESSION-HANDOFF-PROMPT.md
 
+> **2026-10-28 P1 Tool/Responses 후속:** 실제 DGX `3899031`에서 PLE·Phase6·Phase5 합성·Preview 소스 분석 묶음 PASS. [Phase6 결과](BLAZUX-PHASE6-RESULTS.md). 원본 blazux v0.32 네 패치의 **실제 코드**를 `src/preview_p1_patches/`에 고정하고 `src/preview_p1_tool_responses_stage.py`로 **설치된 Preview 소스의 /tmp 복사본에만 적용 여부**를 검사한다. `--bundle p1-tool-stage`는 새 명시적 CPU-only Docker 승인 후 실행. Preview 호환성, 서버 동작, 운영 적용은 여전히 `NOT_RUN`이며 패치 문맥 불일치는 `BLOCKED`로 처리한다. 정확 SHA·실측은 [현재 세션 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 우선.
+
+
 ## 2026-10-28 상시 운영 규칙 — CPU-only 일회용 Docker + 기능 묶음 처리
 
 **근거:** 2026-10-28 사용자 요청 및 DGX `47c8aa819bcdca5c6938831a091190bea075610a`의 일회성 PLE CPU 회귀 PASS. 증거 해석은 [Phase6 결과](BLAZUX-PHASE6-RESULTS.md)의 해당 SHA를 참조. 이 규칙은 기존 운영 컨테이너 `docker exec/run/stop/restart`에 대한 포괄 승인도, GPU 실험/모델/HTTP/CI/PR/merge 승인도 아니다.

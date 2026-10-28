@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 DGX P1 묶음 실제 PASS — SHA 3899031
+
+- 사용자 DGX 전체 출력: `git pull --ff-only`가 `47c8aa8..3899031` fast-forward한 직후, `--bundle p1-offline --execute` 실행. **정확한 시험 SHA** `389903179f9ce81b2f846c657b877b190750e3c1`.
+- Host Phase6 **147/147 PASS**, Source Manifest **227/227 PASS**. CPU-only disposable Docker의 PLE 계측/24-call 동시성/byte-exact PASS, Phase4 네 조합 PASS. 독립 Phase5 Tool/Responses/Prefix/MTP **14/14 합성 contract PASS**.
+- Preview 소스 읽기 전용 분석 성공: parser engine/qwen3/streaming/Responses의 과거 SHA와 일치. 새로운 blazux 메서드가 아직 없는 것을 확인(예: `_normalize_tool_arguments`, `_marker_is_literal`, `_make_failed_response_event`). 이는 **패치 부재**의 소스 증거이며 Preview 서버가 실제 오작동한다는 증거가 아니다.
+- synthetic warm CPU 중앙값 stats OFF **112.815 μs**, ON **131.456 μs**. 이전 `47c8aa8` 시험 값과 방향이 다르므로 실제 오버헤드/서비스 성능 추정에 사용하지 않는다.
+- 마지막 마커 `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`; **GPU/model/http/운영 적용은 수행하지 않음**. 새 SOURCE-only patch staging 커밋은 별도 DGX 실행 전 `NOT_RUN`.
+
+
 ## 2026-10-28 P1 PLE 단계별 계측 — 일회성 CPU Docker 실제 DGX PASS (정확한 SHA)
 
 - **사용자가 제공한 실제 DGX 로그:** `feature/blazux-phase6-runtime-gates` 소스 `47c8aa819bcdca5c6938831a091190bea075610a`. `git pull --ff-only`로 `518e805..47c8aa8` fast-forward 후, `scripts/ple-phase-stats-cpu-container.sh --expected-head 47c8aa8... --execute` 실행 완료.

@@ -1,5 +1,14 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 Preview P1 Tool/Responses 코드 패치 후보 + 안전한 실제 소스 스테이징
+
+- 실제 DGX P1 묶음 검증: SHA `389903179f9ce81b2f846c657b877b190750e3c1`, Phase6 147/147·Source227/227·PLE byte-exact·Phase5 synthetic 14/14·Preview read-only AST PASS. 세부 증거는 [BLAZUX-PHASE6-RESULTS.md](BLAZUX-PHASE6-RESULTS.md).
+- 신규 실기능 코드 후보: 원본 blazux SHA `8bb7a7179c6844839d9de8eda4dec6ec07e3b4fa`의 네 개 Python source 패치(도구 preamble/literal guard/Responses empty STOP+terminal/schema JSON arguments)를 **Git blob 원형 그대로** `src/preview_p1_patches/`에 고정. 원본 패치 대상은 vLLM **v0.32**, 현재 Preview와 호환 완료라고 주장 금지.
+- `src/preview_p1_tool_responses_stage.py`: 설치된 Preview의 관측된 6개 SHA256을 검증하고 사본만 `/tmp`에 만들며, 순서가 고정된 네 패치를 `--fuzz=0`으로 적용 후 Python AST/실제 훅 존재 검증. 원본 설치 파일/모델/운영 상태 변경 없음. 문맥 불일치 시 `PREVIEW_PATCH_N_CONTEXT_MISMATCH`로 정확히 BLOCKED. **실제 Preview rebase 성공·실 Parser/API 검증은 신규 HEAD DGX 실행 전 `NOT_RUN`**.
+- 실행 옵션 `scripts/ple-phase-stats-cpu-container.sh --expected-head <SHA> --bundle p1-tool-stage --execute`: CPU-only 고정 이미지, 운영 격리, P1 기존 번들 후 **임시 소스 패치만 시도**. 별도 명시적 일회 실행 승인 필요. `p1-offline` 모드는 유지한다.
+- 실패 시 그 첫 불일치 파일/헝크의 문맥만 **실제 설치 Preview 소스의 안전한 읽기 전용 증거로 확보**하고, 그 문맥을 반영한 실제 Preview-native 수정으로 포팅한다. 새 A/B Gate 증식 금지, 실제 엔진 적용/서빙/GPU 작업은 별도 승인. 현 운영에 적용된 신규 기능 0개.
+
+
 ## 2026-10-28 최신 P1 CPU 계측 완료 및 일회용 Docker 묶음 규칙
 
 - **실제 DGX-tested SHA** `47c8aa819bcdca5c6938831a091190bea075610a`: PLE phase stats CPU byte-exact/24 concurrent calls PASS, Phase4 4-flag matrix PASS, Phase6 147/147 PASS, Source Manifest 227/227 PASS. 최종 `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 중앙값 OFF 116.606 μs / ON 114.607 μs는 warm synthetic 샘플일 뿐 운영 성능 비교가 아니다. **P1 PLE 계측 `CPU_VERIFIED`, 운영 `NOT_APPLIED`**.
