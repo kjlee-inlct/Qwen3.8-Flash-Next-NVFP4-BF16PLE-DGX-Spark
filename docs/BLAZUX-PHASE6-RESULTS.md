@@ -1,5 +1,16 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 사용자 결정 — A BLOCKED 유지, B0 CPU 독립 검증 착수
+
+사용자는 P6-A의 실물 ABI가 안전하게 관측되지 않더라도 P6-B 작업을 진행하기로 결정했다. **이것은 준비·오프라인 검증의 선행 승인이지, 미검증 A Gate를 형식적으로 PASS 처리하거나 B의 운영 GPU 실행을 즉시 승인한 것이 아니다.** 실 B GPU Gate 선행조건 및 P6-C/D 의존성은 유지한다.
+
+[Phase6 P6-B0 CPU physical-bounds / B1 GPU isolation 계획](BLAZUX-PHASE6-B0-BOUNDS-AND-B1-GPU-ISOLATION-20261028.md)을 추가하고, 순수 stdlib 코드 src/phase6_b0_cpu_bounds.py, 25개의 오프라인 회귀시험, scripts/phase6-b0-offline.sh를 기능 브랜치에 준비했다. 합성 multi-group block table의 int32 element stride, state byte stride, physical ID/할당 범위, 복사 길이, sentinel, alias, 보존 바이트·패딩·실패 원자성 등을 검사한다. **실 GPU/CUDA state copy·prefix/rollback·MTP나 실제 활성 ABI 증거는 전혀 제공하지 않음**. 현재 정식 P6-A는 BLOCKED_MISSING_IN_PROCESS_EVIDENCE, 정식 P6-B는 BLOCKED, B1 GPU NOT_RUN; B0 소스·CPU 검증은 **신규 HEAD에 대한 DGX 로그 수신 전 NOT_RUN**. 새 HEAD의 기대값 124 unit, Source220은 실측이 아니다.
+
+DGX 운영 컨테이너·이미지·가중치·서빙 포트·GPU 모델·기존 PRE-B 36회 원본 불변. 이미 소진된 벤치마크 재실행 금지. 이번 단계의 실제 GPU/모델 배치, Docker exec/run, 운영 stop/restart, blazux patch, CI/PR/merge 금지. 별도 B1 자원·격리·검증 프로토콜을 확보하고 명시 승인받아야 GPU 시험을 시작할 수 있다.
+
+---
+
+
 ## 2026-10-28 DGX A5 실제 오프라인 회귀 영수증 — 99/99·Source216/216 PASS
 
 - **검증된 DGX checkout exact HEAD**: `6afade42bdf40f73c644f96ecbc17b4f3ad36f7f` (`feature/blazux-phase6-runtime-gates`), `git pull --ff-only`로 `882b590... → 6afade4...` fast-forward 확인. `bash scripts/phase6-gate.sh`: `Ran 99 tests in 0.016s`, `OK`; `PASS_SOURCE_ONLY: 216 tracked file(s)`와 동일 HEAD; 종료 마커 `PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN`, 사용자 래퍼 `PHASE6_A5_OFFLINE_SOURCE_VALIDATION_COMPLETED`를 확인했다.

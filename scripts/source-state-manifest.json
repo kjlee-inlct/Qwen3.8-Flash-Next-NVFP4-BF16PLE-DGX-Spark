@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 216,
+  "tracked_file_count": 220,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -126,7 +126,8 @@
     "2026-10-28 Phase6 PRE-B publicly archived numeric summary only: operator-reported 12 condition averages and 36-run completion (raw result.json reported SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d). Exact original raw result bytes are still private/not on GitHub, and not independently rehashed by this commit. No benchmark repeated. DGX operator tested prior docs-only 882b590119afcdadb06afe9938c7f3e10c866656: 99/99 Phase6 tests, source212/212 PASS, but this summary archive/docs update itself is DGX NOT_RUN. P6-A active ABI BLOCKED, P6-B/C/D NOT_RUN.",
     "2026-10-28 Phase6 PRE-B original 533082-byte result.json archived SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d Git SHA1 f963d6003f954bbc90c650a92104fddb34b38bbf; verified 12x3 and timeseries. Private environment/logs not published; one-time benchmark approval consumed; P6-A BLOCKED, P6-D NOT_RUN. Original 882b590 offline 99/212 PASS cannot be attributed to this new commit.",
     "2026-10-28 Phase6 A5 observability feasibility: existing approved Docker inspect and GET /v1/models,/metrics expose startup block_size 8 only, not live Scheduler factory/effective group spec, table physical IDs or GPU tensor storage bounds; real active P6-A remains BLOCKED (missing evidence, not observed FAIL). Separate scoped approval required for future in-process attestation or isolated GPU reproduction. No live/bench/GPU operation or CI; existing DGX 99/212 PASS only at 882b590.",
-    "2026-10-28 P6-A5 DGX operator offline receipt exact SHA 6afade42bdf40f73c644f96ecbc17b4f3ad36f7f, git fast-forward from 882b590, Phase6 99/99 tests OK, source manifest 216/216 PASS, PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN, PHASE6_A5_OFFLINE_SOURCE_VALIDATION_COMPLETED. Provenance limited to source and unit tests; actual ABI P6-A BLOCKED, P6-B/C/D NOT_RUN, no operations authorized. Following documentation-only manifest commit untested on DGX."
+    "2026-10-28 P6-A5 DGX operator offline receipt exact SHA 6afade42bdf40f73c644f96ecbc17b4f3ad36f7f, git fast-forward from 882b590, Phase6 99/99 tests OK, source manifest 216/216 PASS, PHASE6_PREPARATION_OFFLINE_PASS_RUNTIME_NOT_RUN, PHASE6_A5_OFFLINE_SOURCE_VALIDATION_COMPLETED. Provenance limited to source and unit tests; actual ABI P6-A BLOCKED, P6-B/C/D NOT_RUN, no operations authorized. Following documentation-only manifest commit untested on DGX.",
+    "2026-10-28 explicit user request to proceed P6-B with P6-A active ABI still BLOCKED. Introduce P6-B0 independent stdlib-only synthetic byte-block copy bounds rehearsal with 25 new Phase6 unittest cases and guarded offline-only wrapper; planned new Phase6 unit count 124, Source manifest 220, DGX NOT_RUN on new HEAD. Formal P6-B and B1 real GPU remain BLOCKED/NOT_RUN pending true A evidence plus separately approved resource-isolated GPU environment. P6-C/D NOT_RUN. Historical tested A5 6afade42 99/216 PASS only. No model/Docker/GPU/API/benchmark/PR/CI/merge changes."
   ],
   "files": [
     {
@@ -360,6 +361,11 @@
       "blob_sha": "261f0e483ff84fedc4a471397ac289feeb858b51"
     },
     {
+      "path": "docs/BLAZUX-PHASE6-B0-BOUNDS-AND-B1-GPU-ISOLATION-20261028.md",
+      "mode": "100644",
+      "blob_sha": "955b7b8ef36402f9423ce8aa4db1b5bfb25d30e1"
+    },
+    {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
       "blob_sha": "c1f19246469759c8a6474098908f6bd79f633f7b"
@@ -367,7 +373,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "d8cdd2343455b746fca034948c1151ed57cd79ac"
+      "blob_sha": "cb9bebdb38b11aefeeb69d8cf7c525465183ad42"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -377,7 +383,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "5b922a3b3bdf861288ceb99ff756b5f0a5c71f66"
+      "blob_sha": "3b39dfdae6b9dfe4425acc3ffef1062846bf299e"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -397,12 +403,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "aa18121809a7144de1d88b01903b7b8042d9b09a"
+      "blob_sha": "69da7ca2b7bf415fe7db308ad182831e568965ba"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "42f74e1593c39c3a67c4b3bc268af2060aa0a464"
+      "blob_sha": "8847c22f27c148376173ab88ba8aad6469e0dae7"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -700,6 +706,11 @@
       "blob_sha": "f235585f696d1ef8f1423fe6b9890de1869de2d7"
     },
     {
+      "path": "scripts/phase6-b0-offline.sh",
+      "mode": "100644",
+      "blob_sha": "1b5046fc5261f0831555fc6ce96d9ef9fcdb0c36"
+    },
+    {
       "path": "scripts/phase6-gate.sh",
       "mode": "100755",
       "blob_sha": "325be49e2c5677df1221b7be96cb2c53d8e5327d"
@@ -930,6 +941,11 @@
       "blob_sha": "c0819c909fe137b4ff1a8fa4c26cc671a10533ac"
     },
     {
+      "path": "src/phase6_b0_cpu_bounds.py",
+      "mode": "100644",
+      "blob_sha": "d005f7fd67217208b9998503ea9860242632250b"
+    },
+    {
       "path": "src/phase6_gate.py",
       "mode": "100644",
       "blob_sha": "aa7654a5f47cddeababef4e3a0daffdea6fb4be8"
@@ -1108,6 +1124,11 @@
       "path": "tests/test_blazux_phase6_ab_provisional.py",
       "mode": "100644",
       "blob_sha": "c9b916473f156f6f29b47ceeec6981fb83bcfe11"
+    },
+    {
+      "path": "tests/test_blazux_phase6_b0_cpu_bounds.py",
+      "mode": "100644",
+      "blob_sha": "447fadaa3408d9035053702553ae6d7bd03dfa49"
     },
     {
       "path": "tests/test_blazux_phase6_gate.py",
