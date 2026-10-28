@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 DGX a806a5a: temporary Responses patch hunk mismatch
+
+- **Operator DGX run:** exact `a806a5ac33b9f83c15bfc8e10d4b31a6c598a875`, same isolated `p1-real-responses` runner. 183/183 Phase6 unit PASS, 247/247 Source manifest PASS, PLE/Phase4 4-combo/Phase5 synthetic 14/14 PASS. The temporary third Preview patch failed with `PREVIEW_RESPONSES_PATCH_NOT_APPLICABLE` and runner exited 2. Thus actual Parser→Serving and wire retest DID NOT RUN. No operational changes/certification.
+- **Minimal source-only correction (new HEAD DGX_NOT_RUN):** restore hunk #4 old-side source context from 8 to its previously DGX-applied 7 lines; remove only the newly invented extra context line `ResponseOutputItemDoneEvent` while retaining the two native argument SSE union additions and two imports. All 14 preimage hunk contexts now exactly match the known-applied third patch on `5a48a1c01e2f6fee9039df072bd933bd3157a78f`; all unified hunk lengths validated, SHA256 integrity pin and unit checks updated. Installed vLLM preimage pins, the other two temporary patches, strict Pydantic/failure criteria and production Docker/GPU/model/HTTP remain unchanged. P2 forbidden.
+
 ## 2026-10-29 P1 DGX 5a48a1c: missing real function-call SSE union members
 
 - **User DGX exact `5a48a1c01e2f6fee9039df072bd933bd3157a78f`:** Phase6 **183/183 PASS**, source **247/247 PASS**, isolated PLE CPU/Phase4 4-combo PASS, Phase5 synthetic **14/14 PASS**. Parser→Serving generated and structurally validated actual tool output and completed event, but JSON wire roundtrip **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_WIRE_ValidationError_RESPONSE_ARG_DELTA_BLOCKED`, exit 2, no runner completion marker. No HTTP, GPU, model or operational functionality is certified.

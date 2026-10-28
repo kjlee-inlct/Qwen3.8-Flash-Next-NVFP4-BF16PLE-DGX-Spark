@@ -15,6 +15,8 @@ class NativeResponsesTests(unittest.TestCase):
         self.assertEqual(len(files), 2)
         self.assertIn(b'| ResponseFunctionCallArgumentsDeltaEvent', data)
         self.assertIn(b'| ResponseFunctionCallArgumentsDoneEvent', data)
+        # Preserve the exact upstream-compatible original hunk context.
+        self.assertIn(b'@@ -843,7 +856,11 @@', data)
 
     def test_source_syntax_and_explicit_guard(self):
         ast.parse(Path(responses.__file__).read_bytes())

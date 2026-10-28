@@ -30,7 +30,7 @@ from src.preview_p1_native_schema_verify import (
 from src.preview_p1_native_marker_verify import PINNED as MARKER_PINS
 
 RESPONSES_PATCH = Path(__file__).resolve().parent / "preview_p1_patches/qwen-preview-native-responses.patch"
-RESPONSES_SHA256 = "2925f3991492125098b74404d51aeba16c8afe082c501e0261bffabee72f3e65"
+RESPONSES_SHA256 = "f9f31e3b1d05e32bbf670d6cb860e13020ab51c9b28d78297389e4b89edf223a"
 PROTOCOL = "vllm/entrypoints/openai/responses/protocol.py"
 SERVING = "vllm/entrypoints/openai/responses/serving.py"
 TARGETS = frozenset(SCHEMA_TARGETS | {PROTOCOL})

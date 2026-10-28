@@ -36,7 +36,7 @@
  class ResponseCreatedEvent(OpenAIResponseCreatedEvent):
      response: ResponsesResponse  # type: ignore[override]
  
-@@ -843,8 +856,12 @@
+@@ -843,7 +856,11 @@
  
  
  StreamingResponsesResponse: TypeAlias = (
@@ -47,7 +47,6 @@
      | ResponseInProgressEvent
      | ResponseCompletedEvent
      | ResponseOutputItemAddedEvent
-     | ResponseOutputItemDoneEvent
 +    | ResponseFunctionCallArgumentsDeltaEvent
 +    | ResponseFunctionCallArgumentsDoneEvent
 --- a/vllm/entrypoints/openai/responses/serving.py
