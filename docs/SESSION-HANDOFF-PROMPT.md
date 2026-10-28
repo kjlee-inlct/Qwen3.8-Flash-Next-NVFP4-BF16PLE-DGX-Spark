@@ -1,5 +1,8 @@
 # SESSION-HANDOFF-PROMPT.md
 
+> **2026-10-28 새 상시 규칙 확인:** P1 종료 후 P2 자동 시작 금지, 레거시 Docker 정지와 신규 Wizard 전용 stop.sh 구분 및 운영 전환의 별도 승인/복구 원칙은 main 영구 문서의 [PR #6](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/6)에 정리됨. 이 브랜치의 실제 진행 중인 P1 작업은 [현재 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 테스트 영수증은 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)를 참조하며 이곳에 중복하지 않는다.
+
+
 > **2026-10-28 P1 Tool/Responses 후속:** 실제 DGX `3899031`에서 PLE·Phase6·Phase5 합성·Preview 소스 분석 묶음 PASS. [Phase6 결과](BLAZUX-PHASE6-RESULTS.md). 원본 blazux v0.32 네 패치의 **실제 코드**를 `src/preview_p1_patches/`에 고정하고 `src/preview_p1_tool_responses_stage.py`로 **설치된 Preview 소스의 /tmp 복사본에만 적용 여부**를 검사한다. `--bundle p1-tool-stage`는 새 명시적 CPU-only Docker 승인 후 실행. Preview 호환성, 서버 동작, 운영 적용은 여전히 `NOT_RUN`이며 패치 문맥 불일치는 `BLOCKED`로 처리한다. 정확 SHA·실측은 [현재 세션 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 우선.
 
 

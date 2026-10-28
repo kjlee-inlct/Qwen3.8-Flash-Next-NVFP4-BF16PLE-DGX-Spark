@@ -144,7 +144,8 @@
     "2026-10-28 User DGX ab00f94f25b3bd8dcbb359056cd08a533281711b: 173/173 Phase6, Source243/243, PLE/Phase4/Phase5 synthetic, installed native Responses source 3-patch/temp-only actual modified serving methods 18/18 CPU PASS. NEW stage p1-real-parser on runc CPU only: imports real pinned Preview Qwen3 Parser and dependencies from staged temp overlay for 6 XML/schema/chunk tests. New HEAD DGX_NOT_RUN, no production/GPU/model/API; do not progress P2 without user instruction.",
     "2026-10-28 user DGX fd544615c370dd1cbb1ad0764388c3d21f9b465c 177/177 Phase6, Source245/245, true pinned Preview Qwen Parser CPU XML/schema/chunked 6/6 PASS. Add p1-real-responses test using actual imported patched Preview Serving and Pydantic Responses events with CPU inert fixtures, 6 cases planned. New HEAD DGX_NOT_RUN, expected181 tests and Source247 entries. No HTTP/GPU/model/operational mutation or CI/PR/merge; P1 only, legacy Docker preserved, no P2 without explicit approval.",
     "2026-10-28 Operator DGX 9011910: Phase6 181/181 Source247/247; actual Preview Serving/Pydantic 6/6 PASS; no live mutation. Same CPU-only p1-real-responses runner now has 8 additional actual validated ResponsesRequest→Qwen3 Parser→real Serving output/SSE integration cases; new HEAD DGX_NOT_RUN. No HTTP/model/GPU/deployment, CI/PR/merge; legacy protected; remain P1, no automatic P2.",
-    "2026-10-28 User DGX 041d587: Phase6 181/181 Source247/247 PLE/Phase4/Phase5 synthetic PASS; new Qwen Parser -> Responses Serving handoff BLOCKED REAL_RESPONSES_EVENT_BEHAVIOR_FAILED (exit2), NO_SERVICE_CHANGE final marker absent; do not claim integrated pass. Same p1-real-responses CPU-only bundle extended with strictly allowlisted non-sensitive stage plus exception class diagnostic, no altered acceptance/patch/deploy. New HEAD DGX_NOT_RUN. Preserve legacy Docker/PLE and do not auto enter P2."
+    "2026-10-28 User DGX 041d587: Phase6 181/181 Source247/247 PLE/Phase4/Phase5 synthetic PASS; new Qwen Parser -> Responses Serving handoff BLOCKED REAL_RESPONSES_EVENT_BEHAVIOR_FAILED (exit2), NO_SERVICE_CHANGE final marker absent; do not claim integrated pass. Same p1-real-responses CPU-only bundle extended with strictly allowlisted non-sensitive stage plus exception class diagnostic, no altered acceptance/patch/deploy. New HEAD DGX_NOT_RUN. Preserve legacy Docker/PLE and do not auto enter P2.",
+    "2026-10-28 P1 active handoff compacted to only current failing Parser→Serving integration; previous 041d587 DGX 181/181/source247 but p1-real-responses BLOCKED; e8070dc diagnostic NOT_RUN. Main docs-only PR #6 merged b0c7d906 (P1 manual P2 + legacy stop ownership). This feature docs-only handoff commit not DGX-tested, no runtime code/CI/PR/merge."
   ],
   "files": [
     {
@@ -440,12 +441,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "5cf72a0673462a999877c84c0f42f33a520ab8c9"
+      "blob_sha": "8ace3e5f5741465438982676c6c84b32b959feb0"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "587718a90700f29272f63b4d02ae8387424fe1ec"
+      "blob_sha": "ac4bdc5d9db6260138efd98d76def0227fef30b7"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
