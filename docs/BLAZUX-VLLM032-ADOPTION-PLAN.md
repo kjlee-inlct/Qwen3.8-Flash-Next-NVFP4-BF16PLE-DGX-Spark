@@ -1,5 +1,7 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+> **2026-10-29 upstream 최신 HEAD 비교:** [blazux `7e63dbe` ↔ Orcarouter BF16 PLE/MTP 현재 구현 및 P1–P3 상태](BLAZUX-UPSTREAM-COMPARISON-20261029.md). 이 비교는 기존 `8bb7a717` 고정점의 *역사적 분석*을 대체하지 않으며 신규 패치/GPU/HTTP/v0.32 포팅 승인이 아니다. 최신 DGX CPU 기능 SHA `29e78cdc`와 해당 비교 직전 docs-only SHA `73727212`를 분리한다. Prefix-cache 실제 ABI는 계속 `BLOCKED`, PLE 계측 및 Tool/Responses는 **CPU_VERIFIED**, 신규 기능 운영 적용 0건이다. 아래의 과거 Phase별 설명은 당일 계획/영수증으로 보존한다.
+
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
 
 **사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.

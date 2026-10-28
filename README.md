@@ -2,6 +2,10 @@
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
+## Latest blazux upstream comparison (2026-10-29)
+
+[Source-pinned comparison with blazux upstream main and the P1/P2/P3 implementation matrix](docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md) covers the current vLLM v0.32 upstream and this repo's Preview/Orcarouter direct BF16 PLE + BF16 MTP overlay. The latest P1 PLE/Tool CPU integration evidence is bound to DGX-tested `29e78cdc`, not deployment. Prefix-cache active ABI remains blocked; no GPU/model/API patch or automatic P2/P3 progression is authorized by this documentation.
+
 ## Session handoff for continuing development
 
 For a new ChatGPT or engineering session, **start with**

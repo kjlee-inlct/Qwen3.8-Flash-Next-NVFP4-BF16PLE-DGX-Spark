@@ -1,5 +1,7 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+> **최신 외부 원본 비교:** [blazux 7e63dbe ↔ 우리 Preview BF16 PLE/MTP 8개 기능 비교](BLAZUX-UPSTREAM-COMPARISON-20261029.md). 원본 `patch_mamba_block_size.py`의 **worker Mamba state-slot + scheduler split** 두 수정 지점은 P1 후보 diff의 기준이지만, 우리 활성 ABI/Prefix-cache가 검증됐거나 수정됐다는 뜻이 아니다. 다음 코딩 후보는 **두 함수의 정확한 pinned Preview source 대비 최소 격리 diff**이며, 실제 GPU/HTTP/운영 적용은 별도 승인 전까지 금지한다. upstream v0.32/DFlash2 성능 수치는 본 Orcarouter 구성에 전이하지 않는다.
+
 > 기능별 최신 정확한 DGX SHA와 성공/차단 판정은 `docs/BLAZUX-PHASE6-RESULTS.md`; 영구 운영 규칙은 `docs/SESSION-HANDOFF-PROMPT.md`; 재발 방지는 `docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md`를 따른다. 이 문서에는 현재 P1의 **진행 가능 경계만** 유지한다.
 
 - **Repository/branch:** `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` / `feature/blazux-phase6-runtime-gates`. DGX checkout `$HOME/Workspace/llm/blazux-phase6-gates`.
