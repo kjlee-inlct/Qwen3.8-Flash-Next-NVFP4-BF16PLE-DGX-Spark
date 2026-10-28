@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 Preview-native Tool/Responses 포팅 — 전체 설치 소스 일괄 확보
+
+- latest DGX actual source `10fc574ff60afb7d8a09728ef4e547c3a6774001`: Phase6 **159/159**·Source **233/233**·PLE/Phase4·Phase5 synthetic **14/14** PASS. Stage `PREVIEW_PATCH_1_CONTEXT_MISMATCH:vllm/parser/engine/parser_engine_config.py:old_line_103`, 설치 원본 수정/GPU 없음.
+- **기능 진전 중심 다음 단계:** blazux 0.32 네 패치가 수정하는 실제 설치 Preview 10개 파일을 **한 번의 원본 소스 번들**로 수집한다. 새 `src/preview_p1_tool_responses_stage.py --snapshot-preview-source-base64`와 `scripts/preview-p1-source-export.sh --expected-head <SHA> --execute` 사용. SHA/allowlist 엄격 고정, no model/GPU/network, 파일은 `$HOME` 아래 0600 임시 이름으로 보관하며 git tree를 변경하지 않음. 사용자 별도 명시적 실행/아카이브 업로드 필요. 이 파일을 기반으로 source snippets가 아니라 **Preview 실제 4 patch native port** 및 의미 있는 CPU Parser fixture를 작성.
+- 원본 v0.32 patch를 맹목적으로 재실행하거나 Gate 문서만 반복하는 것 금지. 신규 exporter HEAD는 실제 DGX `NOT_RUN`; Preview API/운영 신규 기능 적용=0.
+
+
 ## 2026-10-28 P1 Tool/Responses stage 실패 원인 수정
 
 - 실제 DGX **`4efed48136278acb195231bb2b1a79a91ce62c5f`**: Phase6 157/157·Source233/233·P1 PLE/Phase4·Phase5 합성14/14 PASS, 설치 Preview read-only AST 감사 PASS. **실제 Preview 임시 patch staging은 `PREVIEW_SHA_DRIFT`로 BLOCKED**. 운영 설치/GPU 변경 없음.

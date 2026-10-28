@@ -9,13 +9,16 @@ only SOURCE_STAGED, never CPU parser/API behavior or deployment certification.
 from __future__ import annotations
 
 import ast
+import base64
 import hashlib
+import io
 import importlib.util
 import json
 import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from pathlib import Path
 
@@ -277,7 +280,49 @@ def stage_preview_bundle(site: Path, directory: Path = PATCH_DIR) -> dict:
     }
 
 
+
+def build_readonly_source_archive(files: dict[str, bytes]) -> bytes:
+    """Package only allowlisted patch-target Python source, never models."""
+    if not files or len(files) > len(ALLOWED_FILES):
+        raise StageBlocked("SOURCE_ARCHIVE_INVALID_COUNT")
+    if any(
+        name not in ALLOWED_FILES or name == NEW_FILE
+        or not isinstance(body, bytes) or len(body) > MAX_SOURCE_BYTES
+        for name, body in files.items()
+    ):
+        raise StageBlocked("SOURCE_ARCHIVE_FORBIDDEN_INPUT")
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+        for name in sorted(files):
+            data = files[name]
+            item = tarfile.TarInfo(name=name)
+            item.size = len(data)
+            item.mode = 0o444
+            item.mtime = 0
+            item.uid = item.gid = 0
+            archive.addfile(item, io.BytesIO(data))
+    payload = buffer.getvalue()
+    if not payload or len(payload) > 2_000_000:
+        raise StageBlocked("SOURCE_ARCHIVE_TOO_LARGE")
+    return payload
+
+
+def snapshot_pinned_preview_source() -> str:
+    """Return BASE64 gzip archive of exact pinned source (no vLLM import)."""
+    _, touched = read_patch_bundle()
+    originals = read_preview_sources(find_installed_preview(), touched)
+    return base64.b64encode(build_readonly_source_archive(originals)).decode("ascii")
+
+
 def main(argv: list[str]) -> int:
+    if argv == ["--snapshot-preview-source-base64"]:
+        try:
+            payload = snapshot_pinned_preview_source()
+        except StageBlocked as exc:
+            print(json.dumps({"status": "BLOCKED_NOT_EXPORTED", "reason": exc.code}))
+            return 2
+        print(payload)
+        return 0
     if argv != ["--stage-preview-source-only"]:
         print(json.dumps({"status": "BLOCKED", "reason": "EXPLICIT_SOURCE_STAGE_ARG_REQUIRED"}))
         return 2

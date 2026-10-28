@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Tool/Responses — 원본 패치 1 문맥 불일치 확인, 전체 Preview 소스 획득 필요
+
+- 실제 사용자 DGX 소스 `10fc574ff60afb7d8a09728ef4e547c3a6774001`: Phase6 **159/159 PASS**, Source **233/233 PASS**, PLE byte-exact/Phase4 4 combinations PASS, Phase5 Tool/Responses/Prefix/MTP synthetic **14/14 PASS**.
+- 6개 Preview source SHA256 검사 완료 후 blazux v0.32 **첫 번째** 패치에 진입했으나 `PREVIEW_PATCH_1_CONTEXT_MISMATCH:vllm/parser/engine/parser_engine_config.py:old_line_103`로 `BLOCKED_NOT_APPLIED` / `exit=2`. `installed_vllm_modified=false`, `model_gpu_api_run=false`. **Preview 코드의 103행 근처 실제 텍스트는 제공된 로그에 없으므로 임의의 위치·수정 내용을 단정하지 않음**.
+- 다음 **실제 Preview-native 기능 포팅에 필요한 새 증거**: `scripts/preview-p1-source-export.sh`가 고정 이미지의 installed Preview에서 patch target `vllm/parser` 및 `vllm/entrypoints/openai/responses` Python 파일을 **한 번만** 수집하여 비공개 `$HOME/preview-p1-source-*.tar.gz`로 저장. 원본 SHA 확인/allowlist/읽기 전용/CPU-only/no-network/GPU-void/운영 컨테이너 identity 보호, `--execute` 명시. 새 소스 번들 제공 후 **네 패치**를 모두 native Preview source/ABI 기준으로 직접 구현하며, v0.32 patch를 반복해 맞춰보는 일은 중단.
+- 이 새 source-export 경로는 포팅에 필요한 실제 파일 **내용 확보 도구**이며, 그 자체가 구현·호환성·runtime PASS가 아니다. 신규 HEAD DGX `NOT_RUN`, 운영 서비스 변경 없음.
+
+
 ## 2026-10-28 P1 Tool/Responses Preview stage 실제 DGX 중단 — SHA 4efed48
 
 - 사용자 실행: exact `4efed48136278acb195231bb2b1a79a91ce62c5f`, `--bundle p1-tool-stage --execute`. Phase6 **157/157 PASS**, Source **233/233 PASS**, PLE byte-exact/동시성/Phase4 flag PASS, Phase5 Tool/Responses/Prefix/MTP 합성 **14/14 PASS** 및 Preview read-only AST 감사 완료.

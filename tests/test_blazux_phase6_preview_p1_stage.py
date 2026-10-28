@@ -118,6 +118,27 @@ class P1PreviewToolStageTests(unittest.TestCase):
                 "vllm/parser/qwen3.py:old_line_294",
             )
 
+    def test_source_archive_has_only_allowlisted_python(self):
+        import io
+        import tarfile
+        fixtures = {
+            "vllm/parser/qwen3.py": b"class Qwen3Parser:\n    pass\n",
+            "vllm/parser/engine/parser_engine_config.py": b"class ParserEngineConfig:\n    pass\n",
+        }
+        blob = stage.build_readonly_source_archive(fixtures)
+        with tarfile.open(fileobj=io.BytesIO(blob), mode="r:gz") as archive:
+            self.assertEqual(sorted(archive.getnames()), sorted(fixtures))
+            for filename, contents in fixtures.items():
+                entry = archive.getmember(filename)
+                self.assertTrue(entry.isfile())
+                self.assertEqual(archive.extractfile(entry).read(), contents)
+
+    def test_source_archive_refuses_forbidden_or_missing(self):
+        for bad in ({}, {"vllm/models/model.bin": b"not allowed"},
+                    {stage.NEW_FILE: b"not allowed"}):
+            with self.subTest(files=list(bad)), self.assertRaises(stage.StageBlocked):
+                stage.build_readonly_source_archive(bad)
+
     def test_python_source_is_parseable(self):
         source = Path(stage.__file__).read_text()
         ast.parse(source)
