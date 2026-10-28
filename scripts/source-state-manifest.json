@@ -1266,7 +1266,7 @@
     {
       "path": "tests/test_blazux_phase6_preview_native_responses.py",
       "mode": "100644",
-      "blob_sha": "f3e4153047dfb812f995eee94ba70bd56aeaeaea"
+      "blob_sha": "e93a94f683490ebfe9022bbae22d2d6cdf6d6660"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_schema.py",

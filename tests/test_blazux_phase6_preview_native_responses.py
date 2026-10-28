@@ -24,19 +24,19 @@ class NativeResponsesTests(unittest.TestCase):
         import tempfile
 
         patch_data = responses.RESPONSES_PATCH.read_bytes()
-        header = b"@@ -843,7 +856,11 @@\\n"
+        header = b"@@ -843,7 +856,11 @@\n"
         self.assertEqual(patch_data.count(header), 1)
         hunk = patch_data.split(header, 1)[1].split(
-            b"--- a/vllm/entrypoints/openai/responses/serving.py\\n", 1
+            b"--- a/vllm/entrypoints/openai/responses/serving.py\n", 1
         )[0]
         # GNU patch needs the original three trailing context lines.
         self.assertTrue(hunk.endswith(
-            b"     | ResponseInProgressEvent\\n"
-            b"     | ResponseCompletedEvent\\n"
-            b"     | ResponseOutputItemAddedEvent\\n"
+            b"     | ResponseInProgressEvent\n"
+            b"     | ResponseCompletedEvent\n"
+            b"     | ResponseOutputItemAddedEvent\n"
         ))
         preimage = b"".join(
-            line[1:] + b"\\n"
+            line[1:] + b"\n"
             for line in hunk.splitlines()
             if line.startswith((b" ", b"-"))
         )
@@ -45,11 +45,11 @@ class NativeResponsesTests(unittest.TestCase):
             root = Path(tmp)
             target = root / "protocol.py"
             target.write_bytes(
-                b"# synthetic source line\\n" * 842 + preimage
-                + b"     | ResponseOutputItemDoneEvent\\n"
+                b"# synthetic source line\n" * 842 + preimage
+                + b"     | ResponseOutputItemDoneEvent\n"
             )
             command_patch = (
-                b"--- a/protocol.py\\n+++ b/protocol.py\\n"
+                b"--- a/protocol.py\n+++ b/protocol.py\n"
                 + header + hunk
             )
             proc = subprocess.run(
@@ -61,8 +61,8 @@ class NativeResponsesTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0,
                              "exact hunk rejected against synthetic preimage")
             result = target.read_text()
-            self.assertIn("    | ResponseFunctionCallArgumentsDeltaEvent\\n", result)
-            self.assertIn("    | ResponseFunctionCallArgumentsDoneEvent\\n", result)
+            self.assertIn("    | ResponseFunctionCallArgumentsDeltaEvent\n", result)
+            self.assertIn("    | ResponseFunctionCallArgumentsDoneEvent\n", result)
 
     def test_source_syntax_and_explicit_guard(self):
         ast.parse(Path(responses.__file__).read_bytes())
