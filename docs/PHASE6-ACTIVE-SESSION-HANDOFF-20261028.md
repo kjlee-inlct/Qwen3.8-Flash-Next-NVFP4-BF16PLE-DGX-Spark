@@ -1,5 +1,16 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
+
+**사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.
+
+**새 대화의 최우선 규칙:** [실수 원인 및 재발 방지 정본](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 먼저 읽고 (1) 사용자 기능 가치 (2) 실제 코드 변경 (3) 최소 반증 가능 검증 (4) 남는 실제 실행 장애를 밝힌 뒤 작업한다. 독립적인 소스/CPU P1 기능 구현(PLE 단계별 계측 완성, Tool/Responses Preview Parser 호환 준비)을 우선 후보로 하고, 새 A/B 하위 Gate·반복 메타데이터 조사·시험 개수 증가는 목적이 아니라 필요할 때만 수행한다. **동일 근거에서 전진이 없는 연속 작업은 STOP 및 재우선순위.** 과거 계획의 PRE-B --execute 지시와 이전 예상 테스트 수는 역사적 기록이며 재실행하지 않는다.
+
+**권한과 근거 불변:** 운영 Docker/GPU/model/HTTP/벤치/패치/CI/PR/merge 무승인 실행 금지, main/P0/Phase1–5 및 baseline 불변. P6-A 활성 ABI BLOCKED, B0 합성 PASS, B1a read-only 관측 완료, B1 실제 GPU NOT_RUN, P6-B 정식 BLOCKED, C/D NOT_RUN. 사용자 제공 마지막 DGX-tested source 37b883793bdd33f8aa2d4810947a94fef3aa5c20의 147 unit 및 Source224 PASS와 이후 문서-only GitHub 커밋을 반드시 구분. **이번 수정은 핸드오프 재발 방지 기록만이며 기능 적용·DGX 실행이 아니다.**
+
+---
+
+
 ## 2026-10-28 DGX P6-B1a 실제 무부하 관측 완료 — 147/224 PASS, GPU 미인증
 
 - **정확한 DGX 테스트 소스 SHA:** `37b883793bdd33f8aa2d4810947a94fef3aa5c20`, `feature/blazux-phase6-runtime-gates`. 사용자 제공 전체 DGX 실행 로그에서 `git pull --ff-only`가 `이미 업데이트 상태`이며, 사용자 `git rev-parse HEAD` pin 검사 이후 종료 마커까지 성공했음을 확인.
@@ -100,52 +111,29 @@ DGX 운영 컨테이너·이미지·가중치·서빙 포트·GPU 모델·기존
 
 > 이 파일은 **현재 진행 중인 작업만** 전달한다. 확정 사실·완료 이력·상시 운영 규칙·과거 Phase별 영수증은 정본을 참조하고 복제하지 않는다. 이 파일 작성 이후 GitHub 문서/Manifest 전용 커밋의 SHA는 실제 DGX 시험 SHA가 아니다.
 
-## 새 대화에 그대로 입력할 프롬프트
+## 새 대화에 그대로 입력할 프롬프트 — 최신 (기존 2026-10-28 초기 계획 대체)
 
-당신은 `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`의 `feature/blazux-phase6-runtime-gates`에서 진행 중인 **Phase 6 P6-A 활성 ABI 증거 수집 + 사용자 승인된 기존 서비스 PRE-B 벤치마크 스크립트 실검증**을 인수인계한다. 설명/분석/지시/출력은 한글로 진행하라.
+당신은 저장소 kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark의 feature/blazux-phase6-runtime-gates를 인수인계한다. 사용자 목표는 **실제 유용한 blazux 기능 구현과 검증**이다. Phase/Gate 수 증가 자체가 아니다. 한국어로 진행한다.
 
-**먼저 반드시 GitHub에서 최신 버전의 아래 영구 문서를 직접 읽고, 이것이 현재 진행 상태에 우선하는 규칙/정본임을 확인하라.** 기존 완료 기록과 상시 규칙의 내용은 이 프롬프트에서 되풀이하지 않는다.
+**첫 필독**: docs/SESSION-HANDOFF-PROMPT.md, docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md, docs/BLAZUX-VLLM032-ADOPTION-PLAN.md, docs/BLAZUX-PHASE6-RESULTS.md, docs/BLAZUX-PHASE6-GATE-PLAN.md, scripts/source-state-manifest.json. 완료 이력은 각 정본에 남겨 중복해서 복제하지 않는다. 이 섹션보다 위의 날짜가 같은 교정 규칙이 다음 작업에 우선한다.
 
-- `docs/SESSION-HANDOFF-PROMPT.md`: 실험 브랜치, P0/Phase 계보, 권한 경계, Source Manifest, 운영 서비스 비간섭, 인수인계 규칙
-- `docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md`: **현재 승인된 실행 범위** 및 위험·중지·evidence 구분
-- `docs/BLAZUX-PHASE6-RESULTS.md` 및 `docs/BLAZUX-PHASE6-GATE-PLAN.md`: 현재 Phase 6 실측 및 Gate 상태
-- `docs/BLAZUX-PHASE6-A-TO-B-BENCH-CHECKPOINT.md`, `docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md`: Baseline/새 PRE-B/향후 P6-D 구분과 비교 가능성
-- `docs/BLAZUX-VLLM032-ADOPTION-PLAN.md`, `docs/BLAZUX-PHASE5-MAMBA-GROUPED-EXIT-GATE-20261028.md`, `scripts/source-state-manifest.json`: 상시 보호 경계와 정확한 소스 검증 계보
+### 현재 정확한 실증
 
-### 지금 진행 중인 두 작업
+- B0 CPU 합성 DGX PASS: source 3aa40292f96427d3592ebdba971b31484c2a6079, Phase6 124/124, Source220/220, 별도 25/25.
+- B1a 비간섭 관측 DGX PASS: source 37b883793bdd33f8aa2d4810947a94fef3aa5c20, Phase6 147/147, Source224/224 (2회), pinned legacy container stable, host MemAvailable 14620→14609 MiB, NVML PARTIAL. 결과는 PASSIVE_METADATA_COLLECTED_NOT_GPU_READY로 GPU 가용성 증거가 아님.
+- P6-A active Scheduler/Mamba state ABI BLOCKED_MISSING_IN_PROCESS_EVIDENCE; B1 실제 CUDA/Triton NOT_RUN, 정식 B BLOCKED, C/D NOT_RUN. 사용자 승인됐던 PRE-B 12조건×3회=36회는 이미 정확히 한 번 수행·보관되었고, 해당 승인은 소진됐다. 재벤치 금지.
+- Phase4 PLE CPU Fast Gather/Stats default-OFF 구현 및 CPU byte-exact PASS; Phase5 Prefix/Mamba·Tool/Responses·MTP reduced-vocab **합성/source** 위험 검증 PASS; 신규 blazux 기능 중 **운영 적용 실증 0개**. 합성 테스트와 실제 엔진 적용을 혼동하지 않는다.
+- GitHub HEAD는 다음 대화가 커넥터로 직접 재조회한다. 마지막 DGX-tested SHA와 docs/manifest-only 후속 HEAD를 구분한다. CI는 별도 실행증거 없으면 NOT_RUN/NO_EVIDENCE.
 
-1. **P6-A 실서비스 관찰 시도**: `scripts/phase6-a-live-observe.sh` / `src/phase6_a4_live_observer.py`가 기존 고정 Docker 컨테이너를 실행 전후 대조한 뒤 localhost `/v1/models`와 `/metrics`를 GET하여 **실제로 노출된** CacheConfig 숫자/불리언만 추출한다. 기존 메트릭의 값은 실제 Python Scheduler 객체, `MambaSpec` 그룹별 block sizes, block-table geometry, 물리 GPU state/tensor 주소/stride를 증명하지 않는다. **P6-A 실제 활성 ABI는 현재 BLOCKED**이고 이 관찰 실행만으로 PASS로 변경하면 안 된다.
-2. **PRE-B 성능 스크립트 실측 — 1회 승인된 provisional run**: 기존 2026-10-26/27 pre-blazux Baseline이 있어도 사용자가 `llama-benchy` 런처 검증 목적으로 신규 측정을 승인했다. `scripts/phase6-ab-provisional-run.sh --preflight`를 먼저 실행하고 PASS 시에만 `--execute`를 **1회** 수행한다. 이는 기존 127.0.0.1:8000 운영 모델에 실제 generation inference를 보내는 **12 조건×3 측정=36회**이며, B 정식 진입/P6-D 성능 Gate가 아니라 `PASS_PROVISIONAL_PRE_B_36` 형식의 잠정 자료다. 이 요청 이후 작업을 바로 수행하는 동안에도 다른 운영 사용자가 받을 응답 지연 위험을 고려한다. 새로운 GPU 모델/컨테이너 기동은 없다.
+### 미완료 및 사용자 가치 중심 우선순위
 
-### 정확한 실증 상태 (새 테스트 결과가 도착하면 덮어쓰지 말고 SHA별로 갱신)
+1. 기능 표(P1 PLE 단계별 계측 / Prefix-cache / Tool Calling·Responses; P2 reduced MTP vocab / PLE Gather / 별도 vLLM 0.32; P3 YaRN 500K / Hybrid FP8)를 기준으로 **실제 구현되는 최소 사용자 가치 1개**부터 고른다. 다음 제안의 우선 후보는 현재 옵션을 기반으로 한 PLE wait/dedup/gather/stage 단계별 계측의 누락 코드 구현 및 CPU 독립 검증, 또는 Pi Agent를 위한 실제 Preview Parser 호환성 소스/모의 API 정확성 구현이다. GPU/서빙 실행 승인을 임의로 포함하지 않는다.
+2. P6-A 실물 ABI 공백과 B1 GPU 실행 위험은 원인·필요 증거·별도 승인 조건을 문서에 기록한 채 **DEFERRED_BY_EVIDENCE**로 유지한다. 승인·관측 수단의 변화 없이 B1b, B1c 같은 CPU-only 세부 Gate나 동일 자원 관측을 자동 추가하지 않는다.
+3. 작업 착수 전 반드시 기능의 실제 변화, 파일/함수, 실패 가능한 최소 검증, 실사용까지 남은 blocker, 적용 상태를 명시한다. 결과 보고에서 SOURCE_REVIEWED / IMPLEMENTED_OFFLINE / CPU_VERIFIED / GPU_VERIFIED / API_VERIFIED / DEPLOYED_VERIFIED를 명확하게 구분하고, 테스트 수·Manifest 개수·Phase 완료·임의 퍼센트를 제품 진행률처럼 사용하지 않는다.
+4. 코드·문서 변경은 승인된 Phase6 feature branch에만, 정확한 GitHub HEAD CAS 및 전체 path/mode/blob manifest 동기화 후 수행한다. 파일·스크립트를 만든 뒤 DGX 미실행이면 NOT_RUN으로 남긴다.
 
-- **마지막 DGX operator-tested 소스 SHA**: `fb5deae540812a300cb8404a53a202e505c40577` — `Ran 70 tests; OK`, `PASS_SOURCE_ONLY: 204 tracked file(s)`, 과거 원본 Baseline SHA와 runner/tokenizer/12×3 36-repeat 검사 PASS, `PLAN_READY_NOT_EXECUTED`, 최종 `PHASE6_AB_BENCH_PLAN_DGX_VERIFIED_NO_LOAD`. 이는 **신규 벤치 실측이 아님**.
-- **신규 기능 구현 GitHub SHA**: `d031d4196eab1f5f1603d6541eaf5a31b02192c0` — loopback live observer 12개 테스트, 메모리/컨테이너 identity watchdog 포함한 provisional benchmark 17개 테스트, current runbook 및 오래된 Phase1/Baseline 문구 교정, 새 Source Manifest 211개. **DGX 미실행**. `99/99`와 `211/211`은 원 코드 커밋에서의 *기대치*일 뿐 아직 PASS 아니다. 이후 문서-only 인수인계 커밋은 파일 수가 증가하지만 코드는 그대로이며 HEAD 검증 전 기대 수를 재계산해야 한다.
-- Github 상태 확인 시점 (2026-10-28): 이 구현 SHA는 `baf1d48...`에서 fast-forward된 1커밋; **Open PR=0**, combined commit statuses `[]`, 조회 가능한 PR-triggered workflow runs `[]`. 이는 **CI PASS가 아니라 CI evidence 없음**이며 PR/머지는 수행하지 않았다는 뜻이다. 새 문서-only HEAD에서도 상태를 재조회하라.
-- 기존 레거시 Docker: `qwen38-flash-orca-uncensored-bf16-mtp`, pinned image ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`, 서비스 loopback `http://127.0.0.1:8000/v1`. **현재 시점 실가동 여부는 과거 관측값일 뿐** 새 operator log/체크로 확인한다.
+### 절대 보호 경계
 
-### 미완료, 차단 요소, 해결 전에는 주장하면 안 되는 내용
+운영 중인 pinned Docker/모델/이미지/포트, 사용자 HF cache, 벤치 원본, main/P0/Phase1–5 refs 변경 금지. 승인 없는 운영 Docker exec/run/stop/restart/attach, GPU model/kernel execution, 추론/HTTP/벤치, blazux runtime patch 적용, CI/PR/merge 금지. 실 모델·GPU/서빙 적용 검증은 새 증거와 사용자 별도 명시적 승인이 필요하다. 그 대신 독립적인 옵션 기본 OFF CPU 기능 구현은 불필요하게 미루지 않는다.
 
-- 실제 선택된 Scheduler 클래스와 CacheConfig/scheduler/hash group block-size, 각 `MambaSpec` 그룹·물리 block table/실 GPU state pointer·allocation/stride는 아직 독립적으로 관측되지 않음. HTTP 메트릭 일부 노출만으로 full P6-A PASS 금지. 추가 process attach, Docker exec/instrumentation 또는 격리 GPU probe는 **이번 승인 대상이 아니며 별도 승인**이 필요하다.
-- 이전 Baseline의 **당시 실제 Gutenberg corpus SHA 및 sampler/KV/cache 동등성** 미확정. 신규 벤치의 current cache SHA는 별도 고정하되 2026-10-26/27 수치와 **strict A/B 개선율/회귀율, blazux 성능 개선을 주장하지 않는다**. 동일 조건의 신규 pre/post 쌍과 사전 정의한 임계값만 향후 비교한다.
-- 신규 live observer/preflight/실제 벤치 새 SHA의 DGX 로그, 원본 결과 폴더/sha checksum, 사용 모델 메타데이터, 오류/중단 여부, bench PASS/PARTIAL 미확인. **P6-B/C/D는 NOT_RUN/BLOCKED**. No CI and no PR/merge evidence.
-
-### 새 대화에서 진행할 우선순위
-
-1. **GitHub 현황 확정**: 연결된 GitHub 도구로 포크 저장소 최신 Phase6 HEAD, `docs/SESSION-HANDOFF-PROMPT.md`와 위 정본, Source Manifest 전체 개수, 열린 PR, 최신 커밋 combined status 및 조회 가능한 Actions 실행 상태를 확인한다. 최신 문서-only 커밋은 DGX-tested SHA로 둔갑시키지 않는다. 과거 단순 목록/영구 규칙을 재작성하지 말고 링크만 사용한다.
-2. **DGX 전용 clean checkout 갱신**: 사용자 DGX `$HOME/Workspace/llm/blazux-phase6-gates`에서 origin/branch/clean을 확인하고 `git pull --ff-only`, `git rev-parse HEAD`를 **실제로 GitHub에서 본 최신 HEAD**에 일치시킨다. Phase6 `bash scripts/phase6-gate.sh`, `bash -n`으로 두 신규 shell entrypoint 확인, `scripts/verify-source-state.py` 전체 manifest 검사. 새 문서 추가가 1개라면 **Source212개 기대**, 신규 코드 테스트 **99개 기대**, 모두 **LOG 도착 전 NOT_RUN**.
-3. **P6-A 관찰**: `bash scripts/phase6-a-live-observe.sh`를 실행한다. GET한 engine metrics가 `PARTIAL_EXPOSED_RUNTIME_CACHE_METADATA`면 허용 숫자만 기술하고 active P6-A는 BLOCKED; 메트릭 `ABI_METRICS_NOT_USABLE`인 경우에도 없는 값을 임의로 채우지 않는다. `docker inspect` 실행 전후 identity drift / 모델 ID 불일치면 STOP. 실제 GPU tensor/그룹의 관찰 계획은 결과에 따라 별도 작성한다.
-4. **PRE-B 신규 스크립트 검증**: `bash scripts/phase6-ab-provisional-run.sh --preflight`가 `READY_FOR_APPROVED_PROVISIONAL_BENCH` 및 marker를 출력했는지 먼저 확인. 사전 검사: 원본 baseline hash, runner `e9be344578cec17745066b220798b80a0d2686d3`, 현재 cached Gutenberg SHA `8a2f79a2f4601cfe6e25830c29c1a25c7a3d906285a989948117568f8077ab2c`, image ID/StartedAt, MemAvailable>=8GiB. 실패 시 자동 재시도/완화 없음.
-5. **조건 만족 시 단 한 번 실제 벤치**: `bash scripts/phase6-ab-provisional-run.sh --execute` (실제 추론 부하 발생). 10초 주기 관측으로 MemAvailable<4GiB, Docker identity drift, 1시간 초과 시 벤치 자식 그룹만 중단하고 기존 서비스는 그대로 둔다. 한 번 성공·실패·중단 후 **승인을 자동으로 재사용하여 또 실행하지 않는다**. 현재 RAM/HW 상황과 중요한 사용자 트래픽을 반영하여 실행 여부를 판단하고, 문제 발생 시 STOP.
-6. **증거·정본 갱신**: 실제 출력에 나타난 정확 SHA, unittest/Source PASS, metric 상태, PRE-B 12×3/36 raw result SHA256·private staging 위치 및 redacted 12-row PP/TG/TTFT 요약·SHA256SUMS, 전후 identity, stop/watchdog 여부를 GitHub 문서에 기록. 비공개 logs/environment/IDs/경로·토큰을 공개 repo로 업로드하지 않는다. Source Manifest의 모든 path/mode/blob sha를 최신 HEAD 파일 내용과 일치시킨 뒤 기능 브랜치에 **CAS expected_sha**, fast-forward 커밋한다. 후속 기록 커밋은 DGX-tested로 위장하지 않는다.
-7. **후속 정확성 설계**: 현재 관찰로 P6-A active ABI가 해결되지 않으면 group별 실제 state oracle 확보 방법을 소스·리스크·승인 경계로 쪼개서 다음 별도 검증 제안만 준비한다. B 실 GPU/C API/최종 D 벤치/patch는 자동 진행하지 않는다.
-
-### 이번 작업에만 적용되는 STOP/금지
-
-- **원본 2026-10-26/27 pre-blazux 12×3 결과 절대 덮어쓰지 않음**. 실제 새 36회 결과는 홈의 private `bench-results-staging`의 `phase6-pre-b-provisional` 새 하위 폴더에만 보존. 직접 `scripts/benchmark/run-llama-benchy.sh` 실행 금지(운영 API에 guard 없이 부하 가능).
-- P6-A active runtime, P6-B, P6-C, P6-D의 정확성/개선 주장은 미관측 상태에서 금지. 실제 사용자 요청에 근거해 provisional benchmark만 승인 범위 내 1회 허용; 이미 실행된 로그가 있다면 중복 벤치 금지.
-- 이 작업에서 운영 Docker stop/restart/exec/run, ptrace, instrumentation, 새 모델 로딩, GPU 전용 stress/추론 실험, 가중치·cache·port·receipt 변경, 기본 image 변경을 금지한다. 벤치 자체가 기존 모델 GPU 연산을 발생시키는 것은 명시 승인됐으나 새 GPU 모델 기동 권한은 아님.
-- **지금은 Phase6 브랜치만 수정**. `main`, P0, Phase1–5, 원본 Bench/PR#5 불변. PR 작성/리뷰가 필요하면 영구 문서의 **이전 Phase base→현재 Phase head, 미병합 리뷰 전용** 정책부터 확인한다. **main PR·merge/squash/cherry-pick/rebase/force push 금지**; 이 인수인계 문서나 시험 미완료 기능을 `main`으로 머지하지 않는다. CI 미실행은 PASS가 아니다.
-
-이제 실제 GitHub 최신 HEAD와 위 정본부터 확인하고, DGX 증거가 아직 없으면 절대 실행되었다고 주장하지 말고, 가장 안전한 다음 실행 명령/검증 기준을 제시하라.
-
+**다음 대화에서 먼저 수행할 일:** GitHub 최신 상태와 실수 교정 정본을 읽고, P1 기능 중 하나에 대한 **실제 코드 구현 및 검증 계획**을 제시한다. 사용자가 해당 구현을 요청하면 그때 구현한다. 불필요한 신규 Gate로 시작하지 않는다.

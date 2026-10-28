@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 224,
+  "tracked_file_count": 225,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -130,7 +130,8 @@
     "2026-10-28 explicit user request to proceed P6-B with P6-A active ABI still BLOCKED. Introduce P6-B0 independent stdlib-only synthetic byte-block copy bounds rehearsal with 25 new Phase6 unittest cases and guarded offline-only wrapper; planned new Phase6 unit count 124, Source manifest 220, DGX NOT_RUN on new HEAD. Formal P6-B and B1 real GPU remain BLOCKED/NOT_RUN pending true A evidence plus separately approved resource-isolated GPU environment. P6-C/D NOT_RUN. Historical tested A5 6afade42 99/216 PASS only. No model/Docker/GPU/API/benchmark/PR/CI/merge changes.",
     "2026-10-28 user DGX full terminal log exact SHA 3aa40292f96427d3592ebdba971b31484c2a6079 after ff-only: Phase6 124/124 unit OK, Source220/220 PASS, targeted B0 25/25 OK and Source220/220 repeated; 2 synthetic groups/2 state/2 copy ops; B0 CPU synthetic PASS only, actual P6-A ACTIVE BLOCKED, B1 GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs/manifest GitHub commit NOT tested on DGX; no GPU/model/runtime, consumed benchmark approval unchanged.",
     "2026-10-28 P6-B1a passive resource feasibility code: reuse existing A3a /proc/meminfo+NVML parsers, two pinned Docker inspect ID/StartedAt observations, host MemAvailable metadata floor 8192MiB before/after. Pure stdout redacted; PARTIAL/N/A does not prove GPU budget, even full telemetry cannot authorize allocation. 23 added offline unit cases; expected Phase6 147 tests, Source224 (new DGX NOT_RUN). B0 actual 124/220 and 25 targeted PASS at exact 3aa40292. P6-A ACTIVE remains BLOCKED, B1 GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN; no Docker exec/run/stop, model/GPU/API/benchmark/CI/PR/merge.",
-    "2026-10-28 DGX P6-B1a operator full log source SHA 37b883793bdd33f8aa2d4810947a94fef3aa5c20: Phase6 147/147 OK, Source Manifest 224/224 PASS twice, stable running pinned Docker identity, host MemAvailable before 14620MiB and after 14609MiB, GPU NVML telemetry PARTIAL, status PASSIVE_METADATA_COLLECTED_NOT_GPU_READY, reasons empty. GPU unified memory headroom NOT proven, second model feasible NOT proven, GPU allocation not authorized; A BLOCKED, B0 PASS prior source, B1 real GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs+manifest receipt commit not DGX-tested. No extra bench/model/GPU/CI/PR/merge."
+    "2026-10-28 DGX P6-B1a operator full log source SHA 37b883793bdd33f8aa2d4810947a94fef3aa5c20: Phase6 147/147 OK, Source Manifest 224/224 PASS twice, stable running pinned Docker identity, host MemAvailable before 14620MiB and after 14609MiB, GPU NVML telemetry PARTIAL, status PASSIVE_METADATA_COLLECTED_NOT_GPU_READY, reasons empty. GPU unified memory headroom NOT proven, second model feasible NOT proven, GPU allocation not authorized; A BLOCKED, B0 PASS prior source, B1 real GPU NOT_RUN, formal B BLOCKED, C/D NOT_RUN. Subsequent docs+manifest receipt commit not DGX-tested. No extra bench/model/GPU/CI/PR/merge.",
+    "2026-10-28 user explicitly identified delivery drift: repeated offline source/CPU sub-gates and docs for blazux Phase5-6 without demonstrating any of 8 planned new blazux features deployed in service. Assistant admitted planning/process error and introduced canonical DELIVERY-DRIFT-POSTMORTEM guardrails. Future work: outcome-first feature implementation, classify implementation/CPU/GPU/API/deployed evidence separately; stop-loop after repeated ABI-resource BLOCKED without new evidence/approval, avoid B1b/B1c proliferation; next P1 candidates PLE phased wait/dedup/gather/stage statistics and Preview Tool/Responses CPU compatibility. Replace stale active handoff prompt that instructed re-running already consumed 36 PRE-B bench. Preserve last DGX at 37b883793bdd33f8aa2d4810947a94fef3aa5c20 147/147 Source224/224 and B0 3aa40292 124/220 PASS; no runtime/GPU/bench/CI/PR/merge approvals or execution. This docs-only correction commit untested on DGX."
   ],
   "files": [
     {
@@ -192,6 +193,11 @@
       "path": "docs/BENCHMARKS.md",
       "mode": "100644",
       "blob_sha": "0dfc6422823978049573fbc2058f1af785d1265e"
+    },
+    {
+      "path": "docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md",
+      "mode": "100644",
+      "blob_sha": "abdda8a293e411218c866dd012c6478ec504ff66"
     },
     {
       "path": "docs/BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md",
@@ -381,7 +387,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "fe9624f6dbda6e664c82173c58e4fd4a6af5b79c"
+      "blob_sha": "9699154f5e0c64bc88e4300df0cca5f2a6ef4ef9"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -391,12 +397,12 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "87b969d001824cc5f53cb217dd0d23ef0ae59f62"
+      "blob_sha": "63d7fab18437022d6218e55630bb8b029b87e1e8"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "a5189355a5db8cfb791f72865523fc75cd8ac126"
+      "blob_sha": "c1e6c08ba92ef597669ca61f939745b76a025564"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -411,12 +417,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "363f41d49b277489ed251ee79f06dc45feb790c8"
+      "blob_sha": "ced11034f0fe9743e33836e3972e27d6eb3dc5d3"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "a2ba06bfe7b9ccdb4b7d6771bd3d5e174dab7bc3"
+      "blob_sha": "11ba6f8d61e86ff5250fe45057bdd5dab7280d4a"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

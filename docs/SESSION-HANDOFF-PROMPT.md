@@ -1,5 +1,16 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
+
+**사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.
+
+**새 대화의 최우선 규칙:** [실수 원인 및 재발 방지 정본](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 먼저 읽고 (1) 사용자 기능 가치 (2) 실제 코드 변경 (3) 최소 반증 가능 검증 (4) 남는 실제 실행 장애를 밝힌 뒤 작업한다. 독립적인 소스/CPU P1 기능 구현(PLE 단계별 계측 완성, Tool/Responses Preview Parser 호환 준비)을 우선 후보로 하고, 새 A/B 하위 Gate·반복 메타데이터 조사·시험 개수 증가는 목적이 아니라 필요할 때만 수행한다. **동일 근거에서 전진이 없는 연속 작업은 STOP 및 재우선순위.** 과거 계획의 PRE-B --execute 지시와 이전 예상 테스트 수는 역사적 기록이며 재실행하지 않는다.
+
+**권한과 근거 불변:** 운영 Docker/GPU/model/HTTP/벤치/패치/CI/PR/merge 무승인 실행 금지, main/P0/Phase1–5 및 baseline 불변. P6-A 활성 ABI BLOCKED, B0 합성 PASS, B1a read-only 관측 완료, B1 실제 GPU NOT_RUN, P6-B 정식 BLOCKED, C/D NOT_RUN. 사용자 제공 마지막 DGX-tested source 37b883793bdd33f8aa2d4810947a94fef3aa5c20의 147 unit 및 Source224 PASS와 이후 문서-only GitHub 커밋을 반드시 구분. **이번 수정은 핸드오프 재발 방지 기록만이며 기능 적용·DGX 실행이 아니다.**
+
+---
+
+
 ## 2026-10-28 DGX P6-B1a 실제 무부하 관측 완료 — 147/224 PASS, GPU 미인증
 
 - **정확한 DGX 테스트 소스 SHA:** `37b883793bdd33f8aa2d4810947a94fef3aa5c20`, `feature/blazux-phase6-runtime-gates`. 사용자 제공 전체 DGX 실행 로그에서 `git pull --ff-only`가 `이미 업데이트 상태`이며, 사용자 `git rev-parse HEAD` pin 검사 이후 종료 마커까지 성공했음을 확인.
