@@ -32,7 +32,7 @@ Knobs (env):
   VLLM_PLE_MMAP_CHUNK=2048   rows per gather task
   VLLM_PLE_FAST_GATHER=0    1 = opt in to decode-sized inline CPU gather (default OFF)
   VLLM_PLE_FAST_GATHER_ROWS=512  max rows in opt-in inline path (not applied when OFF)
-  VLLM_PLE_PHASE_STATS=0    opt-in CPU gather timing/counters (no Prometheus/I-O bytes)
+  VLLM_PLE_PHASE_STATS=0    opt-in CPU phases + legacy gather counters (no GPU/I-O stats)
   VLLM_PLE_MMAP_PREWARM=0    1 = stream the whole table once at load to fill the
                              page cache with whatever memory is free. Keep this
                              at 0 for a 95.37 GiB BF16 table on a 128 GB system.
@@ -167,15 +167,30 @@ class MmapPleTable:
             {
                 "calls": 0, "errors": 0, "rows": 0, "logical_bytes": 0,
                 "gather_s": 0.0, "fast_calls": 0,
+                "normalize_s": 0.0, "dedup_s": 0.0,
+                "gather_work_s": 0.0, "wait_s": 0.0, "stage_s": 0.0,
+                # Scope markers prevent reporting asynchronous H2D completion,
+                # kernel duration or physical NVMe I/O as if observed.
+                "h2d_transfer_s": "NOT_INSTRUMENTED",
+                "nvme_read_bytes": "NOT_INSTRUMENTED",
             }
             if self.phase_stats_enabled else None
         )
 
-    def stats_snapshot(self) -> dict[str, int | float] | None:
-        """Best-effort per-table CPU gather counters, or None if disabled.
+    def stats_snapshot(self) -> dict[str, int | float | str] | None:
+        """Thread-safe copy of CPU gather observations, or None when disabled.
 
-        logical_bytes counts returned bytes, not physical NVMe I/O.
-        There is no Prometheus endpoint, background timer, or GPU measurement.
+        gather_s: inclusive gather() wall time (legacy meaning).
+        normalize_s: input conversion to contiguous int64.
+        dedup_s: np.unique(ids, return_inverse=True) on the default path.
+        gather_work_s: SUM of completed per-task memmap indexing wall times;
+            concurrent tasks overlap, so this may exceed gather_s.
+        wait_s: main-thread wall time consuming executor results; includes
+            worker execution and scheduling, NOT exclusive idle time.
+        stage_s: CPU output allocation and inverse-order restoration only.
+            NOT a measurement of H2D upload, CUDA sync, or GPU staging.
+        nvme_read_bytes: NOT_INSTRUMENTED; logical_bytes counts returned bytes.
+        Phase totals are non-additive, especially with concurrent workers.
         """
         if not self.phase_stats_enabled:
             return None
@@ -184,58 +199,107 @@ class MmapPleTable:
             return dict(self._stats)
 
     def _record_gather_stats(
-        self, count: int, elapsed_s: float, failed: bool, fast: bool
+        self, count: int, elapsed_s: float, failed: bool, fast: bool,
+        phases: dict[str, float],
     ) -> None:
         assert self._stats_lock is not None and self._stats is not None
         with self._stats_lock:
             self._stats["calls"] += 1
             self._stats["errors"] += int(failed)
             self._stats["gather_s"] += elapsed_s
+            for key, duration in phases.items():
+                self._stats[key] += duration
+            # Failed calls can have partial phase durations, but never
+            # contribute successful rows, bytes, or fast-call counters.
             if not failed:
                 self._stats["rows"] += count
                 self._stats["logical_bytes"] += count * self.row_bytes
                 self._stats["fast_calls"] += int(fast)
 
     def gather(self, ids: np.ndarray) -> np.ndarray:
-        """CPU row gather; flag OFF preserves baseline dedup+pool behavior."""
+        """CPU row gather; stats OFF keeps the original dispatch path."""
         if not self.phase_stats_enabled:
             return self._gather_rows(ids)
+        phases = {
+            "normalize_s": 0.0, "dedup_s": 0.0,
+            "gather_work_s": 0.0, "wait_s": 0.0, "stage_s": 0.0,
+        }
         started = time.perf_counter()
-        n = int(np.asarray(ids).size)
-        fast = bool(n > 0 and n <= self.fast_gather_rows)
+        n = 0
+        fast = False
         try:
-            result = self._gather_rows(ids)
+            n = int(np.asarray(ids).size)
+            fast = bool(n > 0 and n <= self.fast_gather_rows)
+            result = self._gather_rows(ids, phases)
         except Exception:
-            self._record_gather_stats(n, time.perf_counter() - started, True, fast)
+            self._record_gather_stats(
+                n, time.perf_counter() - started, True, fast, phases
+            )
             raise
-        self._record_gather_stats(n, time.perf_counter() - started, False, fast)
+        self._record_gather_stats(
+            n, time.perf_counter() - started, False, fast, phases
+        )
         return result
 
-    def _gather_rows(self, ids: np.ndarray) -> np.ndarray:
-        """ids: int64 [N] global row ids -> uint8 [N, row_bytes] (fresh)."""
-        ids = np.ascontiguousarray(ids, dtype=np.int64).reshape(-1)
+    def _gather_rows(
+        self, ids: np.ndarray, phases: dict[str, float] | None = None
+    ) -> np.ndarray:
+        """int64 row IDs -> uint8 [N,row_bytes]; optional CPU-only phases."""
+        if phases is None:
+            # Preserve the original OFF path without clock sampling.
+            ids = np.ascontiguousarray(ids, dtype=np.int64).reshape(-1)
+        else:
+            t = time.perf_counter()
+            try:
+                ids = np.ascontiguousarray(ids, dtype=np.int64).reshape(-1)
+            finally:
+                phases["normalize_s"] += time.perf_counter() - t
         if ids.size == 0:
-            return np.empty((0, self.row_bytes), dtype=np.uint8)
+            if phases is None:
+                return np.empty((0, self.row_bytes), dtype=np.uint8)
+            t = time.perf_counter()
+            try:
+                return np.empty((0, self.row_bytes), dtype=np.uint8)
+            finally:
+                phases["stage_s"] += time.perf_counter() - t
         if ids.size <= self.fast_gather_rows:
-            # Opt-in small-N path: no sort/inverse and no ThreadPoolExecutor.
-            # Preserve all caller row order and duplicate IDs byte-for-byte.
+            # Fast path deliberately skips row dedup and executor wait.
             lo, hi = int(ids.min()), int(ids.max())
             if lo < 0 or hi >= self.shard_size * len(self.mm):
                 raise IndexError(
                     f"PLE row id out of range: [{lo}, {hi}] for {self.rows_total} rows"
                 )
             shard = ids // self.shard_size
-            out = np.empty((ids.size, self.row_bytes), dtype=np.uint8)
+            if phases is None:
+                out = np.empty((ids.size, self.row_bytes), dtype=np.uint8)
+            else:
+                t = time.perf_counter()
+                out = np.empty((ids.size, self.row_bytes), dtype=np.uint8)
+                phases["stage_s"] += time.perf_counter() - t
             for si in np.unique(shard):
                 mm = self.mm[int(si)]
                 if mm is None:
                     raise IndexError(f"PLE shard {int(si)} missing")
                 mask = shard == si
-                out[mask] = mm[ids[mask] - int(si) * self.shard_size]
+                if phases is None:
+                    out[mask] = mm[ids[mask] - int(si) * self.shard_size]
+                else:
+                    t = time.perf_counter()
+                    try:
+                        out[mask] = mm[ids[mask] - int(si) * self.shard_size]
+                    finally:
+                        phases["gather_work_s"] += time.perf_counter() - t
             return out
-        # Dedupe + sort: repeated n-grams are common, and sorted rows improve
-        # locality inside a shard.
-        uniq, inverse = np.unique(ids, return_inverse=True)
+
+        # Default dedup + sorted shard tasks, unchanged with stats OFF.
+        if phases is None:
+            uniq, inverse = np.unique(ids, return_inverse=True)
+        else:
+            t = time.perf_counter()
+            try:
+                uniq, inverse = np.unique(ids, return_inverse=True)
+            finally:
+                phases["dedup_s"] += time.perf_counter() - t
         if uniq[0] < 0 or uniq[-1] >= self.shard_size * len(self.mm):
             raise IndexError(
                 f"PLE row id out of range: [{uniq[0]}, {uniq[-1]}] "
@@ -243,7 +307,12 @@ class MmapPleTable:
             )
         shard = uniq // self.shard_size
         local = uniq - shard * self.shard_size
-        out = np.empty((uniq.size, self.row_bytes), dtype=np.uint8)
+        if phases is None:
+            out = np.empty((uniq.size, self.row_bytes), dtype=np.uint8)
+        else:
+            t = time.perf_counter()
+            out = np.empty((uniq.size, self.row_bytes), dtype=np.uint8)
+            phases["stage_s"] += time.perf_counter() - t
 
         bounds = np.flatnonzero(np.diff(shard)) + 1
         starts = np.concatenate(([0], bounds))
@@ -254,21 +323,47 @@ class MmapPleTable:
             for c in range(s, e, self.chunk):
                 tasks.append((si, c, min(c + self.chunk, e)))
 
-        def run(task: tuple[int, int, int]) -> None:
+        def run(task: tuple[int, int, int]) -> float | None:
             si, a, b = task
             mm = self.mm[si]
             if mm is None:
                 raise IndexError(f"PLE shard {si} missing")
-            # Fancy indexing on a memmap: page faults do the I/O; NumPy releases
-            # the GIL for the copy, so tasks overlap across threads.
+            # Includes memmap indexing and any page-fault stalls. This is
+            # worker elapsed time, NOT NVMe read bandwidth or pure CPU time.
+            if phases is None:
+                out[a:b] = mm[local[a:b]]
+                return None
+            t = time.perf_counter()
             out[a:b] = mm[local[a:b]]
+            return time.perf_counter() - t
 
         if len(tasks) == 1:
-            run(tasks[0])
-        else:
+            duration = run(tasks[0])
+            if phases is not None:
+                assert duration is not None
+                phases["gather_work_s"] += duration
+        elif phases is None:
             for _ in self.pool.map(run, tasks):
                 pass
-        return out[inverse]
+        else:
+            # Each next() measures the caller's wait/result-consumption
+            # interval. Do not subtract overlapping worker task durations.
+            results = iter(self.pool.map(run, tasks))
+            for _ in tasks:
+                t = time.perf_counter()
+                try:
+                    duration = next(results)
+                finally:
+                    phases["wait_s"] += time.perf_counter() - t
+                assert duration is not None
+                phases["gather_work_s"] += duration
+        if phases is None:
+            return out[inverse]
+        t = time.perf_counter()
+        try:
+            return out[inverse]
+        finally:
+            phases["stage_s"] += time.perf_counter() - t
 
     def prewarm(self) -> None:
         """Stream every shard once so the page cache holds as much as it can."""
