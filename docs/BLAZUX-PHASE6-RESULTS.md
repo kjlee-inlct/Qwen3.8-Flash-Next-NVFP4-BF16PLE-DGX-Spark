@@ -1,5 +1,12 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Responses source CPU success → 실제 Qwen3 Parser 격리 실행 준비
+
+- **확정된 사용자 DGX 검증:** feature HEAD `ab00f94f25b3bd8dcbb359056cd08a533281711b`의 `--bundle p1-responses --execute`, **Phase6 173/173 PASS**, **Source243/243 PASS**, PLE/Phase4 4 cases/Phase5 synthetic 14/14 PASS. **Preview-native 실제 수정 Responses 메서드 CPU 18/18 PASS**, `PREVIEW_P1_NATIVE_RESPONSES_TERMINALS_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 설치 소스/기존 운영/GPU/API 변경 없음. 이것은 실제 Parser import/HTTP 호환성 PASS가 아님.
+- **다음 P1 기능 검사(신규 HEAD DGX_NOT_RUN):** `src/preview_p1_real_parser_cpu.py`를 `scripts/ple-phase-stats-cpu-container.sh --bundle p1-real-parser`에 추가. 기존 3개 SHA-pinned Preview-native 패치 임시 적용 후 **진짜 설치 vLLM의 Qwen3Parser, 실제 IncrementalLexer/TokenIDScanner, 실제 ResponsesRequest 및 JSON-schema 변환**을 단일 runc/no-network/no-GPU/read-only CPU child에서 import하여 Qwen3 XML 및 chunked streaming 6개 행위 시나리오 확인. 더 이상 메서드 추출 fake 기반만이 아닌 **실제 Parser import/lexer/engine 경로** 검사; 완전한 HTTP/OpenAIServingResponses/모델 테스트는 하지 않는다. 모든 import/동작 실패는 fail-closed.
+- 사용자가 별도 실제 GPU/서비스 승인을 주지 않았으므로 **P1 전체 완료 NOT_CERTIFIED**, 운영 Docker와 main 보존. **P1 완료 뒤에도 P2 자동 전환 금지.**
+
+
 ## 2026-10-28 P1 Responses terminal 처리 Preview-native 포팅 — 사용자 DGX schema PASS 후
 
 - **마지막 실제 operator DGX HEAD:** `db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118` — Phase6 **169/169 PASS**, Source Manifest **240/240 PASS**, PLE/Phase4 회귀 및 합성계약 14/14 PASS, **Preview-native Qwen JSON Schema 실제 수정 메서드 12/12 CPU PASS**. `PREVIEW_P1_NATIVE_TOOL_SCHEMA_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE` 확인. 단지 CPU-only source/modified-method 테스트이며 **실제 vLLM Parser/API 인증 아님**.

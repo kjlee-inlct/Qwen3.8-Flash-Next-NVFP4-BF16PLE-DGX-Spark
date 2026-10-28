@@ -15,12 +15,12 @@ stop() { echo "STOP: $*" >&2; exit 2; }
 
 # Allow exactly the old two-test PLE invocation, or a fixed CPU-only
 # P1 synthetic/source bundle. No arbitrary command/profile injection.
-readonly USAGE="usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> [--bundle p1-offline|p1-tool-stage|p1-native-marker|p1-schema|p1-responses] --execute"
+readonly USAGE="usage: scripts/ple-phase-stats-cpu-container.sh --expected-head <40-char SHA> [--bundle p1-offline|p1-tool-stage|p1-native-marker|p1-schema|p1-responses|p1-real-parser] --execute"
 BUNDLE="ple"
 if [[ $# -eq 3 && "${1:-}" == "--expected-head" && "${3:-}" == "--execute" ]]; then
   :
 elif [[ $# -eq 5 && "${1:-}" == "--expected-head" &&
-        "${3:-}" == "--bundle" && ( "${4:-}" == "p1-offline" || "${4:-}" == "p1-tool-stage" || ( "${4:-}" == "p1-native-marker" || "${4:-}" == "p1-schema" || "${4:-}" == "p1-responses" ) ) &&
+        "${3:-}" == "--bundle" && ( "${4:-}" == "p1-offline" || "${4:-}" == "p1-tool-stage" || ( "${4:-}" == "p1-native-marker" || "${4:-}" == "p1-schema" || "${4:-}" == "p1-responses" || "${4:-}" == "p1-real-parser" ) ) &&
         "${5:-}" == "--execute" ]]; then
   BUNDLE="$4"
 else
@@ -99,7 +99,7 @@ docker run --rm --pull=never \
     python3 src/test_ple_phase_stats_cpu.py
     python3 src/test_ple_phase4_cpu.py
     echo PLE_CPU_CONTAINER_TESTS_PASS
-    if [ "$PLE_CPU_TEST_BUNDLE" = "p1-offline" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-tool-stage" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-native-marker" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-schema" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-responses" ]; then
+    if [ "$PLE_CPU_TEST_BUNDLE" = "p1-offline" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-tool-stage" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-native-marker" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-schema" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-responses" ] || [ "$PLE_CPU_TEST_BUNDLE" = "p1-real-parser" ]; then
       # Existing independent synthetic client oracles: NOT the real parser.
       PYTHONPATH=.:src python3 -m unittest discover \
         -s tests -p "test_blazux_phase5_contracts.py" -v
@@ -126,6 +126,11 @@ docker run --rm --pull=never \
         # Source-only: marker -> schema -> Responses patches on copied pinned Preview.
         # Executes actual modified serving methods with CPU fakes, never vLLM/GPU/API.
         PYTHONPATH=.:src python3 src/preview_p1_native_responses_verify.py --verify-installed
+      fi
+      if [ "$PLE_CPU_TEST_BUNDLE" = "p1-real-parser" ]; then
+        # Opt-in first full installed Preview Parser import/behavior check using
+        # pinned, patched TEMP sources; no GPU/model/HTTP/live service.
+        PYTHONPATH=.:src python3 src/preview_p1_real_parser_cpu.py --verify-installed
       fi
     fi
   ' || rc=$?

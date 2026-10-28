@@ -1,5 +1,11 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 DGX Responses PASS → 실제 Preview Qwen3 Parser CPU import 단계
+
+- 최신 사용자 DGX 결과 `ab00f94f25b3bd8dcbb359056cd08a533281711b`에서 Phase6 173/173, Source243/243, PLE/Phase4/Phase5 synthetic, Responses patched methods 18/18 PASS 및 양쪽 종료 마커 확인. 실제 Parser/HTTP 통합 인증 불가.
+- 새 소스 `src/preview_p1_real_parser_cpu.py`는 원본 설치 패키지 절대 불변, 사용자 인출 Preview preimage 9개 SHA pin, temp 3-patch zero fuzz, subproc meta import override, 실제 Qwen3 Parser의 XML tool + strict Responses schema + streaming 6개 시나리오 검증. `--bundle p1-real-parser` 신규 HEAD DGX_NOT_RUN; 실패 시 overlay/import/real behavior 원인 진단을 P1에서 수행한다. 운영 Docker/GPU/모델/HTTP/CI/PR/merge 금지, P2 자동 시작 금지.
+
+
 ## 2026-10-28 P1 Responses native terminal 3rd patch — 실기 CPU 검증 대기
 
 - 사용자 제공 실제 DGX `db1bba3ea8fa5a1a70b3960c0a6dde2653b3f118`: Phase6 169/169, Source240/240, PLE/Phase4/Phase5 synthetic 및 schema extracted-method CPU12/12 PASS. No installed source/GPU/service/model modification.
