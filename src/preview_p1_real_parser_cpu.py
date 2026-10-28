@@ -64,7 +64,7 @@ def _responses_patch_failure_code(stdout: bytes, stderr: bytes) -> str:
             which = "PROTOCOL"
         elif line == "patching file vllm/entrypoints/openai/responses/serving.py":
             which = "SERVING"
-        match = re.fullmatch(r"Hunk #([1-9][0-9]?) FAILED at [0-9]+\\.", line)
+        match = re.fullmatch(r"Hunk #([1-9][0-9]?) FAILED at [0-9]+\.", line)
         if match and 1 <= int(match.group(1)) <= 14:
             return "PREVIEW_RESPONSES_PATCH_" + which + "_HUNK_" + match.group(1) + "_FAILED"
     error = stderr[:16384].decode("utf-8", errors="replace")
