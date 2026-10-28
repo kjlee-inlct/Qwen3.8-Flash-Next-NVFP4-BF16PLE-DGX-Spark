@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 native Qwen schema — 실제 DGX marker PASS 및 추가 Preview-native 포팅
+
+- **정확한 operator DGX SHA:** `07c031e708cede07cd2842d1fd1e752336cbb567`. Phase6 **165/165 PASS**, Source **237/237 PASS**, PLE phase byte-exact/concurrency24/Phase4 four flags PASS, Phase5 synthetic 14/14 PASS. **네이티브 마커 코드의 임시 source patch/수정 메서드 CPU 5 사례 PASS**, `PREVIEW_P1_NATIVE_QWEN_MARKER_CPU_PASS_NOT_API_OR_DEPLOYED`, `PLE_PHASE_STATS_CPU_DGX_ISOLATED_VERIFIED_NO_GPU_NO_SERVICE_CHANGE`. 운영/GPU/model/HTTP unchanged.
+- 다음 기능 코드: **`src/preview_p1_patches/qwen-preview-native-schema.patch`** — 실제 operator 제공 Preview source의 **marker 적용 후 preimage** 기준 6-file 독립 패치. 새 JSON schema validator `argument_validation.py`, Qwen3 strict Responses argument buffering + one-layer wrapper schema repair, incomplete/unoffered/invalid fail-closed, Chat incremental path 유지, parser adapter→Responses serving에 오류 상태 전달.
+- **현재 작업 환경의 사용자 제공 원본 archive 검증**: 정확 9개 Python preimages; 원본 4-file marker patch와 새 schema patch 순차 `patch --batch --forward --fuzz=0 -p1` temp copy 적용, 변경 AST + 실제 Qwen3 메서드/validator CPU **12개 검사 PASS**. `src/preview_p1_native_schema_verify.py`는 설치 Preview 원본 SHA 확인 후 동일한 임시 사본 시험을 재현한다. **full vLLM parser/Responses API/실 모델/운영 검증이 아님**.
+- 다음 DGX 1회 CPU-only mode: `scripts/ple-phase-stats-cpu-container.sh --expected-head <정확한 신규 SHA> --bundle p1-schema --execute`. 실행은 새로운 사용자 승인과 HEAD 필수. 신규 커밋은 `DGX_NOT_RUN`; v0.32 원본 패치 무차별 적용 금지, main/P0/Phase1–5/운영 Docker/GPU/PR/CI/merge 무변경.
+
+
 ## 2026-10-28 P1 Preview-native Qwen tool-marker port — uploaded real source archive
 
 - 사용자 첨부 `preview-p1-source-vjEAFR9W.tar.gz`에서 **9개의 실제 설치 Preview 파일**을 검사, path/file과 sha256 확인(새 `argument_validation.py`는 원본에 존재하지 않아 9개가 정상). 내부 6개 핀과 일치, 추가 `nemotron_v3.py`는 sha256 `9d77b45debb4fb820cc448dfbeeccb53b384f8124b0ef6627ddba9777dcfa6df`.

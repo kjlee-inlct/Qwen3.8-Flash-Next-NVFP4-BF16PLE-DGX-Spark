@@ -1,5 +1,13 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 실제 DGX marker 검증 → P1 Schema strict Responses native 포팅
+
+- **마지막 operator DGX source:** `07c031e708cede07cd2842d1fd1e752336cbb567`. Phase6 165/165, Source237/237, PLE/Phase4/Phase5 synthetic 모두 PASS. `PREVIEW_P1_NATIVE_QWEN_MARKER_CPU_PASS_NOT_API_OR_DEPLOYED`: 실제 수정된 StreamingParserEngine 메서드 CPU 5 사례 PASS. 엔진/API/서빙 기능 적용 증거는 아님.
+- 실 코드 신규 `src/preview_p1_patches/qwen-preview-native-schema.patch`: 정확한 Preview **marker 후 preimage**에 6-file native patch. Responses의 schema-unverified argument delta 전송을 보류, 완성 후 offered schema 확인·정상/1-layer wrapper 허용, JSON 중복 키·미완료·누락 도구/부적합 인자 차단. `ParserEngine`, `Qwen3Parser`, 양쪽 adapter/Delegating parser 및 Responses serving hook 연결. Chat 기본 경로 보존.
+- `src/preview_p1_native_schema_verify.py`는 설치 원본 SHA + marker/schema 해시 고정, 원본 설치 untouched, 임시 파일에 두 패치 순서 적용, JSON Schema validator와 **실제 수정 메서드**의 CPU 12 사례 실행. 사용자 제공 source archive에서 temp patch/AST/CPU 12 사례 PASS 확인했으나 신규 GitHub HEAD의 **DGX_NOT_RUN**. `--bundle p1-schema`에 포함. 실제 전체 vLLM Parser import·API·모델·GPU·서빙 검증 전에는 `CPU_VERIFIED_EXTRACTED_METHODS_ONLY`, `NOT_APPLIED`.
+- 남은 동일 P1: Responses terminal `response.failed/response.incomplete/error`, 실제 Parser/Responses 통합(및 Pi Agent) 검증. Phase6 GPU ABI는 별도 BLOCKED로 유지. 운영 컨테이너 변경/CI/PR/merge는 여전히 미승인.
+
+
 ## 2026-10-28 P1 Preview-native Qwen 마커 코드 실물 포팅 — 첨부 아카이브 기반
 
 - 사용자 제공 `preview-p1-source-vjEAFR9W.tar.gz` 9개 파일 SHA/유형 검사 완료. `src/preview_p1_patches/qwen-preview-native-marker.patch`는 정확한 Preview preimage를 대상으로 별도 작성한 4-file native source patch로, Qwen3 preamble/literal tool marker 동작만 포함한다(원본 blazux v0.32 patch #1/#2를 그대로 적용하지 않음).
