@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 PRE-B 원본 36회 결과 Git 보관 완료
+
+- [실제 DGX result.json 원본](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/result.json): **533,082바이트 원본 바이트 불변**, SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d`, Git Blob SHA1 `f963d6003f954bbc90c650a92104fddb34b38bbf` 독립 검증 일치. 12개 조합×3회 개별 PP/TG/TTFT 및 시계열 구조 검사 PASS. [공개 요약](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/summary.public.json) 12개 평균 수치도 원본과 12/12 일치.
+- 기존 별도 비공개 환경/실행 로그/체크섬 장부와 운영 Docker 식별자는 공개하지 않음. 아래의 '원본 미수령' 단락은 이전 시점의 기록으로만 유지한다.
+- DGX 오프라인 마지막 확인: `882b590119afcdadb06afe9938c7f3e10c866656` 99/99 tests, Source Manifest 212/212 PASS. 본 raw 등재 커밋의 DGX·CI는 별도 검증하지 않았다. PRE-B 벤치 신규 실행 승인은 소진됨: **재실행 금지**. P6-A ACTIVE ABI `BLOCKED`, P6-B/C/D `NOT_RUN`, strict 공식 성능 개선율 주장 금지.
+
+---
+
+
 ## 2026-10-28 신규 PRE-B 결과 Git 보관 시작 (원본 raw 미수령)
 
 - **구조화 공개 요약**: [Phase6 PRE-B summary.public.json](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/summary.public.json) / [공개·비공개 구분 README](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/README.md). DGX 콘솔에서 보고한 12개 조합의 평균값, 36회 검증 선언, 결과 원본의 보고된 SHA `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d`를 기록했다.
