@@ -1,5 +1,16 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 P1→P2 수동 경계 · 레거시 서비스 보존 (확정된 상시 규칙)
+
+- **현재 개발 단계는 P1.** P1 검증/완료/인수인계 뒤에도 P2 기능(MTP reduced draft vocabulary, PLE Gather 추가 최적화, vLLM 0.32 별도 경로)으로 **자동 진행하지 않는다**. P2 착수는 사용자의 별도 명시 지시가 있어야 한다. P1 진단만 요청한 경우 새 GPU/모델/운영 작업 승인으로 확대 해석하지 않는다.
+- **기존 레거시 PLE/Docker의 정지·전환은 별개의 운영 단계.** 현재 모델 컨테이너 `qwen38-flash-orca-uncensored-bf16-mtp` 및 checkpoint/cache/이미지/port 8000을 P1 source/CPU 검증을 위해 중지·교체·삭제하지 않는다. 차후 전환 승인이 있을 때는 기존 `scripts/status.sh`, `doctor.sh`, `health.sh`, 설치/활성화 스크립트를 활용해 정확한 ID/이미지/마운트/포트 확인→복구계획→사용자 승인→정지/전환 순서로 진행한다.
+- **소유권 경계:** `scripts/stop.sh`와 Wizard `uninstall.sh`는 **Wizard-owned 신규 컨테이너만** 조작할 수 있다. `adopt-legacy.sh`는 read-only 관찰 등록이며 기존 레거시 정지 권한을 주지 않는다. 기존 레거시를 끄려면 해당 컨테이너 정확한 전체 ID 대조 및 별도 승인 절차를 작성한다. 기존 cache/weights/legacy image와 복구 수단을 유지한다.
+- **증거 경계:** CPU-only runc 시험 PASS, Source Manifest PASS 및 패치된 실제 Preview Parser/Serving의 import PASS는 운영 서버 적용/API/GPU 검증이 아니다. 현재 진행 작업의 정확한 SHA·마지막 DGX 실제 로그·실패 단계는 [기능 브랜치 현재 작업 문서](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/feature/blazux-phase6-runtime-gates/docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)와 [Phase6 증거 장부](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/feature/blazux-phase6-runtime-gates/docs/BLAZUX-PHASE6-RESULTS.md)를 확인한다. 이 문서의 이전 날짜형 SHA·PASS는 이력이며 새 HEAD의 실측으로 재사용하지 않는다.
+- **작업 분리:** 미완료 P1 기능 브랜치 전체를 문서 인수인계 목적의 PR로 `main`에 합치지 않는다. 영구 규칙 수정은 문서-only 변경으로 검토하고, 코드/실기/CI 증거를 분리한다. 원칙은 [운영·안전 가이드](../scripts/OPERATIONS.md), [레거시 상태 정책](../scripts/LEGACY-INSTALLATION.md), [현재 feature의 작업 방향 교정 정본](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/blob/feature/blazux-phase6-runtime-gates/docs/BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 참조한다.
+
+---
+
+
 > 기준: **2026-10-26 (Asia/Seoul)**. 이 파일은 다른 ChatGPT/개발 세션에서 현재 프로젝트를 그대로 이어받기 위한 **상시 인수인계 프롬프트**다.  
 > 개인 저장소: [kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark).  
 > **중요:** 이 문서의 commit/시험 결과는 기록 당시의 스냅샷이다. 새 세션에서는 GitHub의 실제 최신 `main`, PR, CI와 사용자 DGX의 새로운 로그를 확인해야 한다.
