@@ -29,7 +29,8 @@ class RealResponsesCPUPlanTests(unittest.TestCase):
         source = Path(r.__file__).read_text()
         self.assertIn("serving.SimpleContext(response_parser=parser_instance)", source)
         self.assertIn("typed_request, sampling, contexts(), context,", source)
-        self.assertIn('ev.type == "response.output_item.done"', source)
+        self.assertIn("list(context.streamed_output_items)", source)
+        self.assertIn("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_MISSING", source)
         self.assertIn('REAL_PARSER_TO_RESPONSES_STREAM_FINAL_TOOL_WRONG', source)
 
     def test_validation_diagnostics_never_emit_raw_errors(self):
@@ -37,6 +38,9 @@ class RealResponsesCPUPlanTests(unittest.TestCase):
         self.assertIn("include_input=False", source)
         self.assertIn("include_context=False", source)
         self.assertIn("P1_DIAG_VALIDATION_FIELD=", source)
+        self.assertIn("STREAM_VALID_GENERATOR", source)
+        self.assertIn("STREAM_VALID_WIRE", source)
+        self.assertIn("P1_DIAG_EVENT_KIND=", source)
 
     def test_typed_events_and_roundtrip_required(self):
         source = Path(r.__file__).read_text()

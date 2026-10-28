@@ -246,9 +246,11 @@ def _child(root: Path) -> dict:
         async def completed(self, req, params, *args, **kwargs):
             # The engine is a fixture, but terminal output must reflect real
             # completed typed items emitted by the serving stream processor.
-            finished_items = [
-                ev.item for ev in events if ev.type == "response.output_item.done"
-            ]
+            if context.streamed_output_items is None:
+                raise StageBlocked("REAL_RESPONSES_STREAM_PROCESSOR_ITEMS_MISSING")
+            # Reuse the exact typed items retained by the real installed
+            # SimpleStreamingEventProcessor; do not rebuild final output.
+            finished_items = list(context.streamed_output_items)
             return protocol.ResponsesResponse.from_request(
                 req, params, model_name="offline-test",
                 created_time=123456, output=finished_items,
@@ -262,10 +264,11 @@ def _child(root: Path) -> dict:
             events.append(event)
         return events
 
-    print('P1_DIAG_STAGE=STREAM_VALID_TOOL', flush=True)
+    print('P1_DIAG_STAGE=STREAM_VALID_GENERATOR', flush=True)
     chunks = ["<tool_call>\n", "<function=weather>", "\n<parameter=city>",
               "Se", "oul", "</parameter>", "\n</function>", "\n</tool_call>"]
     streamed = asyncio.run(stream_model(chunks))
+    print('P1_DIAG_STAGE=STREAM_VALID_STRUCTURE', flush=True)
     types = [ev.type for ev in streamed]
     if (not types or types[-1] != "response.completed"
             or "response.output_item.added" not in types
@@ -284,7 +287,21 @@ def _child(root: Path) -> dict:
             or json.loads(finalized[0].arguments) != {"city": "Seoul"}
             or finalized[0].call_id != done_items[0].call_id):
         raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_FINAL_TOOL_WRONG")
+    print('P1_DIAG_STAGE=STREAM_VALID_WIRE', flush=True)
     for event in streamed:
+        # Only fixed event-family labels, never payload or model data.
+        safe_event_kinds = {
+            "response.created": "CREATED",
+            "response.in_progress": "IN_PROGRESS",
+            "response.completed": "COMPLETED",
+            "response.failed": "FAILED",
+            "response.output_item.added": "ITEM_ADDED",
+            "response.output_item.done": "ITEM_DONE",
+            "response.function_call_arguments.delta": "ARG_DELTA",
+            "response.function_call_arguments.done": "ARG_DONE",
+        }
+        print("P1_DIAG_EVENT_KIND=" + safe_event_kinds.get(event.type, "OTHER"),
+              flush=True)
         if adapter.validate_json(event.model_dump_json()).type != event.type:
             raise StageBlocked("REAL_PARSER_TO_RESPONSES_STREAM_WIRE_INVALID")
     cases += 1
@@ -363,7 +380,8 @@ def main(args: list[str]) -> int:
                     "IMPORT_PARSER_HANDOFF", "VALIDATE_TYPED_REQUEST",
                     "NONSTREAM_VALID_TOOL", "NONSTREAM_WIRE",
                     "NONSTREAM_REJECTIONS", "NONSTREAM_PLAINTEXT",
-                    "STREAM_VALID_TOOL", "STREAM_REJECT_INVALID",
+                    "STREAM_VALID_GENERATOR", "STREAM_VALID_STRUCTURE",
+                    "STREAM_VALID_WIRE", "STREAM_REJECT_INVALID",
                 }
                 stage = "CHILD_START"
                 if "P1_RESPONSES_BEFORE_IMPORT" in child.stdout:
@@ -399,8 +417,23 @@ def main(args: list[str]) -> int:
                                 validation_field = candidate
                 suffix = ("_" + validation_field
                           if error_type == "ValidationError" else "")
+                # Record the last fully serialized event family for a wire
+                # failure, not source fields or untrusted event contents.
+                known_event_kinds = {
+                    "CREATED", "IN_PROGRESS", "COMPLETED", "FAILED",
+                    "ITEM_ADDED", "ITEM_DONE", "ARG_DELTA", "ARG_DONE", "OTHER",
+                }
+                event_kind = "OTHER"
+                if stage == "STREAM_VALID_WIRE":
+                    for line in child.stdout.splitlines():
+                        if line.startswith("P1_DIAG_EVENT_KIND="):
+                            candidate = line.partition("=")[2]
+                            if candidate in known_event_kinds:
+                                event_kind = candidate
+                event_suffix = ("_" + event_kind
+                                if stage == "STREAM_VALID_WIRE" else "")
                 raise StageBlocked("REAL_RESPONSES_" + stage + "_" + error_type
-                                   + suffix + "_BLOCKED")
+                                   + suffix + event_suffix + "_BLOCKED")
             if "PREVIEW_P1_REAL_RESPONSES_SERVING_CPU_PASS_NOT_HTTP_OR_DEPLOYED" not in child.stdout:
                 raise StageBlocked("REAL_RESPONSES_SUCCESS_MARKER_MISSING")
             for line in child.stdout.splitlines():

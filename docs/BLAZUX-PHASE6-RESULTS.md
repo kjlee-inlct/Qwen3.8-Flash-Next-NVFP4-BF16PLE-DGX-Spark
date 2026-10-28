@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 actual DGX d262c0d: streaming validation still blocked
+
+- **Actual operator DGX execution:** `d262c0d1a9db30278eb058c7cc5dadf43ce41646`, `p1-real-responses`: Phase6 unit **183/183 PASS**, source manifest **247/247 PASS**, PLE CPU/Phase4 4/4 and Phase5 synthetic 14/14 PASS. Parser→Responses integrated stream **BLOCKED**: `REAL_RESPONSES_STREAM_VALID_TOOL_ValidationError_RESPONSE_BLOCKED`; final runner `STOP: isolated CPU test failed (exit=2)`, no final success marker. Neither API nor model/GPU/legacy service was validated or changed by the fixture. Report supplied by operator on 2026-10-28.
+- **Next targeted source-only change (new exact HEAD DGX_NOT_RUN):** preserve pinned three temporary Preview patches and existing `p1-real-responses` bundle. In `src/preview_p1_real_responses_cpu.py`, final typed output now takes the real `SimpleContext.streamed_output_items` (fail closed if absent); split existing stream test into generator, structural and wire-serialization diagnostics with allowlisted event-kind labels. Pydantic traceback/messages/payloads stay hidden. This is **not** evidence that the root Pydantic error is fixed. No new Gate, GPU/API/operational modification or P2 step.
+
 ## 2026-10-28 P1 Parser→Responses handoff actual DGX FAILED; no deployment
 
 - **DGX 실제 로그 `041d5871249746cf029f1e453ec9fab2a4d56d3e`:** `p1-real-responses` 전체 Phase6 **181/181 PASS**, Source **247/247 PASS**, PLE CPU/Phase4/Phase5 synthetic PASS; **새 실제 Parser→Serving 연결 검증 FAILED**: `BLOCKED_NOT_APPLIED: REAL_RESPONSES_EVENT_BEHAVIOR_FAILED`; `STOP: isolated CPU test failed (exit=2)`. 기존 실제 Serving Pydantic terminal 6/6 및 실제 Parser 6/6은 과거 확인 결과이며, **새 8개 handoff 중 어느 지점인지 아직 진단 불가**. Runner 최종 NO_SERVICE_CHANGE 성공 마커 미출력; 운영 변경 성공을 추론하지 말 것.
