@@ -1,5 +1,14 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P6-A5 BLOCKED 원인 및 안전한 후속 결정
+
+[**P6-A5 실제 ABI 관측 가능성 결정서**](BLAZUX-PHASE6-A5-ACTIVE-ABI-OBSERVABILITY-DECISION-20261028.md)에 기존 `/metrics`가 시작 시 CacheConfig `block_size=8`만 보여 주며, **실제 선택된 Scheduler/Mamba 그룹·block-table·GPU state의 physical ID/stride/할당 경계를 노출하지 않는 구조적 증거 공백**을 명시했다. 이는 **관측 부족에 의한 `BLOCKED`이지 관측된 ABI `FAIL`이 아니다.** 기존 HTTP/기본 Docker metadata 반복은 Full P6-A를 PASS로 만들지 못한다.
+
+**다음 단계**는 운영 서비스 비변경을 원칙으로 하는 별도 승인용 **향후 in-process attestation** 설계이며 현재 운영 프로세스에 코드를 삽입하거나 재시작/attach/exec하지 않는다. 대안인 격리 GPU/모델 ABI 검증도 별도 승인과 자원 판정이 있어야 하며 기존 활성 프로세스의 실측으로 승격할 수 없다. 승인 소진된 12×3 벤치 재실행 금지. 마지막 실제 DGX 오프라인 99/99·Source212/212 PASS는 `882b590119afcdadb06afe9938c7f3e10c866656`에만 적용되며, 이번 문서·Manifest 신규 HEAD는 DGX NOT_RUN. P6-A ACTIVE `BLOCKED`, P6-B/C/D `NOT_RUN`, patch/PR/merge/CI/운영 변경 없음.
+
+---
+
+
 ## 2026-10-28 PRE-B 원본 36회 결과 Git 보관 완료
 
 - [실제 DGX result.json 원본](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/result.json): **533,082바이트 원본 바이트 불변**, SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d`, Git Blob SHA1 `f963d6003f954bbc90c650a92104fddb34b38bbf` 독립 검증 일치. 12개 조합×3회 개별 PP/TG/TTFT 및 시계열 구조 검사 PASS. [공개 요약](../results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/summary.public.json) 12개 평균 수치도 원본과 12/12 일치.

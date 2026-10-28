@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 215,
+  "tracked_file_count": 216,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -124,7 +124,8 @@
     "2026-10-28 new-chat handoff-only receipt: create docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md (current ongoing Phase6 live active ABI observability + one approved provisional 12x3 existing-service script test only) and prepend authoritative link to docs/SESSION-HANDOFF-PROMPT.md. User requested copying current work without duplicating evergreen rules/completed history. Existing code SHA d031d4196eab1f5f1603d6541eaf5a31b02192c0, new live/PRE-B paths 99 expected Phase6 unit tests and manifest211 before this documentation commit; neither new code SHA nor new handoff commit DGX verified yet. Last actual DGX operator tested exact source fb5deae540812a300cb8404a53a202e505c40577: 70/70 Phase6 unit and Source204/204; baseline checksum/36 numeric results PASS, fresh bench NOT_RUN. New doc-only HEAD expects Source212 and Phase6 unit99 but NOT_RUN on DGX; never inherit earlier test PASS. Phase6 branch open PR0, commit combined statuses empty, PR-triggered workflow runs empty at prior code HEAD (NOT CI PASS). P6-A actual scheduler/Mamba groups/physical state BLOCKED, B/C/D NOT_RUN, historic corpus/sampler/KV comparability missing; one user-approved 12x3 existing-service benchmark allowed only through guarded wrapper and must not be repeated automatically. Current work restricted to Phase6; no PR/merge/CI/main/P0/Phase1-5/old baseline/model/legacy Docker change.",
     "2026-10-28 Phase6 operator DGX tested exact d031d4196eab1f5f1603d6541eaf5a31b02192c0: 99/99 offline unit PASS and full source 211/211 PASS; readonly /metrics startup cache block_size=8, prefix=false, utilization=.8 and pinned legacy identity. P6-A real active Scheduler/MambaSpec/group physical table/GPU ABI not observed, BLOCKED. User-approved one 12x3/36 existing-service provisional PRE-B benchmark completed exactly once PASS_PROVISIONAL_PRE_B_36, result SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d from console (not independently rehashed in GitHub). Approval consumed: no repeat. Strict historical AB comparison UNVERIFIED and official P6-D NOT_RUN; B/C NOT_RUN. Subsequent 13668e0 docs-only HEAD 212 tracked files was not operator tested, and this docs-only recording commit is also not DGX-tested. No operational modification or model work from GitHub.",
     "2026-10-28 Phase6 PRE-B publicly archived numeric summary only: operator-reported 12 condition averages and 36-run completion (raw result.json reported SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d). Exact original raw result bytes are still private/not on GitHub, and not independently rehashed by this commit. No benchmark repeated. DGX operator tested prior docs-only 882b590119afcdadb06afe9938c7f3e10c866656: 99/99 Phase6 tests, source212/212 PASS, but this summary archive/docs update itself is DGX NOT_RUN. P6-A active ABI BLOCKED, P6-B/C/D NOT_RUN.",
-    "2026-10-28 Phase6 PRE-B original 533082-byte result.json archived SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d Git SHA1 f963d6003f954bbc90c650a92104fddb34b38bbf; verified 12x3 and timeseries. Private environment/logs not published; one-time benchmark approval consumed; P6-A BLOCKED, P6-D NOT_RUN. Original 882b590 offline 99/212 PASS cannot be attributed to this new commit."
+    "2026-10-28 Phase6 PRE-B original 533082-byte result.json archived SHA256 35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d Git SHA1 f963d6003f954bbc90c650a92104fddb34b38bbf; verified 12x3 and timeseries. Private environment/logs not published; one-time benchmark approval consumed; P6-A BLOCKED, P6-D NOT_RUN. Original 882b590 offline 99/212 PASS cannot be attributed to this new commit.",
+    "2026-10-28 Phase6 A5 observability feasibility: existing approved Docker inspect and GET /v1/models,/metrics expose startup block_size 8 only, not live Scheduler factory/effective group spec, table physical IDs or GPU tensor storage bounds; real active P6-A remains BLOCKED (missing evidence, not observed FAIL). Separate scoped approval required for future in-process attestation or isolated GPU reproduction. No live/bench/GPU operation or CI; existing DGX 99/212 PASS only at 882b590."
   ],
   "files": [
     {
@@ -353,6 +354,11 @@
       "blob_sha": "a6b68e17ea5cb2f601b464bd67d68b099e3d75bc"
     },
     {
+      "path": "docs/BLAZUX-PHASE6-A5-ACTIVE-ABI-OBSERVABILITY-DECISION-20261028.md",
+      "mode": "100644",
+      "blob_sha": "109f576aba8cc94d5ba9d90022c81f78dc39fd75"
+    },
+    {
       "path": "docs/BLAZUX-PHASE6-BENCHMARK-GATE-RULES.md",
       "mode": "100644",
       "blob_sha": "c1f19246469759c8a6474098908f6bd79f633f7b"
@@ -360,7 +366,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "f483cd0796297793a846fae2d28f7b67accf5e8e"
+      "blob_sha": "d8cdd2343455b746fca034948c1151ed57cd79ac"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -370,7 +376,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "b15101081063bfb0264b9ae8abd27d5d9e43617e"
+      "blob_sha": "5f38288f57881b1601a874eafdd99deae222f3ef"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -390,12 +396,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "999e53ba9ac4b4c402e49fd6f2552910cc3573a6"
+      "blob_sha": "719bb4df959e550394c835c526167cc25220ca91"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "c2f1d727592585d40ab8a075c18b4516771dc528"
+      "blob_sha": "cd740e1071fff61053e8c250713f9f833a084c93"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

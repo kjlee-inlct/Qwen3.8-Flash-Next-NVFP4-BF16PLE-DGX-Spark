@@ -1,5 +1,14 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-28 P6-A5 BLOCKED 원인 및 안전한 후속 결정
+
+[**P6-A5 실제 ABI 관측 가능성 결정서**](BLAZUX-PHASE6-A5-ACTIVE-ABI-OBSERVABILITY-DECISION-20261028.md)에 기존 `/metrics`가 시작 시 CacheConfig `block_size=8`만 보여 주며, **실제 선택된 Scheduler/Mamba 그룹·block-table·GPU state의 physical ID/stride/할당 경계를 노출하지 않는 구조적 증거 공백**을 명시했다. 이는 **관측 부족에 의한 `BLOCKED`이지 관측된 ABI `FAIL`이 아니다.** 기존 HTTP/기본 Docker metadata 반복은 Full P6-A를 PASS로 만들지 못한다.
+
+**다음 단계**는 운영 서비스 비변경을 원칙으로 하는 별도 승인용 **향후 in-process attestation** 설계이며 현재 운영 프로세스에 코드를 삽입하거나 재시작/attach/exec하지 않는다. 대안인 격리 GPU/모델 ABI 검증도 별도 승인과 자원 판정이 있어야 하며 기존 활성 프로세스의 실측으로 승격할 수 없다. 승인 소진된 12×3 벤치 재실행 금지. 마지막 실제 DGX 오프라인 99/99·Source212/212 PASS는 `882b590119afcdadb06afe9938c7f3e10c866656`에만 적용되며, 이번 문서·Manifest 신규 HEAD는 DGX NOT_RUN. P6-A ACTIVE `BLOCKED`, P6-B/C/D `NOT_RUN`, patch/PR/merge/CI/운영 변경 없음.
+
+---
+
+
 ## 2026-10-28 DGX 실제 로그 반영 — P6-A 부분 관찰 / 신규 PRE-B 1회 완료
 
 **2026-10-28 DGX 신규 증거 반영:** `d031d419...`에서 99/99 tests + Source211/211 PASS, P6-A 시작 시 cache metric `block_size=8`, `enable_prefix_caching=false`, `gpu_memory_utilization=0.8`만 노출; **실물 ABI BLOCKED**. 승인된 PRE-B 기존 서비스 신규 12×3/36회가 **`PASS_PROVISIONAL_PRE_B_36`**로 1회 완료됐으며 `result.json` SHA256 `35c409d6f714bbce7b9c68d9cbc5c24f5a18e64575f1842daef1dc1d64d3a80d` (콘솔 보고; GitHub에서 원본 별도 재해시 아님). **추가 실행/재시도 금지**. `13668e0...` 및 본 문서만 변경하는 후속 HEAD는 DGX NOT_RUN, P6-B/C/D NOT_RUN. 자세한 영수증: [BLAZUX-PHASE6-RESULTS.md](BLAZUX-PHASE6-RESULTS.md).
