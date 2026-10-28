@@ -1,5 +1,12 @@
 # Phase 6 현재 진행 작업 전용 — 새 대화 인수인계 프롬프트 (2026-10-28)
 
+## 2026-10-28 P1 Tool/Responses stage 실패 원인 수정
+
+- 실제 DGX **`4efed48136278acb195231bb2b1a79a91ce62c5f`**: Phase6 157/157·Source233/233·P1 PLE/Phase4·Phase5 합성14/14 PASS, 설치 Preview read-only AST 감사 PASS. **실제 Preview 임시 patch staging은 `PREVIEW_SHA_DRIFT`로 BLOCKED**. 운영 설치/GPU 변경 없음.
+- **assistant 코드 오기**: `preview_p1_tool_responses_stage.py`의 `qwen3.py` pin이 54자리였으나 실제 SHA는 `8a7ee658322de7b736ea5b0f802d70dd07a124b5878b4f8ad2f99eca8e1d35fb` (64자리). 이는 Preview 파일이 바뀌었다는 증거가 아니라 정적 pin 오기. 결과 문서 참조.
+- 이번 수정은 올바른 pin과 회귀시험·첫 `patch` 실패 위치만 안전하게 반환하는 코드. `--bundle p1-tool-stage` 실행은 **새 exact HEAD에 대한 별도 사용자의 명시적 일회용 CPU Docker 승인 후**이며 새로운 패치 성공/Preview 호환성을 아직 주장하지 않는다. v0.32→Preview 문맥 차이 발생 시 직접 포팅으로 진행한다.
+
+
 ## 2026-10-28 Preview P1 Tool/Responses 코드 패치 후보 + 안전한 실제 소스 스테이징
 
 - 실제 DGX P1 묶음 검증: SHA `389903179f9ce81b2f846c657b877b190750e3c1`, Phase6 147/147·Source227/227·PLE byte-exact·Phase5 synthetic 14/14·Preview read-only AST PASS. 세부 증거는 [BLAZUX-PHASE6-RESULTS.md](BLAZUX-PHASE6-RESULTS.md).

@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-28 P1 Tool/Responses Preview stage 실제 DGX 중단 — SHA 4efed48
+
+- 사용자 실행: exact `4efed48136278acb195231bb2b1a79a91ce62c5f`, `--bundle p1-tool-stage --execute`. Phase6 **157/157 PASS**, Source **233/233 PASS**, PLE byte-exact/동시성/Phase4 flag PASS, Phase5 Tool/Responses/Prefix/MTP 합성 **14/14 PASS** 및 Preview read-only AST 감사 완료.
+- stage 결과: `{"status":"BLOCKED_NOT_APPLIED","reason":"PREVIEW_SHA_DRIFT","installed_vllm_modified":false,"model_gpu_api_run":false}`; 최종 CPU wrapper `exit=2`. 실제 패치는 복사본에도 적용되지 못했으며 Parser/API 실행·운영 적용 증거 없음.
+- **진짜 원인:** `src/preview_p1_tool_responses_stage.py`의 `vllm/parser/qwen3.py` static SHA256 고정값이 **54자리 오기**. 이미 동일한 DGX 실행의 `phase5_preview_abi_audit.py`가 64자리 실제 관측 SHA `8a7ee658322de7b736ea5b0f802d70dd07a124b5878b4f8ad2f99eca8e1d35fb`와 과거 값 일치를 확인. 이 결과를 **실제 Preview 코드 변경/드리프트로 오판 금지**.
+- 다음 source-fix: 올바른 64자리 고정값으로 정정, 기존 감사의 4개 공통 SHA에 대한 일치 테스트 및 static pin 형식 테스트, temp patch context rejection에서 공개 상대경로/기대 라인만 보고. 새 commit에서 DGX 실제 patch apply 여부는 여전히 `NOT_RUN`; 운영 Docker/GPU/모델/HTTP 및 PR/CI 변경 없음.
+
+
 ## 2026-10-28 DGX P1 묶음 실제 PASS — SHA 3899031
 
 - 사용자 DGX 전체 출력: `git pull --ff-only`가 `47c8aa8..3899031` fast-forward한 직후, `--bundle p1-offline --execute` 실행. **정확한 시험 SHA** `389903179f9ce81b2f846c657b877b190750e3c1`.

@@ -84,6 +84,40 @@ class P1PreviewToolStageTests(unittest.TestCase):
         self.assertNotIn("exec(", stage.stage_preview_bundle.__doc__ or "")
         self.assertEqual(stage.main([]), 2)
 
+    def test_pinned_preview_hashes_match_observed_audit_and_are_64_digits(self):
+        from src.phase5_preview_abi_audit import PREVIOUS_SHA256
+
+        stage.validate_preview_pins()
+        shared = {
+            "parser_engine": "vllm/parser/engine/parser_engine.py",
+            "parser_qwen3": "vllm/parser/qwen3.py",
+            "streaming_parser": "vllm/parser/engine/streaming_parser_engine.py",
+            "responses_serving": "vllm/entrypoints/openai/responses/serving.py",
+        }
+        for key, filename in shared.items():
+            with self.subTest(filename=filename):
+                self.assertEqual(stage.PINNED_PREIMAGES[filename], PREVIOUS_SHA256[key])
+        for pin in stage.PINNED_PREIMAGES.values():
+            self.assertRegex(pin, r"^[0-9a-f]{64}$")
+        with patch.dict(stage.PINNED_PREIMAGES, {shared["parser_qwen3"]: "123abc"}):
+            with self.assertRaisesRegex(stage.StageBlocked, "INVALID_PREVIEW_SHA_PIN"):
+                stage.validate_preview_pins()
+
+    def test_sanitized_first_rejected_hunk_location(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "vllm/parser/qwen3.py.rej"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "--- vllm/parser/qwen3.py\n"
+                "+++ vllm/parser/qwen3.py\n"
+                "@@ -294,7 +294,10 @@\n"
+                "-private test data must never leak\n"
+            )
+            self.assertEqual(
+                stage.first_rejected_hunk(Path(tmp)),
+                "vllm/parser/qwen3.py:old_line_294",
+            )
+
     def test_python_source_is_parseable(self):
         source = Path(stage.__file__).read_text()
         ast.parse(source)

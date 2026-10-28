@@ -12,6 +12,7 @@ import ast
 import hashlib
 import importlib.util
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -29,7 +30,7 @@ PATCH_DIR = Path(__file__).resolve().parent / "preview_p1_patches"
 # not from blazux's v0.32 source. Any version drift blocks staging.
 PINNED_PREIMAGES = {
     "vllm/parser/engine/parser_engine.py": "f837bd5ae7bf759732a7d829209f93444b5692746d981509630c9bd3fcb39edb",
-    "vllm/parser/qwen3.py": "8a7ee658322de7b736ea5b0f802d70dd07a124b5878b4af61d35fb",
+    "vllm/parser/qwen3.py": "8a7ee658322de7b736ea5b0f802d70dd07a124b5878b4f8ad2f99eca8e1d35fb",
     "vllm/parser/engine/streaming_parser_engine.py": "d00aba98ad26a2593e022a1faf5d048348d892822f75be40d19cf1dd522570f2",
     "vllm/parser/engine/parser_engine_config.py": "f7350e0ca9124001684f1f874ee72bf6a34932d3e4b84cc84567bbccf2f3e4b9",
     "vllm/entrypoints/openai/responses/serving.py": "d5fdb9ca62fa767d6feb61f6b3f5280f288051eea8605d27afa698cc00067968",
@@ -133,8 +134,16 @@ def find_installed_preview() -> Path:
     return root.parent
 
 
+def validate_preview_pins() -> None:
+    """Catch malformed static pins before blaming actual Preview source drift."""
+    for pin in PINNED_PREIMAGES.values():
+        if len(pin) != 64 or any(c not in "0123456789abcdef" for c in pin):
+            raise StageBlocked("INVALID_PREVIEW_SHA_PIN")
+
+
 def read_preview_sources(site: Path, touched: set[str]) -> dict[str, bytes]:
     """Snapshot only exact allowlisted Python files, with strict pinned hashes."""
+    validate_preview_pins()
     files = {}
     package = site / "vllm"
     if package.is_symlink() or not package.is_dir():
@@ -201,6 +210,24 @@ def check_implemented_hooks(root: Path) -> None:
         raise StageBlocked("PATCHED_ARGUMENT_VALIDATOR_MISSING")
 
 
+def first_rejected_hunk(sandbox: Path) -> str:
+    """Reveal only an allowlisted source filename and old line number, never code."""
+    for path in sorted(sandbox.rglob("*.rej")):
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_PATCH_BYTES:
+            continue
+        filename = path.relative_to(sandbox).as_posix()
+        if not filename.endswith(".rej") or filename[:-4] not in ALLOWED_FILES:
+            continue
+        try:
+            rejected = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        match = re.search(r"^@@ -(\d+)(?:,\d+)? \+\d+", rejected, re.M)
+        # The output is bounded, non-sensitive source locator information.
+        return filename[:-4] + (":old_line_" + match.group(1) if match else "")
+    return "UNKNOWN_ALLOWLISTED_HUNK"
+
+
 def stage_preview_bundle(site: Path, directory: Path = PATCH_DIR) -> dict:
     """Apply blazux source to TEMP COPIES only; never import or modify vllm."""
     patches, touched = read_patch_bundle(directory)
@@ -224,8 +251,10 @@ def stage_preview_bundle(site: Path, directory: Path = PATCH_DIR) -> dict:
             except (OSError, subprocess.TimeoutExpired) as exc:
                 raise StageBlocked("PATCH_TOOL_FAILED") from exc
             if result.returncode != 0:
-                # Do not leak source paths or patch fragments from stderr/stdout.
-                raise StageBlocked(f"PREVIEW_PATCH_{index}_CONTEXT_MISMATCH")
+                # Do not print patch stdout/stderr or source body; only a public
+                # allowlisted relative path and rejected hunk's old line number.
+                detail = first_rejected_hunk(sandbox)
+                raise StageBlocked(f"PREVIEW_PATCH_{index}_CONTEXT_MISMATCH:{detail}")
         for name in touched:
             path = sandbox / name
             if not path.is_file() or path.is_symlink() or path.stat().st_size > MAX_SOURCE_BYTES:

@@ -135,7 +135,8 @@
     "2026-10-28 P1 PLE CPU phase timings code/test on Phase6 branch: legacy gather counters preserved, opt-in normalize/dedup/worker-result-wait/CPU-stage timings; H2D/NVMe explicitly NOT_INSTRUMENTED. New code DGX_NOT_RUN; existing service and blazux runtime NOT_APPLIED; offline test needs exact-SHA execution.",
     "2026-10-28 P1 PLE disposable pinned-image CPU-only runner added, with explicit --execute and SHA gate, no serving container exec, no GPU/network/model. New runner itself DGX_NOT_RUN; source verification and isolated CPU test require operator execution at exact new SHA.",
     "2026-10-28 operator DGX at exact 47c8aa819bcdca5c6938831a091190bea075610a confirmed PLE phase stats CPU (24 parallel calls, bytes identical) + Phase4 four flag combinations + Phase6 147/147 and Source227/227. Tiny synthetic CPU medians OFF 116.606us / ON 114.607us are not a performance improvement claim. P1 PLE CPU_VERIFIED only, not deployed. New docs plus optional p1-offline one-container batch of existing synthetic Tool/Responses/Prefix/MTP contracts and preview source audit; new HEAD DGX_NOT_RUN. No service/GPU/model/API/benchmark operation.",
-    "2026-10-28 DGX exact 389903179f9ce81b2f846c657b877b190750e3c1 P1 p1-offline bundled CPU: Phase6 147/147, source227/227, PLE byte-exact/concurrency24/Phase4 4 flags, Phase5 synthetic 14/14 PASS; installed Preview parser AST hashes confirmed but patch hooks missing. New pinned blazux v0.32 4-source-patch family and Preview temporary-only no-write source staging introduced; newly committed source DGX_NOT_RUN, actual Preview patch context unknown, runtime/API not applied. No GPU/model/service/CI/PR/merge."
+    "2026-10-28 DGX exact 389903179f9ce81b2f846c657b877b190750e3c1 P1 p1-offline bundled CPU: Phase6 147/147, source227/227, PLE byte-exact/concurrency24/Phase4 4 flags, Phase5 synthetic 14/14 PASS; installed Preview parser AST hashes confirmed but patch hooks missing. New pinned blazux v0.32 4-source-patch family and Preview temporary-only no-write source staging introduced; newly committed source DGX_NOT_RUN, actual Preview patch context unknown, runtime/API not applied. No GPU/model/service/CI/PR/merge.",
+    "2026-10-28 DGX exact 4efed48136278acb195231bb2b1a79a91ce62c5f: Phase6 157/157 + Source233/233 + P1 PLE/Phase4 + Phase5 synthetic 14/14 + Preview audit PASS; stage BLOCKED_NOT_APPLIED PREVIEW_SHA_DRIFT due assistant hardcoded qwen3.py SHA being 54 chars instead of observed 64 chars. Correct pin and add preflight static pin/audit sync regression and allowlisted first rejected patch hunk locator. New head not run on DGX; no GPU/service/model/API/CI/PR changes."
   ],
   "files": [
     {
@@ -411,7 +412,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "e34d1bdbae0fe0c2b80b137d5b244b24dc5cc362"
+      "blob_sha": "b2e096c3f57ab87409301c8f52a821e5fc13161f"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -431,7 +432,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "08fd9fe9e1536a14d7c15366e3cec512efde0225"
+      "blob_sha": "bc4802ed5e7821fcf0d72778658e5a15aa232835"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -1011,7 +1012,7 @@
     {
       "path": "src/preview_p1_tool_responses_stage.py",
       "mode": "100644",
-      "blob_sha": "4b30fa9106d4b9065bf1a963549bd98d72fdd557"
+      "blob_sha": "ab31d37b1352afbab2a6c9f803e9616defc3b8d5"
     },
     {
       "path": "src/recipe/__init__.py",
@@ -1206,7 +1207,7 @@
     {
       "path": "tests/test_blazux_phase6_preview_p1_stage.py",
       "mode": "100644",
-      "blob_sha": "d7e59de6f7473ce652f940b3cfc445107b31cd07"
+      "blob_sha": "aae18320358d959d815dfface4bcc869e04388dc"
     },
     {
       "path": "tests/test_blazux_phase6_readonly_preflight.py",
