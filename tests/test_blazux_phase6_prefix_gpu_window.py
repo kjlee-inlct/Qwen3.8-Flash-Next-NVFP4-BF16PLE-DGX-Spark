@@ -581,6 +581,43 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertIn("snapshot_tap=read_candidate_snapshot_events", src)
         self.assertIn('"physical_mapping_and_reuse_verified": False', src)
 
+    def test_request_epoch_metadata_survives_sanitized_log_tap(self):
+        payload = "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps({
+            "schema": 1, "phase": "before_preprocess",
+            "request_epoch_ordinal": 2, "ordinal": 1,
+            "status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+            "samples": [{"state_sha256": "a" * 64,
+                         "group_id": 2, "physical_block_id": 7,
+                         "layer_sha256_prefix": "b" * 16,
+                         "state_kind_index": 0,
+                         "block_boundary_tokens": 6400}],
+        })
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            found = gpu.read_candidate_snapshot_events()
+        self.assertEqual(found[0]["request_epoch_ordinal"], 2)
+        self.assertEqual(len(found[0]["samples"]), 1)
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            summary = gpu.read_candidate_observer()
+        self.assertEqual(summary["candidate_state_snapshot_records"][0]
+                         ["request_epoch_ordinal"], 2)
+        self.assertFalse(summary["physical_mapping_and_reuse_verified"])
+
+    def test_invalid_epoch_not_promoted_into_request_correlation(self):
+        payload = "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps({
+            "schema": 1, "phase": "before_preprocess",
+            "request_epoch_ordinal": True, "ordinal": 1,
+            "samples": [],
+        })
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            got = gpu.read_candidate_snapshot_events()
+        self.assertIsNone(got[0]["request_epoch_ordinal"])
+
     def test_actual_stage_observer_abi_is_checked_without_docker(self):
         with tempfile.TemporaryDirectory() as td:
             stage = Path(td)

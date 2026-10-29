@@ -510,8 +510,11 @@ def read_candidate_snapshot_events() -> list[dict]:
                 "layer_sha256_prefix", "state_kind_index",
                 "state_kind", "block_boundary_tokens", "observed_computed_tokens",
                 "natural_byte_length", "gpu_completed_before_read")})
+        epoch = item.get("request_epoch_ordinal")
         observed.append({
             "phase": item["phase"], "ordinal": item.get("ordinal"),
+            "request_epoch_ordinal": (
+                epoch if type(epoch) is int and 0 <= epoch <= 8 else None),
             "status": item.get("status"), "samples": samples})
         if len(observed) >= 128:
             break
@@ -650,6 +653,10 @@ def read_candidate_observer() -> dict:
         "candidate_state_snapshot_full_cold_hit_pair_verified": False,
         "candidate_state_snapshot_records": [
             {"phase":e.get("phase"), "ordinal":e.get("ordinal"),
+             "request_epoch_ordinal": (
+                 e.get("request_epoch_ordinal")
+                 if type(e.get("request_epoch_ordinal")) is int
+                 and 0 <= e["request_epoch_ordinal"] <= 8 else None),
              "status":e.get("status"),
              "samples": [
                  {field: sample.get(field) for field in (

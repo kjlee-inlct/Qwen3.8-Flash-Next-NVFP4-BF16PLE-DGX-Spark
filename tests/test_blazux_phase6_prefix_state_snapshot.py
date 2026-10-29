@@ -1,4 +1,5 @@
 """Candidate-only state content hook. No GPU needed for structural tests."""
+import json
 import os
 import unittest
 from unittest.mock import patch
@@ -6,6 +7,10 @@ from src import p1_prefix_state_snapshot as snap
 
 
 class MambaHybridModelState:
+    def add_request(self, req_index, new_req_data):
+        self.steps.append("request_added")
+        return "request_added"
+
     def __init__(self):
         self.steps = []
 
@@ -34,10 +39,12 @@ class Tests(unittest.TestCase):
     def setUp(self):
         snap._seen.clear()
         snap._contexts.clear()
+        snap._request_epochs.clear()
 
     def tearDown(self):
         snap._seen.clear()
         snap._contexts.clear()
+        snap._request_epochs.clear()
 
     def test_disabled_by_default_does_not_wrap_or_touch_gpu(self):
         class Disabled(MambaHybridModelState):
@@ -115,6 +122,64 @@ class Tests(unittest.TestCase):
         self.assertIsNone(snap._target_column(9503, 1024))
         self.assertIsNone(snap._target_column(True, 1600))
 
+    def test_snapshot_budget_rearmed_by_add_request_not_repeated_forward(self):
+        Instrumented = type("MambaHybridModelState", (MambaHybridModelState,), {})
+        i = Instrumented()
+        with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
+            snap.install(Instrumented)
+        values = {"status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+                  "block_boundary_tokens": 6400,
+                  "samples": [{"state_sha256": "a" * 64}]}
+        cfg = object()
+        def consume_forward():
+            i.preprocess_state(FakeBatch(), ["table"], cfg, [9503])
+            i.postprocess_state([0], 1, [9503])
+        with patch.object(snap, "_sample", return_value=values), \
+                patch("builtins.print") as emit:
+            self.assertEqual(i.add_request(0, None), "request_added")
+            for _ in range(12):
+                consume_forward()  # Cold prefill + decoding.
+            self.assertEqual(emit.call_count, 4)
+            self.assertEqual(i.add_request(1, None), "request_added")
+            consume_forward()  # First HIT request.
+            self.assertEqual(emit.call_count, 6)
+            consume_forward()
+            self.assertEqual(emit.call_count, 8)
+            consume_forward()
+            self.assertEqual(emit.call_count, 8)
+        raw = [json.loads(call.args[0].split(snap.PREFIX, 1)[1])
+               for call in emit.call_args_list]
+        by_epoch = {(x["request_epoch_ordinal"], x["phase"])
+                    for x in raw}
+        self.assertEqual(by_epoch, {
+            (1, "before_preprocess"), (1, "after_postprocess"),
+            (2, "before_preprocess"), (2, "after_postprocess")})
+        self.assertTrue(all(not x["content_reuse_verified"] for x in raw))
+        self.assertTrue(all(x["ordinal"] <= snap.MAX_EVENTS_PER_PHASE
+                            for x in raw))
+
+    def test_epoch_cap_blocks_excess_without_crashing_model(self):
+        Instrumented = type("MambaHybridModelState", (MambaHybridModelState,), {})
+        i = Instrumented()
+        with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
+            snap.install(Instrumented)
+        for _ in range(snap.MAX_REQUEST_EPOCHS + 3):
+            self.assertEqual(i.add_request(0, None), "request_added")
+        self.assertEqual(snap._epoch(i), snap.MAX_REQUEST_EPOCHS + 1)
+        self.assertFalse(snap._capture_allowed(i, "before_preprocess"))
+
+    def test_epoch_is_only_advanced_after_successful_model_add(self):
+        class Failing(MambaHybridModelState):
+            def add_request(self, req_index, new_req_data):
+                raise ValueError("original add failed")
+        Failing.__name__ = "MambaHybridModelState"
+        with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
+            snap.install(Failing)
+        i = Failing()
+        with self.assertRaisesRegex(ValueError, "original add failed"):
+            i.add_request(0, None)
+        self.assertEqual(snap._epoch(i), 0)
+
     def test_bad_mapping_error_does_not_reach_model_state(self):
         class NoContext:
             _mamba_ctx = None
@@ -136,7 +201,9 @@ class Tests(unittest.TestCase):
         self.assertIn('"content_reuse_verified":false', text)
 
     def test_sample_limits_are_small_and_explicit(self):
-        self.assertLessEqual(snap.MAX_EVENTS_PER_PHASE, 8)
+        self.assertLessEqual(snap.MAX_EVENTS_PER_PHASE, 2)
+        self.assertLessEqual(snap.MAX_REQUEST_EPOCHS, 8)
+        self.assertLessEqual(snap.MAX_TOTAL_EVENTS, 40)
         self.assertLessEqual(snap.MAX_STATES_PER_EVENT, 4)
         self.assertLessEqual(snap.MAX_STATE_BYTES, 32 * 1024 * 1024)
 

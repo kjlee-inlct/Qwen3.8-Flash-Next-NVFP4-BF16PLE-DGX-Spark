@@ -14,7 +14,11 @@ import json
 import os
 
 PREFIX = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
-MAX_EVENTS_PER_PHASE = 8
+# Per active request epoch, not per model lifetime. Cold prefill alone used
+# the old global 8-event budget before any HIT request was observed.
+MAX_EVENTS_PER_PHASE = 2
+MAX_REQUEST_EPOCHS = 8
+MAX_TOTAL_EVENTS = 40
 MAX_STATE_BYTES = 32 * 1024 * 1024
 MAX_STATES_PER_EVENT = 4
 # Actual last GPU run observed prefix-hit blocks equal to 6400 tokens.
@@ -23,6 +27,7 @@ MAX_GROUPS = 8
 MAX_LAYERS_PER_GROUP = 64
 _seen = {}
 _contexts = {}
+_request_epochs = {}
 
 
 def _int(value, *, minimum=0, maximum=10_000_000):
@@ -197,15 +202,48 @@ def _sample(instance, *, phase, mapping, computed, tables, kv_config):
     return result
 
 
-def _emit(phase, sample):
-    ordinal = _seen.get(phase, 0) + 1
-    _seen[phase] = ordinal
+def _epoch(instance):
+    return _request_epochs.get(id(instance), 0)
+
+
+def _capture_allowed(instance, phase):
+    epoch = _epoch(instance)
+    return (
+        (id(instance) in _request_epochs or len(_request_epochs) < 8)
+        and 0 <= epoch <= MAX_REQUEST_EPOCHS
+        and _seen.get((epoch, phase), 0) < MAX_EVENTS_PER_PHASE
+        and sum(_seen.values()) < MAX_TOTAL_EVENTS
+    )
+
+
+def _advance_request_epoch(instance):
+    """After a successful add_request, rearm only that candidate request.
+
+    Strictly bounded per-instance and globally. Never log a real req_index.
+    """
+    key = id(instance)
+    if key not in _request_epochs and len(_request_epochs) >= 8:
+        # This diagnostic must never break a healthy model request.
+        # Leave the over-cap instance uninstrumented.
+        return
+    _request_epochs[key] = min(
+        _request_epochs.get(key, 0) + 1, MAX_REQUEST_EPOCHS + 1)
+
+
+def _emit(phase, sample, *, epoch=0):
+    if (type(epoch) is not int or epoch < 0 or epoch > MAX_REQUEST_EPOCHS
+            or sum(_seen.values()) >= MAX_TOTAL_EVENTS):
+        return
+    key = (epoch, phase)
+    ordinal = _seen.get(key, 0) + 1
     if ordinal > MAX_EVENTS_PER_PHASE:
         return
+    _seen[key] = ordinal
     sample.update({
         "schema": 1,
         "phase": phase,
         "ordinal": ordinal,
+        "request_epoch_ordinal": epoch,
         "provenance": "CANDIDATE_GPU_TENSOR_READ_NOT_CACHE_HIT_PROOF",
         "content_reuse_verified": False,
         "actual_cold_hit_pair_verified": False,
@@ -223,8 +261,16 @@ def install(cls):
     pre = getattr(cls, "preprocess_state")
     post = getattr(cls, "postprocess_state")
     align = getattr(cls, "_ensure_align_ctx")
+    add = getattr(cls, "add_request")
     if getattr(pre, "_p1_content_probe", False):
         return
+
+    @functools.wraps(add)
+    def add_wrapper(self, req_index, new_req_data):
+        result = add(self, req_index, new_req_data)
+        _advance_request_epoch(self)
+        return result
+
 
     @functools.wraps(pre)
     def pre_wrapper(self, input_batch, block_tables, kv_cache_config,
@@ -246,13 +292,14 @@ def install(cls):
         result = align(self, kv_cache_config, mamba_group_ids, block_tables)
         pending = _contexts.get(id(self))
         if (pending is not None and pending[1] is kv_cache_config
-                and _seen.get("before_preprocess", 0) < MAX_EVENTS_PER_PHASE):
+                and _capture_allowed(self, "before_preprocess")):
             snapshot = _sample(
                 self, phase="before_preprocess",
                 mapping=pending[2], computed=pending[3],
                 tables=pending[0], kv_config=pending[1])
             if snapshot.get("block_boundary_tokens") is not None:
-                _emit("before_preprocess", snapshot)
+                _emit("before_preprocess", snapshot,
+                      epoch=_epoch(self))
         return result
 
     @functools.wraps(post)
@@ -260,18 +307,21 @@ def install(cls):
         result = post(self, idx_mapping, num_sampled, num_computed_tokens)
         pair = _contexts.get(id(self))
         if (pair is not None and num_computed_tokens is not None
-                and _seen.get("after_postprocess", 0) < MAX_EVENTS_PER_PHASE):
+                and _capture_allowed(self, "after_postprocess")):
             snapshot = _sample(
                 self, phase="after_postprocess",
                 mapping=idx_mapping, computed=num_computed_tokens,
                 tables=pair[0], kv_config=pair[1])
             if snapshot.get("block_boundary_tokens") is not None:
-                _emit("after_postprocess", snapshot)
+                _emit("after_postprocess", snapshot,
+                      epoch=_epoch(self))
         return result
 
     pre_wrapper._p1_content_probe = True
     align_wrapper._p1_content_probe = True
     post_wrapper._p1_content_probe = True
+    add_wrapper._p1_content_probe = True
+    setattr(cls, "add_request", add_wrapper)
     setattr(cls, "preprocess_state", pre_wrapper)
     setattr(cls, "_ensure_align_ctx", align_wrapper)
     setattr(cls, "postprocess_state", post_wrapper)

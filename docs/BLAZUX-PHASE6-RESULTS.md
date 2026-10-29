@@ -1,5 +1,15 @@
 # Phase 6 evidence ledger
 
+## 2026-10-30 DGX actual P1 candidate GPU and original recovery — STRICT_NUMERIC_GATE_NOT_PASS
+
+- User-provided DGX terminal log on feature HEAD `d0f87f279cada71f9d8bbb15f581106b827e8334`: targeted CPU **39+14+14+10+9+12+2=100/100 PASS**, Source Manifest **277/277 PASS**, image ABI SHA `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`, Stage and CPU/source preflight PASS, original same-ID and HTTP before stop PASS.
+- Isolated candidate GPU started and HTTP ready. Four serial requests: **150 output token IDs identical**, Prefix HIT token deltas **[0,6400,6400,6400]**, MTP2 accepted-draft-token delta **+400**. Physical entries **40/40 valid**, candidate physical metadata partial proof.
+- Real GPU SHA256 sampled **16 snapshot events** (8 before/8 after) with **64 bounded GDN/Conv samples**, no capture errors, source group **2**, physical block **7**, selected two layers' bfloat16 Conv and float32 Temporal state hashes stable through the first Cold request from 6400 to 9521 computed tokens. **All 16 events occurred during request 1 (Cold)** because former global 8/phase capture budget was exhausted before requests 2–4; HIT request windows had 0 snapshots and `candidate_snapshot_request_correlation.status=INCONCLUSIVE_COLD_HIT_STATE_WINDOWS`, matches=0, mismatches=0. This is **missing evidence**, not a proven mismatch or cache correctness.
+- Numeric strict tolerance `1e-4`: Cold-vs-HIT max abs delta **0.00029145419830456376**, repeat-vs-repeat max **0.0003423040616326034**, *No-HIT control-vs-control* **0.00028011936228722334**, itself over strict. `status=INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE`; do not relax gate or infer a prefix-specific defect. Candidate GPU exit **2** due to oracle not verified.
+- Original same Docker ID and HTTP `/health`+`/v1/models` explicitly **RESTORED_PASS**; original is running; isolated candidate cleanup confirmed by caller. Original was temporarily stopped/recovered in the approved single GPU window; no claimed new/current service state beyond this receipt.
+- Fix on next feature HEAD: make GPU state snapshot **two events per phase per newly registered add_request epoch**, global max 40 events across max eight request epochs, without exposing real request IDs. This re-arms the probe for HIT requests but does not change source/state patch, numeric gate, full-state reuse status, or production service. New CPU failure-injection tests verify Cold forward repetitions cannot exhaust subsequent HIT request budget. New HEAD CPU/GPU **NOT_RUN**.
+- Detailed: [Candidate Snapshot Diagnostics](P1-CANDIDATE-STATE-SNAPSHOT-20261030.md).
+
 ## 2026-10-30 P1 serial HTTP request window attribution prepared — CPU NOT_RUN
 
 - P1 candidate GPU oracle now snapshots Docker hash events before Cold and after each of four serial requests, bounded and fail-closed on log churn. Identity correlation compares the Cold post-state and prefix-HIT pre-state at observed 6400-token physical block; even matching samples do not set full_state_reuse_verified. The previous no-HIT 1e-4 numeric gate is not bypassed.
