@@ -39,3 +39,10 @@
 - **추가 임시 규칙:** 사용자는 tmux에서 콘솔 복사·붙여넣기가 불편하다고 했으므로 **tmux를 필수 조건으로 강제하지 않는다**. 일반 SSH 셸에서 `( set -Eeuo pipefail; ... )` **서브셸**로 실행하여 중간 실패 시 로그인 셸 전체가 종료되지 않도록 한다. 명령은 안전한 독립 확인을 합쳐 왕복을 최소화하되 최종 운영 복구는 항상 별도 확인한다.
 - 대화가 새로 시작됐다는 이유로 P1 메트릭 oracles, docs, source manifest, tests를 단순 반복 생성하지 않는다. **실제 기능 증거가 증가하는 작업만** 우선한다.
 - **PR/merge 권한 경계:** 이번 사용자 요청의 문서 인계 PR 처리처럼 명시적으로 요청된 경우에도 **`main`에 기능 코드·실험 후보를 병합하지 않는다**. 현재 P1 기능은 배포 미승인이다. 다음 세션에 자동 PR/merge/CI 실행 권한이 부여되는 것은 아니다.
+
+## 2026-10-29 — 후보 전용 P1 active ABI observer 소스 준비 (신규 HEAD DGX_NOT_RUN)
+
+- 원래 `/tmp/p1-prefix-stage.2dSPVPR6`의 두 소스 SHA·0700/0600을 유지한다. `src/p1_prefix_live_observer.py`를 정지한 후보 컨테이너의 `vllm/_p1_prefix_live_observer.py`로만 복사하며, 기존 Stage 코드에 메서드 후처리 hook을 추가한 후보별 사본 두 개의 SHA를 Docker readback으로 별도 검증한다. 원본 운영/이미지에 hook을 설치하지 않는다.
+- 실제 실행 시 `Scheduler._mamba_block_aligned_split`, `MambaHybridModelState.add_request` 호출 이후 런타임 인스턴스의 block-size/group 메타데이터, state-index GPU 텐서 shape/stride/storage bounds 및 제한된 slot seed 스칼라를 모델 텍스트 없이 Docker stdout에서 계측한다. scalar `.item()`은 후보 GPU 동기화를 동반하므로 **candidate-only diagnostic**이고 성능 벤치에 사용하면 안 된다. 단발성 수집 및 최대 12 이벤트/프로세스 제한.
+- 로그로부터 집계하는 `read_candidate_observer()`는 실제 후보 프로세스 이벤트 유무를 구분한다. sampled seed + tensor layout은 **전체 logical→physical block table의 내용·재사용 보존·group별 state allocation bounds를 증명하지 못함**. Physical mapping과 MTP acceptance는 계속 false로 반환하며, API 오라클만 PASS여도 P1 전체 return 0을 막는다. 이 한계를 해결할 추가 vLLM 내부 table 및 speculative acceptance hook은 실제 런타임 증거에 따라 설계해야 한다.
+- 신규 소스와 CPU mock 시험은 GitHub 코드 준비일 뿐 현재 DGX CPU/GPU/HTTP **NOT_RUN**. 마지막 실 GPU 검증 SHA는 계속 `c342e033c6e601f374520eefb6a9d0e9277b54ef`; 사용자의 새 운영 중지 승인 없이 `--execute` 하지 않는다. `main` 및 기존 운영 미변경.

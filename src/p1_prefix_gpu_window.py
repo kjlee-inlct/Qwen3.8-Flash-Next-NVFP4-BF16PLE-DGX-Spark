@@ -362,15 +362,83 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
                 != target_mounts):
         raise Blocked("CANDIDATE_MOUNT_DRIFT")
 
+    # The host Stage remains immutable. Instrument only the stopped candidate.
+    # Observer is imported by two post-class hooks only in the candidate layer.
+    observer_source = REPO / "src/p1_prefix_live_observer.py"
+    observer_bytes = observer_source.read_bytes()
+    if not observer_bytes or len(observer_bytes) > 200_000:
+        raise Blocked("CANDIDATE_OBSERVER_SOURCE_INVALID")
+    docker_cp_to_stopped_candidate(root, "_p1_prefix_live_observer.py",
+                                   observer_bytes)
+    verify_candidate_code(root, "_p1_prefix_live_observer.py",
+                          hashlib.sha256(observer_bytes).hexdigest())
+    suffixes = {
+        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
+        "scheduler.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(Scheduler, '_mamba_block_aligned_split', 'scheduler')\n",
+    }
     for name, (relative, digest) in PATCHES.items():
         target_dir = root + "/" + relative.rsplit("/", 1)[0]
-        source_file = STAGE / name
-        data = source_file.read_bytes()
+        data = (STAGE / name).read_bytes()
         if len(data) > 2_000_000 or hashlib.sha256(data).hexdigest() != digest:
             raise Blocked("CANDIDATE_STAGE_SHA256_DRIFT")
-        docker_cp_to_stopped_candidate(target_dir, name, data)
-        verify_candidate_code(target_dir, name, digest)
-    print("P1_PREFIX_CANDIDATE_STOPPED_PATCH_SHA256_VERIFIED_NOT_GPU")
+        # Fail before original stop if the appended hook breaks Python syntax.
+        import ast
+        candidate_bytes = data + suffixes[name].encode("utf-8")
+        try:
+            ast.parse(candidate_bytes.decode("utf-8"))
+        except (SyntaxError, UnicodeError):
+            raise Blocked("CANDIDATE_INSTRUMENTED_SOURCE_INVALID") from None
+        docker_cp_to_stopped_candidate(target_dir, name, candidate_bytes)
+        verify_candidate_code(target_dir, name,
+                              hashlib.sha256(candidate_bytes).hexdigest())
+    print("P1_PREFIX_CANDIDATE_STOPPED_PATCH_AND_OBSERVER_SHA256_VERIFIED_NOT_GPU")
+
+
+def read_candidate_observer() -> dict:
+    """Collect bounded actual engine/worker events from candidate Docker logs.
+
+    Metadata and the sampled scalar seed cannot prove full logical-to-physical
+    state reuse, per-group allocation or MTP speculative acceptance.
+    """
+    try:
+        cp = subprocess.run(["docker", "logs", "--tail", "6000", NAME],
+                            capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("CANDIDATE_OBSERVER_LOG_UNAVAILABLE") from None
+    if cp.returncode:
+        raise Blocked("CANDIDATE_OBSERVER_LOG_UNAVAILABLE")
+    prefix = "P1_PREFIX_ACTIVE_ABI_JSON:"
+    events = []
+    for line in (cp.stdout + "\n" + cp.stderr).splitlines():
+        if prefix not in line:
+            continue
+        try:
+            item = json.loads(line.split(prefix, 1)[1])
+        except ValueError:
+            continue
+        if isinstance(item, dict) and item.get("schema") == 1 and (
+                item.get("kind") in ("scheduler", "mamba")):
+            events.append(item)
+    mamba = [e for e in events if e["kind"] == "mamba"]
+    sched = [e for e in events if e["kind"] == "scheduler"]
+    return {
+        "active_scheduler_event_count": len(sched),
+        "active_mamba_add_request_event_count": len(mamba),
+        "mamba_state_seed_observed_count":
+            sum(e.get("state_seed_observed") is True for e in mamba),
+        "mamba_tensor_layout_observed_count":
+            sum(bool(e.get("tensor_metadata")) for e in mamba),
+        "scheduler_effective_blocks": [
+            e.get("self_block", {}).get("block_size") for e in sched[:4]],
+        "mamba_effective_cache_blocks": [
+            e.get("cache_config", {}) for e in mamba[:4]],
+        "mamba_sampled_seeds": [
+            e.get("state_seed_value") for e in mamba[:8]
+            if e.get("state_seed_observed") is True],
+        "physical_mapping_and_reuse_verified": False,
+        "mtp_speculative_acceptance_observed": False,
+        "provenance": "LIVE_CANDIDATE_WORKER_STDOUT_NOT_STATIC_AST",
+    }
 
 
 def candidate_ids() -> list[str]:
@@ -502,10 +570,18 @@ def run(argv: list[str] | None = None) -> int:
                 result = oracle.run_oracle(model, PORT)
             except oracle.OracleBlocked as exc:
                 raise Blocked("CANDIDATE_ORACLE_" + str(exc)) from None
+            runtime_abi = read_candidate_observer()
+            result["active_candidate_abi"] = runtime_abi
+            result["active_mamba_physical_mapping_observed"] = (
+                runtime_abi["physical_mapping_and_reuse_verified"])
             print(json.dumps(result, sort_keys=True))
             print("P1_PREFIX_GPU_ORACLE_" + result["status"])
             if not result["status"].startswith("PASS_"):
                 raise Blocked("ORACLE_NOT_VERIFIED_" + result["status"])
+            # Strict API equality alone is not the full P1 physical+MTP gate.
+            if not (runtime_abi["physical_mapping_and_reuse_verified"]
+                    and runtime_abi["mtp_speculative_acceptance_observed"]):
+                raise Blocked("ACTIVE_PHYSICAL_MAPPING_OR_MTP_NOT_PROVEN")
         finally:
             # NEVER restore the original while candidate might still own GPU memory.
             # A cleanup failure leaves original stopped and requires explicit --recover.

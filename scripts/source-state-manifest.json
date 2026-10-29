@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 263,
+  "tracked_file_count": 265,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -441,7 +441,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "333980964bcd77ec48c6d06e95c9199b387e1bfc"
+      "blob_sha": "2e828d7bb78b78054d85baa1c71d0061b0e5506c"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -936,7 +936,12 @@
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "4e7e324aa5db99889dc97f036d9e4af9a4c900c8"
+      "blob_sha": "6ff33382adbc3cbc6854c2bf36f47d3878ec01ce"
+    },
+    {
+      "path": "src/p1_prefix_live_observer.py",
+      "mode": "100644",
+      "blob_sha": "cbcf90203b26f6d4b6a3dac1de717adea9f5308c"
     },
     {
       "path": "src/p1_prefix_stage_files.py",
@@ -1332,6 +1337,11 @@
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
       "blob_sha": "2585e53904649f5f7dc7118d3b988e94378eebc1"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_live_observer.py",
+      "mode": "100644",
+      "blob_sha": "e2d3cdad7bc8d81179b95ee2c6f103d0c4e6f980"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
