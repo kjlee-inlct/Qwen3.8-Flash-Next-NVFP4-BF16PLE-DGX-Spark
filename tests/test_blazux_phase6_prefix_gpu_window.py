@@ -105,6 +105,7 @@ class CandidateWindowTests(unittest.TestCase):
                     b"class MambaHybridModelState:\n"
                     b"    def _ensure_align_ctx(self): pass\n"
                     b"    def add_request(self): pass\n"
+                    b"    def preprocess_state(self): pass\n"
                     if name == "mamba_hybrid.py" else
                     b"class Scheduler:\n"
                     b"    def _mamba_block_aligned_split(self): pass\n"
@@ -438,6 +439,8 @@ class CandidateWindowTests(unittest.TestCase):
             (stage / "mamba_hybrid.py").write_text(
                 "class MambaHybridModelState:\n"
                 "    def add_request(self, req_index, new_req_data): pass\n"
+                "    def preprocess_state(self, input_batch, block_tables, "
+                "kv_cache_config, num_computed_tokens): pass\n"
                 "    def _ensure_align_ctx(self, kv_cache_config, "
                 "mamba_group_ids, block_tables): pass\n"
             )
@@ -455,6 +458,30 @@ class CandidateWindowTests(unittest.TestCase):
                     gpu.Blocked, "STAGE_OBSERVER_ABI_DRIFT_mamba_hybrid"):
                 gpu.verify_stage_observer_sites(stage)
 
+
+
+    def test_preprocess_observer_is_candidate_only_and_mapping_not_full_pass(self):
+        lines = "\\n".join("P1_PREFIX_ACTIVE_ABI_JSON:" + json.dumps(e)
+                          for e in [
+            {"schema": 1, "kind": "preprocess",
+             "batch_row_to_state_slot_observed": True,
+             "state_column_observed": True,
+             "physical_map_samples": [{
+                 "request_slot_to_table_row_verified": True,
+                 "physical_entry_observed": True,
+                 "physical_id_within_state_allocation": None,
+                 "block_size_matches_mamba_config": True}]},
+        ])
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=lines,
+                                            stderr="")):
+            result = gpu.read_candidate_observer()
+        self.assertEqual(result["active_preprocess_event_count"], 1)
+        self.assertEqual(result["batch_state_slot_mapping_observed_count"], 1)
+        self.assertEqual(result["batch_mapping_observed_physical_entries_count"], 1)
+        self.assertEqual(result["physical_id_allocation_unknown_count"], 1)
+        self.assertFalse(result["physical_mapping_observed_partial"])
+        self.assertFalse(result["physical_mapping_and_reuse_verified"])
 
     def test_wrapper_requires_exact_head_and_source_manifest(self):
         script = (Path(__file__).resolve().parents[1] /

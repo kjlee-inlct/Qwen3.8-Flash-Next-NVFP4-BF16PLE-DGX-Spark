@@ -38,7 +38,7 @@ _OBSERVED_ATTRS = frozenset((
     "static_forward_context", "kv_cache", "block_tables",
     "input_block_tables", "gpu", "_mamba_group_ids", "_mamba_ctx",
     "_align_mode", "_mamba_state_idx_gpu", "_p1_observer_mamba_tables",
-    "num_computed_tokens", "block_table_stride_req", "state_block_strides",
+    "num_computed_tokens", "num_reqs", "idx_mapping", "block_table_stride_req", "state_block_strides",
     "state_elem_sizes", "state_group_indices", "state_conv_widths",
 ))
 
@@ -231,7 +231,8 @@ def _remember_physical_tables(instance, args, kwargs, fn):
         _saved_mamba_tables.pop(id(instance), None)
 
 
-def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
+def _sample_physical(instance, request_idx, expected_col, mamba_block_size, *,
+                     batch_row=None):
     """Compare a sampled request state-slot / Mamba column with physical IDs.
 
     This verifies bounded table entries, not the SSM state contents or
@@ -255,32 +256,39 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
         # the input_batch permutation, never read [req_index, col] or claim
         # a matching physical block ID. Metadata is still useful evidence.
         batch_order = info.get("batch_order_rows") is True
+        mapped_row = (batch_row if type(batch_row) is int and batch_row >= 0
+                      else None)
+        resolved = batch_order and mapped_row is not None
         entry = {"group_id": gid, "group_block_sizes": group_sizes,
-                 "table_row_semantics": ("BATCH_ORDER_ROW_UNRESOLVED"
-                                         if batch_order else
-                                         "OPAQUE_WRAPPER_LEGACY_PROBE"),
-                 "request_slot_to_table_row_verified": False,
+                 "table_row_semantics": (
+                     "IDX_MAPPING_BATCH_ROW_OBSERVED" if resolved else
+                     "BATCH_ORDER_ROW_UNRESOLVED" if batch_order else
+                     "OPAQUE_WRAPPER_LEGACY_PROBE"),
+                 "request_slot_to_table_row_verified": resolved,
                  "state_allocation_blocks": allocated,
                  "state_allocation_complete": allocation.get(
                      "allocation_complete") is True,
                  "table_shape": shape,
                  "table_row_stride_elements": meta["element_strides"][0],
                  "table_within_allocation": meta["view_within_allocation"],
-                 "row_in_bounds": (None if batch_order else
-                                   0 <= request_idx < shape[0]),
+                 "row_in_bounds": (
+                     0 <= mapped_row < shape[0] if resolved else
+                     None if batch_order else 0 <= request_idx < shape[0]),
                  "column_in_bounds": 0 <= expected_col < shape[1],
                  "block_size_matches_mamba_config": (
                      None if not group_sizes or mamba_block_size is None
                      else all(x == mamba_block_size for x in group_sizes)),
                  "physical_entry_observed": False,
                  "physical_id_within_state_allocation": None}
-        if batch_order:
+        if batch_order and not resolved:
             entry["physical_read_skipped_reason"] = (
                 "BATCH_ROW_TO_REQUEST_SLOT_UNVERIFIED")
-        if (not batch_order and meta["view_within_allocation"]
-                and entry["row_in_bounds"] and entry["column_in_bounds"]):
+        if (meta["view_within_allocation"] and
+                entry["row_in_bounds"] and entry["column_in_bounds"]
+                and (not batch_order or resolved)):
             try:
-                block = _number(info["table"][request_idx, expected_col].item())
+                row = mapped_row if resolved else request_idx
+                block = _number(info["table"][row, expected_col].item())
                 if block is not None:
                     entry["physical_entry_observed"] = True
                     entry["physical_block_id"] = block
@@ -293,6 +301,63 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
     return snapshots
 
 
+def _preprocess_mapping_event(instance, fn, args, kwargs):
+    """Bounded candidate-only batch row -> persistent state-slot diagnostic.
+
+    Source ABI: preprocess_state(input_batch, block_tables, kv_cache_config,
+    num_computed_tokens) calls fused kernels with input_batch.idx_mapping.
+    GPU scalar reads are deliberately limited to 8 batch rows + one state
+    column + at most 8 group entries for an *observed* row. No state contents
+    or request IDs are logged. This cannot prove cache state reuse.
+    """
+    event = {"batch_row_to_state_slot_observed": False,
+             "state_column_observed": False, "physical_map_samples": [],
+             "batch_row_count": None, "idx_mapping_metadata": None}
+    try:
+        bound = inspect.signature(fn).bind_partial(instance, *args, **kwargs)
+        batch = bound.arguments.get("input_batch")
+        count = _number(_direct(batch, "num_reqs"))
+        indices = _direct(batch, "idx_mapping")
+        meta = _tensor_metadata(indices)
+        event["batch_row_count"] = count
+        event["idx_mapping_metadata"] = meta
+        if (count is None or count <= 0 or meta is None
+                or len(meta["shape"]) != 1 or not meta["view_within_allocation"]
+                or meta["shape"][0] < count):
+            event["mapping_reason"] = "BATCH_IDX_MAPPING_UNAVAILABLE"
+            return event
+        slots = _direct(instance, "_mamba_state_idx_gpu")
+        slot_meta = _tensor_metadata(slots)
+        if (slot_meta is None or len(slot_meta["shape"]) != 1
+                or not slot_meta["view_within_allocation"]):
+            event["mapping_reason"] = "MAMBA_STATE_SLOT_UNAVAILABLE"
+            return event
+        valid_slots = 0
+        for batch_row in range(min(count, 8)):
+            req_slot = _number(indices[batch_row].item())
+            if req_slot is None or not (0 <= req_slot < slot_meta["shape"][0]):
+                continue
+            valid_slots += 1
+            event["batch_row_to_state_slot_observed"] = True
+            state_col = _number(slots[req_slot].item())
+            if state_col is None or state_col < 0:
+                continue
+            event["state_column_observed"] = True
+            event["batch_row_sample"] = batch_row
+            event["state_slot_sample"] = req_slot
+            event["state_column_sample"] = state_col
+            mamba_bs = _number(_direct(_direct(instance, "cache_config"),
+                                       "mamba_block_size"))
+            event["physical_map_samples"] = _sample_physical(
+                instance, req_slot, state_col, mamba_bs, batch_row=batch_row)
+            return event
+        event["valid_batch_slot_mapping_count_bounded"] = valid_slots
+        event["mapping_reason"] = "NO_NONNEGATIVE_STATE_COLUMN_IN_SAMPLE"
+    except (TypeError, ValueError, AttributeError, IndexError, RuntimeError):
+        event["mapping_reason"] = "GPU_MAPPING_READ_UNAVAILABLE"
+    return event
+
+
 def _observe(kind, instance, fn, args, kwargs):
     event = {"schema": 1, "kind": kind, "active_class": type(instance).__name__,
              "active_module": type(instance).__module__,
@@ -301,6 +366,8 @@ def _observe(kind, instance, fn, args, kwargs):
     event["cache_config"] = _scalar_fields(cache)
     event["cache_groups"] = _groups(cache)
     event["instance_groups"] = _groups(instance)
+    if kind == "preprocess":
+        event.update(_preprocess_mapping_event(instance, fn, args, kwargs))
     if kind == "align_ctx":
         tables = _saved_mamba_tables.get(id(instance))
         if tables is None:
@@ -393,6 +460,7 @@ def _observe(kind, instance, fn, args, kwargs):
 def install(cls, method, kind):
     if (kind, method) not in (("mamba", "add_request"),
                               ("align_ctx", "_ensure_align_ctx"),
+                              ("preprocess", "preprocess_state"),
                               ("scheduler", "_mamba_block_aligned_split")):
         raise ValueError("UNAPPROVED_OBSERVER_SITE")
     fn = getattr(cls, method)

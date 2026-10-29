@@ -361,6 +361,108 @@ class Tests(unittest.TestCase):
         self.assertEqual(ordinals, [1, 2, 3, 4, 8, 16, 32, 64, 128])
         self.assertLessEqual(len(events), obs.MAX_EVENTS)
 
+
+    def test_actual_preprocess_batch_mapping_reads_only_mapped_gpu_row(self):
+        class Tensor:
+            shape = (3, 16)
+            device = "cuda:0"
+            def stride(self): return (16, 1)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            class Storage:
+                def nbytes(self): return 192
+            def untyped_storage(self): return self.Storage()
+            def __getitem__(self, key):
+                if key != (1, 3):
+                    raise AssertionError("request slot incorrectly used as batch row")
+                return Scalar(5)
+        class Indices:
+            shape = (3,)
+            device = "cuda:0"
+            def stride(self): return (1,)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            class Storage:
+                def nbytes(self): return 12
+            def untyped_storage(self): return self.Storage()
+            def __getitem__(self, row):
+                return Scalar((2, 7, 5)[row])
+        class State:
+            shape = (8,)
+            device = "cuda:0"
+            def stride(self): return (1,)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            class Storage:
+                def nbytes(self): return 32
+            def untyped_storage(self): return self.Storage()
+            def __getitem__(self, slot):
+                return Scalar(3 if slot == 7 else -1)
+        class Group:
+            layer_names = ["gdn"]
+            kv_cache_spec = {"gdn": type("Spec", (), {"block_size": 1600})()}
+        class Config:
+            kv_cache_groups = [Group()]
+        class Batch:
+            num_reqs = 3
+            idx_mapping = Indices()
+        class Model(Mamba):
+            def __init__(self):
+                super().__init__()
+                self._mamba_state_idx_gpu = State()
+                self.cache_config.mamba_block_size = 1600
+            def _ensure_align_ctx(self, kv_cache_config, mamba_group_ids, block_tables):
+                return True
+            def preprocess_state(self, input_batch, block_tables,
+                                 kv_cache_config, num_computed_tokens):
+                return None
+        obs.install(Model, "_ensure_align_ctx", "align_ctx")
+        obs.install(Model, "preprocess_state", "preprocess")
+        model = Model()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            model._ensure_align_ctx(Config(), [0], (Tensor(),))
+            model.preprocess_state(Batch(), (Tensor(),), Config(), None)
+        events = [json.loads(line.split(obs.PREFIX, 1)[1])
+                  for line in output.getvalue().splitlines()]
+        e = events[-1]
+        self.assertEqual(e["kind"], "preprocess")
+        self.assertTrue(e["batch_row_to_state_slot_observed"])
+        self.assertEqual(e["batch_row_sample"], 1)
+        self.assertEqual(e["state_slot_sample"], 7)
+        self.assertEqual(e["state_column_sample"], 3)
+        physical = e["physical_map_samples"][0]
+        self.assertTrue(physical["request_slot_to_table_row_verified"])
+        self.assertEqual(physical["physical_block_id"], 5)
+        self.assertTrue(physical["physical_entry_nonnegative"])
+        self.assertIsNone(physical["physical_id_within_state_allocation"])
+
+    def test_preprocess_out_of_range_slot_never_indexes_physical_table(self):
+        class Indices:
+            shape = (1,)
+            device = "cuda:0"
+            def stride(self): return (1,)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            class Storage:
+                def nbytes(self): return 4
+            def untyped_storage(self): return self.Storage()
+            def __getitem__(self, row): return Scalar(900)
+        class Batch:
+            num_reqs = 1
+            idx_mapping = Indices()
+        class Model(Mamba):
+            def preprocess_state(self, input_batch, block_tables,
+                                 kv_cache_config, num_computed_tokens): return None
+        obs.install(Model, "preprocess_state", "preprocess")
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            Model().preprocess_state(Batch(), (), None, None)
+        e = json.loads(captured.getvalue().split(obs.PREFIX, 1)[1])
+        self.assertFalse(e["batch_row_to_state_slot_observed"])
+        self.assertFalse(e["state_column_observed"])
+        self.assertEqual(e["physical_map_samples"], [])
+
     def test_refuses_unapproved_hook(self):
         with self.assertRaises(ValueError):
             obs.install(Mamba, "dangerous", "other")

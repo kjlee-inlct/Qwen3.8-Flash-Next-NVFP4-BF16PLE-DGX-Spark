@@ -102,6 +102,8 @@ def verify_stage_observer_sites(path: Path = STAGE) -> None:
             "_ensure_align_ctx": ("self", "kv_cache_config",
                                   "mamba_group_ids", "block_tables"),
             "add_request": ("self", "req_index", "new_req_data"),
+            "preprocess_state": ("self", "input_batch", "block_tables",
+                                 "kv_cache_config", "num_computed_tokens"),
         }),
         "scheduler.py": ("Scheduler", {
             "_mamba_block_aligned_split": (
@@ -411,7 +413,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
     verify_candidate_code(root, "_p1_prefix_live_observer.py",
                           hashlib.sha256(observer_bytes).hexdigest())
     suffixes = {
-        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, '_ensure_align_ctx', 'align_ctx')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
+        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, '_ensure_align_ctx', 'align_ctx')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n_p1_install_observer(MambaHybridModelState, 'preprocess_state', 'preprocess')\n",
         "scheduler.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(Scheduler, '_mamba_block_aligned_split', 'scheduler')\n",
     }
     for name, (relative, digest) in PATCHES.items():
@@ -426,7 +428,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
         except (SyntaxError, UnicodeError):
             raise Blocked("CANDIDATE_STAGE_PYTHON_UNPARSEABLE") from None
         expected_class, required = (
-            ("MambaHybridModelState", {"_ensure_align_ctx", "add_request"})
+            ("MambaHybridModelState", {"_ensure_align_ctx", "add_request", "preprocess_state"})
             if name == "mamba_hybrid.py" else
             ("Scheduler", {"_mamba_block_aligned_split"}))
         classes = [node for node in parsed.body
@@ -471,12 +473,13 @@ def read_candidate_observer() -> dict:
         except ValueError:
             continue
         if isinstance(item, dict) and item.get("schema") == 1 and (
-                item.get("kind") in ("scheduler", "mamba", "align_ctx")):
+                item.get("kind") in ("scheduler", "mamba", "align_ctx", "preprocess")):
             events.append(item)
     mamba = [e for e in events if e["kind"] == "mamba"]
     sched = [e for e in events if e["kind"] == "scheduler"]
     align_ctx = [e for e in events if e["kind"] == "align_ctx"]
-    physical = [p for e in (mamba + align_ctx)
+    preprocess = [e for e in events if e["kind"] == "preprocess"]
+    physical = [p for e in (mamba + align_ctx + preprocess)
                 for key in ("physical_map_samples",
                             "deferred_state_to_physical_samples")
                 for p in e.get(key, []) if isinstance(p, dict)]
@@ -517,6 +520,15 @@ def read_candidate_observer() -> dict:
             e.get("state_seed_matches_expected") is False
             for e in mamba if "state_seed_matches_expected" in e),
         "active_mamba_add_request_event_count": len(mamba),
+        "active_preprocess_event_count": len(preprocess),
+        "batch_state_slot_mapping_observed_count": sum(
+            e.get("batch_row_to_state_slot_observed") is True
+            for e in preprocess),
+        "batch_state_column_observed_count": sum(
+            e.get("state_column_observed") is True for e in preprocess),
+        "batch_mapping_observed_physical_entries_count": sum(
+            p.get("request_slot_to_table_row_verified") is True and
+            p.get("physical_entry_observed") is True for p in physical),
         "mamba_state_seed_observed_count":
             sum(e.get("state_seed_observed") is True for e in mamba),
         "mamba_tensor_layout_observed_count":
@@ -530,7 +542,8 @@ def read_candidate_observer() -> dict:
             if e.get("state_seed_observed") is True],
         "physical_mapping_observed_partial": (
             bool(physical) and
-            any(p.get("physical_id_within_state_allocation") is True
+            any(p.get("request_slot_to_table_row_verified") is True
+                and p.get("physical_id_within_state_allocation") is True
                 and p.get("block_size_matches_mamba_config") is True
                 for p in physical)),
         "physical_mapping_and_reuse_verified": False,
