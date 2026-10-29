@@ -8,6 +8,7 @@ blocked() { printf 'P1_LEGACY_WINDOW_BLOCKED_%s\n' "$*" >&2; exit 2; }
 [[ $# -ge 3 && "$2" == "--expected-head" && "$3" =~ ^[a-f0-9]{40}$ ]] || blocked "ARGUMENTS"
 case "$1" in
   --preflight) MODE=preflight ;;
+  --pause) MODE=pause ;;
   --stop) MODE=stop ;;
   --start) MODE=start ;;
   *) blocked "UNKNOWN_ACTION" ;;

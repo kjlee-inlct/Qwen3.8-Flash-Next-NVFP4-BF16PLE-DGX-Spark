@@ -1,4 +1,4 @@
-"""P1 ONLY: stop/restart the same exact YSLAB installer-owned container.
+"""P1 ONLY: pause/stop/restore same exact YSLAB installer-owned container.
 
 The original uninstall.sh --keep-image REMOVES the container. New Wizard uninstall/stop-only logic must not be used for the original legacy
 service. P1 scripts/stop.sh and scripts/start.sh delegate to this separate
@@ -102,7 +102,7 @@ def state_receipt(home: Path) -> dict:
             "views": str(expected_views)}
 
 
-def verify_identity(container: dict, image: dict, receipt: dict) -> bool:
+def verify_identity(container: dict, image: dict, receipt: dict) -> str:
     if container.get("Id") != receipt["id"] or container.get("Name") != "/" + NAME:
         raise Blocked("CONTAINER_ID_OR_NAME_MISMATCH")
     if container.get("Image") != IMAGE_ID or image.get("Id") != IMAGE_ID:
@@ -125,10 +125,16 @@ def verify_identity(container: dict, image: dict, receipt: dict) -> bool:
             (receipt["views"], "/recipe/recipe-views")}.issubset(mounts):
         raise Blocked("MODEL_MOUNT_BINDINGS_MISMATCH")
     state = container.get("State") or {}
-    status = (state.get("Status"), state.get("Running"))
-    if status not in (("running", True), ("exited", False)):
+    status = state.get("Status")
+    running = state.get("Running")
+    paused = state.get("Paused")
+    if (status, running, paused) not in (
+        ("running", True, False),
+        ("paused", True, True),
+        ("exited", False, False),
+    ):
         raise Blocked("AMBIGUOUS_DOCKER_STATE")
-    return status[1]
+    return status
 
 
 def inspect(kind: str, target: str) -> dict:
@@ -147,7 +153,7 @@ def inspect(kind: str, target: str) -> dict:
 
 def run(args: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--action", choices=("preflight", "stop", "start"), required=True)
+    parser.add_argument("--action", choices=("preflight", "pause", "stop", "start"), required=True)
     parser.add_argument("--confirm-id")
     parser.add_argument("--execute", action="store_true")
     a = parser.parse_args(args)
@@ -162,30 +168,41 @@ def run(args: list[str] | None = None) -> int:
         receipt = state_receipt(Path.home())
         if a.action != "preflight" and a.confirm_id != receipt["id"]:
             raise Blocked("CONFIRMED_ID_MISMATCH")
-        running = verify_identity(inspect("container", NAME),
-                                  inspect("image", IMAGE_TAG), receipt)
+        status = verify_identity(inspect("container", NAME),
+                                 inspect("image", IMAGE_TAG), receipt)
         if a.action == "preflight":
-            print("P1_LEGACY_WINDOW_PREFLIGHT_PASS_" +
-                  ("RUNNING" if running else "STOPPED"))
+            print("P1_LEGACY_WINDOW_PREFLIGHT_PASS_" + status.upper())
             return 0
-        if a.action == "stop" and not running:
-            raise Blocked("SERVICE_NOT_RUNNING")
-        if a.action == "start" and running:
+        if a.action == "pause" and status != "running":
+            raise Blocked("PAUSE_REQUIRES_RUNNING")
+        if a.action == "stop" and status != "running":
+            raise Blocked("STOP_REQUIRES_RUNNING")
+        if a.action == "start" and status == "running":
             raise Blocked("SERVICE_ALREADY_RUNNING")
-        command = (["docker", "stop", "--time", "30", receipt["id"]]
-                   if a.action == "stop" else ["docker", "start", receipt["id"]])
+        if a.action == "pause":
+            command = ["docker", "pause", receipt["id"]]
+            expected, marker = ("paused", "PAUSED_SAME_ID_GPU_MEMORY_NOT_RELEASED")
+        elif a.action == "stop":
+            command = ["docker", "stop", "--time", "30", receipt["id"]]
+            expected, marker = ("exited", "STOPPED_SAME_ID_NO_REMOVAL")
+        elif status == "paused":
+            command = ["docker", "unpause", receipt["id"]]
+            expected, marker = ("running", "UNPAUSED_SAME_ID_HEALTH_NOT_YET_CHECKED")
+        elif status == "exited":
+            command = ["docker", "start", receipt["id"]]
+            expected, marker = ("running", "RESTARTED_SAME_ID_HEALTH_NOT_YET_CHECKED")
+        else:
+            raise Blocked("UNKNOWN_START_STATE")
         try:
             subprocess.run(command, check=True, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, timeout=90)
         except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
             raise Blocked("DOCKER_STATE_CHANGE_FAILED") from None
-        after = verify_identity(inspect("container", NAME),
-                                inspect("image", IMAGE_TAG), receipt)
-        if after != (a.action == "start"):
+        now = verify_identity(inspect("container", NAME),
+                              inspect("image", IMAGE_TAG), receipt)
+        if now != expected:
             raise Blocked("POST_ACTION_STATE_MISMATCH")
-        print("P1_LEGACY_" +
-              ("STOPPED_SAME_ID_NO_REMOVAL" if a.action == "stop" else
-               "RESTARTED_SAME_ID_HEALTH_NOT_YET_CHECKED"))
+        print("P1_LEGACY_" + marker)
         return 0
     except Blocked as exc:
         print("P1_LEGACY_WINDOW_BLOCKED_" + str(exc), file=sys.stderr)

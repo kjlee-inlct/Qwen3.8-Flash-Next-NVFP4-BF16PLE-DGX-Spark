@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # P1: restore the exact same original YSLAB container ID after maintenance.
-# Does not claim health: verify GET /health and /v1/models after start.
+# Paused -> docker unpause; exited -> docker start. No removal or recreation.
+# Does not claim health: verify GET /health and /v1/models afterward.
 set -Eeuo pipefail
 umask 077
 dir="$(cd -- "$(dirname -- "$0")" && pwd -P)"

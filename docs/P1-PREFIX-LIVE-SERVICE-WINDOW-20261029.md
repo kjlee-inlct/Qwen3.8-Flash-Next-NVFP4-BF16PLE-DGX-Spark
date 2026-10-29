@@ -11,6 +11,15 @@
 
 **Manifest의 역할:** `scripts/deployment-manifest.json`의 `legacy` 항목을 기존 서비스의 이름·태그·full 이미지 SHA256·모델 target·recipe 레이블·8000 포트/바인드·설치 경로의 **유일한 배포 정책**으로 읽는다. 새 `legacy.image_id`는 사용자 DGX에서 검증된 기존 이미지 digest를 고정한 값이다. 실제 대상 ID는 `~/.local/state/yslab-qwen38-bf16ple/container-id`, 이미지 ID는 동일 디렉터리 `image-id`에서 읽으며 Docker inspect 값과 모두 일치해야 한다. 이들 파일은 소스 Manifest나 배포 Manifest를 수정해도 자동으로 갱신되지 않는다. `scripts/source-state-manifest.json`은 Git SHA/파일 모드 검증용이며 Docker 대상 선택용이 아니다.
 
+## Pause / Stop / 공통 Start — Docker/GPU 의미 구분
+
+- `scripts/pause.sh --preflight --expected-head SHA`는 읽기 전용 신원·상태 확인. `scripts/pause.sh --expected-head SHA --confirm-id FULL64 --execute`는 **Docker `pause`**로 해당 컨테이너 프로세스를 일시 동결한다. 이는 모델/GPU 메모리를 해제하지 않는다. HTTP 포트 바인드는 남아 있어도 API 호출은 응답이 멈추거나 timeout할 수 있다. 활성 요청이 있는 상태에선 사용하지 않는다.
+- `scripts/stop.sh --expected-head SHA --confirm-id FULL64 --execute`는 Docker `stop`으로 프로세스를 종료하고 GPU 사용 메모리를 회수할 때 사용한다. **P1의 별도 BF16 모델 GPU 로드 시험에서는 `pause`가 아닌 `stop`이 필수**이며, 이것만으로 GPU 여유 용량이 충분함이 보장되지는 않는다.
+- **공통 `scripts/start.sh`:** 원래 컨테이너가 `paused`이면 `docker unpause`, `exited`이면 `docker start`를 수행한다. `running`이면 중복 작동을 거부한다. 양쪽 모두 동일 ID·image digest·labels·ports·mounts/receipt를 전후 검증하고, `/health`/`/v1/models` 확인 전에는 READY로 기록하지 않는다.
+- 명령은 모두 전용 `blazux-phase6-gates` checkout에서 수행한다. 이미지 자체를 pause/stop/start할 수 없다. NVIDIA `cuda-checkpoint`는 별도 GPU checkpoint 기능이며 **이 프로젝트에서 지원/검증/허가된 기능이 아니다**. Docker `pause`는 그 기능을 제공하지 않는다.
+- **2026-10-29 실기기 기존 서비스 Cmd 읽기 전용 결과:** `Running=true`, `--no-enable-prefix-caching` 명시, `--enable-prefix-caching` 없음, `--block-size` **CLI 미지정(NULL)**, `--max-model-len=262144`, `--max-num-seqs=8`, `--gpu-memory-utilization=0.8`, `MTP method=mtp,num_speculative_tokens=2`, 모델 view=`recipe-views`. CLI의 `block_size=null`은 실제 vLLM 런타임 block size가 null임을 뜻하지 않으므로 기존 process 내부 ABI는 여전히 BLOCKED.
+- **증거 경계:** 코드 HEAD `7fd423db3e9fe260ce786e185f755f387975c31b`에서 사용자 실제 DGX `PASS_SOURCE_ONLY:255`와 `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING` 확인. 이후의 `pause`/공통 `start` 변경은 **DGX 미시험 / 운영 상태 변경 미실행**이다.
+
 ## 안전 계약
 
 1. 정확한 개인 Fork / Phase6 branch / clean HEAD / Source Manifest 확인. 현재 YSLAB state의 `paths`, `container-id`, `image-id`를 확인하고 default original checkout, cache/views 디렉터리 및 symlink 여부 검증.

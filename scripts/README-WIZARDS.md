@@ -128,6 +128,12 @@ scripts/install.sh --skip-login --yes
 
 **배포 정책의 단일 출처:** `scripts/deployment-manifest.json`의 `legacy` 항목(컨테이너·이미지·image_id·target·label·port·mount 출처); 실제 ID는 로컬 YSLAB `container-id`/`image-id` 영수증 및 Docker inspect와 대조한다. `source-state-manifest.json`은 Git 파일 무결성 검사만 담당한다.
 
+## P1 pause.sh 및 공통 start.sh (2026-10-29)
+
+`scripts/pause.sh`는 Manifest와 레거시 receipt로 신원 확인된 기존 Docker 컨테이너를 **메모리를 보존한 채 일시 정지**한다. 따라서 GPU 메모리를 확보하려는 P1 실제 모델 추론 시험에는 **`scripts/stop.sh`**를 사용해야 한다. `scripts/start.sh`는 일시 정지(`paused`) 상태에서는 `docker unpause`, 종료(`exited`) 상태에서는 `docker start`를 자동 선택한다. GPU/통합 메모리를 보존하는 Docker pause와 GPU 상태 자체를 외부에 저장하는 CUDA checkpoint는 별개의 기능이며 후자는 지원하지 않는다.
+
+모든 스크립트는 `--expected-head SHA`와 변경 시 `--confirm-id FULL64 --execute`가 필수. `--preflight`는 읽기 전용이며 `RUNNING/PAUSED/EXITED`를 구분한다. 어느 것도 리소스가 확보됐거나 API가 재개됐다는 것을 단독 보증하지 않는다. **서비스를 아직 pause/stop/start하지 않았으며, 실 GPU 후보 준비 전 stop 금지.**
+
 ## P1 기존 운영 서비스 stop/start (2026-10-29)
 
 현재 `scripts/stop.sh`의 기본 목적은 **기존 YSLAB 이미지 `yslab-qwen38-bf16ple:9492b78c`로 생성된 실행 중 컨테이너 `qwen38-flash-orca-uncensored-bf16-mtp`만 안전하게 stop-only**하는 것이다. 이미지 자체를 중지하는 기능은 없으며 `docker rm`은 사용하지 않는다. 정확한 Git HEAD, full container ID, 원래 설치 receipt, image digest, labels, 8000 포트와 bind mounts를 검증하는 `scripts/p1-legacy-service-window.sh`로만 위임한다.

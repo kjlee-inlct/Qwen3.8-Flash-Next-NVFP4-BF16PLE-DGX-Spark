@@ -1,3 +1,10 @@
+## 2026-10-29 P1 Docker pause proposed and common start designed — source prepared / host NOT_RUN
+
+- 사용자 DGX 실제 조회: original service `running=true`, `--no-enable-prefix-caching` present, `--enable-prefix-caching` absent; CLI `--block-size` absent (does **not** reveal actual engine/group ABI); max model len `262144`, sequences `8`, GPU memory fraction `0.8`, `mtp` speculative tokens `2`, recipe-views checkpoint. No model inference or mutation.
+- `scripts/pause.sh` is the newly requested *optional* operational entrypoint. For this fixed manifest+legacy ID it invokes `docker pause` only from running state. It freezes processes **without freeing existing GPU model allocation**, so **NOT a substitute for `scripts/stop.sh` for P1 second GPU model runtime**. User-visible API will not answer normally while paused.
+- `scripts/start.sh` is common: paused → `docker unpause`; exited → `docker start`; running or ambiguous states fail closed. Same immutable manifest/receipt/image/port/mount/ID and clean exact Git HEAD checked on every action; postaction Docker state checked. `P1_LEGACY_WINDOW_PREFLIGHT_PASS_PAUSED` is state-observation only. Neither start pathway asserts API health, and both require subsequent `/health` + `/v1/models`. Add mock transition and fake-shell dispatch tests, **no actual Docker/GPU execution in GitHub**.
+- **Previous DGX `7fd423db3e9fe260ce786e185f755f387975c31b` source255/255 + `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING` belongs to the before-pause code. New pause/shared start source at new commit is **DGX_NOT_RUN**. Legacy pause/stop/start `NOT_RUN`, P1 active ABI `BLOCKED`, real GPU prefix correctness `NOT_RUN`, P2/P3 not started.
+
 # Phase 6 evidence ledger
 
 ## 2026-10-29 P1 Manifest-driven legacy service selection — implementation prepared

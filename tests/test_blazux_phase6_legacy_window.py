@@ -1,8 +1,11 @@
 """CPU-only tests; never invoke Docker."""
 import unittest
 import json
+import io
 import subprocess
 import tempfile
+from contextlib import redirect_stdout
+from unittest.mock import patch
 from pathlib import Path
 from src import p1_legacy_service_window as w
 
@@ -20,7 +23,7 @@ def valid():
          "Mounts": [
              {"Type": "bind", "Source": cache, "Destination": "/recipe/hf-cache"},
              {"Type": "bind", "Source": views, "Destination": "/recipe/recipe-views"}],
-         "State": {"Status": "running", "Running": True}}
+         "State": {"Status": "running", "Running": True, "Paused": False}}
     return c, {"Id": w.IMAGE_ID}, r
 
 
@@ -53,9 +56,11 @@ class LegacyWindowTests(unittest.TestCase):
 
     def test_running_and_exited_exact_id(self):
         c, i, r = valid()
-        self.assertTrue(w.verify_identity(c, i, r))
-        c["State"] = {"Status": "exited", "Running": False}
-        self.assertFalse(w.verify_identity(c, i, r))
+        self.assertEqual(w.verify_identity(c, i, r), "running")
+        c["State"] = {"Status": "paused", "Running": True, "Paused": True}
+        self.assertEqual(w.verify_identity(c, i, r), "paused")
+        c["State"] = {"Status": "exited", "Running": False, "Paused": False}
+        self.assertEqual(w.verify_identity(c, i, r), "exited")
 
     def test_id_image_label_mount_port_and_policy_fail_closed(self):
         edits = [
@@ -66,7 +71,9 @@ class LegacyWindowTests(unittest.TestCase):
             lambda c, i, r: c["HostConfig"].update(PortBindings={}),
             lambda c, i, r: c["HostConfig"].update(RestartPolicy={"Name": "always"}),
             lambda c, i, r: c.update(Name="/other"),
-            lambda c, i, r: c.update(State={"Status": "restarting", "Running": True}),
+            lambda c, i, r: c.update(State={"Status": "restarting", "Running": True, "Paused": False}),
+            lambda c, i, r: c.update(State={"Status": "running", "Running": True, "Paused": True}),
+            lambda c, i, r: c.update(State={"Status": "paused", "Running": False, "Paused": True}),
         ]
         for edit in edits:
             c, i, r = valid()
@@ -74,9 +81,77 @@ class LegacyWindowTests(unittest.TestCase):
             with self.assertRaises(w.Blocked):
                 w.verify_identity(c, i, r)
 
+    def test_state_transitions_issue_only_expected_docker_command(self):
+        """Strict fake inspect, no actual docker process, checkpoint, or GPU action."""
+        states = {
+            "running": {"Status": "running", "Running": True, "Paused": False},
+            "paused": {"Status": "paused", "Running": True, "Paused": True},
+            "exited": {"Status": "exited", "Running": False, "Paused": False},
+        }
+        cases = [
+            ("pause", "running", "paused", "pause", "PAUSED_SAME_ID_GPU_MEMORY_NOT_RELEASED"),
+            ("stop", "running", "exited", "stop", "STOPPED_SAME_ID_NO_REMOVAL"),
+            ("start", "paused", "running", "unpause", "UNPAUSED_SAME_ID_HEALTH_NOT_YET_CHECKED"),
+            ("start", "exited", "running", "start", "RESTARTED_SAME_ID_HEALTH_NOT_YET_CHECKED"),
+        ]
+        for action, before, after, command, marker in cases:
+            with self.subTest(action=action, from_state=before):
+                c, i, r = valid()
+                originals = []
+                for status in (before, after):
+                    item = json.loads(json.dumps(c))
+                    item["State"] = states[status]
+                    originals.append(item)
+                count = [0]
+                def fake_inspect(kind, target):
+                    if kind == "image":
+                        return i
+                    self.assertEqual(kind, "container")
+                    self.assertEqual(target, w.NAME)
+                    index = count[0]
+                    count[0] += 1
+                    return originals[index]
+                stream = io.StringIO()
+                with patch.object(w.os, "geteuid", return_value=1000), \
+                     patch.object(w, "state_receipt", return_value=r), \
+                     patch.object(w, "inspect", side_effect=fake_inspect), \
+                     patch.object(w.subprocess, "run") as docker_run, \
+                     redirect_stdout(stream):
+                    rc = w.run(["--action", action,
+                                "--confirm-id", r["id"], "--execute"])
+                self.assertEqual(rc, 0)
+                self.assertEqual(count[0], 2)
+                self.assertEqual(docker_run.call_count, 1)
+                argv = docker_run.call_args.args[0]
+                self.assertEqual(argv[0:2], ["docker", command])
+                self.assertEqual(argv[-1], r["id"])
+                self.assertIn(marker, stream.getvalue())
+
+    def test_illegal_transitions_refuse_docker_calls(self):
+        states = {
+            "running": {"Status": "running", "Running": True, "Paused": False},
+            "paused": {"Status": "paused", "Running": True, "Paused": True},
+            "exited": {"Status": "exited", "Running": False, "Paused": False},
+        }
+        for action, status in (("pause", "paused"), ("pause", "exited"),
+                               ("stop", "paused"), ("stop", "exited"),
+                               ("start", "running")):
+            with self.subTest(action=action, state=status):
+                c, i, r = valid()
+                c["State"] = states[status]
+                with patch.object(w.os, "geteuid", return_value=1000), \
+                     patch.object(w, "state_receipt", return_value=r), \
+                     patch.object(w, "inspect", side_effect=lambda kind, _: c if kind == "container" else i), \
+                     patch.object(w.subprocess, "run") as docker_run:
+                    rc = w.run(["--action", action,
+                                "--confirm-id", r["id"], "--execute"])
+                self.assertEqual(rc, 2)
+                docker_run.assert_not_called()
+
     def test_entry_requires_explicit_mutation_authority(self):
         self.assertEqual(w.run(["--action", "stop"]), 2)
         self.assertEqual(w.run(["--action", "start"]), 2)
+        self.assertEqual(w.run(["--action", "pause"]), 2)
         self.assertEqual(w.run(["--action", "preflight", "--execute"]), 2)
 
     def test_no_container_removal_or_image_changes(self):
@@ -86,6 +161,8 @@ class LegacyWindowTests(unittest.TestCase):
         self.assertNotIn('"docker", "run"', source)
         self.assertIn('"docker", "stop", "--time", "30"', source)
         self.assertIn('"docker", "start", receipt["id"]', source)
+        self.assertIn('"docker", "pause", receipt["id"]', source)
+        self.assertIn('"docker", "unpause", receipt["id"]', source)
 
 
 class LegacyBashEntrypointDispatchTests(unittest.TestCase):
@@ -95,7 +172,7 @@ class LegacyBashEntrypointDispatchTests(unittest.TestCase):
         scripts = Path(__file__).resolve().parents[1] / "scripts"
         with tempfile.TemporaryDirectory(prefix="p1-stub-") as tmp:
             root = Path(tmp)
-            for name in ("stop.sh", "start.sh"):
+            for name in ("stop.sh", "start.sh", "pause.sh"):
                 (root / name).write_bytes((scripts / name).read_bytes())
             for name in ("p1-legacy-service-window.sh", "uninstall.sh"):
                 stub = root / name
@@ -117,6 +194,14 @@ printf 'FAKE_ARG=%s\\n' "$@"
         self.assertIn("FAKE_ARG=--stop", result.stdout)
         self.assertNotIn("FAKE_ARG=--stop-only", result.stdout)
 
+    def test_pause_routes_to_same_legacy_controller(self):
+        result = self._fake_run("pause.sh", [
+            "--expected-head", "a" * 40,
+            "--confirm-id", "b" * 64, "--execute"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("FAKE_TARGET=p1-legacy-service-window.sh", result.stdout)
+        self.assertIn("FAKE_ARG=--pause", result.stdout)
+
     def test_start_routes_to_same_legacy_controller(self):
         result = self._fake_run("start.sh", [
             "--expected-head", "a" * 40,
@@ -126,7 +211,7 @@ printf 'FAKE_ARG=%s\\n' "$@"
         self.assertIn("FAKE_ARG=--start", result.stdout)
 
     def test_preflight_is_legacy_and_readonly(self):
-        for script in ("stop.sh", "start.sh"):
+        for script in ("stop.sh", "start.sh", "pause.sh"):
             with self.subTest(script=script):
                 result = self._fake_run(script, [
                     "--preflight", "--expected-head", "a" * 40])
@@ -144,7 +229,8 @@ printf 'FAKE_ARG=%s\\n' "$@"
     def test_bare_yes_and_missing_arguments_do_nothing(self):
         for script, args in (("stop.sh", []), ("stop.sh", ["--yes"]),
                              ("stop.sh", ["--wizard"]),
-                             ("start.sh", []), ("start.sh", ["--wizard"])):
+                             ("start.sh", []), ("start.sh", ["--wizard"]),
+                             ("pause.sh", []), ("pause.sh", ["--yes"])):
             with self.subTest(script=script, args=args):
                 result = self._fake_run(script, args)
                 self.assertNotEqual(result.returncode, 0)

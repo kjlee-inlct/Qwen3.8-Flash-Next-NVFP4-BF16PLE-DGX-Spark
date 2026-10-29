@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 255,
+  "tracked_file_count": 256,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "8e46d7393f8fecefb363941f6ad45c3524b91673"
+      "blob_sha": "f92fbe17545f0db8d916ecbdd099aeed1cef9e2c"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -446,12 +446,12 @@
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
       "mode": "100644",
-      "blob_sha": "936075bceeb781ef73eee744789b8f7ce3a64e34"
+      "blob_sha": "182d6c472c0bc2ee21ea0ec059b137339d760c33"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "1a0341a676cc62494a6f44a2eedac5c74d5e906c"
+      "blob_sha": "967a7e9b56bfc620c9babe480ff530d52dcdc8bd"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -636,7 +636,7 @@
     {
       "path": "scripts/README-WIZARDS.md",
       "mode": "100644",
-      "blob_sha": "7ef0c6552b330b26e0c48577b0ad1fa94c9db467"
+      "blob_sha": "d62789a20eba2ca36cfc9b687871bd7f35276001"
     },
     {
       "path": "scripts/SAFETY-AND-RECOVERY.md",
@@ -716,7 +716,12 @@
     {
       "path": "scripts/p1-legacy-service-window.sh",
       "mode": "100755",
-      "blob_sha": "08428a7afac01d8ac72e1801d7ea164f1d9b70df"
+      "blob_sha": "1c09d0188fa24d39d3550a6f256d9794916bc692"
+    },
+    {
+      "path": "scripts/pause.sh",
+      "mode": "100755",
+      "blob_sha": "4826fd0e905ef1fb24bbfee764ec00dbc0900dd6"
     },
     {
       "path": "scripts/phase2-check-offline.sh",
@@ -836,7 +841,7 @@
     {
       "path": "scripts/start.sh",
       "mode": "100755",
-      "blob_sha": "b0a83a82fd477f647c6dd5fae27b2bfa1f52aef7"
+      "blob_sha": "0a1f856a0e4464b1735d2f32523c555aa94b604f"
     },
     {
       "path": "scripts/status.sh",
@@ -911,7 +916,7 @@
     {
       "path": "src/p1_legacy_service_window.py",
       "mode": "100644",
-      "blob_sha": "6f0ab7a7c19fcd35c5c07b8f5669cf62dbef57c3"
+      "blob_sha": "91de771bc35d904598ed685d80ff6ff3cff8ed63"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1291,7 +1296,7 @@
     {
       "path": "tests/test_blazux_phase6_legacy_window.py",
       "mode": "100644",
-      "blob_sha": "9827e5a47eaa5b17b274657ce93c630a679d216e"
+      "blob_sha": "322d48895ee55551be7a6bfd6397a399feccf8de"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_candidate.py",
