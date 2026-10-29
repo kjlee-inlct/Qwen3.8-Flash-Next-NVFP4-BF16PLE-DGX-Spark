@@ -521,6 +521,12 @@ def read_candidate_observer() -> dict:
             for e in mamba if "state_seed_matches_expected" in e),
         "active_mamba_add_request_event_count": len(mamba),
         "active_preprocess_event_count": len(preprocess),
+        "preprocess_observer_call_ordinals": [
+            e.get("observer_call_ordinal") for e in preprocess[:12]],
+        "preprocess_mapping_unavailable_reasons": {
+            reason: sum(e.get("mapping_reason") == reason for e in preprocess)
+            for reason in sorted({e.get("mapping_reason") for e in preprocess
+                                  if isinstance(e.get("mapping_reason"), str)})},
         "batch_state_slot_mapping_observed_count": sum(
             e.get("batch_row_to_state_slot_observed") is True
             for e in preprocess),
@@ -678,7 +684,8 @@ def run(argv: list[str] | None = None) -> int:
             wait_ready(PORT, model, timeout_s=1200)
             print("P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS")
             try:
-                result = oracle.run_oracle(model, PORT, min_output_tokens=24)
+                result = oracle.run_oracle(model, PORT, min_output_tokens=24,
+                                           enable_cold_controls=True)
             except oracle.OracleBlocked as exc:
                 raise Blocked("CANDIDATE_ORACLE_" + str(exc)) from None
             runtime_abi = read_candidate_observer()

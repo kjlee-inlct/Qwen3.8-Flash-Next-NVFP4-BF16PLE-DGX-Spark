@@ -441,7 +441,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "2a321ec4108091b981c260a39b1451f62c44ad84"
+      "blob_sha": "f5c95f40ed8eaa552be7e2b591b0221c03d48b97"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -931,12 +931,12 @@
     {
       "path": "src/p1_prefix_gpu_oracle.py",
       "mode": "100644",
-      "blob_sha": "4d0f780a89055111a8402b334303f22977f0fb98"
+      "blob_sha": "8fe8031dbb8cd2f8b08363854a29979299c24567"
     },
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "112d6f17b820abc16958760101dd9a9b0909f699"
+      "blob_sha": "fde725a5961dfb2fd804ee12a2fbebe27a9102fd"
     },
     {
       "path": "src/p1_prefix_live_observer.py",
@@ -1336,7 +1336,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "3576d9783da944476e060977229056b3067385d4"
+      "blob_sha": "f0a1a4f96103f49dc6859149e9018a94beb787fe"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",

@@ -483,6 +483,78 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertFalse(result["physical_mapping_observed_partial"])
         self.assertFalse(result["physical_mapping_and_reuse_verified"])
 
+
+    def test_optional_candidate_only_no_hit_cold_controls(self):
+        def response(prob):
+            return {"choices": [{
+                "message": {"content": "1, 2"}, "finish_reason": "stop",
+                "logprobs": {"content": [
+                    {"token": "1", "logprob": prob},
+                    {"token": "2", "logprob": -0.3}]},
+                "token_ids": [11, 12]}],
+                "usage": {"prompt_tokens": 9503, "completion_tokens": 2}}
+        reference = {"token_ids": [11, 12],
+                     "logprobs": [-0.2, -0.3]}
+        original = oracle.build_payload("m", long_prompt=True)
+        before = {"vllm:prefix_cache_queries_total": 100,
+                  "vllm:prefix_cache_hits_total": 64}
+        after = [{"vllm:prefix_cache_queries_total": 100 + 9503 * (i + 1),
+                  "vllm:prefix_cache_hits_total": 64} for i in range(2)]
+        with patch.object(oracle, "request_json",
+                          side_effect=[response(-0.2002), response(-0.2001)]
+                          ) as send, patch.object(oracle, "metrics",
+                          return_value=before), patch.object(
+                          oracle, "settled_metrics", side_effect=after):
+            result = oracle.cold_control_diagnostics(
+                "m", 18080, original, reference)
+        self.assertEqual(result["status"],
+                         "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED")
+        self.assertTrue(result["all_controls_no_prefix_hit_observed"])
+        self.assertAlmostEqual(
+            result["cold_reference_to_control_max_abs_delta"], 0.0002)
+        self.assertAlmostEqual(
+            result["control_to_control_max_abs_delta"], 0.0001)
+        self.assertEqual(original.get("cache_salt"), None)
+        first = send.call_args_list[0].args[1]["cache_salt"]
+        second = send.call_args_list[1].args[1]["cache_salt"]
+        self.assertNotEqual(first, second)
+        self.assertGreaterEqual(len(first), 32)
+        self.assertEqual(result["strict_abs_tolerance_unchanged"], 1e-4)
+
+    def test_optional_cold_control_rejects_hits_or_missing_api(self):
+        def response():
+            return {"choices": [{
+                "message": {"content": "1"}, "finish_reason": "stop",
+                "logprobs": {"content": [
+                    {"token": "1", "logprob": -0.2}]},
+                "token_ids": [11]}],
+                "usage": {"prompt_tokens": 9503, "completion_tokens": 1}}
+        before = {"vllm:prefix_cache_queries_total": 100,
+                  "vllm:prefix_cache_hits_total": 0}
+        after = [{"vllm:prefix_cache_queries_total": 100 + 9503 * (i + 1),
+                  "vllm:prefix_cache_hits_total": 80} for i in range(2)]
+        with patch.object(oracle, "request_json", return_value=response()), \\
+                patch.object(oracle, "metrics", return_value=before), \\
+                patch.object(oracle, "settled_metrics", side_effect=after):
+            result = oracle.cold_control_diagnostics(
+                "m", 18080, {}, {"token_ids": [11], "logprobs": [-0.2]})
+        self.assertEqual(result["status"],
+                         "INCONCLUSIVE_CONTROLS_NOT_VERIFIED_COLD")
+        self.assertFalse(result["cold_reference_logprob_comparison_available"])
+        with patch.object(
+                oracle, "request_json",
+                side_effect=oracle.OracleBlocked("CHAT_HTTP_OR_JSON_UNAVAILABLE")
+                ), patch.object(oracle, "metrics", return_value=before):
+            result = oracle.cold_control_diagnostics(
+                "m", 18080, {}, {"token_ids": [11], "logprobs": [-0.2]})
+        self.assertEqual(result["status"], "UNAVAILABLE_API_OR_METRICS")
+
+    def test_main_oracle_controls_are_opt_in_only(self):
+        source = (Path(__file__).resolve().parents[1] /
+                  "src/p1_prefix_gpu_window.py").read_text()
+        self.assertIn("enable_cold_controls=True", source)
+        self.assertIn("physical_mapping_and_reuse_verified", source)
+
     def test_wrapper_requires_exact_head_and_source_manifest(self):
         script = (Path(__file__).resolve().parents[1] /
                   "scripts/p1-prefix-gpu-window.sh").read_text()

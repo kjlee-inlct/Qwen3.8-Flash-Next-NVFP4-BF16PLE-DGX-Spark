@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import re
+import secrets
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -191,7 +192,78 @@ def logprob_diagnostics(runs: list[dict]) -> dict:
     }
 
 
-def run_oracle(model: str, port: int, *, min_output_tokens: int = 0) -> dict:
+
+def cold_control_diagnostics(model: str, port: int, payload: dict,
+                             reference: dict) -> dict:
+    """Two extra same-token-input cold controls in the *candidate* window.
+
+    Unique per-request cache salts should isolate prefix reuse if supported
+    by the pinned Preview. Never assume salt support: actual no-hit metrics
+    are required. An unsupported API, malformed response, token divergence or
+    missing metrics is explicitly inconclusive. This is a diagnostic only:
+    strict 1e-4 acceptance is NOT relaxed or bypassed.
+    """
+    before = metrics(port)
+    samples = []
+    query_deltas = []
+    hit_deltas = []
+    for _ in range(2):
+        salted = dict(payload)
+        salted["cache_salt"] = secrets.token_urlsafe(32)
+        try:
+            sample = extract(request_json(port, salted))
+            validate_chat_output(sample)
+            after = settled_metrics(port, before, require_queries=True)
+        except OracleBlocked:
+            return {"status": "UNAVAILABLE_API_OR_METRICS",
+                    "completed_controls": len(samples),
+                    "cold_reference_logprob_comparison_available": False}
+        query_deltas.append(counter_delta(before, after, "prefix_cache_queries_total"))
+        hit_deltas.append(counter_delta(before, after, "prefix_cache_hits_total"))
+        samples.append(sample)
+        before = after
+
+    output = {
+        "status": "INCONCLUSIVE",
+        "completed_controls": len(samples),
+        "cache_query_deltas": query_deltas,
+        "cache_hit_deltas": hit_deltas,
+        "all_controls_no_prefix_hit_observed": False,
+        "all_controls_token_ids_match_reference": False,
+        "cold_reference_logprob_comparison_available": False,
+        "cold_reference_to_control_max_abs_delta": None,
+        "control_to_control_max_abs_delta": None,
+        "strict_abs_tolerance_unchanged": 1e-4,
+    }
+    if not all(q > 0 and hit == 0 for q, hit in zip(query_deltas, hit_deltas)):
+        output["status"] = "INCONCLUSIVE_CONTROLS_NOT_VERIFIED_COLD"
+        return output
+    output["all_controls_no_prefix_hit_observed"] = True
+    if not all(s["token_ids"] == reference["token_ids"] for s in samples):
+        output["status"] = "INCONCLUSIVE_CONTROL_TOKEN_IDS_DIFFER"
+        return output
+    output["all_controls_token_ids_match_reference"] = True
+    vectors = [reference["logprobs"], *[s["logprobs"] for s in samples]]
+    length = len(reference["token_ids"])
+    if not length or not all(
+        len(v) == length and all(
+            isinstance(x, (float, int)) and math.isfinite(x) for x in v)
+        for v in vectors
+    ):
+        output["status"] = "INCONCLUSIVE_CONTROL_LOGPROBS_MISSING"
+        return output
+    output["cold_reference_logprob_comparison_available"] = True
+    output["cold_reference_to_control_max_abs_delta"] = max(
+        abs(x - y) for v in vectors[1:]
+        for x, y in zip(vectors[0], v))
+    output["control_to_control_max_abs_delta"] = max(
+        abs(x - y) for x, y in zip(vectors[1], vectors[2]))
+    output["status"] = "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED"
+    return output
+
+
+def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
+               enable_cold_controls: bool = False) -> dict:
     """Cold + three strictly serialized repeats, one candidate GPU boot.
 
     MTP/EAGLE hybrid caches may miss the *first* repeated request and start
@@ -274,8 +346,16 @@ def run_oracle(model: str, port: int, *, min_output_tokens: int = 0) -> dict:
         status = "INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE"
     else:
         status = "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS"
+    controls = {"status": "NOT_RUN"}
+    if (enable_cold_controls and same_text and same_tokens and
+            same_finishes and lp_complete):
+        try:
+            controls = cold_control_diagnostics(model, port, payload, cold)
+        except OracleBlocked:
+            controls = {"status": "UNAVAILABLE_API_OR_METRICS"}
     return {
         "status": status, "requests": len(observations),
+        "same_input_cold_controls": controls,
         "mtp_configured_tokens": 2,
         "mtp_speculative_metric_names_observed": observed_spec_metric_names,
         "mtp_accepted_draft_token_counter_delta": accepted_delta,
