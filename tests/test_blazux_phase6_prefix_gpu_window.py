@@ -461,7 +461,7 @@ class CandidateWindowTests(unittest.TestCase):
 
 
     def test_preprocess_observer_is_candidate_only_and_mapping_not_full_pass(self):
-        lines = "\\n".join("P1_PREFIX_ACTIVE_ABI_JSON:" + json.dumps(e)
+        lines = "\n".join("P1_PREFIX_ACTIVE_ABI_JSON:" + json.dumps(e)
                           for e in [
             {"schema": 1, "kind": "preprocess",
              "batch_row_to_state_slot_observed": True,
