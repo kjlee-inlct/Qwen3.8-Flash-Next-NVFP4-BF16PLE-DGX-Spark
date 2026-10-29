@@ -99,7 +99,16 @@ class CandidateWindowTests(unittest.TestCase):
             stage = Path(td)
             patches = {}
             for name, (target, _) in gpu.PATCHES.items():
-                content = (name + "-fixture").encode()
+                # Valid minimal Python: the candidate now checks both
+                # runtime observer method sites before the guarded stop.
+                content = (
+                    b"class MambaHybridModelState:\n"
+                    b"    def initialize_kv_cache(self): pass\n"
+                    b"    def add_request(self): pass\n"
+                    if name == "mamba_hybrid.py" else
+                    b"class Scheduler:\n"
+                    b"    def _mamba_block_aligned_split(self): pass\n"
+                )
                 (stage / name).write_bytes(content)
                 os.chmod(stage / name, 0o600)
                 patches[name] = (target, hashlib.sha256(content).hexdigest())

@@ -383,15 +383,22 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
             raise Blocked("CANDIDATE_STAGE_SHA256_DRIFT")
         # Reject ABI drift before original stop, never only after GPU load.
         import ast
-        parsed = ast.parse(data.decode("utf-8"))
-        if name == "mamba_hybrid.py":
-            classes = [node for node in parsed.body if
-                       isinstance(node, ast.ClassDef) and
-                       node.name == "MambaHybridModelState"]
-            methods = {node.name for node in classes[0].body
-                       if isinstance(node, ast.FunctionDef)} if len(classes) == 1 else set()
-            if not {"initialize_kv_cache", "add_request"}.issubset(methods):
-                raise Blocked("MAMBA_ACTIVE_OBSERVER_METHOD_NOT_IN_STAGE")
+        try:
+            parsed = ast.parse(data.decode("utf-8"))
+        except (SyntaxError, UnicodeError):
+            raise Blocked("CANDIDATE_STAGE_PYTHON_UNPARSEABLE") from None
+        expected_class, required = (
+            ("MambaHybridModelState", {"initialize_kv_cache", "add_request"})
+            if name == "mamba_hybrid.py" else
+            ("Scheduler", {"_mamba_block_aligned_split"}))
+        classes = [node for node in parsed.body
+                   if isinstance(node, ast.ClassDef)
+                   and node.name == expected_class]
+        methods = {node.name for node in classes[0].body
+                   if isinstance(node, ast.FunctionDef)} if len(classes) == 1 else set()
+        if not required.issubset(methods):
+            raise Blocked("ACTIVE_OBSERVER_METHOD_NOT_IN_STAGE_" +
+                          name.removesuffix(".py").upper())
         candidate_bytes = data + suffixes[name].encode("utf-8")
         try:
             ast.parse(candidate_bytes.decode("utf-8"))
