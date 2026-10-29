@@ -38,6 +38,7 @@ for pat in \
   test_blazux_phase6_prefix_live_observer.py \
   test_blazux_phase6_prefix_state_reuse_contract.py \
   test_blazux_phase6_prefix_copy_region_contract.py \
+  test_blazux_phase6_prefix_state_snapshot.py \
   test_blazux_phase6_prefix_mamba_utils_probe.py \
   test_blazux_phase6_prefix_closure_prep.py
 do

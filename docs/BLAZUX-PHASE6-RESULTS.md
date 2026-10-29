@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-30 P1 candidate-only actual CUDA block snapshot probe — NEW HEAD NOT DGX VERIFIED
+
+- User supplied actual immutable Stage / Mamba helper source in p1-final-source-37e8962562bd.tar.gz, including _memcpy_u64_tiled (lines 40-119), _copy_mamba_state_block (123-252), Stage preprocess (177-224) and postprocess (306-345). Installed Mamba SHA 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3. Stage source SHA and runtime checks remain pinned.
+- New src/p1_prefix_state_snapshot.py is copied ONLY into the stopped candidate, with a fixed candidate-only opt-in. It samples first actual boundary after _ensure_align_ctx initializes metadata and after postprocess_state, GPU-syncs and SHA256 hashes bounded full natural logical block bytes (not padded), only outputs hashes/physical group/slot/boundary metadata. It does not modify production or Stage.
+- New candidate observer output retains up to 16 snapshot events before container cleanup. No synthetic or live snapshot content is allowed to set physical_mapping_and_reuse_verified=True; request-level Cold/HIT attribution and all-layer coverage are not proven. Existing strict logprob 1e-4 remains unchanged.
+- CPU suite adds 8 candidate-only hook tests and 4 candidate-window tests, expected targeted total 95 (previous 83). These files and wiring are committed on feature branch, but DGX CPU, actual candidate GPU and post-window original restore at new HEAD are **NOT_RUN**. No new GPU success is claimed.
+- Mandatory next step: DGX read-only closure prep at exact HEAD; only then one explicitly confirmed same-ID GPU maintenance window to collect actual content hashes and restore original, with complete output preserved. See docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md.
+
 ## 2026-10-30 Actual Preview state copy code audit — CPU ONLY, no GPU executed
 
 - Source supplied as p1-closure-abi.MOxSlTwv.log; installed image mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3. Worker pre/post kernels and _copy_mamba_state_block inspected. SD/DS conv and temporal paths use different byte ranges and bias-based source selection, and require source-before vs destination-after evidence.

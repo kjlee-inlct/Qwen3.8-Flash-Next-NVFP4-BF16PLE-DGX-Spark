@@ -106,6 +106,7 @@ class CandidateWindowTests(unittest.TestCase):
                     b"    def _ensure_align_ctx(self): pass\n"
                     b"    def add_request(self): pass\n"
                     b"    def preprocess_state(self): pass\n"
+                    b"    def postprocess_state(self): pass\n"
                     if name == "mamba_hybrid.py" else
                     b"class Scheduler:\n"
                     b"    def _mamba_block_aligned_split(self): pass\n"
@@ -142,8 +143,9 @@ class CandidateWindowTests(unittest.TestCase):
                              "1000:1000")
             self.assertEqual(sum(arg == "--mount" for arg in commands[0]), 2)
             self.assertNotIn(str(stage), repr(commands[0]))
-            self.assertEqual(cp.call_count, 3)
-            self.assertEqual(verify.call_count, 3)
+            self.assertEqual(cp.call_count, 4)
+            self.assertEqual(verify.call_count, 4)
+            self.assertIn("P1_PREFIX_STATE_SNAPSHOT=1", commands[0])
             self.assertEqual(os.stat(stage).st_mode & 0o777, 0o700)
             self.assertEqual(os.stat(stage / "mamba_hybrid.py").st_mode & 0o777,
                              0o600)
@@ -433,6 +435,74 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertEqual(observed["physical_table_sample_count"], 0)
         self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
+    def test_candidate_state_snapshots_do_not_promote_reuse_verified(self):
+        capture = {
+            "schema": 1,
+            "phase": "before_preprocess",
+            "status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+            "samples": [{"state_sha256": "a" * 64,
+                         "physical_block_id": 12,
+                         "state_kind": "TEMPORAL_STATE"}],
+            "actual_cold_hit_pair_verified": False
+        }
+        pair = dict(capture, phase="after_postprocess")
+        payload = "\n".join(
+            "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps(x)
+            for x in (capture, pair))
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            observed = gpu.read_candidate_observer()
+        self.assertEqual(observed["candidate_state_snapshot_event_count"], 2)
+        self.assertEqual(observed["candidate_state_snapshot_sample_count"], 2)
+        self.assertEqual(
+            observed["state_content_checksum_evidence_status"],
+            "CANDIDATE_SNAPSHOTS_OBSERVED_NOT_HIT_ATTRIBUTED")
+        self.assertFalse(observed["candidate_state_snapshot_full_cold_hit_pair_verified"])
+        self.assertFalse(observed["physical_mapping_and_reuse_verified"])
+        self.assertEqual(len(observed["candidate_state_snapshot_records"]), 2)
+        self.assertEqual(
+            observed["candidate_state_snapshot_records"][0]["samples"][0]
+            ["state_sha256"], "a" * 64)
+
+    def test_unavailable_state_snapshot_does_not_change_gate(self):
+        e = {"schema": 1, "phase": "before_preprocess",
+             "status": "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE",
+             "samples": []}
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0,
+                                            stdout="P1_PREFIX_STATE_SNAPSHOT_JSON:"
+                                            + json.dumps(e), stderr="")):
+            observed = gpu.read_candidate_observer()
+        self.assertEqual(observed["candidate_state_snapshot_error_count"], 1)
+        self.assertFalse(observed["candidate_state_snapshot_full_cold_hit_pair_verified"])
+        self.assertFalse(observed["physical_mapping_and_reuse_verified"])
+
+    def test_snapshot_digest_in_logs_is_validated_and_never_promotes_gate(self):
+        payload = "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps({
+            "schema": 1, "phase": "before_preprocess",
+            "status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+            "samples": [{"state_sha256": "not-a-digest",
+                         "physical_block_id": 4}],
+        })
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            result = gpu.read_candidate_observer()
+        self.assertEqual(
+            result["candidate_state_snapshot_records"][0]["samples"], [])
+        self.assertFalse(result["physical_mapping_and_reuse_verified"])
+
+    def test_candidate_state_probe_is_candidate_only_injected(self):
+        source = (Path(__file__).resolve().parents[1] /
+                  "src/p1_prefix_gpu_window.py").read_text()
+        self.assertIn("P1_PREFIX_STATE_SNAPSHOT=1", source)
+        self.assertIn("src/p1_prefix_state_snapshot.py", source)
+        self.assertIn("_p1_install_state_snapshot(MambaHybridModelState)", source)
+        self.assertIn("postprocess_state", source)
+        self.assertIn("candidate_state_snapshot_full_cold_hit_pair_verified", source)
+        self.assertIn('"physical_mapping_and_reuse_verified": False', source)
+
     def test_actual_stage_observer_abi_is_checked_without_docker(self):
         with tempfile.TemporaryDirectory() as td:
             stage = Path(td)
@@ -443,6 +513,8 @@ class CandidateWindowTests(unittest.TestCase):
                 "kv_cache_config, num_computed_tokens): pass\n"
                 "    def _ensure_align_ctx(self, kv_cache_config, "
                 "mamba_group_ids, block_tables): pass\n"
+                "    def postprocess_state(self, idx_mapping, num_sampled, "
+                "num_computed_tokens): pass\n"
             )
             (stage / "scheduler.py").write_text(
                 "class Scheduler:\n"

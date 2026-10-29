@@ -104,6 +104,8 @@ def verify_stage_observer_sites(path: Path = STAGE) -> None:
             "add_request": ("self", "req_index", "new_req_data"),
             "preprocess_state": ("self", "input_batch", "block_tables",
                                  "kv_cache_config", "num_computed_tokens"),
+            "postprocess_state": ("self", "idx_mapping", "num_sampled",
+                                  "num_computed_tokens"),
         }),
         "scheduler.py": ("Scheduler", {
             "_mamba_block_aligned_split": (
@@ -380,6 +382,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
         args += ["--env", entry]
     args += ["--env", "HF_HUB_OFFLINE=1", "--env", "TRANSFORMERS_OFFLINE=1",
              "--env", "PYTHONDONTWRITEBYTECODE=1",
+             "--env", "P1_PREFIX_STATE_SNAPSHOT=1",
              IMAGE, *cmd]
     checked(args, timeout=60)
     actual = inspect_json("container", NAME)
@@ -412,8 +415,24 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
                                    observer_bytes)
     verify_candidate_code(root, "_p1_prefix_live_observer.py",
                           hashlib.sha256(observer_bytes).hexdigest())
+    snapshot_source = REPO / "src/p1_prefix_state_snapshot.py"
+    snapshot_bytes = snapshot_source.read_bytes()
+    if not snapshot_bytes or len(snapshot_bytes) > 200_000:
+        raise Blocked("CANDIDATE_STATE_SNAPSHOT_SOURCE_INVALID")
+    import ast
+    try:
+        snapshot_ast = ast.parse(snapshot_bytes.decode("utf-8"))
+    except (SyntaxError, UnicodeError):
+        raise Blocked("CANDIDATE_STATE_SNAPSHOT_SOURCE_UNPARSEABLE") from None
+    if not any(isinstance(node, ast.FunctionDef) and node.name == "install"
+               for node in snapshot_ast.body):
+        raise Blocked("CANDIDATE_STATE_SNAPSHOT_INSTALL_MISSING")
+    docker_cp_to_stopped_candidate(root, "_p1_prefix_state_snapshot.py",
+                                   snapshot_bytes)
+    verify_candidate_code(root, "_p1_prefix_state_snapshot.py",
+                          hashlib.sha256(snapshot_bytes).hexdigest())
     suffixes = {
-        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, '_ensure_align_ctx', 'align_ctx')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n_p1_install_observer(MambaHybridModelState, 'preprocess_state', 'preprocess')\n",
+        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, '_ensure_align_ctx', 'align_ctx')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n_p1_install_observer(MambaHybridModelState, 'preprocess_state', 'preprocess')\nfrom vllm._p1_prefix_state_snapshot import install as _p1_install_state_snapshot\n_p1_install_state_snapshot(MambaHybridModelState)\n",
         "scheduler.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(Scheduler, '_mamba_block_aligned_split', 'scheduler')\n",
     }
     for name, (relative, digest) in PATCHES.items():
@@ -428,7 +447,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
         except (SyntaxError, UnicodeError):
             raise Blocked("CANDIDATE_STAGE_PYTHON_UNPARSEABLE") from None
         expected_class, required = (
-            ("MambaHybridModelState", {"_ensure_align_ctx", "add_request", "preprocess_state"})
+            ("MambaHybridModelState", {"_ensure_align_ctx", "add_request", "preprocess_state", "postprocess_state"})
             if name == "mamba_hybrid.py" else
             ("Scheduler", {"_mamba_block_aligned_split"}))
         classes = [node for node in parsed.body
@@ -464,8 +483,19 @@ def read_candidate_observer() -> dict:
     if cp.returncode:
         raise Blocked("CANDIDATE_OBSERVER_LOG_UNAVAILABLE")
     prefix = "P1_PREFIX_ACTIVE_ABI_JSON:"
+    snapshot_prefix = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
     events = []
+    snapshot_events = []
     for line in (cp.stdout + "\n" + cp.stderr).splitlines():
+        if snapshot_prefix in line:
+            try:
+                item = json.loads(line.split(snapshot_prefix, 1)[1])
+            except ValueError:
+                continue
+            if (isinstance(item, dict) and item.get("schema") == 1
+                    and item.get("phase") in
+                    ("before_preprocess", "after_postprocess")):
+                snapshot_events.append(item)
         if prefix not in line:
             continue
         try:
@@ -553,7 +583,41 @@ def read_candidate_observer() -> dict:
                 and p.get("block_size_matches_mamba_config") is True
                 for p in physical)),
         "physical_mapping_and_reuse_verified": False,
-        "state_content_checksum_evidence_status": "NOT_COLLECTED_NO_LIVE_STATE_HOOK",
+        "state_content_checksum_evidence_status": (
+            "CANDIDATE_SNAPSHOTS_OBSERVED_NOT_HIT_ATTRIBUTED"
+            if any(e.get("samples") for e in snapshot_events)
+            else "CANDIDATE_SNAPSHOT_NOT_COMPLETELY_OBSERVED"),
+        "candidate_state_snapshot_event_count": len(snapshot_events),
+        "candidate_state_snapshot_pre_count": sum(
+            e.get("phase") == "before_preprocess" for e in snapshot_events),
+        "candidate_state_snapshot_post_count": sum(
+            e.get("phase") == "after_postprocess" for e in snapshot_events),
+        "candidate_state_snapshot_sample_count": sum(
+            len(e.get("samples", [])) for e in snapshot_events
+            if isinstance(e.get("samples"), list)),
+        "candidate_state_snapshot_error_count": sum(
+            e.get("status") == "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE"
+            for e in snapshot_events),
+        "candidate_state_snapshot_full_cold_hit_pair_verified": False,
+        "candidate_state_snapshot_records": [
+            {"phase":e.get("phase"), "ordinal":e.get("ordinal"),
+             "status":e.get("status"),
+             "samples": [
+                 {field: sample.get(field) for field in (
+                     "state_kind", "group_id", "physical_block_id",
+                     "layer_sha256_prefix", "state_kind_index",
+                     "shape", "dtype", "natural_byte_length",
+                     "state_sha256", "block_boundary_tokens",
+                     "state_column", "gpu_completed_before_read")}
+                 for sample in e.get("samples", [])[:4]
+                 if isinstance(sample, dict)
+                 and isinstance(sample.get("state_sha256"), str)
+                 and re.fullmatch(r"[a-f0-9]{64}",
+                                  sample["state_sha256"])
+             ]}
+            for e in snapshot_events[:16]
+            if isinstance(e.get("samples", []), list)
+        ],
         "mtp_speculative_acceptance_observed": False,
         "provenance": "LIVE_CANDIDATE_WORKER_STDOUT_NOT_STATIC_AST",
     }
