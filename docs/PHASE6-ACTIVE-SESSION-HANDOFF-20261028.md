@@ -1,5 +1,8 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+> **최신 사용자 DGX 실측 `c342e033c6e601f374520eefb6a9d0e9277b54ef`:** CPU20/20, Source263/263, 실제 GPU 후보 HTTP + Prefix HIT PASS. 9,492 token Cold/Repeat×3 cache query delta [9492×4], HIT delta **[0,6400,6400,6400]**, 출력 text/token IDs 모두 일치. 단 최대 logprob delta **0.003320594** > 0.0001 strict → **P1 전체 수치 정합성 INCONCLUSIVE/exit2**; active Mamba physical mapping 未관측. 후보 삭제 후 원본 동일 ID HTTP 복구 PASS. 후속 logprob drift 분해 오라클은 DGX_NOT_RUN. [실증 장부](BLAZUX-PHASE6-RESULTS.md).
+
+
 > **최신 DGX 실증 SHA `0168cee29775c2c8104dc584d039900723df7f8b`:** CPU20/20, Source263/263 PASS; 원본 Chat protocol 및 후보 GPU/HTTP PASS. 합성 입력 2,142 토큰 Cold/Repeat 실제 동일 text+3 token IDs, **cache queries +2142, hits 0**, strict first logprob diff `0.000113669`→ `FAIL_FIRST_TOKEN_LOGPROB_MISMATCH`. 후속 원본 복구 출력은 아직 미제출. Mamba physical mapping 불명, P1 correctness NOT_PASS. MTP first-repeat miss 가능성을 구분하기 위한 장문/4회 오라클 변경은 아직 DGX_NOT_RUN. [실측 원장](BLAZUX-PHASE6-RESULTS.md) 참조.
 
 

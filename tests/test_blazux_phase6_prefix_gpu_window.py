@@ -326,6 +326,28 @@ class CandidateWindowTests(unittest.TestCase):
             self.assertEqual(result["status"],
                              "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED")
 
+    def test_numeric_drift_cold_vs_cached_and_repeat_vs_repeat(self):
+        runs = [
+            {"token_ids": [101, 102], "logprobs": [-0.2, -0.3]},
+            {"token_ids": [101, 102], "logprobs": [-0.2033, -0.3]},
+            {"token_ids": [101, 102], "logprobs": [-0.2033, -0.3]},
+            {"token_ids": [101, 102], "logprobs": [-0.2033, -0.3]},
+        ]
+        v = oracle.logprob_diagnostics(runs)
+        self.assertTrue(v["logprob_diagnostic_complete"])
+        self.assertAlmostEqual(v["cold_to_repeat_max_deltas"][0], 0.0033)
+        self.assertEqual(v["repeat_to_repeat_consecutive_max_deltas"],
+                         [0.0, 0.0])
+        self.assertAlmostEqual(v["per_token_cold_repeat_max_deltas"][0], 0.0033)
+        self.assertEqual(v["per_token_cold_repeat_max_deltas"][1], 0.0)
+        runs[3]["logprobs"][1] = -0.301
+        self.assertAlmostEqual(
+            oracle.logprob_diagnostics(runs)[
+                "repeat_to_repeat_consecutive_max_deltas"][-1], 0.001)
+        runs[3]["logprobs"][1] = None
+        self.assertFalse(oracle.logprob_diagnostics(runs)[
+            "logprob_diagnostic_complete"])
+
     def test_oracle_requires_real_hit_evidence(self):
         name = "vllm:prefix_cache_hits_total"
         self.assertEqual(oracle.counter_delta({}, {}, "prefix_cache_hits_total"), 0)

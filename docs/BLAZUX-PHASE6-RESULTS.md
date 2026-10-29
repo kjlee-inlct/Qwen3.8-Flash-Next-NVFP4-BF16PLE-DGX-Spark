@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 세 번째 실제 GPU Prefix-cache 적중 확인 — SHA c342e033c6e601f374520eefb6a9d0e9277b54ef
+
+- 사용자 DGX: targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**. 원본 Chat API pre-stop `PASS_ORIGINAL_CHAT_PROTOCOL`, 후보의 stopped-overlay 두 패치 SHA 검증, Prefix ON GPU 후보 HTTP READY 확인.
+- 합성 **9,492 prompt tokens**, `/v1/chat/completions` thinking OFF, 동일 요청 **4회**(Cold + Repeat 3회), MTP 설정 `num_speculative_tokens=2` 보존. 실제 `vllm:prefix_cache_queries_total` 요청별 delta **[9492,9492,9492,9492]**, `vllm:prefix_cache_hits_total` delta **[0,6400,6400,6400]**. 반복 **2/3/4번째 모두 GPU 후보 캐시 HIT의 실제 카운터 증가**. hit 6400은 1600×4이지만 **실제 Mamba active block size/physical mapping=1600 확증은 아님**.
+- 채팅 응답은 **모두 nonempty**, 텍스트 해시 동일 `6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918`, 토큰 ID **3개 4회 모두 동일**, finish reason 동일, logprob 전체 원소 존재. **최대 first/all token logprob 절대차 0.0033205938525497913**, strict threshold 0.0001 초과. 그래서 `INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE` 및 exit **2**, Prefix-cache 기능 HIT 확인과 완전한 수치 정합성 PASS를 혼동하지 않음.
+- 후보 cleanup 후 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED` 실제 출력 확인. 기존 원본 동일 ID/HTTP 정상 복구 보고. 이 GPU run이 MTP 실제 수락률/활성 Mamba 물리 상태 slot mapping/장문 유효성/범용 정확성까지 입증한 것은 **아님**.
+- 다음의 작은 수정(후속 HEAD **DGX_NOT_RUN**): 오라클 strict 기준은 그대로 0.0001; **Cold→각 HIT 반복 응답**의 logprob 차이와 **반복 HIT 응답 사이**의 logprob 차이를 분리해 익명 숫자로 출력. 수치 실패가 캐시 재사용 경로 고유 변화인지 일반 decode 비결정성인지 좁힐 수 있으나, 다시 GPU 기동하려면 추가 실효성 있는 활성 ABI 진단과 묶을 것. **logprob 허용치를 근거 없이 완화하여 P1 PASS로 만들지 말 것**.
+
+
 ## 2026-10-29 P1 두 번째 실제 GPU 후보 결과 — SHA 0168cee29775c2c8104dc584d039900723df7f8b
 
 - 사용자 DGX 실측: feature HEAD 정확히 `0168cee29775c2c8104dc584d039900723df7f8b`, targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**, 원본 사전 `PASS_ORIGINAL_CHAT_PROTOCOL` (최종 텍스트 비어 있지 않음; finish=stop; logprob tokens=3; token IDs 있음), stopped 후보 패치 두 개 SHA 검증, 후보 실제 GPU HTTP READY.

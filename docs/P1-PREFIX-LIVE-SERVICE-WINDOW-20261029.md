@@ -1,5 +1,8 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+> **최신 사용자 DGX 실측 `c342e033c6e601f374520eefb6a9d0e9277b54ef`:** CPU20/20, Source263/263, 실제 GPU 후보 HTTP + Prefix HIT PASS. 9,492 token Cold/Repeat×3 cache query delta [9492×4], HIT delta **[0,6400,6400,6400]**, 출력 text/token IDs 모두 일치. 단 최대 logprob delta **0.003320594** > 0.0001 strict → **P1 전체 수치 정합성 INCONCLUSIVE/exit2**; active Mamba physical mapping 未관측. 후보 삭제 후 원본 동일 ID HTTP 복구 PASS. 후속 logprob drift 분해 오라클은 DGX_NOT_RUN. [실증 장부](BLAZUX-PHASE6-RESULTS.md).
+
+
 > **최신 실기기 GPU 실행 증거 (`85260bfa60e5b683681f8877447e326f69223d05`):** 신규 CPU 15/15 PASS, Source263/263, 후보 소스 두 SHA256 검증 및 **실제 후보 GPU HTTP 준비 PASS**, cold/repeat API 2회 실행, Prefix-cache hit 불확실 + 출력 양쪽 빈 문자열 + first token logprob 불일치 → **P1 correctness INCONCLUSIVE, exit 2**. 후보 제거/원본 동일-ID 재기동 및 `/health`, `/v1/models` HTTP 200까지 PASS. GPU/active Mamba ABI/P1 완료 아님. 후속 오라클 수정은 **신규 SHA DGX_NOT_RUN**. [근거 원장](BLAZUX-PHASE6-RESULTS.md) 참조.
 
 

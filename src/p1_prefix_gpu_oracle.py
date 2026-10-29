@@ -156,6 +156,37 @@ def settled_metrics(port: int, before: dict, *, require_queries: bool,
     return latest
 
 
+def logprob_diagnostics(runs: list[dict]) -> dict:
+    """Report absolute per-request numeric drift, never lowering strict gate.
+
+    Separating cold-to-cache from repeat-to-repeat distinguishes one-time
+    cache-path shifts from nondeterminism across already-cached requests.
+    No token strings or logits are emitted.
+    """
+    vectors = [r["logprobs"] for r in runs]
+    length = len(runs[0]["token_ids"])
+    if not all(len(v) == length and
+               all(isinstance(x, (float, int)) and math.isfinite(x)
+                   for x in v) for v in vectors):
+        return {"logprob_diagnostic_complete": False,
+                "cold_to_repeat_max_deltas": None,
+                "repeat_to_repeat_consecutive_max_deltas": None,
+                "per_token_cold_repeat_max_deltas": None}
+    def max_diff(a: list, b: list) -> float:
+        return max(abs(x - y) for x, y in zip(a, b))
+    return {
+        "logprob_diagnostic_complete": True,
+        "cold_to_repeat_max_deltas": [
+            max_diff(vectors[0], v) for v in vectors[1:]],
+        "repeat_to_repeat_consecutive_max_deltas": [
+            max_diff(vectors[i], vectors[i + 1])
+            for i in range(1, len(vectors) - 1)],
+        "per_token_cold_repeat_max_deltas": [
+            max(abs(v[i] - vectors[0][i]) for v in vectors[1:])
+            for i in range(length)],
+    }
+
+
 def run_oracle(model: str, port: int) -> dict:
     """Cold + three strictly serialized repeats, one candidate GPU boot.
 
@@ -194,6 +225,7 @@ def run_oracle(model: str, port: int) -> dict:
     token_lps = [cold["logprobs"], *[r["logprobs"] for r in repetitions]]
     lp_complete = all(len(lp) == len(cold["token_ids"]) and
                       all(v is not None for v in lp) for lp in token_lps)
+    numeric_drift = logprob_diagnostics([cold, *repetitions])
     max_lp_delta = None
     first_lp_delta_max = None
     if lp_complete:
@@ -246,6 +278,7 @@ def run_oracle(model: str, port: int) -> dict:
         "all_token_logprobs_available": lp_complete,
         "max_token_logprob_abs_delta": max_lp_delta,
         "max_first_token_logprob_abs_delta": first_lp_delta_max,
+        **numeric_drift,
         "logprob_strict_abs_tolerance": 1e-4,
         "active_mamba_physical_mapping_observed": False,
     }
