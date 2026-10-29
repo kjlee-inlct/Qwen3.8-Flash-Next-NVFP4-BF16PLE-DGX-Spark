@@ -20,10 +20,35 @@ def _number(value):
     return None
 
 
+# Narrow whitelist: never inspect arbitrary request/model fields or print repr.
+# Real vLLM config/spec/request structs may use slots/properties; the original
+# vars(obj)-only implementation incorrectly reported those fields as missing.
+_OBSERVED_ATTRS = frozenset((
+    "block_size", "mamba_block_size", "num_gpu_blocks", "num_blocks",
+    "num_kv_cache_groups", "max_num_seqs", "kv_cache_groups",
+    "cache_groups", "kv_cache_group_specs", "kv_cache_spec",
+    "kv_cache_specs", "layer_names", "vllm_config", "compilation_config",
+    "static_forward_context", "kv_cache", "block_tables",
+    "input_block_tables", "gpu", "_mamba_group_ids", "_mamba_ctx",
+    "_align_mode", "_mamba_state_idx_gpu", "_p1_observer_mamba_tables",
+    "num_computed_tokens", "block_table_stride_req", "state_block_strides",
+    "state_elem_sizes", "state_group_indices", "state_conv_widths",
+))
+
+
 def _direct(obj, name):
+    if obj is None or name not in _OBSERVED_ATTRS:
+        return None
     try:
-        return vars(obj).get(name)
+        local = vars(obj)
+        if name in local:
+            return local[name]
     except (TypeError, AttributeError):
+        pass
+    # Only for a whitelisted field. Needed for slots and class descriptors.
+    try:
+        return getattr(obj, name, None)
+    except (AttributeError, TypeError, RuntimeError, ValueError):
         return None
 
 
@@ -87,10 +112,19 @@ def _kv_spec_info(kv_cache_config, group_ids):
         group = groups[gid]
         specs = _direct(group, "kv_cache_spec")
         layer_names = _direct(group, "layer_names")
+        # vLLM may use UniformTypeKVCacheSpecs instead of a bare MambaSpec.
+        # Unwrap by actual layer names rather than treating the wrapper as the
+        # effective MambaSpec (which silently lost its block size).
+        wrapped = _direct(specs, "kv_cache_specs")
+        lookup = specs if isinstance(specs, dict) else wrapped
         details = []
-        if isinstance(specs, dict):
-            for layer_name in list(specs)[:16]:
-                spec = specs[layer_name]
+        if isinstance(lookup, dict):
+            if not isinstance(layer_names, (list, tuple)):
+                layer_names = list(lookup)
+            for layer_name in list(layer_names)[:16]:
+                if not isinstance(layer_name, str) or layer_name not in lookup:
+                    continue
+                spec = lookup[layer_name]
                 details.append({"spec_class": type(spec).__name__,
                                 **_scalar_fields(spec)})
         else:
@@ -207,8 +241,9 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
                  "table_within_allocation": meta["view_within_allocation"],
                  "row_in_bounds": 0 <= request_idx < shape[0],
                  "column_in_bounds": 0 <= expected_col < shape[1],
-                 "block_size_matches_mamba_config": bool(
-                     group_sizes and all(x == mamba_block_size for x in group_sizes)),
+                 "block_size_matches_mamba_config": (
+                     None if not group_sizes or mamba_block_size is None
+                     else all(x == mamba_block_size for x in group_sizes)),
                  "physical_entry_observed": False}
         if (meta["view_within_allocation"] and entry["row_in_bounds"]
                 and entry["column_in_bounds"]):

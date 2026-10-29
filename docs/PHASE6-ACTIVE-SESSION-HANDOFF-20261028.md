@@ -60,3 +60,9 @@
 - 이 값들은 **실제 프로세스 표본 관측이 실행되어야만 의미**가 있다. block table의 physical id가 유효해도 실제 state-content가 HIT에서 정확히 재사용/보존됐다는 증명이 아니므로 `physical_mapping_and_reuse_verified=false`는 그대로 유지. `active_mamba_physical_mapping_observed`를 전체 PASS로 잘못 승격하지 않는다. 정확한 실기 검증 및 후속 state-content/inference parity는 미완료. GPU 실행·운영 중단 새 승인 필요.
 
 - 실제 `vllm_config.compilation_config.static_forward_context`에 노출된 group별 layer `kv_cache` 텐서의 shape/stride/storage bounds를 후보 초기화 시 읽어 `state_allocation_blocks` 최솟값과 표본 physical ID를 비교한다. 필요한 하나라도 확인되지 않으면 `allocation_complete=false`, `physical_id_within_state_allocation=null` 처리한다. 상태 텐서 내용을 해시하거나 메모리를 읽어 동일성 입증한 것이 아니며, CPU mock 통과만으로 엔진 호환성/물리 재사용 정합성 PASS 아님.
+
+### Runtime observer 자료형 정합성 수정 (DGX 신규 코드 NOT_RUN)
+
+- 마지막 사용자 실제 CPU 증거는 SHA `6f018dd283aea95f9babb0c3473d9cca0400725e`의 23+3 mock/265 Manifest PASS로 한정. 이후 물리 mapping 계측 코드는 **GPU/CPU 미실행**.
+- `vars(obj)` 단독 접근은 실제 `__slots__` 구성 데이터 및 클래스 속성 구현의 유효한 `num_computed_tokens`, `mamba_block_size`, `kv_cache`를 누락시킬 수 있다. 승인된 수치/구조 필드 whitelist로만 `getattr` fallback을 제한해 진단을 보정했다. `UniformTypeKVCacheSpecs.kv_cache_specs` layer mapping을 실제 layer 이름 순서로 해석해 Mamba spec block-size를 읽는다. spec 누락은 `unknown`이며 잘못된 mismatch/physical PASS가 아니다.
+- CPU-only 신규 mock은 slots + Uniform wrapper 및 unknown block-size 삼상값을 검증하도록 추가했다. 신규 코드는 GitHub 소스 준비뿐이며 DGX CPU/GPU/HTTP 시험, active physical table 값, state-content reuse 모두 **NOT_RUN/UNVERIFIED**이다.

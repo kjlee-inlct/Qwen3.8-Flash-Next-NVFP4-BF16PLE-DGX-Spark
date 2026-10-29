@@ -186,6 +186,62 @@ class Tests(unittest.TestCase):
         event = json.loads(captured.getvalue().split(obs.PREFIX, 1)[1])
         self.assertEqual(event["physical_map_samples"], [])
 
+
+    def test_slots_and_uniform_mamba_spec_are_observed_not_silently_missing(self):
+        class SlottedSpec:
+            __slots__ = ("block_size",)
+            def __init__(self, value):
+                self.block_size = value
+        class UniformSpecs:
+            __slots__ = ("kv_cache_specs",)
+            def __init__(self):
+                self.kv_cache_specs = {"gdn0": SlottedSpec(32)}
+        class Group:
+            __slots__ = ("kv_cache_spec", "layer_names")
+            def __init__(self):
+                self.kv_cache_spec = UniformSpecs()
+                self.layer_names = ["gdn0"]
+        class Config:
+            __slots__ = ("kv_cache_groups",)
+            def __init__(self):
+                self.kv_cache_groups = [Group()]
+        class SlottedRequest:
+            __slots__ = ("num_computed_tokens",)
+            def __init__(self):
+                self.num_computed_tokens = 129
+        self.assertEqual(
+            obs._kv_spec_info(Config(), [0])[0]["specs"][0]["block_size"], 32)
+        self.assertEqual(obs._direct(SlottedRequest(), "num_computed_tokens"), 129)
+        self.assertIsNone(obs._direct(SlottedRequest(), "unreviewed_field"))
+
+    def test_unknown_mamba_spec_size_is_not_reported_as_mismatch(self):
+        class Table:
+            shape = (1, 1)
+            device = "cuda:0"
+            def __getitem__(self, key):
+                return Scalar(0)
+            def stride(self):
+                return (1, 1)
+            def storage_offset(self):
+                return 0
+            def element_size(self):
+                return 4
+            class Storage:
+                def nbytes(self):
+                    return 4
+            def untyped_storage(self):
+                return self.Storage()
+        class Instance:
+            def __init__(self):
+                self._p1_observer_mamba_tables = {
+                    0: {"table": Table(), "meta": obs._tensor_metadata(Table()),
+                        "group": {"specs": []},
+                        "allocation": {"allocation_blocks": None}}}
+        result = obs._sample_physical(Instance(), 0, 0, 32)
+        self.assertEqual(len(result), 1)
+        self.assertIsNone(result[0]["block_size_matches_mamba_config"])
+        self.assertIsNone(result[0]["physical_id_within_state_allocation"])
+
     def test_refuses_unapproved_hook(self):
         with self.assertRaises(ValueError):
             obs.install(Mamba, "dangerous", "other")

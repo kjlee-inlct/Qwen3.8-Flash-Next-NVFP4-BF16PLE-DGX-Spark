@@ -456,6 +456,9 @@ def read_candidate_observer() -> dict:
         "physical_group_block_size_mismatch_count": sum(
             p.get("block_size_matches_mamba_config") is False
             for p in physical),
+        "physical_group_block_size_unknown_count": sum(
+            p.get("block_size_matches_mamba_config") is None
+            for p in physical),
         "mamba_seed_expected_comparison_count": sum(
             "state_seed_matches_expected" in e for e in mamba),
         "mamba_seed_mismatch_count": sum(
