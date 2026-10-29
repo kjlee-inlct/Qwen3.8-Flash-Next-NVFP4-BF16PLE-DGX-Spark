@@ -1,3 +1,9 @@
+## 2026-10-29 P1 exact-PIN Prefix candidate file staging prepared (GPU NOT_RUN)
+
+- **DGX operator evidence at code HEAD `7fecba294341b9e3d017cbdeda0438c23106b977`:** `PASS_SOURCE_ONLY: 256 tracked file(s)`, `P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED`, `P1_START_RUNNING_NOOP_DGX_PASS_UNCHANGED`. The tested shell compared full container ID, `StartedAt`, status and paused flag before/after and found exact equality. Therefore repeated `start.sh` on the running legacy service was a real **successful no-op**; no restart or state change. API readiness was not checked in this operator snippet.
+- **Next tangible source prep:** new `src/p1_prefix_stage_files.py` exports precisely two previously SHA-pinned and AST-matched modified Preview files into a unique private host directory via new `scripts/p1-prefix-stage.sh`. It requires exact branch/HEAD/clean Source Manifest, pinned local legacy image, stable pre/post Docker legacy ID/StartedAt/Running status, CPU-only disposable `runc` / no GPU / no model mounts / no network, no image modification. These files are inputs for a later isolated P1 candidate GPU container; they are **NOT** installed in vLLM or production. New test module is CPU-only and uses stubs/mocks.
+- **State boundary:** new script at subsequent GitHub commit is untested on DGX; `P1_PREFIX_GPU_STAGE=DGX_NOT_RUN`, `P1_PREFIX_GPU_RUNTIME=NOT_RUN`, `P6-A ACTIVE_ABI=BLOCKED`; existing real service not stopped, paused, rebuilt, or restarted. No P2/P3/CI/PR/merge.
+
 ## 2026-10-29 P1 Docker pause proposed and common start designed — source prepared / host NOT_RUN
 
 - 사용자 DGX 실제 조회: original service `running=true`, `--no-enable-prefix-caching` present, `--enable-prefix-caching` absent; CLI `--block-size` absent (does **not** reveal actual engine/group ABI); max model len `262144`, sequences `8`, GPU memory fraction `0.8`, `mtp` speculative tokens `2`, recipe-views checkpoint. No model inference or mutation.

@@ -1,5 +1,13 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+## Prefix 후보 소스 두 파일의 CPU-only 출력 (현재 단계)
+
+- 신규 `src/p1_prefix_stage_files.py`와 `scripts/p1-prefix-stage.sh`는 **운영 서비스 가동 중** GPU 사용 없이, 고정 이미지에서 원본 SHA 확인 및 Mamba Hybrid/Scheduler 두 개의 정확한 AST 패치를 수행해 개인 호스트 임시 폴더에 결과 파일을 생성한다. 기존 검증은 패치한 임시 사본을 지웠지만 이번 단계는 외부 후보 Docker에 RO mount할 두 파일을 실제 남긴다는 차이가 있다.
+- 출력은 `/tmp/p1-prefix-stage.XXXXXXXX/mamba_hybrid.py`와 `scheduler.py` **두 개만** 허용하며 root 디렉터리는 mode 0700, 파일은 mode 0600이다. 기존 이미지, 설치 vLLM, 레거시 컨테이너, 모델/캐시는 수정하지 않는다. 원본 소스 SHA가 어긋나거나 출력 디렉터리가 깨끗하지 않으면 fail-closed. CPU Docker는 `--runtime=runc --network=none` / no GPU / no model mounts / 메모리 512 MiB.
+- **실행 전에 신규 코드를 시험:** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_stage_files.py' -v`. 성공 시 후보 파일 생성은 `bash scripts/p1-prefix-stage.sh --expected-head <LATEST_COMMITTED_HEAD> --execute`. 기대 `P1_PREFIX_GPU_SOURCE_STAGE_READY_ONLY_NOT_APPLIED` 및 `P1_PREFIX_STAGE_DGX_CPU_ONLY_READY_NOT_GPU_TESTED` 출력. 경로는 로컬 메모리/파일시스템의 임시 staging이며 이미지에 설치된 경로가 아니다.
+- **GPU 후보 기동과 운영 중지는 아직 금지:** 후보 Docker launch, RO mount 지점, 실제 active ABI 관측, prefix ON/OFF cold/cache-hit 오라클, 메모리·타임아웃 제한, 실패 시 기존 서비스 복구가 준비되어야 이후 `scripts/stop.sh`로 메모리를 확보한다. 지금의 stage PASS는 GPU 정합성 증거가 아니다.
+
+
 > **상태: 스크립트 준비 / DGX 신규 코드 시험 NOT_RUN / 기존 서비스 중지 NOT_RUN / 실제 GPU·Prefix-cache 후보 런타임 NOT_READY.** 사용자는 기존 서비스를 멈추고 P1 검증해도 된다고 했지만, 반드시 **만들어진 스크립트로 중지할 것**을 조건으로 승인했다. 이 변경은 실제 중지/재시작이 아니다.
 
 ## 스크립트 관리 경계의 실제 차이
