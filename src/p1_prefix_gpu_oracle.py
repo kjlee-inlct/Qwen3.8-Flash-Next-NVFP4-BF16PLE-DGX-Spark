@@ -299,8 +299,99 @@ def assess_no_hit_numeric_baseline(controls: dict,
     return result
 
 
+def snapshot_log_delta(previous: object, current: object,
+                       request_index: int) -> dict:
+    """Associate ordered candidate log snapshots with one HTTP request.
+
+    Docker log rotation, truncation, missing/reordered events are inconclusive.
+    No result here is a full GDN/PLE state-reuse proof.
+    """
+    result = {"request_index_1_based": request_index, "events": [],
+              "status": "INCONCLUSIVE_SNAPSHOT_WINDOW_UNAVAILABLE",
+              "full_state_reuse_verified": False}
+    if (type(request_index) is not int or not 1 <= request_index <= 4
+            or not isinstance(previous, list)
+            or not isinstance(current, list)
+            or len(previous) > 128 or len(current) > 128
+            or any(not isinstance(e, dict) for e in previous + current)):
+        return result
+    if len(current) < len(previous) or current[:len(previous)] != previous:
+        result["status"] = "INCONCLUSIVE_SNAPSHOT_LOG_DRIFT"
+        return result
+    delta = current[len(previous):]
+    if len(delta) > 32:
+        result["status"] = "INCONCLUSIVE_TOO_MANY_SNAPSHOT_EVENTS"
+        return result
+    result["events"] = delta
+    result["status"] = "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS"
+    return result
+
+
+def compare_snapshot_windows(windows: object, hit_indices: object) -> dict:
+    """Conservative Cold-post versus HIT-pre digest diagnostic.
+
+    Matching selected state blocks is NOT all-layer coverage nor proof the
+    worker actually restored state into the execution path. Never pass P1.
+    """
+    output = {"status": "INCONCLUSIVE_COLD_HIT_STATE_WINDOWS",
+              "matched_selected_state_blocks": 0,
+              "mismatched_selected_state_blocks": 0,
+              "full_state_reuse_verified": False}
+    if (not isinstance(windows, list) or len(windows) != 4
+            or not isinstance(hit_indices, list) or not hit_indices):
+        return output
+    if any(w.get("status") != "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS"
+           for w in windows if isinstance(w, dict)) or any(
+           not isinstance(w, dict) for w in windows):
+        return output
+
+    def flatten(window, phase):
+        mapped = {}
+        for event in window.get("events", []):
+            if not isinstance(event, dict) or event.get("phase") != phase:
+                continue
+            samples = event.get("samples")
+            if not isinstance(samples, list):
+                continue
+            for sample in samples:
+                if not isinstance(sample, dict):
+                    continue
+                fields = ("group_id", "physical_block_id",
+                          "layer_sha256_prefix", "state_kind_index",
+                          "block_boundary_tokens")
+                values = [sample.get(k) for k in fields]
+                if (any(type(v) is not int or v < 0 for v in
+                        (values[0], values[1], values[3], values[4]))
+                        or not isinstance(values[2], str)
+                        or not re.fullmatch(r"[0-9a-f]{16}", values[2])):
+                    continue
+                digest = sample.get("state_sha256")
+                if (isinstance(digest, str) and
+                        re.fullmatch(r"[0-9a-f]{64}", digest)):
+                    mapped[tuple(values)] = digest
+        return mapped
+
+    cold = flatten(windows[0], "after_postprocess")
+    hits = {}
+    for index in hit_indices:
+        if type(index) is not int or not 2 <= index <= 4:
+            return output
+        hits.update(flatten(windows[index-1], "before_preprocess"))
+    keys = set(cold) & set(hits)
+    if not keys:
+        return output
+    matched = sum(cold[key] == hits[key] for key in keys)
+    output["matched_selected_state_blocks"] = matched
+    output["mismatched_selected_state_blocks"] = len(keys) - matched
+    output["status"] = ("INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS"
+                        if matched != len(keys) else
+                        "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF")
+    return output
+
+
 def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
-               enable_cold_controls: bool = False) -> dict:
+               enable_cold_controls: bool = False,
+               snapshot_tap=None) -> dict:
     """Cold + three strictly serialized repeats, one candidate GPU boot.
 
     MTP/EAGLE hybrid caches may miss the *first* repeated request and start
@@ -313,6 +404,13 @@ def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
     initial = metrics(port)
     observations = []
     last = initial
+    snapshot_windows = []
+    previous_snapshot = None
+    if snapshot_tap is not None:
+        try:
+            previous_snapshot = snapshot_tap()
+        except Exception:
+            previous_snapshot = None
     for index in range(4):
         result = extract(request_json(port, payload))
         # A malformed result cannot be treated as a cache-correctness PASS.
@@ -327,6 +425,14 @@ def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
             "hit_delta": hit_delta,
             "cached_prompt_tokens": cached,
         })
+        if snapshot_tap is not None:
+            try:
+                current = snapshot_tap()
+            except Exception:
+                current = None
+            snapshot_windows.append(snapshot_log_delta(
+                previous_snapshot, current, index + 1))
+            previous_snapshot = current
         last = after
 
     cold = observations[0]["response"]
@@ -393,6 +499,9 @@ def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
     return {
         "status": status, "requests": len(observations),
         "same_input_cold_controls": controls,
+        "candidate_request_snapshot_windows": snapshot_windows,
+        "candidate_snapshot_request_correlation": compare_snapshot_windows(
+            snapshot_windows, hit_indices),
         "no_hit_strict_numeric_baseline": assess_no_hit_numeric_baseline(controls),
         "mtp_configured_tokens": 2,
         "mtp_speculative_metric_names_observed": observed_spec_metric_names,

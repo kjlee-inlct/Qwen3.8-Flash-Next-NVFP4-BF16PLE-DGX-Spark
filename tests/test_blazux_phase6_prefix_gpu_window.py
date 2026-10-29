@@ -503,6 +503,84 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertIn("candidate_state_snapshot_full_cold_hit_pair_verified", source)
         self.assertIn('"physical_mapping_and_reuse_verified": False', source)
 
+    def test_serial_http_snapshot_windows_match_not_full_reuse_pass(self):
+        sample = {
+            "group_id": 0, "physical_block_id": 12,
+            "layer_sha256_prefix": "a" * 16,
+            "state_kind_index": 0, "block_boundary_tokens": 6400,
+            "state_sha256": "b" * 64,
+        }
+        cold = {"phase": "after_postprocess", "samples": [sample]}
+        hit = {"phase": "before_preprocess", "samples": [dict(sample)]}
+        baseline = []
+        state1 = [cold]
+        state2 = [cold, hit]
+        w1 = oracle.snapshot_log_delta(baseline, state1, 1)
+        w2 = oracle.snapshot_log_delta(state1, state2, 2)
+        w3 = oracle.snapshot_log_delta(state2, state2, 3)
+        w4 = oracle.snapshot_log_delta(state2, state2, 4)
+        got = oracle.compare_snapshot_windows([w1, w2, w3, w4], [2])
+        self.assertEqual(got["status"],
+                         "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF")
+        self.assertEqual(got["matched_selected_state_blocks"], 1)
+        self.assertFalse(got["full_state_reuse_verified"])
+        self.assertFalse(w1["full_state_reuse_verified"])
+
+    def test_snapshots_drift_or_wrong_hash_never_claim_full_reuse(self):
+        sample = {
+            "group_id": 0, "physical_block_id": 12,
+            "layer_sha256_prefix": "a" * 16,
+            "state_kind_index": 0, "block_boundary_tokens": 6400,
+            "state_sha256": "b" * 64,
+        }
+        cold = {"phase": "after_postprocess", "samples": [sample]}
+        changed = dict(sample, state_sha256="c" * 64)
+        hit = {"phase": "before_preprocess", "samples": [changed]}
+        window = [
+            {"status": "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS",
+             "events": [cold]},
+            {"status": "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS",
+             "events": [hit]},
+            {"status": "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS",
+             "events": []},
+            {"status": "HTTP_SERIAL_WINDOW_BOUNDED_SNAPSHOTS",
+             "events": []},
+        ]
+        got = oracle.compare_snapshot_windows(window, [2])
+        self.assertEqual(got["status"],
+                         "INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS")
+        self.assertEqual(got["mismatched_selected_state_blocks"], 1)
+        self.assertFalse(got["full_state_reuse_verified"])
+        drift = oracle.snapshot_log_delta([cold], [hit], 2)
+        self.assertEqual(drift["status"], "INCONCLUSIVE_SNAPSHOT_LOG_DRIFT")
+        self.assertFalse(drift["full_state_reuse_verified"])
+
+    def test_candidate_log_tap_filters_bad_state_hashes(self):
+        valid = {
+            "schema": 1, "phase": "before_preprocess",
+            "ordinal": 1, "status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+            "samples": [{
+                "state_sha256": "f" * 64, "group_id": 0,
+                "physical_block_id": 2,
+                "layer_sha256_prefix": "a" * 16,
+                "state_kind_index": 0, "block_boundary_tokens": 6400,
+            }, {"state_sha256": "invalid"}],
+        }
+        payload = "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps(valid)
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=payload,
+                                            stderr="")):
+            found = gpu.read_candidate_snapshot_events()
+        self.assertEqual(len(found), 1)
+        self.assertEqual(len(found[0]["samples"]), 1)
+        self.assertEqual(found[0]["samples"][0]["state_sha256"], "f" * 64)
+
+    def test_oracle_snapshot_tap_is_candidate_only_not_a_pass_gate(self):
+        src = (Path(__file__).resolve().parents[1] /
+               "src/p1_prefix_gpu_window.py").read_text()
+        self.assertIn("snapshot_tap=read_candidate_snapshot_events", src)
+        self.assertIn('"physical_mapping_and_reuse_verified": False', src)
+
     def test_actual_stage_observer_abi_is_checked_without_docker(self):
         with tempfile.TemporaryDirectory() as td:
             stage = Path(td)

@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "5801850b3cf74ce43837a6bd4a6a8098de30b303"
+      "blob_sha": "a663a560ce4b2b512a9d4c1dfa6405b5781fc6f3"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
-      "blob_sha": "604d5adaaf35913c642fb870d4d905f53c0fcbfb"
+      "blob_sha": "7ce83479aef04b3c5561b35a43d25641eda7d83c"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +451,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "ca03e145aaad219f453102f72fd31da49513d5b6"
+      "blob_sha": "67cd914a4c64cb729ddbaa4eae7591d66334db30"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -951,12 +951,12 @@
     {
       "path": "src/p1_prefix_gpu_oracle.py",
       "mode": "100644",
-      "blob_sha": "fc0aca568bed27ebcef31858a1a870ae681b8c60"
+      "blob_sha": "0d1f2b3f92479d17f858118738f9d55c262b5cea"
     },
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "f72f16a1e71cad6cdab29300ff196a3bd3171b3c"
+      "blob_sha": "7e27e5defffa57a590f48f58206fac97e9d1ac3e"
     },
     {
       "path": "src/p1_prefix_live_observer.py",
@@ -1381,7 +1381,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "534ca4bec0f7e044fbb9af31d99aaca4a18cbf5a"
+      "blob_sha": "b894f2aecf4301c746c055af6d97770039becbd9"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",

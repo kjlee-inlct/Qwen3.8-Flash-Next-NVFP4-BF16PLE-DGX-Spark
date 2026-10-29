@@ -17,9 +17,16 @@
 
 ## Exit and recovery gates
 
-1. DGX read-only closure prep must pass all existing CPU mocks plus the new candidate snapshot/parse regression cases; expected targeted total 96. Verify source manifest and original running status, Stage SHA, installed source SHA, and exact HEAD. A failure blocks GPU.
+1. DGX read-only closure prep must pass all existing CPU mocks plus the new candidate snapshot/parse regression cases; expected targeted total 100. Verify source manifest and original running status, Stage SHA, installed source SHA, and exact HEAD. A failure blocks GPU.
 2. A single operator-approved exclusive GPU maintenance window uses the existing script scripts/p1-prefix-gpu-window.sh --expected-head SHA --execute --confirm-id ORIGINAL_RECEIPT_ID. It temporarily stops the original. The script must clean candidate and restore original same-ID, HTTP /health and /v1/models; no pause to release GPU.
 3. Capture full candidate oracle JSON, active_candidate_abi.candidate_state_snapshot_records, the exit code, and original recovery proof. Nonzero exit remains inconclusive/failure even when restoration passes.
 4. Correlate real Cold/HIT snapshots by actual request and block identity, verify all GDN/PLE states and timing, then address no-HIT strict numerical nondeterminism separately. No diagnostic HASH match alone may upgrade the final gate.
 
 This commit is candidate-only GPU evidence preparation and is NOT final P1 PASS.
+
+## Serialized HTTP Cold/HIT attribution
+
+- GPU window now passes a candidate-only snapshot_tap callback into the existing 4-call, serial chat oracle. The callback reads and sanitizes capped candidate Docker state snapshot lines BEFORE the Cold call and AFTER each of four HTTP responses; each delta is assigned to request_index_1_based=1..4. No request text or IDs are inspected.
+- Truncation, ordering changes or missing Docker logs invalidate attribution rather than filling gaps. Candidate result includes candidate_request_snapshot_windows and candidate_snapshot_request_correlation; the final read_candidate_observer additionally keeps event records before candidate cleanup.
+- Source-grounded comparison matches Cold after_postprocess to actual cache-HIT before_preprocess using physical_block_id, group_id, anonymous layer digest, state_kind_index and target 6400-token boundary. Matching selected block hashes produce BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF, and mismatches produce INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS; neither is a P1 PASS. All-layer GDN/PLE and copy timing audit are still required.
+- New CPU tests cover log sanitization, serial window drift, matching/mismatching state hashes and proof non-escalation. Expected targeted CPU tests on this HEAD: 100 (previous 96 + 4); DGX and CI NOT_RUN.

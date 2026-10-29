@@ -469,6 +469,55 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
     print("P1_PREFIX_CANDIDATE_STOPPED_PATCH_AND_OBSERVER_SHA256_VERIFIED_NOT_GPU")
 
 
+def read_candidate_snapshot_events() -> list[dict]:
+    """Bounded source-only hashes, for serial HTTP request attribution.
+
+    Called before and after each oracle request while the isolated candidate
+    exists. No state values or request identifiers are returned. Missing/
+    rotated logs are made inconclusive by the oracle delta validator.
+    """
+    try:
+        cp = subprocess.run(["docker", "logs", "--tail", "6000", NAME],
+                            capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("CANDIDATE_SNAPSHOT_LOG_UNAVAILABLE") from None
+    if cp.returncode:
+        raise Blocked("CANDIDATE_SNAPSHOT_LOG_UNAVAILABLE")
+    prefix = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
+    observed = []
+    for line in (cp.stdout + "\n" + cp.stderr).splitlines():
+        if prefix not in line:
+            continue
+        try:
+            item = json.loads(line.split(prefix, 1)[1])
+        except (ValueError, TypeError):
+            continue
+        if (not isinstance(item, dict) or item.get("schema") != 1
+                or item.get("phase") not in
+                ("before_preprocess", "after_postprocess")):
+            continue
+        samples = []
+        raw_samples = item.get("samples")
+        if not isinstance(raw_samples, list):
+            raw_samples = []
+        for sample in raw_samples[:4]:
+            if (not isinstance(sample, dict) or
+                    not isinstance(sample.get("state_sha256"), str) or
+                    re.fullmatch(r"[0-9a-f]{64}", sample["state_sha256"]) is None):
+                continue
+            samples.append({key: sample.get(key) for key in (
+                "state_sha256", "group_id", "physical_block_id",
+                "layer_sha256_prefix", "state_kind_index",
+                "state_kind", "block_boundary_tokens", "observed_computed_tokens",
+                "natural_byte_length", "gpu_completed_before_read")})
+        observed.append({
+            "phase": item["phase"], "ordinal": item.get("ordinal"),
+            "status": item.get("status"), "samples": samples})
+        if len(observed) >= 128:
+            break
+    return observed
+
+
 def read_candidate_observer() -> dict:
     """Collect bounded actual engine/worker events from candidate Docker logs.
 
@@ -751,7 +800,8 @@ def run(argv: list[str] | None = None) -> int:
             print("P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS")
             try:
                 result = oracle.run_oracle(model, PORT, min_output_tokens=24,
-                                           enable_cold_controls=True)
+                                           enable_cold_controls=True,
+                                           snapshot_tap=read_candidate_snapshot_events)
             except oracle.OracleBlocked as exc:
                 raise Blocked("CANDIDATE_ORACLE_" + str(exc)) from None
             runtime_abi = read_candidate_observer()
