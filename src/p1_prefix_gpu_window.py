@@ -567,10 +567,12 @@ def run(argv: list[str] | None = None) -> int:
             wait_ready(PORT, model, timeout_s=1200)
             print("P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS")
             try:
-                result = oracle.run_oracle(model, PORT)
+                result = oracle.run_oracle(model, PORT, min_output_tokens=24)
             except oracle.OracleBlocked as exc:
                 raise Blocked("CANDIDATE_ORACLE_" + str(exc)) from None
             runtime_abi = read_candidate_observer()
+            runtime_abi["mtp_speculative_acceptance_observed"] = (
+                result["mtp_acceptance_observed"])
             result["active_candidate_abi"] = runtime_abi
             result["active_mamba_physical_mapping_observed"] = (
                 runtime_abi["physical_mapping_and_reuse_verified"])

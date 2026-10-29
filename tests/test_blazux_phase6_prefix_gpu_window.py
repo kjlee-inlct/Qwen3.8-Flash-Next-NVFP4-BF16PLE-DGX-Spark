@@ -214,6 +214,9 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertGreater(len(long["messages"][1]["content"]),
                            20 * len(short["messages"][1]["content"]))
         self.assertEqual(long["chat_template_kwargs"], {"enable_thinking": False})
+        self.assertEqual(long["max_tokens"], 256)
+        self.assertIn("integers from 1 through 40", long["messages"][1]["content"])
+        self.assertIn("seven plus five", short["messages"][1]["content"])
         self.assertIs(long["return_token_ids"], True)
         self.assertIs(long["logprobs"], True)
         self.assertEqual(long["temperature"], 0)
@@ -290,6 +293,8 @@ class CandidateWindowTests(unittest.TestCase):
                              [0.0, 0.0, 8000.0, 8000.0])
             self.assertEqual(result["max_token_logprob_abs_delta"], 0.0)
             self.assertFalse(result["active_mamba_physical_mapping_observed"])
+            self.assertFalse(result["mtp_acceptance_observed"])
+            self.assertEqual(result["minimum_requested_output_tokens"], 0)
         with patch.object(oracle, "request_json",
                           side_effect=[completion("") for _ in range(4)]), \
                 patch.object(oracle, "metrics", return_value=before), \
@@ -366,6 +371,31 @@ class CandidateWindowTests(unittest.TestCase):
                     "Config": {"Labels": {gpu.LABEL_KEY: "foreign"}}}):
             with self.assertRaisesRegex(gpu.Blocked, "REFUSE_CLEANUP_FOREIGN"):
                 gpu.cleanup_candidate()
+
+    def test_oracle_minimum_decode_and_mtp_acceptance_telemetry(self):
+        response = {"choices": [{
+            "message": {"content": "1, 2"}, "finish_reason": "stop",
+            "logprobs": {"content": [{"token": "1", "logprob": -0.2}]},
+            "token_ids": [11]}],
+            "usage": {"prompt_tokens": 9492, "completion_tokens": 1}}
+        before = {"vllm:prefix_cache_queries_total": 0.0,
+                  "vllm:prefix_cache_hits_total": 0.0,
+                  "vllm:spec_decode_num_accepted_tokens_total": 0.0}
+        after = [
+            {"vllm:prefix_cache_queries_total": 9492.0 * (i + 1),
+             "vllm:prefix_cache_hits_total": 6400.0 * i,
+             "vllm:spec_decode_num_accepted_tokens_total": 2.0 * (i + 1)}
+            for i in range(4)]
+        with patch.object(oracle, "request_json", side_effect=[response] * 4), \\
+                patch.object(oracle, "metrics", return_value=before), \\
+                patch.object(oracle, "settled_metrics", side_effect=after):
+            result = oracle.run_oracle("m", 18080, min_output_tokens=24)
+        self.assertEqual(result["status"],
+                         "INCONCLUSIVE_GENERATION_TOO_SHORT_FOR_LONG_DECODE")
+        self.assertTrue(result["cache_hit_observed"])
+        self.assertFalse(result["all_output_lengths_sufficient"])
+        self.assertEqual(result["mtp_accepted_draft_token_counter_delta"], 8.0)
+        self.assertTrue(result["mtp_acceptance_observed"])
 
     def test_live_candidate_observer_log_summary_is_not_physical_mapping_pass(self):
         examples = [

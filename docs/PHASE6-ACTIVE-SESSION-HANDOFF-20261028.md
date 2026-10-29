@@ -46,3 +46,9 @@
 - 실제 실행 시 `Scheduler._mamba_block_aligned_split`, `MambaHybridModelState.add_request` 호출 이후 런타임 인스턴스의 block-size/group 메타데이터, state-index GPU 텐서 shape/stride/storage bounds 및 제한된 slot seed 스칼라를 모델 텍스트 없이 Docker stdout에서 계측한다. scalar `.item()`은 후보 GPU 동기화를 동반하므로 **candidate-only diagnostic**이고 성능 벤치에 사용하면 안 된다. 단발성 수집 및 최대 12 이벤트/프로세스 제한.
 - 로그로부터 집계하는 `read_candidate_observer()`는 실제 후보 프로세스 이벤트 유무를 구분한다. sampled seed + tensor layout은 **전체 logical→physical block table의 내용·재사용 보존·group별 state allocation bounds를 증명하지 못함**. Physical mapping과 MTP acceptance는 계속 false로 반환하며, API 오라클만 PASS여도 P1 전체 return 0을 막는다. 이 한계를 해결할 추가 vLLM 내부 table 및 speculative acceptance hook은 실제 런타임 증거에 따라 설계해야 한다.
 - 신규 소스와 CPU mock 시험은 GitHub 코드 준비일 뿐 현재 DGX CPU/GPU/HTTP **NOT_RUN**. 마지막 실 GPU 검증 SHA는 계속 `c342e033c6e601f374520eefb6a9d0e9277b54ef`; 사용자의 새 운영 중지 승인 없이 `--execute` 하지 않는다. `main` 및 기존 운영 미변경.
+
+### 다음 단일 GPU 창 통합 진단 보강 — 이번 코드 DGX_NOT_RUN
+
+- 동일 합성 9,492 토큰급 prompt에 대해 최종 질문은 1~40 정수 나열, 후보 max_tokens=256으로 장문 출력을 요구한다. 각 4회 출력이 **최소 24 token IDs** 미만이면 `INCONCLUSIVE_GENERATION_TOO_SHORT_FOR_LONG_DECODE` 처리한다. 원본 사전 Chat 프로토콜 probe(짧은 질문)는 그대로 유지.
+- Cold↔HIT/HIT↔HIT 숫자 분해(기존 코드)를 유지한다. /metrics에 노출되는 `spec_decode` metric을 prefix counter와 함께 읽되, MTP=2 구성만으로 acceptance를 주장하지 않는다. 정확히 `vllm:spec_decode_num_accepted_tokens_total` 의 positive delta가 있는 경우에만 해당 메트릭 기준으로 `mtp_acceptance_observed=true`. 없는 경우 `false`이며 미계측으로 취급한다. 해당 지표가 Preview에 제공되는지는 미확인.
+- 모든 변경은 코드 준비/신규 CPU mock 수준이고 DGX CPU/GPU 테스트 미실행. 물리 Mamba logical→physical block mapping의 실제 재사용 정합성은 계속 차단 상태.

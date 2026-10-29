@@ -37,7 +37,10 @@ def build_payload(model: str, *, long_prompt: bool) -> dict:
     base = ("Unit-test reference: a fictional hardware monitor reads a "
             "register holding a stable state. This sentence is fixed. ")
     message = (base * (450 if long_prompt else 1))
-    message += "\nFinal question: What is seven plus five? Answer with the number 12."
+    message += ("\nFinal question: Output the integers from 1 through 40, "
+                "in ascending order, separated by comma and space, with no explanation."
+                if long_prompt else
+                "\nFinal question: What is seven plus five? Answer with the number 12.")
     return {
         "model": model,
         "messages": [
@@ -45,7 +48,7 @@ def build_payload(model: str, *, long_prompt: bool) -> dict:
             {"role": "user", "content": message}],
         "temperature": 0,
         "seed": 42,
-        "max_tokens": 96,
+        "max_tokens": 256 if long_prompt else 96,
         "logprobs": True,
         "top_logprobs": 1,
         "return_token_ids": True,
@@ -123,7 +126,8 @@ def metrics(port: int) -> dict[str, float]:
         raise OracleBlocked("PREFIX_METRICS_UNAVAILABLE") from None
     result = {}
     for line in body.splitlines():
-        if line.startswith("#") or "prefix_cache" not in line:
+        if line.startswith("#") or not any(
+                tag in line for tag in ("prefix_cache", "spec_decode")):
             continue
         match = re.fullmatch(r'([\w:]+)(\{[^}]*\})?\s+([0-9.eE+-]+)(?:\s+.*)?', line)
         if not match:
@@ -187,7 +191,7 @@ def logprob_diagnostics(runs: list[dict]) -> dict:
     }
 
 
-def run_oracle(model: str, port: int) -> dict:
+def run_oracle(model: str, port: int, *, min_output_tokens: int = 0) -> dict:
     """Cold + three strictly serialized repeats, one candidate GPU boot.
 
     MTP/EAGLE hybrid caches may miss the *first* repeated request and start
@@ -242,6 +246,19 @@ def run_oracle(model: str, port: int) -> dict:
         for o in observations[1:]
     ]
     hit_indices = [i + 2 for i, hit in enumerate(repeat_hits) if hit]
+    # Strict live acceptance evidence requires actual accepted draft tokens,
+    # not merely the configured MTP=2 flag or a speculative metric name.
+    accepted_counter = "vllm:spec_decode_num_accepted_tokens_total"
+    accepted_delta = sum(
+        max(0.0, val - initial.get(key, 0.0))
+        for key, val in last.items()
+        if key.split("{", 1)[0] == accepted_counter)
+    observed_spec_metric_names = sorted({
+        key.split("{", 1)[0] for key in last if "spec_decode" in key
+    })
+    long_enough = all(
+        len(r["token_ids"]) >= min_output_tokens
+        for r in [cold, *repetitions])
     if not same_text or not same_tokens or not same_finishes:
         status = "FAIL_NONIDENTICAL_OUTPUT_OR_FINISH"
     elif not any(repeat_hits):
@@ -249,6 +266,8 @@ def run_oracle(model: str, port: int) -> dict:
             status = "FAIL_ALL_REPEATS_PREFIX_CACHE_MISS"
         else:
             status = "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED"
+    elif not long_enough:
+        status = "INCONCLUSIVE_GENERATION_TOO_SHORT_FOR_LONG_DECODE"
     elif not lp_complete:
         status = "INCONCLUSIVE_TOKEN_LOGPROBS_MISSING"
     elif max_lp_delta is None or max_lp_delta > 1e-4:
@@ -258,6 +277,13 @@ def run_oracle(model: str, port: int) -> dict:
     return {
         "status": status, "requests": len(observations),
         "mtp_configured_tokens": 2,
+        "mtp_speculative_metric_names_observed": observed_spec_metric_names,
+        "mtp_accepted_draft_token_counter_delta": accepted_delta,
+        "mtp_acceptance_observed": accepted_delta > 0,
+        "minimum_requested_output_tokens": min_output_tokens,
+        "minimum_generation_length_observed": min(
+            len(r["token_ids"]) for r in [cold, *repetitions]),
+        "all_output_lengths_sufficient": long_enough,
         "oracle_endpoint": "/v1/chat/completions",
         "thinking_disabled": True,
         "prompt_sha256": hashlib.sha256(prompt_repr.encode()).hexdigest(),
