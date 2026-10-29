@@ -35,7 +35,8 @@ LABEL_VALUE = "isolated-20261029"
 MEMORY = "112g"
 MIN_AFTER_STOP_KIB = 96 * 1024 * 1024
 ENV_ALLOW = {
-    "VLLM_PLE_MMAP", "VLLM_PLE_MMAP_WORKERS", "HF_HUB_OFFLINE",
+    "VLLM_PLE_MMAP", "VLLM_PLE_MMAP_WORKERS",
+    "VLLM_PLE_MMAP_PREWARM", "HF_HUB_OFFLINE",
     "VLLM_USE_FLASHINFER_SAMPLER", "TRANSFORMERS_OFFLINE",
     "VLLM_WORKER_MULTIPROC_METHOD", "VLLM_ATTENTION_BACKEND",
     "VLLM_LOGGING_LEVEL", "VLLM_ENABLE_V1_MULTIPROCESSING",
@@ -140,6 +141,11 @@ def environment_delta(container: dict, image: dict) -> list[str]:
     if unknown:
         # Names only: no secret values, and never propagate unreviewed credentials.
         raise Blocked("UNREVIEWED_ENV_KEYS:" + ",".join(unknown))
+    # PLE mmap prewarm reads the full ~95 GiB BF16 table; it is unsafe
+    # to turn it on in this single-GB10 maintenance window.
+    prewarm = original.get("VLLM_PLE_MMAP_PREWARM", "0")
+    if prewarm not in ("0", ""):
+        raise Blocked("PLE_PREWARM_MUST_BE_DISABLED")
     if extra.get("NVIDIA_VISIBLE_DEVICES", "all") not in ("all", ""):
         raise Blocked("GPU_DEVICE_SELECTION_DRIFT")
     if extra.get("CUDA_VISIBLE_DEVICES", "") in ("-1", "none"):
@@ -204,11 +210,8 @@ def preflight() -> tuple[dict, dict, dict, list[str], list[str], str]:
                 (receipt["views"], "/recipe/recipe-views")}
     if {(m["Source"], m["Destination"]) for m in mounts} != expected:
         raise Blocked("MOUNT_DRIFT")
-    try:
-        inspect_json("container", NAME)
-    except Blocked:
-        pass
-    else:
+    # Do not mistake a Docker daemon/permission failure for "not found".
+    if candidate_ids():
         raise Blocked("CANDIDATE_NAME_OCCUPIED")
     cmd, model = candidate_cmd(cc.get("Cmd"))
     env = environment_delta(cc, ic)
@@ -300,15 +303,28 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], r
         raise Blocked("CANDIDATE_IDENTITY_DRIFT")
 
 
+def candidate_ids() -> list[str]:
+    # docker ps errors MUST propagate: an unreachable daemon is not evidence
+    # that the GPU-owning candidate is absent.
+    out = checked(["docker", "ps", "-aq", "--no-trunc",
+                   "--filter", "name=^/" + NAME + "$", "--format", "{{.ID}}"])
+    ids = out.splitlines() if out else []
+    if any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in ids) or len(ids) > 1:
+        raise Blocked("CANDIDATE_ID_LIST_AMBIGUOUS")
+    return ids
+
+
 def cleanup_candidate() -> None:
-    try:
-        ci = inspect_json("container", NAME)
-    except Blocked:
+    ids = candidate_ids()
+    if not ids:
         return
-    if ci.get("Image") != IMAGE or (
-            (ci.get("Config") or {}).get("Labels") or {}).get(LABEL_KEY) != LABEL_VALUE:
+    ci = inspect_json("container", NAME)
+    if (ci.get("Id") != ids[0] or ci.get("Image") != IMAGE or
+            ((ci.get("Config") or {}).get("Labels") or {}).get(LABEL_KEY) != LABEL_VALUE):
         raise Blocked("REFUSE_CLEANUP_FOREIGN_CONTAINER")
-    checked(["docker", "rm", "--force", NAME], timeout=60)
+    checked(["docker", "rm", "--force", ids[0]], timeout=60)
+    if candidate_ids():
+        raise Blocked("CANDIDATE_CLEANUP_NOT_CONFIRMED")
 
 
 def restore(receipt: dict, model: str, *, timeout_s: int = 900) -> None:

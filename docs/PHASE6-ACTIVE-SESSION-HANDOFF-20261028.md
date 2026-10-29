@@ -1,5 +1,8 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+> 최신 실제 DGX 영수증: `9fb60e82a5ccd78f4c356e30fe324dd475714b83` 신규 CPU 8/8, Source263/263 PASS; `VLLM_PLE_MMAP_PREWARM` 미허용으로 preflight fail-closed. **운영 stop/GPU/API 실행은 전혀 시작하지 않음.** 이 키의 비활성 값만 허용하고 Docker 존재 조회 오류를 차단한 새 구현은 아직 DGX 시험 전. 정확 SHA 증거는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)를 참조.
+
+
 ## 2026-10-29 실제 DGX 초기 후보 실행기 검증 및 사용자 계정 차단
 
 - **정확한 DGX 검증 SHA `742662df4920913abccfad99fd0fb9c3e26d6142`:** 사용자가 `git pull --ff-only` 이후 신규 `test_blazux_phase6_prefix_gpu_window.py` **7/7 PASS** 및 `PASS_SOURCE_ONLY: 263 tracked file(s)`를 보고. 읽기 전용 `scripts/p1-prefix-gpu-window.sh --preflight`에서 `P1_PREFIX_GPU_BLOCKED_USER_DRIFT` (exit 2) 발생. 원인은 컨테이너 Config.User가 이미지 기본 User와 다른 것. **이 사용자 차이가 오류라는 증거는 없으며 GPU·HTTP 모델 후보 실행은 전혀 시작되지 않았음.**

@@ -1,5 +1,12 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 후보 CPU 8/8 통과·PREWARM 키 차단 (DGX SHA 9fb60e82)
+
+- 사용자 DGX 로그: `git pull --ff-only`로 **`9fb60e82a5ccd78f4c356e30fe324dd475714b83`** 동기화; 신규 실행기 CPU **8/8 PASS**, `PASS_SOURCE_ONLY: 263 tracked file(s)`. 실행 전 `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_UNREVIEWED_ENV_KEYS:VLLM_PLE_MMAP_PREWARM` / exit 2. 따라서 후보 Docker create, 운영 stop, GPU 모델 로드, API 오라클, HTTP 복구 모두 **NOT_RUN**. 기존 기존 서비스 설정은 변경되지 않음.
+- 설치된 `src/vllm_ple_mmap.py`의 이 옵션은 BF16 PLE 전체 테이블 page-cache prewarm 제어(기본 0); 원본 runtime 환경에서 값 0 여부는 공유되지 않았다. 본 후속 수정은 **기존 변수 자체는 허용하되 값이 `0`/빈 값이 아니면 차단**한다. Docker 후보 이름 점검·정리의 daemon 오류를 '후보 없음'으로 오인하지 않게 하여 후보 존재가 불확실할 때 원 서비스 GPU 재기동 금지.
+- **후속 GitHub 커밋 DGX_NOT_RUN**. 새 SHA의 targeted CPU + source + CPU-only source/user probe를 하나의 안전한 순서로 수행하고 모두 통과한 경우에만 P1 유지보수창 `--execute` 가능. 실제 Prefix-cache hit/cold-output, MTP GPU, 활성 Scheduler/Mamba ABI는 미관측.
+
+
 ## 2026-10-29 실제 DGX 초기 후보 실행기 검증 및 사용자 계정 차단
 
 - **정확한 DGX 검증 SHA `742662df4920913abccfad99fd0fb9c3e26d6142`:** 사용자가 `git pull --ff-only` 이후 신규 `test_blazux_phase6_prefix_gpu_window.py` **7/7 PASS** 및 `PASS_SOURCE_ONLY: 263 tracked file(s)`를 보고. 읽기 전용 `scripts/p1-prefix-gpu-window.sh --preflight`에서 `P1_PREFIX_GPU_BLOCKED_USER_DRIFT` (exit 2) 발생. 원인은 컨테이너 Config.User가 이미지 기본 User와 다른 것. **이 사용자 차이가 오류라는 증거는 없으며 GPU·HTTP 모델 후보 실행은 전혀 시작되지 않았음.**

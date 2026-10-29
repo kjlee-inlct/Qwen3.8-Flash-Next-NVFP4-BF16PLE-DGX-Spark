@@ -55,6 +55,30 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertIn("SECRET_TOKEN", str(cm.exception))
         self.assertNotIn("do-not-display", str(cm.exception))
 
+    def test_prewarm_default_and_disabled_explicit_preserved(self):
+        image = {"Env": []}
+        self.assertEqual(gpu.environment_delta(
+            {"Env": ["VLLM_PLE_MMAP_PREWARM=0"]}, image),
+            ["VLLM_PLE_MMAP_PREWARM=0"])
+        self.assertEqual(gpu.environment_delta({"Env": []}, image), [])
+        for value in ("1", "2", "true"):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(gpu.Blocked, "PLE_PREWARM_MUST_BE_DISABLED"):
+                    gpu.environment_delta(
+                        {"Env": ["VLLM_PLE_MMAP_PREWARM=" + value]}, image)
+
+    def test_candidate_presence_failure_is_not_treated_as_absent(self):
+        with patch.object(gpu, "checked", side_effect=gpu.Blocked("DOCKER_PS_FAILED")):
+            with self.assertRaisesRegex(gpu.Blocked, "DOCKER_PS_FAILED"):
+                gpu.candidate_ids()
+            with self.assertRaisesRegex(gpu.Blocked, "DOCKER_PS_FAILED"):
+                gpu.cleanup_candidate()
+
+    def test_candidate_absence_checked_without_daemon_inspect(self):
+        with patch.object(gpu, "checked", return_value="") as cp:
+            gpu.cleanup_candidate()
+            cp.assert_called_once()
+
     def test_no_gpu_transitions_in_preflight(self):
         identity = {"id": "a" * 64}
         with patch.object(gpu.os, "geteuid", return_value=1000), \
@@ -95,8 +119,10 @@ class CandidateWindowTests(unittest.TestCase):
             {"vllm:prefix_cache_hits_total": 2}))
 
     def test_candidate_cleanup_only_with_ownership(self):
-        with patch.object(gpu, "inspect_json", return_value={
-                "Image": gpu.IMAGE, "Config": {"Labels": {gpu.LABEL_KEY: "foreign"}}}):
+        with patch.object(gpu, "candidate_ids", return_value=["a" * 64]), \
+                patch.object(gpu, "inspect_json", return_value={
+                    "Id": "a" * 64, "Image": gpu.IMAGE,
+                    "Config": {"Labels": {gpu.LABEL_KEY: "foreign"}}}):
             with self.assertRaisesRegex(gpu.Blocked, "REFUSE_CLEANUP_FOREIGN"):
                 gpu.cleanup_candidate()
 
