@@ -1,5 +1,7 @@
 # P1 Prefix-cache — 현재 진행 작업 인수인계 (2026-10-29)
 
+> **최신 P1 실 DGX 결과 — 2026-10-29, 영수증 SHA `14075d6a413d002d6c8c97f78b175a7f40d015eb` (아래 이전 스냅샷보다 우선):** targeted CPU 24+10/34 PASS, Source265/265 PASS, Stage ABI/read-only preflight PASS. 단일 승인 후보 GPU HTTP PASS, 9,503 prompt 토큰 Cold+HIT 3회, queries [9503×4], HIT [0,6400,6400,6400], 출력 text/150 token IDs 동일. 실제 MTP accepted token counter +400, Scheduler/Mamba add/align 이벤트 각 12회, active scheduler block 1600 / mamba block 1600 / cache block 8 / num_gpu_blocks 360. 그러나 physical mapping group tables 관측 **0개**, seed -1, strict logprob 최대 Cold→Repeat 0.000159494 및 Repeat→Repeat 0.000231789 > 1e-4. 최종 `INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE`, exit 2. **후보 cleanup + 기존 원본 동일 ID/HTTP 복구 PASS**. 현재 운영 서비스 추가 start/recover 불필요. 추가 GPU 윈도 승인 전 Stage의 실제 table/group 자료구조를 읽기 전용 분석해야 함. 상세 영수증은 [결과 장부](BLAZUX-PHASE6-RESULTS.md). 문서 반영 HEAD는 새 GPU 검증 아님.
+
 > **이 문서는 현재 진행 중인 P1 Prefix-cache 작업만 다룬다.** 과거 DGX 실행 영수증은 [Phase 6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 변하지 않는 결정·운영 규칙·완료 작업은 [영구 핸드오프](SESSION-HANDOFF-PROMPT.md), 기존 서비스 stop/restore 절차는 [P1 정비창](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md), 불필요한 Gate 확장 금지는 [재발 방지 정본](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 직접 읽는다. 해당 내용을 다시 작성하지 않는다. 본 파일과 영구 문서의 과거 `NOT_RUN`·과거 SHA 표기는 당시 시점의 기록이다.
 
 ## 현재 작업과 목표

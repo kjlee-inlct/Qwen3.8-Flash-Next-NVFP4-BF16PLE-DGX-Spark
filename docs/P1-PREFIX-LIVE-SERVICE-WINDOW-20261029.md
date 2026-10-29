@@ -1,5 +1,7 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+> **2026-10-29 최신 GPU 정비창 복구 영수증:** 시험 소스 `14075d6a413d002d6c8c97f78b175a7f40d015eb`에서 Prefix HIT 3회, 장문 150 token IDs/text 완전 동일, MTP 실제 accepted +400을 확인했지만 strict logprob 차이 및 Mamba physical mapping 부재로 P1 완전 정합성은 **INCONCLUSIVE (exit 2)**. 원본 동일 컨테이너 ID/HTTP 복구, 후보 잔존 없음은 사용자 로그에서 **PASS**. `start.sh`·`--recover` 재호출 불필요. **새 GPU 유지보수 실행은 별도 승인 필요**. [상세 결과](BLAZUX-PHASE6-RESULTS.md).
+
 ## 2026-10-29 현재 적용 완료 상태 — 이전 'NOT_RUN' 준비 단락보다 우선
 
 - **현재 서비스 조작 불필요:** 사용자 DGX GPU 시험 `c342e033c6e601f374520eefb6a9d0e9277b54ef` 종료 메시지 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED` 확인, 원본 동일 Docker ID 재기동 및 모델 HTTP 준비 성공, 후보 정리됨. 실시간 시점은 별도 읽기 전용 상태 조회로만 판단. `running`이면 `start.sh` 실행할 이유가 없다. `start.sh`는 정확한 HEAD/영수증 ID를 검사하는 `running → NO-OP` 계약으로 구현되어 있지만 불필요한 재호출은 하지 않는다.
