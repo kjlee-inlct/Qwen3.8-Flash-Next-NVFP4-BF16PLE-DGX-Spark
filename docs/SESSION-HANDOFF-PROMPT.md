@@ -1,5 +1,8 @@
 # SESSION-HANDOFF-PROMPT.md
 
+> **2026-10-29 현행 P1 문서 경로 및 권한 범위 보충:** 본 파일은 **상시 규칙과 과거 기록**을 보존한다. 현재 진행 중인 작업·마지막 실제 DGX 결과·next step은 [P1 활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 증거/정확한 SHA는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 유지보수 안전 조건은 [P1 운영 절차](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md)가 정본이다. 2026-10-28 main/Wizard 전용 `scripts/stop.sh` 설명은 **당시 main 배포 이력**이다. 2026-10-29 Phase6 기능 브랜치의 `scripts/stop.sh`는 사용자 승인하에 Manifest·영수증·실제 Docker 신원 검증을 통과한 **기존 YSLAB 컨테이너 stop-only** 전용이며, `--wizard`를 명시할 때만 예전 Wizard 소유 컨테이너를 대상으로 한다. `pause.sh`는 프로세스를 얼려 GPU 메모리를 돌려주지 않고, 공통 `start.sh`는 paused→unpause, exited→start, running→NO-OP를 수행한다. **이 별도 승인으로 YSLAB uninstall/삭제·이미지 재빌드·운영 중단 자동 실행·CI/PR/merge/P2 착수가 허용되지는 않는다.** 시험 성공을 새 HEAD·실모델 GPU·HTTP/API로 확대 해석하지 않는다.
+
+
 > **2026-10-28 새 상시 규칙 확인:** P1 종료 후 P2 자동 시작 금지, 레거시 Docker 정지와 신규 Wizard 전용 stop.sh 구분 및 운영 전환의 별도 승인/복구 원칙은 main 영구 문서의 [PR #6](https://github.com/kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark/pull/6)에 정리됨. 이 브랜치의 실제 진행 중인 P1 작업은 [현재 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 테스트 영수증은 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)를 참조하며 이곳에 중복하지 않는다.
 
 

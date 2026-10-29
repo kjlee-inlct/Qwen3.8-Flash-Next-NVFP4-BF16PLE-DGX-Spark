@@ -1,5 +1,8 @@
 # 운영 시나리오 / 체크리스트
 
+> **범위 안내 (2026-10-29):** 아래 Wizard 신규 자산 설치/삭제 작업과 이전 2026-10-26 기록은 역사적/독립 Wizard 절차이다. **현재 P1의 사용자 승인된 기존 YSLAB 서비스 일시 관리**는 기능 브랜치 `feature/blazux-phase6-runtime-gates`의 [전용 정비창 문서](../docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md), [활성 인수인계](../docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)가 우선이다. `~/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark`의 `main`에 있는 `scripts/stop.sh`와 새 P1 `scripts/stop.sh`는 **동일한 동작이 아니다**. 기존 서비스를 stop/pause/start할 때는 전용 `~/Workspace/llm/blazux-phase6-gates`에서 정책·영수증·full Docker ID가 검증된 스크립트만 사용한다. 아직 실제 P1 GPU 후보 런타임/운영 stop은 실행하지 않았다.
+
+
 > 최신 신규 Wizard 전용 이름은 `qwen38-wizard-<target>`; owner marker와 정확한
 > Docker ID/image ID/receipt를 함께 확인한다. 레거시 컨테이너가 가동 중이면
 > 단일 GB10 신규 GPU 서비스는 동시 시작하지 않는다.

@@ -1,3 +1,14 @@
+# Phase 6 evidence ledger
+
+## 2026-10-29 DGX Prefix 후보 두 파일 실제 Stage PASS — SHA 8e7b2e7535d7c27500b55046220c3f68de788aab
+
+- **사용자 제공 실제 실행 로그:** `git pull --ff-only`로 해당 HEAD fast-forward; `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_stage_files.py' -v` → `Ran 6 tests in 0.005s`, `OK` (**6/6**). `scripts/p1-prefix-stage.sh --expected-head 8e7b2e7535d7c27500b55046220c3f68de788aab --execute` → `PASS_SOURCE_ONLY: 259 tracked file(s)` 및 실제 생성 `files=2`, `actual_gpu_or_model_run=false`, `status=SOURCE_STAGE_ONLY_NOT_INSTALLED`.
+- **성공 마커:** `P1_PREFIX_GPU_SOURCE_STAGE_READY_ONLY_NOT_APPLIED`, `P1_PREFIX_STAGE_HOST_DIRECTORY=/tmp/p1-prefix-stage.2dSPVPR6`, `P1_PREFIX_STAGE_DGX_CPU_ONLY_READY_NOT_GPU_TESTED`. 출력한 파일 두 개의 SHA256: `mamba_hybrid.py=1dfb7b5566c8e683afff6640b1764c774c27daaa817437862fd465e63da9f381`, `scheduler.py=0501cec135d23a21f988c67371f8f1dbf97cc63726c9c44b89e350c8887178d7`. 결과 파일은 격리 CPU Docker로 생성한 임시 **호스트 출력**이며 pinned 원본 이미지/설치 vLLM에 반영하지 않았다. `/tmp` 경로의 미래 존재/파일 SHA/권한은 재확인 필요.
+- **코드/실행 판정:** `P1_PREFIX_STAGE=DGX_CPU_SOURCE_FILES_CREATED_VERIFIED`; `PREFIX_RUNTIME_GPU=NOT_RUN`; `P6_A_ACTIVE_ABI=BLOCKED_MISSING_IN_PROCESS_EVIDENCE`; `PREFIX_COLD_HIT_IDENTICAL_OUTPUT=NOT_RUN`; `MTP_PREFIX_INTERACTION=NOT_RUN`; `LEGACY_STOP_PAUSE_RESTORE=NOT_RUN`. Source/CPU PASS를 GPU/API/실 사용 정합성 PASS로 승격하지 않는다. 기존 API 상태 및 새 추론 시험 미확인.
+- **진행해야 할 일:** 기존 Docker Entrypoint/Env/RO 마운트 구성에 대한 제안된 read-only 상세 확인은 **아직 DGX 결과 미제출**이다. 별도 후보 Docker 런처·정확한 소스 적용 지점·모델 메모리 예산·Prefix cache ON 오라클·실패 시 동일 ID 복구 및 HTTP health를 준비하기 전 stop하지 않는다. 이 결과는 이전 `7fecba2`의 실 start NO-OP PASS와 다른 독립 증거이다.
+
+> 아래 기록은 해당 소스 SHA 및 작성 시점의 **과거 스냅샷**이다. 그 안의 `DGX_NOT_RUN`은 그때의 커밋을 수식하며, 최신 `8e7b2e7` Stage PASS와 혼동하지 않는다.
+
 ## 2026-10-29 P1 exact-PIN Prefix candidate file staging prepared (GPU NOT_RUN)
 
 - **DGX operator evidence at code HEAD `7fecba294341b9e3d017cbdeda0438c23106b977`:** `PASS_SOURCE_ONLY: 256 tracked file(s)`, `P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED`, `P1_START_RUNNING_NOOP_DGX_PASS_UNCHANGED`. The tested shell compared full container ID, `StartedAt`, status and paused flag before/after and found exact equality. Therefore repeated `start.sh` on the running legacy service was a real **successful no-op**; no restart or state change. API readiness was not checked in this operator snippet.
@@ -10,8 +21,6 @@
 - `scripts/pause.sh` is the newly requested *optional* operational entrypoint. For this fixed manifest+legacy ID it invokes `docker pause` only from running state. It freezes processes **without freeing existing GPU model allocation**, so **NOT a substitute for `scripts/stop.sh` for P1 second GPU model runtime**. User-visible API will not answer normally while paused.
 - `scripts/start.sh` is common: paused → `docker unpause`; exited → `docker start`; running or ambiguous states fail closed. Same immutable manifest/receipt/image/port/mount/ID and clean exact Git HEAD checked on every action; postaction Docker state checked. `P1_LEGACY_WINDOW_PREFLIGHT_PASS_PAUSED` is state-observation only. Neither start pathway asserts API health, and both require subsequent `/health` + `/v1/models`. Add mock transition and fake-shell dispatch tests, **no actual Docker/GPU execution in GitHub**.
 - **Previous DGX `7fd423db3e9fe260ce786e185f755f387975c31b` source255/255 + `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING` belongs to the before-pause code. New pause/shared start source at new commit is **DGX_NOT_RUN**. Legacy pause/stop/start `NOT_RUN`, P1 active ABI `BLOCKED`, real GPU prefix correctness `NOT_RUN`, P2/P3 not started.
-
-# Phase 6 evidence ledger
 
 ## 2026-10-29 P1 common start idempotency and user DGX evidence
 

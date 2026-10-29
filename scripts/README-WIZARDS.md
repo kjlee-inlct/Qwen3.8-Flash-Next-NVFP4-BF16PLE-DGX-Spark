@@ -1,5 +1,8 @@
 # DGX Spark 설치·제거 위자드 사용 안내
 
+> **현재 P1 작업 구분:** 이 설명서의 이전 Wizard 작업은 `main` 및 설치 위자드 이력이다. `feature/blazux-phase6-runtime-gates`의 신규 `scripts/stop.sh`는 `--expected-head`를 요구하는 기존 YSLAB 컨테이너 stop-only, `scripts/pause.sh`는 동일 ID pause-only, 공통 `scripts/start.sh`는 running→NO-OP / paused→unpause / exited→start이다. **`main`의 stop.sh에는 P1 옵션을 전달하지 않는다.** 최신 사용자 DGX 단계는 [활성 P1 인수인계](../docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)와 [결과 장부](../docs/BLAZUX-PHASE6-RESULTS.md)를 우선 참조한다.
+
+
 **다음 세션 인수인계:** [SESSION-HANDOFF-PROMPT.md](../docs/SESSION-HANDOFF-PROMPT.md)에서 최종 GitHub PR #1 병합, DGX 163개 전체 테스트 통과 기록, 미완료 실제 설치/제거 시험 및 GitHub 직접 작업 규칙을 확인하세요. 아래 일부 이전 시점 문구는 당시 기록입니다.
 
 > **2026-10-26 사용자 DGX 로그: 모의 36/36 및 전체 156/156 PASS (이전 HEAD).**

@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "9699154f5e0c64bc88e4300df0cca5f2a6ef4ef9"
+      "blob_sha": "5d170930a250edfd62280f988404b96f9f050cc0"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "7a36129a38c2fea739114f13ed2f5acb05b09fec"
+      "blob_sha": "131f65600cc46bc1a7cde06bd8bf09cfaba21670"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -446,17 +446,17 @@
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
       "mode": "100644",
-      "blob_sha": "70d93a8d21ac6ea2dbfc9fc9057cf4fc0557060f"
+      "blob_sha": "407378227df1b0217f4327ce6cff4b6f92c6231c"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "b43ae765645056292f5d2a092ba8fd1eb7d0ca7b"
+      "blob_sha": "8eb125d02ec1cb438240766e1ef9d96ee8805fa3"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "ac4bdc5d9db6260138efd98d76def0227fef30b7"
+      "blob_sha": "9b0702b1c936346ad5236444fc4bc637596dbeb4"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -626,17 +626,17 @@
     {
       "path": "scripts/MANIFEST-SCHEMA.md",
       "mode": "100644",
-      "blob_sha": "e965946505988326989a76fbec2f78ddcc2492c1"
+      "blob_sha": "d73489d215eff3ee16cf6278473ff8dddbae8835"
     },
     {
       "path": "scripts/OPERATIONS.md",
       "mode": "100644",
-      "blob_sha": "a1c64d68ddff8afa97b0eec58393c1a37b69717c"
+      "blob_sha": "28c3b4ede7da4e52b80d2e1c594f88f4db3e85f2"
     },
     {
       "path": "scripts/README-WIZARDS.md",
       "mode": "100644",
-      "blob_sha": "d62789a20eba2ca36cfc9b687871bd7f35276001"
+      "blob_sha": "5db82535d1876073c3709b122a16f0b805e7ee6b"
     },
     {
       "path": "scripts/SAFETY-AND-RECOVERY.md",

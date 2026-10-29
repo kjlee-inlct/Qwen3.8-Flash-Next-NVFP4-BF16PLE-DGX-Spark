@@ -1,5 +1,8 @@
 # blazux Track A Phase 6 — Approval-gated runtime verification
 
+> **2026-10-29 P1 진행 주석:** 하위 Gate의 2026-10-28 수치와 승인 상태는 당시 기록이며 최신 결과를 대체하지 않는다. 사용자 DGX `8e7b2e7`에서 Prefix 소스 두 파일을 CPU-only로 실제 생성한 것은 **SOURCE_STAGE_PASS**이지 `P6-A ACTIVE ABI` 또는 GPU Prefix ON/cold-hit 정합성 PASS가 아니다. 기존 서비스는 아직 중지하지 않았다. [현재 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) 및 [Stage 영수증](BLAZUX-PHASE6-RESULTS.md)을 우선 읽는다.
+
+
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
 
 **사용자 지적 및 어시스턴트 작업 관리 실패:** Phase 4에서 PLE 옵션을 이미 오프라인 구현한 이후, Phase 5·6에서 소스/CPU 합성 시험, 하위 Gate, 문서/Manifest를 과도하게 늘린 반면, 사용자가 원했던 신규 blazux 기능의 실제 엔진 적용·통합 성과는 증명하지 못했다. 147/147 tests, Source224/224, B0/B1a PASS는 각 검증 범위의 성과일 뿐 **8개 기능의 운영 적용 실적은 0개**이다. 실제 ABI BLOCKED를 재조사와 Gate 증식으로 해결할 수 있다는 인상을 주지 말 것.

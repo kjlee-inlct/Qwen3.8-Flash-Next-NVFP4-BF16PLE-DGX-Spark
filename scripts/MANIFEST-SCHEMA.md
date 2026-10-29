@@ -12,12 +12,18 @@
 
 Manifest에 Docker 리소스의 **현재 소유권을 고정 기록하면 안 된다**. Git의 선언형 정책과 로컬의 동적 ID를 분리해야 두 체크아웃 간 충돌을 예방할 수 있다.
 
+## 2026-10-29 P1 별도 유지보수 명령과 Wizard 소유권의 구분
+
+- **Wizard 기본 규칙은 그대로:** `adopt-legacy`는 기존 YSLAB 컨테이너에 대한 `OBSERVE_ONLY` 관찰 정보만 등록하며 Wizard `uninstall.sh`로 기존 컨테이너를 stop/rm/replace할 소유권을 제공하지 않는다.
+- **별도 승인된 P1 한정 예외:** 기능 브랜치 `feature/blazux-phase6-runtime-gates`의 `scripts/pause.sh`, `scripts/stop.sh`, 공통 `scripts/start.sh`는 사용자 승인된 동일 레거시 컨테이너 **상태 전환만** 수행한다. `scripts/deployment-manifest.json`의 `legacy` 항목과 신규 고정 `legacy.image_id` SHA256, 기존 YSLAB 로컬 `paths`/`container-id`/`image-id` 및 Docker 실 상태(전체 ID·이미지·label·port·bind mounts·restart policy)가 **모두 일치**해야 하며 exact HEAD·clean Source Manifest·`--confirm-id FULL64 --execute`가 필요하다. container/image/cache 삭제 및 운영 이미지 패치는 지원하지 않는다. 이 정책은 역사적 Wizard 경계나 `main`의 동일 이름 스크립트를 변경하지 않는다.
+- `source-state-manifest.json`의 blob/mode 검증은 **소스 무결성**에 한정하고, `deployment-manifest.json`의 `legacy` fingerprint만으로 실제 Docker 관리 권한을 주장하지 않는다. **신원 검사 + 사용자의 명시적 작업 승인**이 모두 필요하다. `docker pause`는 GPU 메모리를 해제하지 않으므로 P1 별도 모델 GPU 작업 시 `stop.sh`만 활용한다.
+
 ## 2. deployment-manifest.json 필드
 
 - `schema_version=1` / `policy_id`: 호환성 식별자.
 - `origin`: 이 Fork/원본과 참조 시점 기준 commit SHA. 현재 실행한 checkout의 SHA와 혼동하지 않는다.
 - `service`: MTP2 추천 target, image tag, `127.0.0.1:18300`, context `262144`, seqs `8`, memory `0.80`, readiness 상한.
-- `legacy`: 이미 사용된 YSLAB 배포를 **관찰**하기 위한 상대 경로, legacy 이미지/컨테이너/포트, 정확한 PIN과 Docker recipe label.
+- `legacy`: 이미 사용된 YSLAB 배포를 기본적으로 **관찰**하기 위한 상대 경로, legacy 이미지/컨테이너/포트, 정확한 PIN과 Docker recipe label; P1 승인 유지보수 컨트롤러의 추가 `legacy.image_id`는 해당 설치 이미지의 **고정 SHA256 ID**. 실제 사용자 컨테이너 ID는 Git에 저장하지 않으며 로컬 원본 영수증을 사용한다.
 - `policies`: 모델·cache·인증·타 서비스 보존, legacy read-only adoption, 명시적 소유권 요구, API 외부 노출 제한.
 
 `scripts/manifest.sh validate`는 선언형 정책을 정적으로 검사한다. 최신 Docker/가중치 상태를 검증하는 것은 `scripts/status.sh`, `scripts/doctor.sh`, 모델 `scripts/qwen38-dgx-spark audit`의 역할이다.
