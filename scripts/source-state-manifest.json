@@ -446,7 +446,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "c7301517ec4e21a6267cc66671f28dabe1c9a6bd"
+      "blob_sha": "4695e034bfc320822522fdb6a5f97ec1c8e09af0"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -1371,7 +1371,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_mamba_utils_probe.py",
       "mode": "100644",
-      "blob_sha": "1add95a412371dba4719aeec06d385b64bbc51ab"
+      "blob_sha": "e5b17924a39e95de7daf5009ef7b9785124800ec"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",

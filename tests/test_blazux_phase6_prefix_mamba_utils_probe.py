@@ -19,6 +19,7 @@ def fixture(*, has_copy=True):
             "    def initialize_from_forward_context(self, kv_cache_config, forward_context, copy_funcs, block_tables):\n"
             "        self.state_base_addrs = forward_context\n"
             "    def _populate_metadata(self, kv_cache_config, forward_context, copy_funcs, block_tables):\n"
+            "        self.state_base_addrs = forward_context\n"
             "        self.state_block_strides = forward_context\n"
             "    def run_fused_precopy(self, num_reqs, state_idx_gpu, src_col_gpu, token_bias_gpu, idx_mapping):\n"
             "        grid = (num_reqs,)\n" + copy +
@@ -127,6 +128,28 @@ class Tests(unittest.TestCase):
         self.assertFalse(summary["state_content_reuse_verified"])
         self.assertTrue(summary["state_base_address_metadata_referenced"])
         self.assertTrue(summary["state_block_stride_metadata_referenced"])
+
+    def test_source_hints_do_not_infer_metadata_from_other_method(self):
+        # The context initializer references state_base_addrs, but a
+        # different method's attribute is not evidence that _populate_metadata
+        # configures it. Source-only inference must be scoped to its body.
+        with_base = (
+            b"    def _populate_metadata(self, kv_cache_config, forward_context, copy_funcs, block_tables):\n"
+            b"        self.state_base_addrs = forward_context\n"
+            b"        self.state_block_strides = forward_context\n"
+        )
+        without_base = (
+            b"    def _populate_metadata(self, kv_cache_config, forward_context, copy_funcs, block_tables):\n"
+            b"        self.state_block_strides = forward_context\n"
+        )
+        source = fixture()
+        self.assertEqual(source.count(with_base), 1)
+        source = source.replace(with_base, without_base)
+        summary = probe.copy_path_source_evidence(probe.inspect_source(source))
+        self.assertFalse(summary["state_base_address_metadata_referenced"])
+        self.assertTrue(summary["state_block_stride_metadata_referenced"])
+        self.assertFalse(summary["real_live_state_hash_captured"])
+        self.assertFalse(summary["state_content_reuse_verified"])
 
     def test_actual_image_probe_is_mocked_not_executed(self):
         fake_original={'Config':{'User':'1000:1000'}}
