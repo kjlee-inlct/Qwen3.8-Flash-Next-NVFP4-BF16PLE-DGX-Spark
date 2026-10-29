@@ -369,11 +369,11 @@ def run(argv: list[str] | None = None) -> int:
             print(json.dumps(result, sort_keys=True))
             print("P1_PREFIX_GPU_ORACLE_" + result["status"])
         finally:
-            try:
-                cleanup_candidate()
-            finally:
-                if stopped:
-                    restore(receipt, model)
+            # NEVER restore the original while candidate might still own GPU memory.
+            # A cleanup failure leaves original stopped and requires explicit --recover.
+            cleanup_candidate()
+            if stopped:
+                restore(receipt, model)
         return 0
     except (Blocked, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         # Do not echo unexpected exception content (may include secret data).
