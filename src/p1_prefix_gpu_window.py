@@ -373,7 +373,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
     verify_candidate_code(root, "_p1_prefix_live_observer.py",
                           hashlib.sha256(observer_bytes).hexdigest())
     suffixes = {
-        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
+        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, 'initialize_kv_cache', 'init')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
         "scheduler.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(Scheduler, '_mamba_block_aligned_split', 'scheduler')\n",
     }
     for name, (relative, digest) in PATCHES.items():
@@ -381,8 +381,17 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
         data = (STAGE / name).read_bytes()
         if len(data) > 2_000_000 or hashlib.sha256(data).hexdigest() != digest:
             raise Blocked("CANDIDATE_STAGE_SHA256_DRIFT")
-        # Fail before original stop if the appended hook breaks Python syntax.
+        # Reject ABI drift before original stop, never only after GPU load.
         import ast
+        parsed = ast.parse(data.decode("utf-8"))
+        if name == "mamba_hybrid.py":
+            classes = [node for node in parsed.body if
+                       isinstance(node, ast.ClassDef) and
+                       node.name == "MambaHybridModelState"]
+            methods = {node.name for node in classes[0].body
+                       if isinstance(node, ast.FunctionDef)} if len(classes) == 1 else set()
+            if not {"initialize_kv_cache", "add_request"}.issubset(methods):
+                raise Blocked("MAMBA_ACTIVE_OBSERVER_METHOD_NOT_IN_STAGE")
         candidate_bytes = data + suffixes[name].encode("utf-8")
         try:
             ast.parse(candidate_bytes.decode("utf-8"))
@@ -417,12 +426,32 @@ def read_candidate_observer() -> dict:
         except ValueError:
             continue
         if isinstance(item, dict) and item.get("schema") == 1 and (
-                item.get("kind") in ("scheduler", "mamba")):
+                item.get("kind") in ("scheduler", "mamba", "init")):
             events.append(item)
     mamba = [e for e in events if e["kind"] == "mamba"]
     sched = [e for e in events if e["kind"] == "scheduler"]
+    init = [e for e in events if e["kind"] == "init"]
+    physical = [p for e in mamba for p in e.get("physical_map_samples", [])
+                if isinstance(p, dict)]
     return {
         "active_scheduler_event_count": len(sched),
+        "active_mamba_kv_initialize_event_count": len(init),
+        "active_mamba_init_table_group_counts": [
+            e.get("mamba_group_table_count") for e in init[:4]],
+        "physical_table_sample_count": len(physical),
+        "physical_block_entries_observed": sum(
+            p.get("physical_entry_observed") is True for p in physical),
+        "physical_entry_out_of_bounds_count": sum(
+            p.get("row_in_bounds") is False or
+            p.get("column_in_bounds") is False for p in physical),
+        "physical_group_block_size_mismatch_count": sum(
+            p.get("block_size_matches_mamba_config") is False
+            for p in physical),
+        "mamba_seed_expected_comparison_count": sum(
+            "state_seed_matches_expected" in e for e in mamba),
+        "mamba_seed_mismatch_count": sum(
+            e.get("state_seed_matches_expected") is False
+            for e in mamba if "state_seed_matches_expected" in e),
         "active_mamba_add_request_event_count": len(mamba),
         "mamba_state_seed_observed_count":
             sum(e.get("state_seed_observed") is True for e in mamba),
@@ -435,6 +464,9 @@ def read_candidate_observer() -> dict:
         "mamba_sampled_seeds": [
             e.get("state_seed_value") for e in mamba[:8]
             if e.get("state_seed_observed") is True],
+        "physical_mapping_observed_partial": (
+            bool(physical) and
+            any(p.get("physical_entry_observed") is True for p in physical)),
         "physical_mapping_and_reuse_verified": False,
         "mtp_speculative_acceptance_observed": False,
         "provenance": "LIVE_CANDIDATE_WORKER_STDOUT_NOT_STATIC_AST",

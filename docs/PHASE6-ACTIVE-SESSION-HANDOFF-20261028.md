@@ -52,3 +52,9 @@
 - 동일 합성 9,492 토큰급 prompt에 대해 최종 질문은 1~40 정수 나열, 후보 max_tokens=256으로 장문 출력을 요구한다. 각 4회 출력이 **최소 24 token IDs** 미만이면 `INCONCLUSIVE_GENERATION_TOO_SHORT_FOR_LONG_DECODE` 처리한다. 원본 사전 Chat 프로토콜 probe(짧은 질문)는 그대로 유지.
 - Cold↔HIT/HIT↔HIT 숫자 분해(기존 코드)를 유지한다. /metrics에 노출되는 `spec_decode` metric을 prefix counter와 함께 읽되, MTP=2 구성만으로 acceptance를 주장하지 않는다. 정확히 `vllm:spec_decode_num_accepted_tokens_total` 의 positive delta가 있는 경우에만 해당 메트릭 기준으로 `mtp_acceptance_observed=true`. 없는 경우 `false`이며 미계측으로 취급한다. 해당 지표가 Preview에 제공되는지는 미확인.
 - 모든 변경은 코드 준비/신규 CPU mock 수준이고 DGX CPU/GPU 테스트 미실행. 물리 Mamba logical→physical block mapping의 실제 재사용 정합성은 계속 차단 상태.
+
+### 다음 단계: 후보 물리 블록 표본 계측 (신규 변경 DGX_NOT_RUN)
+
+- **기존 CPU 검증 사용자 DGX 로그:** 정확 SHA `6f018dd283aea95f9babb0c3473d9cca0400725e`에서 GPU-window mock 23/23, live-observer mock 3/3, Source Manifest 265/265 PASS. 이는 실제 컨테이너 실행이 아닌 CPU 계약 검증이다.
+- 후보의 동일 `mamba_hybrid.py` 사본에 `initialize_kv_cache` 후처리 hook을 추가한다. **정지한 후보에만 설치**, 원래 두 Stage SHA/소유권 유지. CPU 소스 AST로 메서드 존재를 GPU/원본 중지 전에 거부한다. 실제 Mamba group id에 해당하는 persistent state-slot block table tensor 참조/shape/row stride를 준비하고, `add_request(req_index,new_req_data)`에서 `(num_computed_tokens-1)//mamba_block_size` 예상 seed와 실제 GPU seed 및 해당 `[req_index, seed]` 물리 block-id 표본을 대조한다. 표본 GPU scalar read는 동기화가 있을 수 있으므로 후보 디버그 한정, 요청별 최대 12번. 일치하는 group spec block-size 여부와 row/column bounds 포함, 사용자 프롬프트·가중치·절대 GPU 주소 출력 금지.
+- 이 값들은 **실제 프로세스 표본 관측이 실행되어야만 의미**가 있다. block table의 physical id가 유효해도 실제 state-content가 HIT에서 정확히 재사용/보존됐다는 증명이 아니므로 `physical_mapping_and_reuse_verified=false`는 그대로 유지. `active_mamba_physical_mapping_observed`를 전체 PASS로 잘못 승격하지 않는다. 정확한 실기 검증 및 후속 state-content/inference parity는 미완료. GPU 실행·운영 중단 새 승인 필요.

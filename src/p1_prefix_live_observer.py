@@ -8,7 +8,6 @@ from __future__ import annotations
 import functools
 import inspect
 import json
-import math
 
 PREFIX = "P1_PREFIX_ACTIVE_ABI_JSON:"
 MAX_EVENTS = 12
@@ -75,6 +74,102 @@ def _groups(obj):
     return result
 
 
+
+def _kv_spec_info(kv_cache_config, group_ids):
+    """Inspect only named Mamba KV groups and typed spec fields."""
+    groups = _direct(kv_cache_config, "kv_cache_groups")
+    if not isinstance(groups, (list, tuple)):
+        return {}
+    result = {}
+    for gid in group_ids[:8]:
+        if type(gid) is not int or gid < 0 or gid >= len(groups):
+            continue
+        group = groups[gid]
+        specs = _direct(group, "kv_cache_spec")
+        layer_names = _direct(group, "layer_names")
+        details = []
+        if isinstance(specs, dict):
+            for layer_name in list(specs)[:16]:
+                spec = specs[layer_name]
+                details.append({"spec_class": type(spec).__name__,
+                                **_scalar_fields(spec)})
+        else:
+            details.append({"spec_class": type(specs).__name__,
+                            **_scalar_fields(specs)})
+        result[gid] = {"specs": details,
+                       "layer_count": len(layer_names) if isinstance(
+                           layer_names, (list, tuple)) else None}
+    return result
+
+
+def _remember_physical_tables(instance, args, kwargs, fn):
+    """References are candidate-only; no model tensor is copied or mutated."""
+    try:
+        bound = inspect.signature(fn).bind_partial(instance, *args, **kwargs)
+        kv_config = bound.arguments.get("kv_cache_config")
+        tables_obj = bound.arguments.get("block_tables")
+        tables = _direct(tables_obj, "block_tables")
+        group_ids = _direct(instance, "_mamba_group_ids")
+        if not isinstance(group_ids, (list, tuple)) or len(group_ids) > 8:
+            group_ids = ()
+        saved = {}
+        spec_info = _kv_spec_info(kv_config, list(group_ids))
+        for gid in group_ids:
+            if type(gid) is not int or gid < 0:
+                continue
+            if not isinstance(tables, (list, tuple)) or gid >= len(tables):
+                continue
+            bt = _direct(tables[gid], "gpu")
+            meta = _tensor_metadata(bt)
+            if meta is None or len(meta["shape"]) != 2:
+                continue
+            saved[gid] = {"table": bt, "meta": meta,
+                          "group": spec_info.get(gid, {})}
+        # Never assume an unobserved table or allocation is valid.
+        instance._p1_observer_mamba_tables = saved
+    except (TypeError, AttributeError, ValueError, RuntimeError):
+        instance._p1_observer_mamba_tables = {}
+
+
+def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
+    """Compare a sampled request state-slot / Mamba column with physical IDs.
+
+    This verifies bounded table entries, not the SSM state contents or
+    cold-to-hit state reuse. A scalar GPU read is diagnostic-only.
+    """
+    snapshots = []
+    saved = _direct(instance, "_p1_observer_mamba_tables")
+    if not isinstance(saved, dict) or request_idx is None or expected_col is None:
+        return snapshots
+    for gid, info in list(sorted(saved.items()))[:8]:
+        meta = info["meta"]
+        shape = meta["shape"]
+        group_sizes = [
+            part.get("block_size") for part in info["group"].get("specs", [])
+            if part.get("block_size") is not None]
+        entry = {"group_id": gid, "group_block_sizes": group_sizes,
+                 "table_shape": shape,
+                 "table_row_stride_elements": meta["element_strides"][0],
+                 "table_within_allocation": meta["view_within_allocation"],
+                 "row_in_bounds": 0 <= request_idx < shape[0],
+                 "column_in_bounds": 0 <= expected_col < shape[1],
+                 "block_size_matches_mamba_config": bool(
+                     group_sizes and all(x == mamba_block_size for x in group_sizes)),
+                 "physical_entry_observed": False}
+        if (meta["view_within_allocation"] and entry["row_in_bounds"]
+                and entry["column_in_bounds"]):
+            try:
+                block = _number(info["table"][request_idx, expected_col].item())
+                if block is not None:
+                    entry["physical_entry_observed"] = True
+                    entry["physical_block_id"] = block
+                    entry["physical_entry_nonnegative"] = block >= 0
+            except (TypeError, IndexError, RuntimeError, ValueError):
+                entry["physical_read_unavailable"] = True
+        snapshots.append(entry)
+    return snapshots
+
+
 def _observe(kind, instance, fn, args, kwargs):
     event = {"schema": 1, "kind": kind, "active_class": type(instance).__name__,
              "active_module": type(instance).__module__,
@@ -83,6 +178,27 @@ def _observe(kind, instance, fn, args, kwargs):
     event["cache_config"] = _scalar_fields(cache)
     event["cache_groups"] = _groups(cache)
     event["instance_groups"] = _groups(instance)
+    if kind == "init":
+        tables = _direct(instance, "_p1_observer_mamba_tables")
+        event["mamba_group_table_count"] = (
+            len(tables) if isinstance(tables, dict) else 0)
+        event["physical_table_metadata"] = [
+            {"group_id": gid, "table": table["meta"],
+             "group": table["group"]}
+            for gid, table in list(sorted(tables.items()))[:8]
+        ] if isinstance(tables, dict) else []
+        context = _direct(instance, "_mamba_ctx")
+        event["fused_ctx_present"] = context is not None
+        if context is not None:
+            event["fused_ctx_block_stride_req"] = _number(
+                _direct(context, "block_table_stride_req"))
+            event["fused_ctx_block_size"] = _number(
+                _direct(context, "block_size"))
+            event["fused_state_layout_tensors"] = {
+                name: _tensor_metadata(_direct(context, name))
+                for name in ("state_block_strides", "state_elem_sizes",
+                             "state_group_indices", "state_conv_widths")
+                if _tensor_metadata(_direct(context, name)) is not None}
     if kind == "mamba":
         event["align_mode"] = (_direct(instance, "_align_mode") is True)
         tensors = {}
@@ -106,6 +222,18 @@ def _observe(kind, instance, fn, args, kwargs):
         event["state_slot_index_in_bounds"] = bool(
             idx is not None and idx >= 0 and index_meta and
             len(index_meta["shape"]) >= 1 and idx < index_meta["shape"][0])
+        request_data = None
+        try:
+            request_data = bound.arguments.get("new_req_data")
+        except (NameError, UnboundLocalError):
+            pass
+        computed = _number(_direct(request_data, "num_computed_tokens"))
+        mamba_bs = _number(_direct(cache, "mamba_block_size"))
+        expected = ((computed - 1) // mamba_bs
+                    if computed is not None and mamba_bs is not None
+                    and mamba_bs > 0 else None)
+        event["num_computed_tokens"] = computed
+        event["expected_mamba_seed"] = expected
         event["state_seed_observed"] = False
         # Deliberately bounded CUDA scalar read, for candidate diagnostic only.
         if event["state_slot_index_in_bounds"]:
@@ -115,13 +243,18 @@ def _observe(kind, instance, fn, args, kwargs):
                 if seed is not None:
                     event["state_seed_observed"] = True
                     event["state_seed_value"] = seed
+                    event["state_seed_matches_expected"] = (
+                        expected is not None and expected == seed)
             except (RuntimeError, TypeError, ValueError, IndexError):
                 event["state_seed_read_error"] = True
+        event["physical_map_samples"] = _sample_physical(
+            instance, idx, expected, mamba_bs)
     return event
 
 
 def install(cls, method, kind):
     if (kind, method) not in (("mamba", "add_request"),
+                              ("init", "initialize_kv_cache"),
                               ("scheduler", "_mamba_block_aligned_split")):
         raise ValueError("UNAPPROVED_OBSERVER_SITE")
     fn = getattr(cls, method)
@@ -130,6 +263,8 @@ def install(cls, method, kind):
     @functools.wraps(fn)
     def wrapped(self, *args, **kwargs):
         result = fn(self, *args, **kwargs)
+        if kind == "init":
+            _remember_physical_tables(self, args, kwargs, fn)
         current = _counts.get(kind, 0)
         if current < MAX_EVENTS:
             _counts[kind] = current + 1

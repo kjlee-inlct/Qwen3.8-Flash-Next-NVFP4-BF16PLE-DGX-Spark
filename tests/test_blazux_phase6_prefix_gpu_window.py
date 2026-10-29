@@ -418,6 +418,8 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertEqual(observed["scheduler_effective_blocks"], [16])
         self.assertEqual(observed["mamba_sampled_seeds"], [7])
         self.assertFalse(observed["physical_mapping_and_reuse_verified"])
+        self.assertFalse(observed["physical_mapping_observed_partial"])
+        self.assertEqual(observed["active_mamba_kv_initialize_event_count"], 0)
         self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
     def test_wrapper_requires_exact_head_and_source_manifest(self):
