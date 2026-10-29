@@ -73,3 +73,16 @@
 - 새 `scripts/p1-prefix-closure-prep.sh --expected-head <SHA> --show-source`는 최신 검증 CPU 테스트 + Source Manifest + Stage/원본 read-only preflight + 실제 pinned-image Mamba source digest/복사 커널 본문을 **한 번에** 수집하는 CPU-only 스크립트이다. `--execute/--recover`나 운영 중지/모델 로드 없이 `/tmp/p1-closure-abi.XXXXXXXX.log`로 source evidence를 남긴다. shell syntax/잘못된 실행 모드 CPU safety tests 2개 추가.
 - 전체 targeted CPU 테스트 구성: 이전 **28+14+14+8=64**, 신규 numeric 3 + image hint 1 + safety 2 = **70개 정의**. 새 HEAD에서 실제 DGX/CI는 NOT_RUN. 기존 운영 컨테이너와 private Stage는 변경하지 않음. 사용자 승인은 P1 완료 업무와 최종 GPU 검증 준비를 진행하는 취지로 해석하되, **GPU 서비스 창은 소스 근거·검증 hook·CPU 반례가 준비되기 전에는 실행하지 않음**. 기존 `physical_mapping_and_reuse_verified=false` 및 strict `1e-4` 변경 없음.
 - 이후 한 번에 할 일: 해당 source log 확보 → 정확한 Preview GDN/PLE context kv-cache tensor 및 copy-event lifecycle 감사 → 제한된 후보 전용 full-state checksum/transform-aware copy 검증 구현 → CPU 반례 + 정비창 사전검증 → 승인된 단일 GPU 시험·원본 동일-ID/HTTP 복구. 소스 미확정 상태에서 v0.32 Blazux hook를 Preview에 직접 복사하거나 GPU 정비창 재실행 금지.
+
+## 2026-10-30 Exact Preview copy-region contract from uploaded source
+
+- Exact pinned-image mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3 from user uploaded DGX source log p1-closure-abi.MOxSlTwv.log. Copy kernel lines 123-252, precopy lines 438-519, postprocess lines 256-388. NOT live cold/hit state proof.
+- SD Conv: source offset token_bias * inner_size * element_size, contiguous bytes (conv_width-token_bias)*inner_size*element_size to dst start of block.
+- DS Conv: each dim row source (row*row_stride + token_bias*element_size) to destination row*row_stride, byte count (conv_width-token_bias)*element_size. Do not compare padding.
+- Temporal/GDN: block-table source column src_col+token_bias; destination dst_col; natural bytes inner_size*element_size, not state_block_strides (page stride may include padding).
+- Group from state_group_indices and batch-order table row identify physical block. Precopy early return when src_col<0 or src_col==dst_col. Postprocess needs_copy and self-copy guards. Source may alias destination with nonzero bias; memcpy helper _memcpy_u64_tiled body missing from initial uploaded excerpt, so overlap correctness is unknown.
+- Added pure CPU region plan/comparator src/p1_prefix_copy_region_contract.py with 10 synthetic tests covering SD/DS shifts, padding, temporal selection, data corruption, column/stride bounds and source/destination before/after aliases. No true GPU copy or state reuse proof is inferred.
+- Pinned image scanner now refuses mamba_utils.py SHA drift and inventories _memcpy_u64_tiled helper when locally defined; absence is UNKNOWN (not silent PASS). Two CPU tests added: SHA drift, missing helper. Closure-prep script captures both helper source and exact immutable Stage four Mamba methods into separate /tmp logs, without modifying the Stage or service.
+- Existing state_reuse_contract requires token_bias=0 and FULL_BLOCK_EXACT; not a general MTP validator. physical_mapping_and_reuse_verified stays false; strict logprob 1e-4 not changed. The next candidate-only runtime proof must separately verify actual GPU stream completion, physical ID identity and source-before/destination-after snapshots, then link cache reuse to cold/hit requests.
+- Expected targeted tests on NEW HEAD: prior 71 + copy-region 10 + image SHA/helper 2 = 83 (DGX/CI NOT_RUN).
+

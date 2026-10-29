@@ -22,6 +22,7 @@ if __name__ == "__main__" and not __package__:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 TARGET = "v1/worker/mamba_utils.py"
+EXPECTED_SOURCE_SHA256 = "25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3"
 MAX_SOURCE_BYTES = 400_000
 METHODS = (
     "initialize_from_forward_context", "_populate_metadata",
@@ -108,7 +109,7 @@ def inspect_source(raw: bytes) -> dict:
         "installed_source_sha256": hashlib.sha256(raw).hexdigest(),
         "read_only": True, "gpu_model_loaded": False,
         "source_runtime_state_reuse_verified": False,
-        "methods": {}, "kernels": {},
+        "methods": {}, "kernels": {}, "helpers": {},
     }
     lines = source.splitlines()
     for name in METHODS + KERNELS:
@@ -137,6 +138,30 @@ def inspect_source(raw: bytes) -> dict:
     if (not any("precopy_mamba_align_fused_kernel" in c for c in pre["calls"]) or
             not any("postprocess_mamba_fused_kernel" in c for c in post["calls"])):
         raise SourceBlocked("MAMBA_FUSED_KERNEL_CALL_SITES_DRIFT")
+    # The shared u64 copy helper is essential to assessing in-place
+    # overlapping shifts, but may be implemented in an imported module.
+    # Its absence is an explicit UNKNOWN, not an observed correct memcpy.
+    local = [node for node in tree.body
+             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+             and node.name == "_memcpy_u64_tiled"]
+    if len(local) > 1:
+        raise SourceBlocked("MAMBA_MEMCPY_HELPER_DUPLICATE")
+    if not local:
+        result["helpers"]["_memcpy_u64_tiled"] = {
+            "status": "HELPER_NOT_LOCAL_SOURCE_UNKNOWN"}
+    else:
+        fn = local[0]
+        result["helpers"]["_memcpy_u64_tiled"] = {
+            "status": "LOCAL_SOURCE_OBSERVED_NOT_EXECUTED",
+            "first_line": fn.lineno, "last_line": fn.end_lineno,
+            "args": [arg.arg for arg in fn.args.posonlyargs + fn.args.args],
+            "calls": sorted({ast.unparse(n.func) for n in ast.walk(fn)
+                             if isinstance(n, ast.Call)})[:80],
+            "attrs": sorted({n.attr for n in ast.walk(fn)
+                             if isinstance(n, ast.Attribute)})[:100],
+            "source": [f"{i}: {lines[i - 1]}"
+                       for i in range(fn.lineno, fn.end_lineno + 1)],
+        }
     return result
 
 
@@ -173,6 +198,12 @@ def copy_path_source_evidence(report: dict) -> dict:
     }
 
 
+def verify_pinned_mamba_utils_source(raw: bytes) -> None:
+    """Reject any installed-source drift before future GPU hook planning."""
+    if hashlib.sha256(raw).hexdigest() != EXPECTED_SOURCE_SHA256:
+        raise SourceBlocked("MAMBA_UTILS_INSTALLED_SOURCE_SHA_DRIFT")
+
+
 def inspect_installed_image() -> dict:
     # Existing preflight verifies branch, exact original image / container
     # identity, candidate absence, host stage hashes and worker/sched source.
@@ -189,7 +220,9 @@ def inspect_installed_image() -> dict:
         # An unavailable Docker daemon must remain a bounded CPU-only block
         # (exit 2), not an uncaught exception/traceback (exit 1).
         raise SourceBlocked("PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED") from None
-    report = inspect_source(source_from_export(output))
+    raw = source_from_export(output)
+    verify_pinned_mamba_utils_source(raw)
+    report = inspect_source(raw)
     report["copy_path_source_evidence"] = copy_path_source_evidence(report)
     report["source_path_relative"] = TARGET
     return report
@@ -206,10 +239,14 @@ def main(argv: list[str] | None = None) -> int:
         reason = str(exc) if isinstance(exc, SourceBlocked) else "CPU_SOURCE_PROBE_UNAVAILABLE"
         print(json.dumps({"status": "BLOCKED_NO_GPU", "reason": reason}))
         return 2
-    details = report.pop("methods"), report.pop("kernels")
+    details = report.pop("methods"), report.pop("kernels"), report.pop("helpers")
     print(json.dumps(report, sort_keys=True))
-    for title, section in zip(("METHOD", "KERNEL"), details):
+    for title, section in zip(("METHOD", "KERNEL", "HELPER"), details):
         for name, meta in section.items():
+            if "first_line" not in meta:
+                print("=== %s: %s (%s) ===" %
+                      (title, name, meta["status"]))
+                continue
             print("=== %s: %s (%s-%s) ===" %
                   (title, name, meta["first_line"], meta["last_line"]))
             print(json.dumps({"args": meta["args"], "calls": meta["calls"],

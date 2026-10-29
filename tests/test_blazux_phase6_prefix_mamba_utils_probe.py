@@ -26,6 +26,8 @@ def fixture(*, has_copy=True):
             "    def run_fused_postprocess_align(self, num_reqs, accepted, state_idx, new_tokens, idx_mapping):\n"
             "        grid = (num_reqs,)\n"
             "        postprocess_mamba_fused_kernel[grid](num_reqs)\n"
+            "def _memcpy_u64_tiled(src, dst, copy_size):\n"
+            "    return copy_size\n"
             "def _copy_mamba_state_block(src_col, dst_col):\n"
             "    return src_col + dst_col\n"
             "def precopy_mamba_align_fused_kernel(num_reqs):\n"
@@ -57,6 +59,8 @@ class Tests(unittest.TestCase):
         self.assertFalse(report['gpu_model_loaded'])
         self.assertEqual(len(report['methods']),4)
         self.assertEqual(len(report['kernels']),3)
+        self.assertEqual(report["helpers"]["_memcpy_u64_tiled"]["status"],
+                         "LOCAL_SOURCE_OBSERVED_NOT_EXECUTED")
         self.assertEqual(report['installed_source_sha256'],hashlib.sha256(fixture()).hexdigest())
         self.assertIn('precopy_mamba_align_fused_kernel[grid]',
                       report['methods']['run_fused_precopy']['calls'])
@@ -151,12 +155,33 @@ class Tests(unittest.TestCase):
         self.assertFalse(summary["real_live_state_hash_captured"])
         self.assertFalse(summary["state_content_reuse_verified"])
 
+    def test_missing_memcpy_helper_reports_unknown_not_copy_correctness(self):
+        source = fixture()
+        helper = (b"def _memcpy_u64_tiled(src, dst, copy_size):\n"
+                  b"    return copy_size\n")
+        self.assertEqual(source.count(helper), 1)
+        result = probe.inspect_source(source.replace(helper, b""))
+        self.assertEqual(
+            result["helpers"]["_memcpy_u64_tiled"]["status"],
+            "HELPER_NOT_LOCAL_SOURCE_UNKNOWN")
+        self.assertFalse(result["source_runtime_state_reuse_verified"])
+
+    def test_installed_image_sha_drift_rejected_even_if_ast_valid(self):
+        data = fixture()
+        with self.assertRaisesRegex(
+                probe.SourceBlocked, "MAMBA_UTILS_INSTALLED_SOURCE_SHA_DRIFT"):
+            probe.verify_pinned_mamba_utils_source(data)
+        with patch.object(probe, "EXPECTED_SOURCE_SHA256",
+                          hashlib.sha256(data).hexdigest()):
+            probe.verify_pinned_mamba_utils_source(data)
+
     def test_actual_image_probe_is_mocked_not_executed(self):
         fake_original={'Config':{'User':'1000:1000'}}
         src=fixture()
         output=json.dumps({'sha256':hashlib.sha256(src).hexdigest(),
                            'source_base64':base64.b64encode(src).decode()})
-        with patch('src.p1_prefix_gpu_window.preflight',return_value=(None,fake_original,None,None,None,None)), \
+        with patch.object(probe, "EXPECTED_SOURCE_SHA256", hashlib.sha256(src).hexdigest()), \
+             patch('src.p1_prefix_gpu_window.preflight',return_value=(None,fake_original,None,None,None,None)), \
              patch('src.p1_prefix_gpu_window.probe_vllm_root',return_value='/opt/vllm'), \
              patch('src.p1_prefix_gpu_window.checked',return_value=output) as run:
             report=probe.inspect_installed_image()

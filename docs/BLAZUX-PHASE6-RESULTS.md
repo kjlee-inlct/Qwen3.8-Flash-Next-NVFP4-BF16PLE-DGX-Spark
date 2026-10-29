@@ -1,5 +1,12 @@
 # Phase 6 evidence ledger
 
+## 2026-10-30 Actual Preview state copy code audit — CPU ONLY, no GPU executed
+
+- Source supplied as p1-closure-abi.MOxSlTwv.log; installed image mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3. Worker pre/post kernels and _copy_mamba_state_block inspected. SD/DS conv and temporal paths use different byte ranges and bias-based source selection, and require source-before vs destination-after evidence.
+- Added synthetic CPU-only copy-range planner/comparator (10 tests), entire image Mamba-utils SHA guard and optional _memcpy_u64_tiled helper source inventory (2 tests), and expanded closure-prep Stage source log. Targeted CPU expected 71 + 10 + 2 = 83, DGX/CI NOT_RUN.
+- No real GDN/PLE full state hash, cache-specific reuse provenance, strict numeric resolution or candidate hook installation. No service stop, Stage mutation, GPU model startup or PR/merge. Existing P1 remains BLOCKED pending live GPU content comparison and strict numerical gate.
+- See docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md.
+
 ## 2026-10-29 최신 DGX CPU-only P1 closure prep 71/71 PASS — 실 검사 소스 SHA 고정
 
 - **사용자 DGX 제출 로그:** exact feature HEAD `c6aa0a84546aa54111aa58051e09a62afb8aa626`. `scripts/p1-prefix-closure-prep.sh --expected-head <SHA> --show-source` 1회 CPU-only 실행: GPU-window mocks **31/31**, live observer **14/14**, reuse-contract **14/14**, Mamba-utils probe **10/10**, closure safety **2/2** → **71/71 PASS**. 테스트 출력 중 `P1_PREFIX_GPU_BLOCKED_CANDIDATE_COPY_FAILED`, `ORIGINAL_CHAT_ORACLE_CHAT_EMPTY_FINAL_CONTENT` 등은 **의도된 mock 반례**로 실제 GPU 실행 실패 증거가 아님.

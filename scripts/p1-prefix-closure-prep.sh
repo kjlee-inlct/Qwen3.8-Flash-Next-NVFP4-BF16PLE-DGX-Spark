@@ -37,6 +37,7 @@ for pat in \
   test_blazux_phase6_prefix_gpu_window.py \
   test_blazux_phase6_prefix_live_observer.py \
   test_blazux_phase6_prefix_state_reuse_contract.py \
+  test_blazux_phase6_prefix_copy_region_contract.py \
   test_blazux_phase6_prefix_mamba_utils_probe.py \
   test_blazux_phase6_prefix_closure_prep.py
 do
@@ -81,4 +82,14 @@ for line in lines:
         print(line)
 PY
 echo "P1_PREP_ABI_LOG=$LOG"
+echo "=== PINNED STAGE SAVE/RESTORE SOURCE (NO GPU) ==="
+STAGE_LOG="$(mktemp /tmp/p1-closure-stage.XXXXXXXX.log)"
+if ! python3 -m src.p1_prefix_state_reuse_contract --inspect-stage >"$STAGE_LOG" 2>&1; then
+  cat "$STAGE_LOG"
+  echo "P1_PREP_STAGE_SOURCE_BLOCKED_NO_GPU"
+  exit 2
+fi
+echo "P1_PREP_STAGE_SOURCE_LOG=$STAGE_LOG"
+grep '^P1_PINNED_STAGE_RESTORE_SOURCE_ONLY_PASS_NO_GPU' "$STAGE_LOG"
+
 echo "P1_PREP_ONLY_NO_GPU_NO_SERVICE_MUTATION"
