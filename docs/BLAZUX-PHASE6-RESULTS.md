@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 첫 P1 실제 GPU 후보 실행 — SHA 85260bfa60e5b683681f8877447e326f69223d05
+
+- 사용자 DGX 실제 로그: 신규 CPU 회귀 **15/15 PASS**, Source Manifest **263/263 PASS**, `P1_PREFIX_CANDIDATE_STOPPED_PATCH_SHA256_VERIFIED_NOT_GPU` (후보의 stopped writable overlay 두 Stage 파일 정확한 SHA/0644 검증), 원본 `scripts/stop.sh`로 stop 후 Prefix ON 후보 GPU 실제 기동과 **`P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS`** 확인. 후속 오라클 **2회 요청을 실제 실행**.
+- 실제 오라클 JSON: `cache_hit_observed=false`; 노출된 `vllm:prefix_cache_hits_total` / `vllm:prefix_cache_queries_total` 등 메트릭 **이름은 존재**하지만 반복 입력의 hit 증거 없음. `cold_text_sha256` 및 `repeat_text_sha256`가 모두 `e3b0c442...` (**빈 문자열**). `text_equal=true,token_sequence_equal=true`는 빈 출력으로 인해 기능 정합성 증거가 아님. `first_token_logprob_equal=false`. `active_mamba_physical_mapping_observed=false`. 최종 `P1_PREFIX_GPU_ORACLE_INCONCLUSIVE_NO_HIT_TELEMETRY`, `P1_PREFIX_GPU_BLOCKED_ORACLE_NOT_VERIFIED_INCONCLUSIVE_NO_HIT_TELEMETRY`, **exit 2**. **P1 Prefix-cache GPU correctness는 PASS 아님**.
+- 후보 제거 후 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`; 사용자 별도 실기기 조회에서 `ORIGINAL_SAME_ID=PASS`, `HEALTH_HTTP=200`, `MODELS_HTTP=200`. 후보 컨테이너 삭제됨, 원본 running; 모델 체크포인트/원본 이미지/호스트 Stage 변경 없음. GPU 후보 runtime LOAD + HTTP 및 운영 복구라는 두 사실만 PASS로 기록. MTP config=2 보존은 확인했으나 실제 speculative acceptance 성능/활성 ABI/physical mapping은 미관측.
+- **그 다음 단계의 후속 코드(DGX_NOT_RUN)** 는 이전 오라클의 Qwen 챗 템플릿 미사용 `/v1/completions` 원시 프롬프트/빈 출력 허용 문제를 수정: `/v1/chat/completions`, `chat_template_kwargs.enable_thinking=false`, temperature=0, token IDs + chat logprobs 요구; 원본 살아 있는 모델에서 먼저 짧은 synthetic Chat API pre-stop probe. 이 검사가 실패하면 **실제 서비스 중지하지 않음**. 반복 요청 interval에 대한 실제 first-party `vllm:prefix_cache_hits_total`/queries counters의 label별 증가량 및 metrics 갱신 지연 확인. 빈 응답/토큰/logprob/실제 hit 증거 없으면 PASS 금지. 신설 mock 회귀 포함. 아직 신규 커밋 GPU 테스트 결과 없음.
+
+
 ## 2026-10-29 DGX P1 CPU 11/11 통과, 스테이지 비-root 접근 차단 (소스 c9901ba9)
 
 - 사용자 실기기 `HEAD=c9901ba9f4f98c272ef704a3f29e199ab729e58c`: 신규 CPU 회귀 **11/11 PASS**, Source manifest **263/263 PASS**, `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_SUBPROCESS_FAILED_DOCKER` (exit 2). 원래 서비스 `Up 7 days`, 후보 컨테이너 없음, 기존 메모리 가용 약 14 GiB. `--execute`는 **NOT_STARTED**.

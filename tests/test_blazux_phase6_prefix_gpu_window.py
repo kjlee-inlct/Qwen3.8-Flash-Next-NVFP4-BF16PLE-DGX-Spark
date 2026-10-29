@@ -197,6 +197,7 @@ class CandidateWindowTests(unittest.TestCase):
                 patch.object(gpu, "preflight",
                              return_value=(identity, original, {}, [], [], "orc")), \
                 patch.object(gpu, "probe_vllm_root", return_value="/opt/python/vllm"), \
+                patch.object(oracle, "probe_before_stop", return_value={"status": "PASS"}), \
                 patch.object(gpu, "create_candidate",
                              side_effect=gpu.Blocked("CANDIDATE_COPY_FAILED")), \
                 patch.object(gpu, "cleanup_candidate") as cleanup, \
@@ -205,14 +206,112 @@ class CandidateWindowTests(unittest.TestCase):
             cleanup.assert_called_once_with()
             checked.assert_not_called()
 
+    def test_chat_payload_has_template_non_thinking_and_long_shared_prefix(self):
+        short = oracle.build_payload("test-model", long_prompt=False)
+        long = oracle.build_payload("test-model", long_prompt=True)
+        self.assertTrue(long["messages"][1]["content"].startswith(
+            short["messages"][1]["content"].split("Final question:")[0][:50]))
+        self.assertGreater(len(long["messages"][1]["content"]),
+                           20 * len(short["messages"][1]["content"]))
+        self.assertEqual(long["chat_template_kwargs"], {"enable_thinking": False})
+        self.assertIs(long["return_token_ids"], True)
+        self.assertIs(long["logprobs"], True)
+        self.assertEqual(long["temperature"], 0)
+
+    def test_original_api_probe_blocks_empty_content_before_stop(self):
+        identity = {"id": "a" * 64}
+        original = {"State": {"Status": "running"},
+                    "Config": {"User": "1000:1000", "WorkingDir": "/recipe"},
+                    "HostConfig": {"Runtime": "runc"}}
+        with patch.object(gpu.os, "geteuid", return_value=1000), \
+                patch.object(gpu, "preflight",
+                             return_value=(identity, original, {}, [], [], "orc")), \
+                patch.object(gpu, "probe_vllm_root", return_value="/opt/python/vllm"), \
+                patch.object(oracle, "probe_before_stop",
+                             side_effect=oracle.OracleBlocked("CHAT_EMPTY_FINAL_CONTENT")), \
+                patch.object(gpu, "create_candidate") as create, \
+                patch.object(gpu, "checked") as checked:
+            self.assertEqual(gpu.run(["--execute", "--confirm-id", "a" * 64]), 2)
+            create.assert_not_called()
+            checked.assert_not_called()
+
+    def test_original_chat_probe_logprobs_and_nonempty_required(self):
+        def response(text, *, logprobs=True):
+            return {"choices": [{"message": {"content": text},
+                                 "logprobs": {"content": [
+                                     {"token": "12", "logprob": -0.25}
+                                 ]} if logprobs else None,
+                                 "finish_reason": "stop", "token_ids": [123]}],
+                    "usage": {"prompt_tokens": 101, "completion_tokens": 1}}
+        with patch.object(oracle, "request_json", return_value=response("12")):
+            probe = oracle.probe_before_stop("test-model")
+            self.assertEqual(probe["status"], "PASS_ORIGINAL_CHAT_PROTOCOL")
+            self.assertEqual(probe["logprob_tokens"], 1)
+        for r in (response(""), response("12", logprobs=False)):
+            with patch.object(oracle, "request_json", return_value=r):
+                with self.assertRaises(oracle.OracleBlocked):
+                    oracle.probe_before_stop("test-model")
+
+    def test_hit_counter_uses_repeat_window_not_created_counter(self):
+        a = {"vllm:prefix_cache_hits_total{model_name=\"m\"}": 1.0}
+        b = {**a, "vllm:prefix_cache_hits_created{model_name=\"m\"}": 4.0}
+        self.assertEqual(oracle.counter_delta(a, b, "prefix_cache_hits_total"), 0.0)
+        b["vllm:prefix_cache_hits_total{model_name=\"m\"}"] = 3.0
+        self.assertEqual(oracle.counter_delta(a, b, "prefix_cache_hits_total"), 2.0)
+
+    def test_oracle_requires_nonempty_output_and_repeat_hit(self):
+        def completion(text="12", lp=-0.2, token_id=100):
+            return {"choices": [{
+                "message": {"content": text}, "finish_reason": "stop",
+                "logprobs": {"content": [{"token": "12", "logprob": lp}]},
+                "token_ids": [token_id],
+            }], "usage": {"prompt_tokens": 650, "completion_tokens": 1}}
+        before = {"vllm:prefix_cache_queries_total": 0.0,
+                  "vllm:prefix_cache_hits_total": 0.0}
+        middle = {"vllm:prefix_cache_queries_total": 640.0,
+                  "vllm:prefix_cache_hits_total": 0.0}
+        hit = {"vllm:prefix_cache_queries_total": 1280.0,
+               "vllm:prefix_cache_hits_total": 600.0}
+        with patch.object(oracle, "request_json",
+                          side_effect=[completion(), completion()]), \
+                patch.object(oracle, "metrics", return_value=before), \
+                patch.object(oracle, "settled_metrics", side_effect=[middle, hit]):
+            result = oracle.run_oracle("m", 18080)
+            self.assertEqual(result["status"],
+                             "PASS_CACHE_HIT_AND_NONEMPTY_OUTPUT_TOKENS_LOGPROB")
+            self.assertEqual(result["repeat_hit_counter_delta"], 600)
+            self.assertEqual(result["token_evidence_type"], "token_ids")
+        with patch.object(oracle, "request_json",
+                          side_effect=[completion(""), completion("")]), \
+                patch.object(oracle, "metrics", return_value=before), \
+                patch.object(oracle, "settled_metrics", side_effect=[middle, hit]):
+            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
+                             "INCONCLUSIVE_EMPTY_FINAL_CONTENT")
+        with patch.object(oracle, "request_json",
+                          side_effect=[completion(), completion()]), \
+                patch.object(oracle, "metrics", return_value=before), \
+                patch.object(oracle, "settled_metrics", side_effect=[
+                    middle, {"vllm:prefix_cache_queries_total": 1280.0,
+                             "vllm:prefix_cache_hits_total": 0.0}]):
+            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
+                             "FAIL_REPEAT_PREFIX_CACHE_MISS")
+        with patch.object(oracle, "request_json",
+                          side_effect=[completion(), completion()]), \
+                patch.object(oracle, "metrics", return_value=before), \
+                patch.object(oracle, "settled_metrics", side_effect=[before, before]):
+            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
+                             "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED")
+
     def test_oracle_requires_real_hit_evidence(self):
-        self.assertFalse(oracle.hit_evidence({}, {}))
-        self.assertTrue(oracle.hit_evidence(
-            {"vllm:prefix_cache_hits_total": 1},
-            {"vllm:prefix_cache_hits_total": 2}))
-        self.assertFalse(oracle.hit_evidence(
-            {"vllm:prefix_cache_hits_total": 2},
-            {"vllm:prefix_cache_hits_total": 2}))
+        name = "vllm:prefix_cache_hits_total"
+        self.assertEqual(oracle.counter_delta({}, {}, "prefix_cache_hits_total"), 0)
+        self.assertEqual(oracle.counter_delta(
+            {name: 1}, {name: 2}, "prefix_cache_hits_total"), 1)
+        self.assertEqual(oracle.counter_delta(
+            {name: 2}, {name: 2}, "prefix_cache_hits_total"), 0)
+        self.assertEqual(oracle.counter_delta(
+            {}, {"vllm:external_prefix_cache_hits_total": 9},
+            "prefix_cache_hits_total"), 0)
 
     def test_candidate_cleanup_only_with_ownership(self):
         with patch.object(gpu, "candidate_ids", return_value=["a" * 64]), \

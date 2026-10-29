@@ -1,5 +1,8 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+> **최신 실기기 GPU 실행 증거 (`85260bfa60e5b683681f8877447e326f69223d05`):** 신규 CPU 15/15 PASS, Source263/263, 후보 소스 두 SHA256 검증 및 **실제 후보 GPU HTTP 준비 PASS**, cold/repeat API 2회 실행, Prefix-cache hit 불확실 + 출력 양쪽 빈 문자열 + first token logprob 불일치 → **P1 correctness INCONCLUSIVE, exit 2**. 후보 제거/원본 동일-ID 재기동 및 `/health`, `/v1/models` HTTP 200까지 PASS. GPU/active Mamba ABI/P1 완료 아님. 후속 오라클 수정은 **신규 SHA DGX_NOT_RUN**. [근거 원장](BLAZUX-PHASE6-RESULTS.md) 참조.
+
+
 ## 2026-10-29 DGX P1 CPU 11/11 통과, 스테이지 비-root 접근 차단 (소스 c9901ba9)
 
 - 사용자 실기기 `HEAD=c9901ba9f4f98c272ef704a3f29e199ab729e58c`: 신규 CPU 회귀 **11/11 PASS**, Source manifest **263/263 PASS**, `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_SUBPROCESS_FAILED_DOCKER` (exit 2). 원래 서비스 `Up 7 days`, 후보 컨테이너 없음, 기존 메모리 가용 약 14 GiB. `--execute`는 **NOT_STARTED**.

@@ -472,6 +472,15 @@ def run(argv: list[str] | None = None) -> int:
         if ci["State"]["Status"] != "running":
             raise Blocked("EXECUTE_REQUIRES_ORIGINAL_RUNNING")
         root = probe_vllm_root((ci.get("Config") or {}).get("User") or "")
+        # Validate the real pinned model's chat-template/logprob API *before*
+        # stopping it. Do not load a second GPU model just to learn 400/empty.
+        from src import p1_prefix_gpu_oracle as oracle
+        try:
+            proto = oracle.probe_before_stop(model, 8000)
+        except oracle.OracleBlocked as exc:
+            raise Blocked("ORIGINAL_CHAT_ORACLE_" + str(exc)) from None
+        print(json.dumps(proto, sort_keys=True))
+        print("P1_PREFIX_ORIGINAL_CHAT_ORACLE_INTERFACE_PASS_BEFORE_STOP")
         # Confirm pinned original sources at exact imported module paths INSIDE image
         # via CPU-only probe (stage export already compared original source SHA).
         stopped = False
@@ -489,8 +498,10 @@ def run(argv: list[str] | None = None) -> int:
             checked(["docker", "start", NAME], timeout=90)
             wait_ready(PORT, model, timeout_s=1200)
             print("P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS")
-            from src.p1_prefix_gpu_oracle import run_oracle
-            result = run_oracle(model, PORT)
+            try:
+                result = oracle.run_oracle(model, PORT)
+            except oracle.OracleBlocked as exc:
+                raise Blocked("CANDIDATE_ORACLE_" + str(exc)) from None
             print(json.dumps(result, sort_keys=True))
             print("P1_PREFIX_GPU_ORACLE_" + result["status"])
             if not result["status"].startswith("PASS_"):
