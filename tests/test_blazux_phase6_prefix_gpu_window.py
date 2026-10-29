@@ -533,8 +533,8 @@ class CandidateWindowTests(unittest.TestCase):
                   "vllm:prefix_cache_hits_total": 0}
         after = [{"vllm:prefix_cache_queries_total": 100 + 9503 * (i + 1),
                   "vllm:prefix_cache_hits_total": 80} for i in range(2)]
-        with patch.object(oracle, "request_json", return_value=response()), \\
-                patch.object(oracle, "metrics", return_value=before), \\
+        with patch.object(oracle, "request_json", return_value=response()), \
+                patch.object(oracle, "metrics", return_value=before), \
                 patch.object(oracle, "settled_metrics", side_effect=after):
             result = oracle.cold_control_diagnostics(
                 "m", 18080, {}, {"token_ids": [11], "logprobs": [-0.2]})

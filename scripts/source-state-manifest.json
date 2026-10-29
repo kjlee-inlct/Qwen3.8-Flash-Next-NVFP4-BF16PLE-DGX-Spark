@@ -1336,7 +1336,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "f0a1a4f96103f49dc6859149e9018a94beb787fe"
+      "blob_sha": "36629a784009702c5bb94114a47784712eb042a0"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",
