@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 DGX P1 CPU 11/11 통과, 스테이지 비-root 접근 차단 (소스 c9901ba9)
+
+- 사용자 실기기 `HEAD=c9901ba9f4f98c272ef704a3f29e199ab729e58c`: 신규 CPU 회귀 **11/11 PASS**, Source manifest **263/263 PASS**, `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_SUBPROCESS_FAILED_DOCKER` (exit 2). 원래 서비스 `Up 7 days`, 후보 컨테이너 없음, 기존 메모리 가용 약 14 GiB. `--execute`는 **NOT_STARTED**.
+- 추가 사용자 읽기 전용 진단: `docker ps` return 0, metadata preflight PASS; `docker run` CPU-only probe return 1. 내부 Python `PermissionError: [Errno 13] Permission denied: '/p1stage/mamba_hybrid.py'`. **원본 호스트 Stage는 소유자 전용 0700 디렉터리와 0600 파일, 원본 Docker USER는 이 호스트 소유자와 다름.**
+- 후속 소스 수정(본 신규 커밋 **DGX_NOT_RUN**): CPU probe는 pinned 원본 Preview source SHA만 원래 Docker 사용자로 점검하며 **호스트 Stage bind mount 없음**. 기존 Stage의 0700/0600 및 SHA256 확인은 호스트 실행기가 계속 수행. GPU 후보는 원본 image digest/USER/WORKDIR/원본 RO cache/views 마운트와 명령 유지하여 **Docker create 상태(시작 전)**로 구성하고, 정확히 두 파일만 `docker cp` 메모리 tar(0644 읽기 권한)로 **후보의 독립 writable overlay**에 복사; `docker cp` readback의 bytes SHA256 및 mode 0644 검증 후에만 `scripts/stop.sh` 호출. 원본 운영 컨테이너/이미지/호스트 Stage 파일은 변경하지 않는다. 복사/검증 실패 시 후보만 제거하고 원래 서비스를 유지.
+- 이전 설계의 **후보 source RO bind 두 개는 이 커밋부터 사용하지 않음**. 대신 후보별 Docker writable layer의 source file copy-up 두 건으로 제한. 이 차이를 명시하지 않고 예전 RO source mount 안내를 재사용하지 않는다.
+- 새 HEAD의 실제 CPU/Docker preflight·candidate cp·GPU readiness/cold-hit/MTP/복구/physical mapping 모두 **미검증**. P1 GPU correctness 성공과 동등하지 않음.
+
+
 ## 2026-10-29 P1 후보 CPU 8/8 통과·PREWARM 키 차단 (DGX SHA 9fb60e82)
 
 - 사용자 DGX 로그: `git pull --ff-only`로 **`9fb60e82a5ccd78f4c356e30fe324dd475714b83`** 동기화; 신규 실행기 CPU **8/8 PASS**, `PASS_SOURCE_ONLY: 263 tracked file(s)`. 실행 전 `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_UNREVIEWED_ENV_KEYS:VLLM_PLE_MMAP_PREWARM` / exit 2. 따라서 후보 Docker create, 운영 stop, GPU 모델 로드, API 오라클, HTTP 복구 모두 **NOT_RUN**. 기존 기존 서비스 설정은 변경되지 않음.

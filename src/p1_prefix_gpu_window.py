@@ -6,6 +6,7 @@ Never installs a Python module, modifies the original container, or writes weigh
 from __future__ import annotations
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tarfile
 import time
 from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
@@ -223,8 +225,8 @@ def preflight() -> tuple[dict, dict, dict, list[str], list[str], str]:
 
 
 def probe_vllm_root(runtime_user: str) -> str:
-    # CPU only. Preserve the original effective Docker user and check that
-    # 0700/0600 staged sources are readable by that user BEFORE stopping.
+    # CPU only, as the ORIGINAL runtime user. Source stages remain host-private
+    # (0700 directory, 0600 files) and are separately SHA-pinned by verify_stage.
     # No GPU, model mounts, serving network or installed-package writes.
     code = (
         "import importlib.util,json,pathlib,hashlib;"
@@ -240,14 +242,7 @@ def probe_vllm_root(runtime_user: str) -> str:
         "assert all((p/k).is_file() and not (p/k).is_symlink()"
         " and hashlib.sha256((p/k).read_bytes()).hexdigest()==h"
         " for k,h in checks);"
-        "stage=["
-        "('mamba_hybrid.py','1dfb7b5566c8e683afff6640b1764c774c27daaa817437862fd465e63da9f381'),"
-        "('scheduler.py','0501cec135d23a21f988c67371f8f1dbf97cc63726c9c44b89e350c8887178d7')"
-        "];"
-        "assert all((pathlib.Path('/p1stage')/n).is_file()"
-        " and hashlib.sha256((pathlib.Path('/p1stage')/n).read_bytes()).hexdigest()==h"
-        " for n,h in stage);"
-        "print(json.dumps({'root':str(p),'sha256_pins_match':True,'stage_access':True}))"
+        "print(json.dumps({'root':str(p),'sha256_pins_match':True}))"
     )
     command = [
         "docker", "run", "--rm", "--pull=never", "--runtime=runc",
@@ -256,14 +251,13 @@ def probe_vllm_root(runtime_user: str) -> str:
         "--memory-swap=512m", "--pids-limit=64",
         "--env", "NVIDIA_VISIBLE_DEVICES=void", "--env", "CUDA_VISIBLE_DEVICES=-1",
         "--env", "PYTHONDONTWRITEBYTECODE=1",
-        "--mount", f"type=bind,src={STAGE},dst=/p1stage,readonly",
     ]
     if runtime_user:
         command += ["--user", runtime_user]
     command += ["--entrypoint", "python3", IMAGE, "-c", code]
     data = json.loads(checked(command, timeout=90))
-    if data.get("sha256_pins_match") is not True or data.get("stage_access") is not True:
-        raise Blocked("PROBE_SOURCE_OR_STAGE_ACCESS_FAILED")
+    if data.get("sha256_pins_match") is not True:
+        raise Blocked("PROBE_ORIGINAL_SOURCE_SHA_FAILED")
     root = data.get("root")
     if not isinstance(root, str) or not re.fullmatch(
             r"/(?:[A-Za-z0-9_.+-]+/)+vllm", root):
@@ -271,7 +265,62 @@ def probe_vllm_root(runtime_user: str) -> str:
     return root
 
 
-def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], runtime: str, runtime_user: str, runtime_workdir: str) -> None:
+def docker_cp_to_stopped_candidate(destination: str, name: str, data: bytes) -> None:
+    """Copy ONLY pinned Python bytes into candidate writable overlay before stop.
+
+    The original image and original service never change. A Docker tar stream
+    with mode 0644 makes these code files readable by the preserved nonroot user,
+    while the original private 0700/0600 host stage remains untouched.
+    """
+    if not re.fullmatch(r"[A-Za-z0-9._+-]+\.py", name):
+        raise Blocked("CANDIDATE_COPY_NAME_UNSAFE")
+    tar_stream = io.BytesIO()
+    with tarfile.open(fileobj=tar_stream, mode="w") as archive:
+        entry = tarfile.TarInfo(name=name)
+        entry.size = len(data)
+        entry.mode = 0o644
+        entry.uid = 0
+        entry.gid = 0
+        entry.mtime = 0
+        archive.addfile(entry, io.BytesIO(data))
+    try:
+        cp = subprocess.run(
+            ["docker", "cp", "-", f"{NAME}:{destination}"],
+            input=tar_stream.getvalue(), capture_output=True, timeout=90)
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("CANDIDATE_COPY_FAILED") from None
+    if cp.returncode:
+        raise Blocked("CANDIDATE_COPY_FAILED")
+
+
+def verify_candidate_code(destination: str, name: str, digest: str) -> None:
+    # Read back from stopped candidate (no GPU, no model, no server).
+    try:
+        cp = subprocess.run(["docker", "cp", f"{NAME}:{destination}/{name}", "-"],
+                            capture_output=True, timeout=90)
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("CANDIDATE_READBACK_FAILED") from None
+    if cp.returncode or len(cp.stdout) > 3_000_000:
+        raise Blocked("CANDIDATE_READBACK_FAILED")
+    try:
+        with tarfile.open(fileobj=io.BytesIO(cp.stdout), mode="r:*") as archive:
+            files = [member for member in archive.getmembers() if member.isfile()]
+            if len(files) != 1 or Path(files[0].name).name != name:
+                raise Blocked("CANDIDATE_READBACK_SHAPE")
+            if stat.S_IMODE(files[0].mode) != 0o644 or files[0].size > 2_000_000:
+                raise Blocked("CANDIDATE_PATCH_PERMISSIONS")
+            extracted = archive.extractfile(files[0])
+            if extracted is None or hashlib.sha256(extracted.read()).hexdigest() != digest:
+                raise Blocked("CANDIDATE_PATCH_SHA256_MISMATCH")
+    except (tarfile.TarError, OSError, ValueError):
+        raise Blocked("CANDIDATE_READBACK_TAR_INVALID") from None
+
+
+def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
+                     runtime: str, runtime_user: str, runtime_workdir: str) -> None:
+    # No host stage source bind mounts: its strict 0700/0600 ownership does NOT
+    # give nonroot original Docker USER read access. Copy exactly two files into
+    # the *isolated, stopped candidate overlay* with read-only-to-user 0644 mode.
     args = ["docker", "create", "--name", NAME, "--pull=never",
             "--label", LABEL_KEY + "=" + LABEL_VALUE,
             "--network=bridge", "--publish", f"127.0.0.1:{PORT}:8000",
@@ -285,11 +334,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], r
     if runtime_workdir:
         args += ["--workdir", runtime_workdir]
     for source, dest in ((receipt["cache"], "/recipe/hf-cache"),
-                         (receipt["views"], "/recipe/recipe-views"),
-                         (str(STAGE / "mamba_hybrid.py"),
-                          root + "/" + PATCHES["mamba_hybrid.py"][0]),
-                         (str(STAGE / "scheduler.py"),
-                          root + "/" + PATCHES["scheduler.py"][0])):
+                         (receipt["views"], "/recipe/recipe-views")):
         args += ["--mount", f"type=bind,src={source},dst={dest},readonly"]
     for entry in env:
         args += ["--env", entry]
@@ -298,9 +343,34 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], r
              IMAGE, *cmd]
     checked(args, timeout=60)
     actual = inspect_json("container", NAME)
+    actual_conf = actual.get("Config") or {}
     if actual.get("Image") != IMAGE or (
-        (actual.get("Config") or {}).get("Labels") or {}).get(LABEL_KEY) != LABEL_VALUE:
+            actual_conf.get("Labels") or {}).get(LABEL_KEY) != LABEL_VALUE:
         raise Blocked("CANDIDATE_IDENTITY_DRIFT")
+    if (actual_conf.get("User") or "") != runtime_user or (
+            actual_conf.get("WorkingDir") or "") != runtime_workdir:
+        raise Blocked("CANDIDATE_RUNTIME_USER_OR_WORKDIR_DRIFT")
+    if (actual.get("State") or {}).get("Status") != "created":
+        raise Blocked("CANDIDATE_MUST_REMAIN_STOPPED_FOR_PATCH")
+    target_mounts = {(receipt["cache"], "/recipe/hf-cache"),
+                     (receipt["views"], "/recipe/recipe-views")}
+    candidate_mounts = actual.get("Mounts") or []
+    if (len(candidate_mounts) != 2 or
+            any(m.get("Type") != "bind" or m.get("RW") is not False
+                for m in candidate_mounts) or
+            {(m.get("Source"), m.get("Destination")) for m in candidate_mounts}
+                != target_mounts):
+        raise Blocked("CANDIDATE_MOUNT_DRIFT")
+
+    for name, (relative, digest) in PATCHES.items():
+        target_dir = root + "/" + relative.rsplit("/", 1)[0]
+        source_file = STAGE / name
+        data = source_file.read_bytes()
+        if len(data) > 2_000_000 or hashlib.sha256(data).hexdigest() != digest:
+            raise Blocked("CANDIDATE_STAGE_SHA256_DRIFT")
+        docker_cp_to_stopped_candidate(target_dir, name, data)
+        verify_candidate_code(target_dir, name, digest)
+    print("P1_PREFIX_CANDIDATE_STOPPED_PATCH_SHA256_VERIFIED_NOT_GPU")
 
 
 def candidate_ids() -> list[str]:
@@ -381,14 +451,14 @@ def run(argv: list[str] | None = None) -> int:
             if a.confirm_id:
                 raise Blocked("PREFLIGHT_CONFIRM_ID_FORBIDDEN")
             root = probe_vllm_root((ci.get("Config") or {}).get("User") or "")
-            print(json.dumps({"status": "PREFLIGHT_CPU_PROBE_NO_GPU",
+            print(json.dumps({"status": "PREFLIGHT_CPU_SOURCE_SHA_VERIFIED_NO_GPU",
                               "stage_files_sha256_match": True,
                               "original_state": ci["State"]["Status"],
                               "candidate_port": PORT,
                               "installed_vllm_root_verified": bool(root),
-                              "stage_access_as_original_user": True,
+                              "stage_hashes_verified_on_host": True,
                               "gpu_model_loaded": False}, sort_keys=True))
-            print("P1_PREFIX_GPU_PREFLIGHT_SOURCE_AND_USER_CPU_PROBE_PASS_NOT_GPU")
+            print("P1_PREFIX_GPU_PREFLIGHT_SOURCE_CPU_PROBE_PASS_NOT_GPU")
             return 0
         if not re.fullmatch(r"[0-9a-f]{64}", a.confirm_id or "") or a.confirm_id != receipt["id"]:
             raise Blocked("EXACT_RECEIPT_ID_CONFIRMATION_REQUIRED")

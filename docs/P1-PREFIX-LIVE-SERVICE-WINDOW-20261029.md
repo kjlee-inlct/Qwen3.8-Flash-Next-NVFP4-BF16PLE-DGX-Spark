@@ -1,5 +1,14 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+## 2026-10-29 DGX P1 CPU 11/11 통과, 스테이지 비-root 접근 차단 (소스 c9901ba9)
+
+- 사용자 실기기 `HEAD=c9901ba9f4f98c272ef704a3f29e199ab729e58c`: 신규 CPU 회귀 **11/11 PASS**, Source manifest **263/263 PASS**, `--preflight`에서 `P1_PREFIX_GPU_BLOCKED_SUBPROCESS_FAILED_DOCKER` (exit 2). 원래 서비스 `Up 7 days`, 후보 컨테이너 없음, 기존 메모리 가용 약 14 GiB. `--execute`는 **NOT_STARTED**.
+- 추가 사용자 읽기 전용 진단: `docker ps` return 0, metadata preflight PASS; `docker run` CPU-only probe return 1. 내부 Python `PermissionError: [Errno 13] Permission denied: '/p1stage/mamba_hybrid.py'`. **원본 호스트 Stage는 소유자 전용 0700 디렉터리와 0600 파일, 원본 Docker USER는 이 호스트 소유자와 다름.**
+- 후속 소스 수정(본 신규 커밋 **DGX_NOT_RUN**): CPU probe는 pinned 원본 Preview source SHA만 원래 Docker 사용자로 점검하며 **호스트 Stage bind mount 없음**. 기존 Stage의 0700/0600 및 SHA256 확인은 호스트 실행기가 계속 수행. GPU 후보는 원본 image digest/USER/WORKDIR/원본 RO cache/views 마운트와 명령 유지하여 **Docker create 상태(시작 전)**로 구성하고, 정확히 두 파일만 `docker cp` 메모리 tar(0644 읽기 권한)로 **후보의 독립 writable overlay**에 복사; `docker cp` readback의 bytes SHA256 및 mode 0644 검증 후에만 `scripts/stop.sh` 호출. 원본 운영 컨테이너/이미지/호스트 Stage 파일은 변경하지 않는다. 복사/검증 실패 시 후보만 제거하고 원래 서비스를 유지.
+- 이전 설계의 **후보 source RO bind 두 개는 이 커밋부터 사용하지 않음**. 대신 후보별 Docker writable layer의 source file copy-up 두 건으로 제한. 이 차이를 명시하지 않고 예전 RO source mount 안내를 재사용하지 않는다.
+- 새 HEAD의 실제 CPU/Docker preflight·candidate cp·GPU readiness/cold-hit/MTP/복구/physical mapping 모두 **미검증**. P1 GPU correctness 성공과 동등하지 않음.
+
+
 ## Prefix 후보 소스 두 파일의 CPU-only 출력 — DGX 완료
 
 > **확정 DGX 결과:** `8e7b2e7535d7c27500b55046220c3f68de788aab`의 신규 CPU **6/6 PASS**, Source Manifest **259/259 PASS**, 두 후보 파일 실제 Stage PASS. `P1_PREFIX_GPU_SOURCE_STAGE_READY_ONLY_NOT_APPLIED` 및 `P1_PREFIX_STAGE_DGX_CPU_ONLY_READY_NOT_GPU_TESTED`. 사용자 DGX 보고 임시 경로: `/tmp/p1-prefix-stage.2dSPVPR6`; `mamba_hybrid.py` SHA256 `1dfb7b5566c8e683afff6640b1764c774c27daaa817437862fd465e63da9f381`, `scheduler.py` SHA256 `0501cec135d23a21f988c67371f8f1dbf97cc63726c9c44b89e350c8887178d7`. 파일은 아직 vLLM 엔진/운영 Docker에 적용되지 않았다. `/tmp`은 비영구적이다. 다음 단계에서 **무조건 stage 재생성을 실행하지 말고**, 기존 출력의 존재·해시·소유/권한을 확인한다.
