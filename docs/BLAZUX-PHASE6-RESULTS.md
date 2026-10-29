@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 최신 DGX CPU-only P1 closure prep 71/71 PASS — 실 검사 소스 SHA 고정
+
+- **사용자 DGX 제출 로그:** exact feature HEAD `c6aa0a84546aa54111aa58051e09a62afb8aa626`. `scripts/p1-prefix-closure-prep.sh --expected-head <SHA> --show-source` 1회 CPU-only 실행: GPU-window mocks **31/31**, live observer **14/14**, reuse-contract **14/14**, Mamba-utils probe **10/10**, closure safety **2/2** → **71/71 PASS**. 테스트 출력 중 `P1_PREFIX_GPU_BLOCKED_CANDIDATE_COPY_FAILED`, `ORIGINAL_CHAT_ORACLE_CHAT_EMPTY_FINAL_CONTENT` 등은 **의도된 mock 반례**로 실제 GPU 실행 실패 증거가 아님.
+- Source Manifest **272/272 PASS**, Stage SHA·read-only preflight **PASS**, `original_state=running`, `gpu_model_loaded=false`; 현 DGX 윈도는 **GPU 후보 기동/원본 stop-start 하지 않음**. 이번 테스트 자체에서는 port8000 HTTP 및 동일 Docker ID 사후 복구 probe를 다시 하지 않았음.
+- 설치 운영 이미지의 실제 `vllm/v1/worker/mamba_utils.py` 원문 SHA256 **`25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`**. 실제 Context 4 methods / fused kernels 3 ABI PASS: `initialize_from_forward_context 791-841`, `_populate_metadata 843-957`, `run_fused_precopy 1018-1061`, `run_fused_postprocess_align 1063-1116`, `_copy_mamba_state_block 123-252`, `precopy_mamba_align_fused_kernel 438-519`, `postprocess_mamba_fused_kernel 256-388`.
+- AST source hints: `state_tensor_source_forward_context_referenced=true`, `state_base_address_metadata_referenced=true`, `state_block_stride_metadata_referenced=true`, `block_table_pointer_metadata_referenced=true`, `copy_kernel_token_bias_referenced=true`, `copy_kernel_conv_width_referenced=true`. 세 runtime fields는 **`real_live_state_hash_captured=false`, `copy_execution_verified=false`, `state_content_reuse_verified=false`**. 기존 `physical_mapping_and_reuse_verified=false`, strict logprob `1e-4` 유지.
+- 실제 함수 본문과 변환/할당 레이아웃은 *사용자 DGX의* **`/tmp/p1-closure-abi.MOxSlTwv.log`**에 존재. 출력에 들어온 것은 요약 및 line headings뿐이다. 이 파일의 exact worker metadata/copy kernel 원문을 확보하여 audited GDN/PLE candidate-only snapshot hook을 구현하기 전에는 GPU를 재실행하거나 전체 P1 PASS 선언하지 않는다. 기존 Prefix HIT, accepted MTP, cold-vs-hit/no-hit logprob는 앞선 장부에 기록돼 있고 이번 CPU 실행은 그 GPU 증거를 추가하거나 갱신하지 않는다.
+
 ## 2026-10-29 P1 단일 GPU 진단, 물리 ID 40개와 무 HIT 수치 대조군 확보 — 시험 HEAD `f5bcbbfee72a0d8212eb40a786fa1321e5d01efa`
 
 - **사용자 직접 제공 DGX 운영 영수증:** 정확히 `feature/blazux-phase6-runtime-gates` HEAD `f5bcbbfee72a0d8212eb40a786fa1321e5d01efa`; 그 직전 DGX targeted CPU **28/28 GPU-window + 14/14 live-observer = 42/42 PASS**, Source Manifest **265/265 PASS**, Stage·원본 상태 read-only preflight PASS. 이번에 명시적으로 승인한 GPU 창 1회 실행, 로그 파일 `/tmp/p1-gpu-integrated.np6xjHlq.log` (사용자 로컬 경로, GitHub에 업로드하지 않음). **후보 Prefix ON GPU 모델 HTTP Ready**, 원본 사전 Chat probe PASS, 후보 패치 2개+observer SHA readback PASS.
