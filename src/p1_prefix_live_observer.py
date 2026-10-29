@@ -189,7 +189,7 @@ def _remember_physical_tables(instance, args, kwargs, fn):
         kv_config = bound.arguments.get("kv_cache_config")
         tables_obj = bound.arguments.get("block_tables")
         tables = _direct(tables_obj, "block_tables")
-        group_ids = _direct(instance, "_mamba_group_ids")
+        group_ids = bound.arguments.get("mamba_group_ids")
         if not isinstance(group_ids, (list, tuple)) or len(group_ids) > 8:
             group_ids = ()
         saved = {}
@@ -269,7 +269,7 @@ def _observe(kind, instance, fn, args, kwargs):
     event["cache_config"] = _scalar_fields(cache)
     event["cache_groups"] = _groups(cache)
     event["instance_groups"] = _groups(instance)
-    if kind == "init":
+    if kind == "align_ctx":
         tables = _direct(instance, "_p1_observer_mamba_tables")
         event["mamba_group_table_count"] = (
             len(tables) if isinstance(tables, dict) else 0)
@@ -346,7 +346,7 @@ def _observe(kind, instance, fn, args, kwargs):
 
 def install(cls, method, kind):
     if (kind, method) not in (("mamba", "add_request"),
-                              ("init", "initialize_kv_cache"),
+                              ("align_ctx", "_ensure_align_ctx"),
                               ("scheduler", "_mamba_block_aligned_split")):
         raise ValueError("UNAPPROVED_OBSERVER_SITE")
     fn = getattr(cls, method)
@@ -355,7 +355,7 @@ def install(cls, method, kind):
     @functools.wraps(fn)
     def wrapped(self, *args, **kwargs):
         result = fn(self, *args, **kwargs)
-        if kind == "init":
+        if kind == "align_ctx":
             _remember_physical_tables(self, args, kwargs, fn)
         current = _counts.get(kind, 0)
         if current < MAX_EVENTS:

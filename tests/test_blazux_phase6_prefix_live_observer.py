@@ -117,7 +117,7 @@ class Tests(unittest.TestCase):
                 self._mamba_group_ids = [0]
                 self._mamba_state_idx_gpu = Vector()
                 self.vllm_config = VllmCfg()
-            def initialize_kv_cache(self, kv_cache_config, block_tables):
+            def _ensure_align_ctx(self, kv_cache_config, mamba_group_ids, block_tables):
                 return True
             def add_request(self, req_index, new_req_data):
                 return req_index
@@ -136,16 +136,16 @@ class Tests(unittest.TestCase):
         try:
             Vector.__getitem__ = lambda self, i: Scalar(4)
             obs._counts.clear()
-            obs.install(MambaInit, "initialize_kv_cache", "init")
+            obs.install(MambaInit, "_ensure_align_ctx", "align_ctx")
             obs.install(MambaInit, "add_request", "mamba")
             obj = MambaInit()
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
-                obj.initialize_kv_cache(CacheConfig(), CacheTables())
+                obj._ensure_align_ctx(CacheConfig(), [0], CacheTables())
                 obj.add_request(2, Request())
             events = [json.loads(x.split(obs.PREFIX, 1)[1])
                       for x in output.getvalue().splitlines()]
-            self.assertEqual(events[0]["kind"], "init")
+            self.assertEqual(events[0]["kind"], "align_ctx")
             self.assertEqual(events[0]["mamba_group_table_count"], 1)
             self.assertEqual(events[1]["expected_mamba_seed"], 4)
             self.assertTrue(events[1]["state_seed_matches_expected"])

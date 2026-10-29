@@ -373,7 +373,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
     verify_candidate_code(root, "_p1_prefix_live_observer.py",
                           hashlib.sha256(observer_bytes).hexdigest())
     suffixes = {
-        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, 'initialize_kv_cache', 'init')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
+        "mamba_hybrid.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(MambaHybridModelState, '_ensure_align_ctx', 'align_ctx')\n_p1_install_observer(MambaHybridModelState, 'add_request', 'mamba')\n",
         "scheduler.py": "\n\n# P1 CANDIDATE-ONLY RUNTIME DIAGNOSTIC (not present in pinned Stage)\nfrom vllm._p1_prefix_live_observer import install as _p1_install_observer\n_p1_install_observer(Scheduler, '_mamba_block_aligned_split', 'scheduler')\n",
     }
     for name, (relative, digest) in PATCHES.items():
@@ -388,7 +388,7 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str],
         except (SyntaxError, UnicodeError):
             raise Blocked("CANDIDATE_STAGE_PYTHON_UNPARSEABLE") from None
         expected_class, required = (
-            ("MambaHybridModelState", {"initialize_kv_cache", "add_request"})
+            ("MambaHybridModelState", {"_ensure_align_ctx", "add_request"})
             if name == "mamba_hybrid.py" else
             ("Scheduler", {"_mamba_block_aligned_split"}))
         classes = [node for node in parsed.body
@@ -433,18 +433,18 @@ def read_candidate_observer() -> dict:
         except ValueError:
             continue
         if isinstance(item, dict) and item.get("schema") == 1 and (
-                item.get("kind") in ("scheduler", "mamba", "init")):
+                item.get("kind") in ("scheduler", "mamba", "align_ctx")):
             events.append(item)
     mamba = [e for e in events if e["kind"] == "mamba"]
     sched = [e for e in events if e["kind"] == "scheduler"]
-    init = [e for e in events if e["kind"] == "init"]
+    align_ctx = [e for e in events if e["kind"] == "align_ctx"]
     physical = [p for e in mamba for p in e.get("physical_map_samples", [])
                 if isinstance(p, dict)]
     return {
         "active_scheduler_event_count": len(sched),
-        "active_mamba_kv_initialize_event_count": len(init),
-        "active_mamba_init_table_group_counts": [
-            e.get("mamba_group_table_count") for e in init[:4]],
+        "active_mamba_align_ctx_event_count": len(align_ctx),
+        "active_mamba_align_ctx_table_group_counts": [
+            e.get("mamba_group_table_count") for e in align_ctx[:4]],
         "physical_table_sample_count": len(physical),
         "physical_block_entries_observed": sum(
             p.get("physical_entry_observed") is True for p in physical),

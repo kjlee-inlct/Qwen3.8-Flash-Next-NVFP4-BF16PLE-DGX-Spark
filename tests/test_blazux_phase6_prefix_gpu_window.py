@@ -103,7 +103,7 @@ class CandidateWindowTests(unittest.TestCase):
                 # runtime observer method sites before the guarded stop.
                 content = (
                     b"class MambaHybridModelState:\n"
-                    b"    def initialize_kv_cache(self): pass\n"
+                    b"    def _ensure_align_ctx(self): pass\n"
                     b"    def add_request(self): pass\n"
                     if name == "mamba_hybrid.py" else
                     b"class Scheduler:\n"
@@ -428,7 +428,7 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertEqual(observed["mamba_sampled_seeds"], [7])
         self.assertFalse(observed["physical_mapping_and_reuse_verified"])
         self.assertFalse(observed["physical_mapping_observed_partial"])
-        self.assertEqual(observed["active_mamba_kv_initialize_event_count"], 0)
+        self.assertEqual(observed["active_mamba_align_ctx_event_count"], 0)
         self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
     def test_wrapper_requires_exact_head_and_source_manifest(self):
