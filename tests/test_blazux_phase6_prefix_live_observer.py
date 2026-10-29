@@ -187,6 +187,13 @@ class Tests(unittest.TestCase):
         self.assertEqual(event["physical_map_samples"], [])
 
 
+    def test_live_mamba_cache_config_is_an_observable_whitelisted_field(self):
+        obj = Mamba()
+        self.assertIs(obs._direct(obj, "cache_config"), obj.cache_config)
+        event = obs._observe("scheduler", obj, Mamba.add_request, (), {})
+        self.assertEqual(event["cache_config"]["block_size"], 16)
+        self.assertEqual(event["cache_config"]["mamba_block_size"], 32)
+
     def test_slots_and_uniform_mamba_spec_are_observed_not_silently_missing(self):
         class SlottedSpec:
             __slots__ = ("block_size",)

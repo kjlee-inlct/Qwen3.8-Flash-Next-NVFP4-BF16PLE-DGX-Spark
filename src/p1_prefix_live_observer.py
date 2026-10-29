@@ -25,7 +25,7 @@ def _number(value):
 # vars(obj)-only implementation incorrectly reported those fields as missing.
 _OBSERVED_ATTRS = frozenset((
     "block_size", "mamba_block_size", "num_gpu_blocks", "num_blocks",
-    "num_kv_cache_groups", "max_num_seqs", "kv_cache_groups",
+    "num_kv_cache_groups", "max_num_seqs", "cache_config", "kv_cache_groups",
     "cache_groups", "kv_cache_group_specs", "kv_cache_spec",
     "kv_cache_specs", "layer_names", "vllm_config", "compilation_config",
     "static_forward_context", "kv_cache", "block_tables",
