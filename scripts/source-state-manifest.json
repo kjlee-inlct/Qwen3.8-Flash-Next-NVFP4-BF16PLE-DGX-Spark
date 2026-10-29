@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 270,
+  "tracked_file_count": 272,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "7b4fb6fa84ee7b2417849c4d48f073a82b782e2b"
+      "blob_sha": "9815c31d6826a4f17755dc0712648a4c06b5413f"
     },
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
@@ -446,7 +446,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "7d23f6f1503b4339422b597e7a2f2210f75b91a2"
+      "blob_sha": "c7301517ec4e21a6267cc66671f28dabe1c9a6bd"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -694,6 +694,11 @@
       "blob_sha": "1c09d0188fa24d39d3550a6f256d9794916bc692"
     },
     {
+      "path": "scripts/p1-prefix-closure-prep.sh",
+      "mode": "100644",
+      "blob_sha": "a54c22e2bf5fa08e8f23b166cad7d222570cbd81"
+    },
+    {
       "path": "scripts/p1-prefix-gpu-window.sh",
       "mode": "100755",
       "blob_sha": "af18608509aed533a65df34800702e5672fdb62a"
@@ -936,7 +941,7 @@
     {
       "path": "src/p1_prefix_gpu_oracle.py",
       "mode": "100644",
-      "blob_sha": "8fe8031dbb8cd2f8b08363854a29979299c24567"
+      "blob_sha": "fc0aca568bed27ebcef31858a1a870ae681b8c60"
     },
     {
       "path": "src/p1_prefix_gpu_window.py",
@@ -951,7 +956,7 @@
     {
       "path": "src/p1_prefix_mamba_utils_probe.py",
       "mode": "100644",
-      "blob_sha": "490574c2c7998194d099b37d85cc756ba5d15b47"
+      "blob_sha": "b02f5a10d568e0025d75a691405c1159592eaa12"
     },
     {
       "path": "src/p1_prefix_stage_files.py",
@@ -1349,9 +1354,14 @@
       "blob_sha": "0cf498e70f9e3576065f180d3d3ad22f63f8bf50"
     },
     {
+      "path": "tests/test_blazux_phase6_prefix_closure_prep.py",
+      "mode": "100644",
+      "blob_sha": "3989c30b87159e096c7fc0ede456361661364d90"
+    },
+    {
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "36629a784009702c5bb94114a47784712eb042a0"
+      "blob_sha": "4fa1148e5a1f606b97d5c855a7af6158fa7dd6fb"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",
@@ -1361,7 +1371,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_mamba_utils_probe.py",
       "mode": "100644",
-      "blob_sha": "00fd207637d5439f964da79d3fde4a7f84e693f4"
+      "blob_sha": "1add95a412371dba4719aeec06d385b64bbc51ab"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",

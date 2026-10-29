@@ -549,6 +549,50 @@ class CandidateWindowTests(unittest.TestCase):
                 "m", 18080, {}, {"token_ids": [11], "logprobs": [-0.2]})
         self.assertEqual(result["status"], "UNAVAILABLE_API_OR_METRICS")
 
+    def test_no_hit_controls_exceeding_strict_are_not_cache_bug_proof(self):
+        controls = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "control_to_control_max_abs_delta": 0.000331825518514961,
+        }
+        got = oracle.assess_no_hit_numeric_baseline(controls)
+        self.assertEqual(got["status"], "NO_HIT_BASELINE_EXCEEDS_STRICT_GATE")
+        self.assertFalse(got["no_hit_numeric_reproducibility_at_strict_gate"])
+        self.assertFalse(got["prefix_specific_numeric_fault_proven"])
+        self.assertFalse(got["strict_p1_gate_relaxed"])
+        self.assertEqual(got["strict_abs_tolerance_unchanged"], 1e-4)
+
+    def test_strict_baseline_within_gate_not_cache_pass(self):
+        controls = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "control_to_control_max_abs_delta": 0.00006,
+        }
+        got = oracle.assess_no_hit_numeric_baseline(controls)
+        self.assertEqual(got["status"], "NO_HIT_BASELINE_WITHIN_STRICT_GATE")
+        self.assertTrue(got["no_hit_numeric_reproducibility_at_strict_gate"])
+        self.assertFalse(got["prefix_specific_numeric_fault_proven"])
+
+    def test_unverified_no_hit_controls_and_nan_never_pass(self):
+        good = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "control_to_control_max_abs_delta": float("nan"),
+        }
+        for invalid in (None, {}, {"status": "UNAVAILABLE_API_OR_METRICS"},
+                        good):
+            got = oracle.assess_no_hit_numeric_baseline(invalid)
+            self.assertIsNone(got["no_hit_numeric_reproducibility_at_strict_gate"])
+            self.assertFalse(got["strict_p1_gate_relaxed"])
+            self.assertEqual(
+                got["status"], "INCONCLUSIVE_NO_HIT_BASELINE_NOT_VERIFIED")
+
     def test_main_oracle_controls_are_opt_in_only(self):
         source = (Path(__file__).resolve().parents[1] /
                   "src/p1_prefix_gpu_window.py").read_text()

@@ -262,6 +262,43 @@ def cold_control_diagnostics(model: str, port: int, payload: dict,
     return output
 
 
+def assess_no_hit_numeric_baseline(controls: dict,
+                                   *, strict_abs_tolerance: float = 1e-4) -> dict:
+    """Explain observed numeric drift; never override the strict P1 gate.
+
+    No-hit control drift over the existing gate demonstrates that the current
+    inference setup is not numerically reproducible at that tolerance, even
+    without prefix reuse. It does NOT prove that the cached path is correct.
+    """
+    result = {
+        "status": "INCONCLUSIVE_NO_HIT_BASELINE_NOT_VERIFIED",
+        "strict_abs_tolerance_unchanged": strict_abs_tolerance,
+        "no_hit_numeric_reproducibility_at_strict_gate": None,
+        "prefix_specific_numeric_fault_proven": False,
+        "strict_p1_gate_relaxed": False,
+    }
+    if not isinstance(controls, dict) or (
+        controls.get("status") !=
+        "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED"
+        or controls.get("all_controls_no_prefix_hit_observed") is not True
+        or controls.get("all_controls_token_ids_match_reference") is not True
+        or controls.get("cold_reference_logprob_comparison_available") is not True
+    ):
+        return result
+    drift = controls.get("control_to_control_max_abs_delta")
+    if (type(drift) not in (int, float)
+            or not math.isfinite(drift) or drift < 0):
+        return result
+    result["no_hit_control_to_control_max_abs_delta"] = drift
+    result["no_hit_numeric_reproducibility_at_strict_gate"] = (
+        drift <= strict_abs_tolerance)
+    result["status"] = (
+        "NO_HIT_BASELINE_EXCEEDS_STRICT_GATE"
+        if drift > strict_abs_tolerance else
+        "NO_HIT_BASELINE_WITHIN_STRICT_GATE")
+    return result
+
+
 def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
                enable_cold_controls: bool = False) -> dict:
     """Cold + three strictly serialized repeats, one candidate GPU boot.
@@ -356,6 +393,7 @@ def run_oracle(model: str, port: int, *, min_output_tokens: int = 0,
     return {
         "status": status, "requests": len(observations),
         "same_input_cold_controls": controls,
+        "no_hit_strict_numeric_baseline": assess_no_hit_numeric_baseline(controls),
         "mtp_configured_tokens": 2,
         "mtp_speculative_metric_names_observed": observed_spec_metric_names,
         "mtp_accepted_draft_token_counter_delta": accepted_delta,

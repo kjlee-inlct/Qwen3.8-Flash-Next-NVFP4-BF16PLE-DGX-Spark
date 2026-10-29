@@ -117,6 +117,17 @@ class Tests(unittest.TestCase):
                     "PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED"):
                 probe.inspect_installed_image()
 
+    def test_copy_source_hints_always_not_runtime_reuse_proof(self):
+        report = probe.inspect_source(fixture())
+        summary = probe.copy_path_source_evidence(report)
+        self.assertEqual(summary["provenance"],
+                         "PINNED_IMAGE_AST_SOURCE_ONLY_NOT_EXECUTED")
+        self.assertFalse(summary["real_live_state_hash_captured"])
+        self.assertFalse(summary["copy_execution_verified"])
+        self.assertFalse(summary["state_content_reuse_verified"])
+        self.assertTrue(summary["state_base_address_metadata_referenced"])
+        self.assertTrue(summary["state_block_stride_metadata_referenced"])
+
     def test_actual_image_probe_is_mocked_not_executed(self):
         fake_original={'Config':{'User':'1000:1000'}}
         src=fixture()

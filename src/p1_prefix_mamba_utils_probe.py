@@ -140,6 +140,39 @@ def inspect_source(raw: bytes) -> dict:
     return result
 
 
+def copy_path_source_evidence(report: dict) -> dict:
+    """Conservative source-only evidence map for selecting future GPU hook sites.
+
+    A function's existence and attributes do not prove that the branch ran or
+    that the tensors were copied. Unknown values remain unknown.
+    """
+    methods = report.get("methods", {})
+    kernels = report.get("kernels", {})
+    init = methods.get("_populate_metadata", {})
+    body = kernels.get("_copy_mamba_state_block", {})
+    pre = methods.get("run_fused_precopy", {})
+    post = methods.get("run_fused_postprocess_align", {})
+    all_attrs = set(init.get("attrs", []))
+    body_src = "\\n".join(body.get("source", []))
+    return {
+        "provenance": "PINNED_IMAGE_AST_SOURCE_ONLY_NOT_EXECUTED",
+        "state_tensor_source_forward_context_referenced": (
+            "forward_context" in "\\n".join(init.get("source", []))),
+        "state_base_address_metadata_referenced": (
+            "state_base_addrs" in all_attrs),
+        "state_block_stride_metadata_referenced": (
+            "state_block_strides" in all_attrs),
+        "block_table_pointer_metadata_referenced": (
+            "block_table_ptrs" in set(pre.get("attrs", []) +
+                                       post.get("attrs", []))),
+        "copy_kernel_token_bias_referenced": ("token_bias" in body_src),
+        "copy_kernel_conv_width_referenced": ("conv_width" in body_src),
+        "real_live_state_hash_captured": False,
+        "copy_execution_verified": False,
+        "state_content_reuse_verified": False,
+    }
+
+
 def inspect_installed_image() -> dict:
     # Existing preflight verifies branch, exact original image / container
     # identity, candidate absence, host stage hashes and worker/sched source.
@@ -157,6 +190,7 @@ def inspect_installed_image() -> dict:
         # (exit 2), not an uncaught exception/traceback (exit 1).
         raise SourceBlocked("PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED") from None
     report = inspect_source(source_from_export(output))
+    report["copy_path_source_evidence"] = copy_path_source_evidence(report)
     report["source_path_relative"] = TARGET
     return report
 

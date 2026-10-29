@@ -1,5 +1,7 @@
 # P1 Prefix-cache — 현재 진행 작업 인수인계 (2026-10-29)
 
+> **2026-10-29 P1 최종 묶음 준비 (신규 코드 DGX_NOT_RUN):** 사용자 최신 실제 DGX HEAD `9ce2af1e40255f116fc83447a8c97d49d349108c`의 CPU image probe 8/8 PASS, source 270/270 PASS, 원본 running; 정확한 설치 Mamba ABI 7개 함수/커널 확인. 저장·복구 커널 *본문*은 로컬 `/tmp/p1-mamba-abi.dxc4R4kv.log`에만 있고 대화에 미공유. 무 HIT numerical baseline 분리 분석, 복사 경로 source-evidence summary, 1회 CPU-only closure prep script 및 반례시험 추가 후 새 HEAD의 DGX NOT_RUN. GPU checksum hook과 strict full P1 PASS는 준비 전이므로 GPU/운영서비스 실행하지 않음. [비교 및 후속 기술 작업](P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md).
+
 > **2026-10-29 현재 CPU-only 차단 수정:** 최신 사용자 DGX 로그에서 `ac3830f4d603a9a0ad6f721020d10a9b4a780816`의 검사기 단위시험 **6/7 PASS, 1 FAIL**. `test_direct_script_invocation_imports_project_package_without_docker`가 발생시킨 실제 예외는 `src.p1_legacy_service_window.Blocked("DOCKER_INSPECT_FAILED")`; 기존은 `window.Blocked`만 포착. 따라서 오류는 P1 이미지 분석 시작 이전의 **예외 타입 누락**, 실제 운영 컨테이너/GPU 장애 아님. 후속 브랜치에 두 예외 타입 처리 + legacy error 모의 반례시험 추가 (검사기 8개 정의). 이 변경 DGX_NOT_RUN. 읽기 전용 ABI 검사 및 stage checksum gate/P1 GPU gate 유지, 원본 stop/start 및 신규 GPU 실행 미승인. [세부 비교·증거](P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md).
 
 > 최신 DGX 결과: 01d6e7af382815b6fea18a8bed0b8556bbdcb6ab에서 CPU 61/61 PASS, Source270/270 PASS, 원본 running 및 Stage preflight PASS. 직접 CLI 모듈 경로 오류로 Mamba utils 실제 이미지 ABI는 아직 미수집. 후속 HEAD에서 direct CLI sys.path 및 blocked preflight 처리 + CPU tests 2개 수정, 새 DGX CPU/GPU NOT_RUN. 권장 명령: python3 -m src.p1_prefix_mamba_utils_probe --inspect-image --show-source. GPU 정비창 추가 승인 없음.
