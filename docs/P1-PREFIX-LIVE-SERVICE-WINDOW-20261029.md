@@ -1,5 +1,7 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+> **최신 2026-10-29 P1 GPU 창 종료·복구 확인 (시험 SHA `f5bcbbfee72a0d8212eb40a786fa1321e5d01efa`):** CPU42/42 및 Source265/265 후 1회 승인된 GPU 창 사용. Prefix HIT 3회, 150 token IDs 동일, MTP accepted +400, 실제 physical block table entry 40개 표본 관측. 무 HIT 대조군도 strict 1e-4 초과이므로 Prefix 특정 logprob 원인 미확정; state-content reuse 완전 미증명. Exit2는 `INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE` 때문이며 **원본 동일-ID/running/port8000 HTTP PASS + 후보 없음**이 실제 사용자 출력으로 확인됨. **운영 서비스 start/recover 불필요, 재 GPU 실행은 신규 승인 필요.** [근거 기록](BLAZUX-PHASE6-RESULTS.md).
+
 > **2026-10-29 최신 GPU 정비창 복구 영수증:** 시험 소스 `14075d6a413d002d6c8c97f78b175a7f40d015eb`에서 Prefix HIT 3회, 장문 150 token IDs/text 완전 동일, MTP 실제 accepted +400을 확인했지만 strict logprob 차이 및 Mamba physical mapping 부재로 P1 완전 정합성은 **INCONCLUSIVE (exit 2)**. 원본 동일 컨테이너 ID/HTTP 복구, 후보 잔존 없음은 사용자 로그에서 **PASS**. `start.sh`·`--recover` 재호출 불필요. **새 GPU 유지보수 실행은 별도 승인 필요**. [상세 결과](BLAZUX-PHASE6-RESULTS.md).
 
 ## 2026-10-29 현재 적용 완료 상태 — 이전 'NOT_RUN' 준비 단락보다 우선
