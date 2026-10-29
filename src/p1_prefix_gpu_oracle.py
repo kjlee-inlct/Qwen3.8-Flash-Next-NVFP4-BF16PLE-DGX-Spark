@@ -36,7 +36,7 @@ def request_json(port: int, payload: dict) -> dict:
 def build_payload(model: str, *, long_prompt: bool) -> dict:
     base = ("Unit-test reference: a fictional hardware monitor reads a "
             "register holding a stable state. This sentence is fixed. ")
-    message = (base * (100 if long_prompt else 1))
+    message = (base * (450 if long_prompt else 1))
     message += "\nFinal question: What is seven plus five? Answer with the number 12."
     return {
         "model": model,
@@ -157,82 +157,95 @@ def settled_metrics(port: int, before: dict, *, require_queries: bool,
 
 
 def run_oracle(model: str, port: int) -> dict:
+    """Cold + three strictly serialized repeats, one candidate GPU boot.
+
+    MTP/EAGLE hybrid caches may miss the *first* repeated request and start
+    hitting only on a later repeat. The 450x synthetic prefix is deliberately
+    longer than the previous 2142-token oracle; no physical Mamba block size
+    is assumed. Do not claim full P1 correctness without active Mamba ABI.
+    """
     payload = build_payload(model, long_prompt=True)
     prompt_repr = json.dumps(payload["messages"], ensure_ascii=True, sort_keys=True)
     initial = metrics(port)
-    cold_raw = request_json(port, payload)
-    cold = extract(cold_raw)
-    middle = settled_metrics(port, initial, require_queries=True)
-    repeat_raw = request_json(port, payload)
-    repeat = extract(repeat_raw)
-    final = settled_metrics(port, middle, require_queries=True)
+    observations = []
+    last = initial
+    for index in range(4):
+        result = extract(request_json(port, payload))
+        # A malformed result cannot be treated as a cache-correctness PASS.
+        validate_chat_output(result)
+        after = settled_metrics(port, last, require_queries=True)
+        query_delta = counter_delta(last, after, "prefix_cache_queries_total")
+        hit_delta = counter_delta(last, after, "prefix_cache_hits_total")
+        cached = result["cached_prompt_tokens"]
+        observations.append({
+            "response": result,
+            "query_delta": query_delta,
+            "hit_delta": hit_delta,
+            "cached_prompt_tokens": cached,
+        })
+        last = after
 
-    a, b = cold["content"], repeat["content"]
-    cold_tokens, hit_tokens = cold["token_ids"], repeat["token_ids"]
-    token_source = "token_ids" if cold_tokens is not None and hit_tokens is not None else "logprob_token_strings"
-    if token_source == "logprob_token_strings":
-        cold_tokens, hit_tokens = cold["tokens"], repeat["tokens"]
-    tokens_same = bool(cold_tokens and hit_tokens and cold_tokens == hit_tokens)
-    logprobs_available = bool(cold["logprobs"] and repeat["logprobs"] and
-                              cold["logprobs"][0] is not None and
-                              repeat["logprobs"][0] is not None)
-    lp_delta = (abs(cold["logprobs"][0] - repeat["logprobs"][0])
-                if logprobs_available else None)
-    lp_same = lp_delta is not None and lp_delta <= 1e-4
-
-    # Confirm *repeat* cache hit after allowing a metrics-publishing interval.
-    hit_delta = counter_delta(middle, final, "prefix_cache_hits_total")
-    query_delta = counter_delta(middle, final, "prefix_cache_queries_total")
-    cached = repeat["cached_prompt_tokens"]
-    hit = hit_delta > 0 or (cached is not None and cached > 0)
-    cold_hit_delta = counter_delta(initial, middle, "prefix_cache_hits_total")
-
-    if not a.strip() or not b.strip():
-        status = "INCONCLUSIVE_EMPTY_FINAL_CONTENT"
-    elif cold["finish_reason"] not in ("stop", "length") or repeat["finish_reason"] not in ("stop", "length"):
-        status = "FAIL_CHAT_FINISH_REASON_UNEXPECTED"
-    elif not cold["tokens"] or not repeat["tokens"]:
+    cold = observations[0]["response"]
+    repetitions = [o["response"] for o in observations[1:]]
+    same_text = all(r["content"] == cold["content"] for r in repetitions)
+    same_tokens = all(r["token_ids"] == cold["token_ids"] for r in repetitions)
+    same_finishes = all(r["finish_reason"] == cold["finish_reason"]
+                        for r in repetitions)
+    token_lps = [cold["logprobs"], *[r["logprobs"] for r in repetitions]]
+    lp_complete = all(len(lp) == len(cold["token_ids"]) and
+                      all(v is not None for v in lp) for lp in token_lps)
+    max_lp_delta = None
+    first_lp_delta_max = None
+    if lp_complete:
+        max_lp_delta = max(abs(a - b)
+                           for lp in token_lps[1:]
+                           for a, b in zip(cold["logprobs"], lp))
+        first_lp_delta_max = max(abs(cold["logprobs"][0] - lp[0])
+                                 for lp in token_lps[1:])
+    query_deltas = [o["query_delta"] for o in observations]
+    hit_deltas = [o["hit_delta"] for o in observations]
+    repeat_hits = [
+        o["hit_delta"] > 0 or
+        (o["cached_prompt_tokens"] is not None and o["cached_prompt_tokens"] > 0)
+        for o in observations[1:]
+    ]
+    hit_indices = [i + 2 for i, hit in enumerate(repeat_hits) if hit]
+    if not same_text or not same_tokens or not same_finishes:
+        status = "FAIL_NONIDENTICAL_OUTPUT_OR_FINISH"
+    elif not any(repeat_hits):
+        if sum(query_deltas[1:]) > 0:
+            status = "FAIL_ALL_REPEATS_PREFIX_CACHE_MISS"
+        else:
+            status = "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED"
+    elif not lp_complete:
         status = "INCONCLUSIVE_TOKEN_LOGPROBS_MISSING"
-    elif cold["token_ids"] is None or repeat["token_ids"] is None:
-        status = "INCONCLUSIVE_TOKEN_IDS_UNAVAILABLE"
-    elif not tokens_same or a != b:
-        status = "FAIL_NONIDENTICAL_OUTPUT"
-    elif not logprobs_available:
-        status = "INCONCLUSIVE_FIRST_TOKEN_LOGPROB_UNAVAILABLE"
-    elif not lp_same:
-        status = "FAIL_FIRST_TOKEN_LOGPROB_MISMATCH"
-    elif hit:
-        status = "PASS_CACHE_HIT_AND_NONEMPTY_OUTPUT_TOKENS_LOGPROB"
-    elif query_delta > 0:
-        status = "FAIL_REPEAT_PREFIX_CACHE_MISS"
+    elif max_lp_delta is None or max_lp_delta > 1e-4:
+        status = "INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE"
     else:
-        status = "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED"
-
+        status = "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS"
     return {
-        "status": status, "requests": 2, "mtp_configured_tokens": 2,
+        "status": status, "requests": len(observations),
+        "mtp_configured_tokens": 2,
         "oracle_endpoint": "/v1/chat/completions",
         "thinking_disabled": True,
         "prompt_sha256": hashlib.sha256(prompt_repr.encode()).hexdigest(),
-        "cold_text_sha256": hashlib.sha256(a.encode()).hexdigest(),
-        "repeat_text_sha256": hashlib.sha256(b.encode()).hexdigest(),
-        "cold_content_nonempty": bool(a.strip()),
-        "repeat_content_nonempty": bool(b.strip()),
-        "cold_output_tokens": len(cold_tokens or []),
-        "repeat_output_tokens": len(hit_tokens or []),
-        "cold_finish_reason": cold["finish_reason"],
-        "repeat_finish_reason": repeat["finish_reason"],
+        "cold_text_sha256": hashlib.sha256(cold["content"].encode()).hexdigest(),
+        "all_repeats_text_equal": same_text,
+        "all_repeats_token_ids_equal": same_tokens,
+        "all_finish_reasons_equal": same_finishes,
+        "output_content_nonempty": bool(cold["content"].strip()),
+        "cold_output_tokens": len(cold["token_ids"]),
         "cold_prompt_tokens": cold["prompt_tokens"],
-        "repeat_prompt_tokens": repeat["prompt_tokens"],
-        "repeat_cached_prompt_tokens": cached,
-        "text_equal": a == b,
-        "token_sequence_equal": tokens_same,
-        "token_evidence_type": token_source,
-        "first_token_logprob_equal": lp_same,
-        "first_token_logprob_abs_delta": lp_delta,
-        "cache_hit_observed": hit,
-        "cold_hit_counter_delta": cold_hit_delta,
-        "repeat_hit_counter_delta": hit_delta,
-        "repeat_query_counter_delta": query_delta,
-        "cache_metric_names": sorted({k.split("{", 1)[0] for k in [*initial, *middle, *final]}),
+        "repeat_prompt_tokens": [r["prompt_tokens"] for r in repetitions],
+        "cache_hit_observed": bool(hit_indices),
+        "cache_hit_repeat_request_indices_1_based": hit_indices,
+        "cache_query_token_deltas_per_request": query_deltas,
+        "cache_hit_token_deltas_per_request": hit_deltas,
+        "cached_prompt_tokens_per_request": [
+            o["cached_prompt_tokens"] for o in observations],
+        "all_token_logprobs_available": lp_complete,
+        "max_token_logprob_abs_delta": max_lp_delta,
+        "max_first_token_logprob_abs_delta": first_lp_delta_max,
+        "logprob_strict_abs_tolerance": 1e-4,
         "active_mamba_physical_mapping_observed": False,
     }

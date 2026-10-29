@@ -1,5 +1,14 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 두 번째 실제 GPU 후보 결과 — SHA 0168cee29775c2c8104dc584d039900723df7f8b
+
+- 사용자 DGX 실측: feature HEAD 정확히 `0168cee29775c2c8104dc584d039900723df7f8b`, targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**, 원본 사전 `PASS_ORIGINAL_CHAT_PROTOCOL` (최종 텍스트 비어 있지 않음; finish=stop; logprob tokens=3; token IDs 있음), stopped 후보 패치 두 개 SHA 검증, 후보 실제 GPU HTTP READY.
+- 고정 2,142 prompt tokens × cold + repeat 2회: 양쪽 실제 채팅 출력 **비어 있지 않음**, 텍스트 SHA256 동일(`6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918`), token IDs **3/3 동일**, finish=stop. 후보 `vllm:prefix_cache_queries_total` repeat delta **+2142**, `vllm:prefix_cache_hits_total` repeat delta **0**, cached_tokens null; 즉 **prefix cache hit 검증 실패**. 첫 토큰 logprob 차이 **0.00011366908438503742**, 기존 strict 1e-4 기준 약간 초과. `P1_PREFIX_GPU_ORACLE_FAIL_FIRST_TOKEN_LOGPROB_MISMATCH`, full `active_mamba_physical_mapping_observed=false`. **P1 GPU correctness FAIL/NOT_PASS**, MTP K=2 설정 유지가 GPU speculative acceptance 증거는 아님.
+- 사용자가 제공한 출력은 **GPU 오라클 판정에서 끝남**. 해당 시험의 후속 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED` 및 종료 코드는 이 시점 **미제출**; 복구 완료를 단정하지 않음. 이전 GPU 시험(`85260bf`)에서 원본 동일 ID/HTTP 200 복구는 별도로 확인됐음. 운영 실행/복구가 완료되기 전 새 GPU 시험 반복 금지.
+- 후속 조사: vLLM 공개 이슈 [#53504](https://github.com/vllm-project/vllm/issues/53504)에서 Qwen3.8 hybrid + MTP K2, 실제 블록 크기 1600일 때 **첫 repeat MISS/다음 repeat HIT**의 retention/EAGLE-boundary 사례가 보고됨; [#51250](https://github.com/vllm-project/vllm/issues/51250)에서는 프롬프트 길이/물리 블록 경계를 넘어야 hybrid prefix HIT 발생 가능. **우리 Preview/Orcarouter BF16의 동일 원인 또는 block size=1600은 아직 증명되지 않음.**
+- 새 오라클(후속 커밋 **DGX_NOT_RUN**): 기본 MTP 유지, 합성 공통 프롬프트 **450 repetitions**(이전 100보다 충분히 길게; 실 token 수는 API로 확인) × **Cold + Repeat 3회**, 동일 HTTP boot/하나의 candidate window 내 단계별 prefix hit/query counters와 text, token IDs, **전체 출력 토큰 logprob의 최대 절대 오차** 계측. 첫 repeat만 miss했더라도 후속 repeat hit를 구분. 캐시 미적중을 logprob 차이보다 **우선 원인으로 판정**; strict logprob 1e-4 임계값은 완화하지 않고 초과시 별도 INCONCLUSIVE. 활성 Mamba physical mapping은 별도 계측 필요. 모델 GPU 기동/상태변경 추가 승인으로 간주하지 않으며 정확한 본문 기록은 실증과 분리.
+
+
 ## 2026-10-29 첫 P1 실제 GPU 후보 실행 — SHA 85260bfa60e5b683681f8877447e326f69223d05
 
 - 사용자 DGX 실제 로그: 신규 CPU 회귀 **15/15 PASS**, Source Manifest **263/263 PASS**, `P1_PREFIX_CANDIDATE_STOPPED_PATCH_SHA256_VERIFIED_NOT_GPU` (후보의 stopped writable overlay 두 Stage 파일 정확한 SHA/0644 검증), 원본 `scripts/stop.sh`로 stop 후 Prefix ON 후보 GPU 실제 기동과 **`P1_PREFIX_CANDIDATE_HTTP_READY_NOT_CORRECTNESS_PASS`** 확인. 후속 오라클 **2회 요청을 실제 실행**.

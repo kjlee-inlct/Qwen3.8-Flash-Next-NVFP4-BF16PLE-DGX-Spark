@@ -259,47 +259,71 @@ class CandidateWindowTests(unittest.TestCase):
         b["vllm:prefix_cache_hits_total{model_name=\"m\"}"] = 3.0
         self.assertEqual(oracle.counter_delta(a, b, "prefix_cache_hits_total"), 2.0)
 
-    def test_oracle_requires_nonempty_output_and_repeat_hit(self):
+    def test_oracle_requires_nonempty_output_and_late_mtp_cache_hit(self):
         def completion(text="12", lp=-0.2, token_id=100):
             return {"choices": [{
                 "message": {"content": text}, "finish_reason": "stop",
                 "logprobs": {"content": [{"token": "12", "logprob": lp}]},
                 "token_ids": [token_id],
-            }], "usage": {"prompt_tokens": 650, "completion_tokens": 1}}
+            }], "usage": {"prompt_tokens": 9600, "completion_tokens": 1}}
         before = {"vllm:prefix_cache_queries_total": 0.0,
                   "vllm:prefix_cache_hits_total": 0.0}
-        middle = {"vllm:prefix_cache_queries_total": 640.0,
-                  "vllm:prefix_cache_hits_total": 0.0}
-        hit = {"vllm:prefix_cache_queries_total": 1280.0,
-               "vllm:prefix_cache_hits_total": 600.0}
-        with patch.object(oracle, "request_json",
-                          side_effect=[completion(), completion()]), \
+        cold = {"vllm:prefix_cache_queries_total": 9600.0,
+                "vllm:prefix_cache_hits_total": 0.0}
+        repeat1 = {"vllm:prefix_cache_queries_total": 19200.0,
+                   "vllm:prefix_cache_hits_total": 0.0}
+        repeat2 = {"vllm:prefix_cache_queries_total": 28800.0,
+                   "vllm:prefix_cache_hits_total": 8000.0}
+        repeat3 = {"vllm:prefix_cache_queries_total": 38400.0,
+                   "vllm:prefix_cache_hits_total": 16000.0}
+        responses = [completion() for _ in range(4)]
+        with patch.object(oracle, "request_json", side_effect=responses), \
                 patch.object(oracle, "metrics", return_value=before), \
-                patch.object(oracle, "settled_metrics", side_effect=[middle, hit]):
+                patch.object(oracle, "settled_metrics",
+                             side_effect=[cold, repeat1, repeat2, repeat3]):
             result = oracle.run_oracle("m", 18080)
             self.assertEqual(result["status"],
-                             "PASS_CACHE_HIT_AND_NONEMPTY_OUTPUT_TOKENS_LOGPROB")
-            self.assertEqual(result["repeat_hit_counter_delta"], 600)
-            self.assertEqual(result["token_evidence_type"], "token_ids")
+                             "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS")
+            self.assertEqual(result["requests"], 4)
+            self.assertEqual(result["cache_hit_repeat_request_indices_1_based"], [3, 4])
+            self.assertEqual(result["cache_hit_token_deltas_per_request"],
+                             [0.0, 0.0, 8000.0, 8000.0])
+            self.assertEqual(result["max_token_logprob_abs_delta"], 0.0)
+            self.assertFalse(result["active_mamba_physical_mapping_observed"])
         with patch.object(oracle, "request_json",
-                          side_effect=[completion(""), completion("")]), \
+                          side_effect=[completion("") for _ in range(4)]), \
                 patch.object(oracle, "metrics", return_value=before), \
-                patch.object(oracle, "settled_metrics", side_effect=[middle, hit]):
-            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
-                             "INCONCLUSIVE_EMPTY_FINAL_CONTENT")
+                patch.object(oracle, "settled_metrics",
+                             side_effect=[cold, repeat1, repeat2, repeat3]):
+            with self.assertRaisesRegex(oracle.OracleBlocked,
+                                        "CHAT_EMPTY_FINAL_CONTENT"):
+                oracle.run_oracle("m", 18080)
+        nohit = dict(repeat3)
+        nohit["vllm:prefix_cache_hits_total"] = 0.0
         with patch.object(oracle, "request_json",
-                          side_effect=[completion(), completion()]), \
+                          side_effect=[completion() for _ in range(4)]), \
                 patch.object(oracle, "metrics", return_value=before), \
                 patch.object(oracle, "settled_metrics", side_effect=[
-                    middle, {"vllm:prefix_cache_queries_total": 1280.0,
-                             "vllm:prefix_cache_hits_total": 0.0}]):
-            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
-                             "FAIL_REPEAT_PREFIX_CACHE_MISS")
+                    cold, repeat1, {**repeat2,
+                                    "vllm:prefix_cache_hits_total": 0.0}, nohit]):
+            result = oracle.run_oracle("m", 18080)
+            self.assertEqual(result["status"], "FAIL_ALL_REPEATS_PREFIX_CACHE_MISS")
         with patch.object(oracle, "request_json",
-                          side_effect=[completion(), completion()]), \
+                          side_effect=[completion(), completion(),
+                                       completion(lp=-0.2002), completion()]), \
                 patch.object(oracle, "metrics", return_value=before), \
-                patch.object(oracle, "settled_metrics", side_effect=[before, before]):
-            self.assertEqual(oracle.run_oracle("m", 18080)["status"],
+                patch.object(oracle, "settled_metrics",
+                             side_effect=[cold, repeat1, repeat2, repeat3]):
+            result = oracle.run_oracle("m", 18080)
+            self.assertEqual(result["status"],
+                             "INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE")
+        with patch.object(oracle, "request_json",
+                          side_effect=[completion() for _ in range(4)]), \
+                patch.object(oracle, "metrics", return_value=before), \
+                patch.object(oracle, "settled_metrics",
+                             side_effect=[before for _ in range(4)]):
+            result = oracle.run_oracle("m", 18080)
+            self.assertEqual(result["status"],
                              "INCONCLUSIVE_PREFIX_CACHE_METRICS_NOT_UPDATED")
 
     def test_oracle_requires_real_hit_evidence(self):
