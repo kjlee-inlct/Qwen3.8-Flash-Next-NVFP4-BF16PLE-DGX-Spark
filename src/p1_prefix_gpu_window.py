@@ -91,6 +91,43 @@ def verify_stage(path: Path = STAGE) -> dict:
     return result
 
 
+def verify_stage_observer_sites(path: Path = STAGE) -> None:
+    """Inspect actual Stage ABI before Docker candidate creation/legacy stop.
+
+    SHA and file permissions must already be checked by verify_stage().
+    """
+    import ast
+    sites = {
+        "mamba_hybrid.py": ("MambaHybridModelState", {
+            "_ensure_align_ctx": ("self", "kv_cache_config",
+                                  "mamba_group_ids", "block_tables"),
+            "add_request": ("self", "req_index", "new_req_data"),
+        }),
+        "scheduler.py": ("Scheduler", {
+            "_mamba_block_aligned_split": (
+                "self", "request", "num_new_tokens",
+                "num_new_local_computed_tokens", "num_external_computed_tokens"),
+        }),
+    }
+    for name, (class_name, expected) in sites.items():
+        try:
+            tree = ast.parse((path / name).read_bytes().decode("utf-8"))
+        except (OSError, UnicodeError, SyntaxError, ValueError):
+            raise Blocked("STAGE_OBSERVER_SOURCE_UNPARSEABLE_" + name) from None
+        classes = [node for node in tree.body if
+                   isinstance(node, ast.ClassDef) and node.name == class_name]
+        if len(classes) != 1:
+            raise Blocked("STAGE_OBSERVER_CLASS_DRIFT_" + name)
+        actual = {
+            node.name: tuple(arg.arg for arg in node.args.args)
+            for node in classes[0].body
+            if isinstance(node, ast.FunctionDef)
+        }
+        for method, positional in expected.items():
+            if actual.get(method) != positional:
+                raise Blocked("STAGE_OBSERVER_ABI_DRIFT_" + name + "_" + method)
+
+
 def flag_value(argv: list[str], option: str) -> str:
     if argv.count(option) != 1:
         raise Blocked("CMD_FLAG_SHAPE_" + option.lstrip("-").upper())
@@ -158,6 +195,7 @@ def environment_delta(container: dict, image: dict) -> list[str]:
 
 def preflight() -> tuple[dict, dict, dict, list[str], list[str], str]:
     verify_stage()
+    verify_stage_observer_sites()
     receipt = legacy.state_receipt(Path.home())
     container = legacy.inspect("container", legacy.NAME)
     img = legacy.inspect("image", legacy.IMAGE_TAG)

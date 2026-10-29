@@ -431,6 +431,30 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertEqual(observed["active_mamba_align_ctx_event_count"], 0)
         self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
+    def test_actual_stage_observer_abi_is_checked_without_docker(self):
+        with tempfile.TemporaryDirectory() as td:
+            stage = Path(td)
+            (stage / "mamba_hybrid.py").write_text(
+                "class MambaHybridModelState:\n"
+                "    def add_request(self, req_index, new_req_data): pass\n"
+                "    def _ensure_align_ctx(self, kv_cache_config, "
+                "mamba_group_ids, block_tables): pass\n"
+            )
+            (stage / "scheduler.py").write_text(
+                "class Scheduler:\n"
+                "    def _mamba_block_aligned_split(self, request, num_new_tokens, "
+                "num_new_local_computed_tokens, num_external_computed_tokens): "
+                "pass\n"
+            )
+            gpu.verify_stage_observer_sites(stage)
+            source = (stage / "mamba_hybrid.py").read_text()
+            (stage / "mamba_hybrid.py").write_text(
+                source.replace("_ensure_align_ctx", "initialize_kv_cache"))
+            with self.assertRaisesRegex(
+                    gpu.Blocked, "STAGE_OBSERVER_ABI_DRIFT_mamba_hybrid"):
+                gpu.verify_stage_observer_sites(stage)
+
+
     def test_wrapper_requires_exact_head_and_source_manifest(self):
         script = (Path(__file__).resolve().parents[1] /
                   "scripts/p1-prefix-gpu-window.sh").read_text()
