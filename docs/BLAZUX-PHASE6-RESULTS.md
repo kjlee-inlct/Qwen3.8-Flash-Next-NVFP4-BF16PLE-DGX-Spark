@@ -1,5 +1,18 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 Manifest-driven legacy service selection — implementation prepared
+
+- 사용자 확인: 중지 스크립트의 **배포 대상은 `scripts/deployment-manifest.json`에서 읽어야 함**. 신규 `legacy.image_id`에 실제 DGX 검증된 레거시 이미지 digest를 고정. `src/p1_legacy_service_window.py`는 컨테이너/이미지/target/recipe label/port/bind/paths를 **이 배포 Manifest에서만** 읽도록 변경하고 로컬 원본 `paths`, `container-id`, `image-id` receipt 및 Docker inspect로 교차 검증한다. `scripts/source-state-manifest.json`은 별개의 Git blob/mode 체크용으로만 사용한다.
+- `scripts/stop.sh`는 Manifest가 지정한 **기존 YSLAB 컨테이너**만 명시적으로 stop-only, `scripts/start.sh`는 동일 ID 복구만 한다. 새 Wizard 정지에는 `--wizard`가 필요. `--yes` 단독, 잘못된 HEAD/정체성, 잘못된 manifest 경로/타입은 fail-closed. 기존 원본 YSLAB uninstall·image/cache는 변경 없음.
+- 신규 Manifest 경로 검증 및 실제 Bash wrapper stub-dispatch 회귀시험 코드를 추가했지만 **GitHub code/source 준비만 완료**, DGX에서 이 새 HEAD의 시험/실제 stop/start/GPU 후보/Prefix correctness는 모두 NOT_RUN. 기존 `a843016...` 사전 검증 PASS를 소급 전이하지 않는다.
+
+## 2026-10-29 P1 stop.sh correct target: existing YSLAB container, not Docker image — HEAD documentation
+
+- User clarified `scripts/stop.sh` must manage **the currently running `qwen38-flash-orca-uncensored-bf16-mtp` container** (short ID `3fc5a3d5be1d`, `yslab-qwen38-bf16ple:9492b78c` image, port 8000). A Docker image cannot be stopped. Earlier `scripts/stop.sh` was Wizard-only and did not meet the stated workflow.
+- **Code changed**: `scripts/stop.sh` now routes `--expected-head` to P1 `--stop`, `--preflight` to P1 read-only guard. `scripts/start.sh` routes to P1 `--start` preserving the original full container ID. Old Wizard mode requires `--wizard` explicitly. Real Bash dispatch tests use fake scripts and **never stop a real Docker container**; no direct `docker rm` in the wrappers.
+- **Existing DGX preflight result at `a84301625f8b72495f72519c32cc3f46773b91cb`**: `PASS_SOURCE_ONLY: 254 tracked file(s)` and `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING`. This belongs to the original P1 low-level guard; the new wrapper has not been DGX tested. `STOP_NOT_RUN`, `START_NOT_RUN`, `GPU_PREFIX_NOT_RUN`, `P6-A ABI_BLOCKED`.
+- Service remains untouched by this GitHub-only change. Do not issue real stop until isolated GPU candidate, memory/port contracts and rollback readiness are complete. No PR/CI/P2/P3 authorization.
+
 ## 2026-10-29 P1 유지보수창: 사용자 stop 허가, 신규 legacy stop-only 스크립트 준비 — DGX NOT_RUN
 
 - 사용자: 기존 서비스를 일시 정지한 Prefix-cache 실제 GPU/모델 검증 허용. **운영 중지는 만들어진 스크립트로만**, model/cache/image 보존과 복구 선행.

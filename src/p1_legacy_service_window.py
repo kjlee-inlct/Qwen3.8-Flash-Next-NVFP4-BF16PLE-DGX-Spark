@@ -1,30 +1,80 @@
 """P1 ONLY: stop/restart the same exact YSLAB installer-owned container.
 
-The original uninstall.sh --keep-image REMOVES the container. New Wizard
-scripts/stop.sh cannot manage the original legacy service. Both are unsuitable
-for a reversible maintenance window. This controller never removes anything.
+The original uninstall.sh --keep-image REMOVES the container. New Wizard uninstall/stop-only logic must not be used for the original legacy
+service. P1 scripts/stop.sh and scripts/start.sh delegate to this separate
+same-ID verifier. This controller never removes anything.
 """
 import argparse
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
 
-NAME = "qwen38-flash-orca-uncensored-bf16-mtp"
-IMAGE_TAG = "yslab-qwen38-bf16ple:9492b78c"
-IMAGE_ID = "sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a"
-TARGET = "orca-uncensored-bf16-mtp"
-RECIPE = "qwen38-flash-next-bf16-ple"
+# Source SHA/permissions are already verified by the shell wrapper.
+# This file consumes the DEPLOYMENT policy; original YSLAB receipts are
+# independently verified. No container identity is selected from CLI arguments.
+POLICY_PATH = Path(__file__).resolve().parents[1] / "scripts/deployment-manifest.json"
 
 
 class Blocked(Exception):
     pass
 
 
+def _relative(value: str) -> bool:
+    if not isinstance(value, str) or not value or value.startswith("/") or "\\" in value:
+        return False
+    parts = value.split("/")
+    return all(part not in ("", ".", "..") for part in parts) and str(PurePosixPath(value)) == value
+
+
+def policy_legacy(raw: dict) -> dict:
+    """Schema-check the reviewed deployment Manifest, not a CLI-selected target."""
+    if not isinstance(raw, dict) or raw.get("schema_version") != 1 or raw.get("policy_id") != "kjlee-qwen38-dgx-spark-wizard":
+        raise Blocked("POLICY_SCHEMA_MISMATCH")
+    origin = raw.get("origin")
+    if not isinstance(origin, dict) or origin.get("repo") != "kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark":
+        raise Blocked("POLICY_REPOSITORY_MISMATCH")
+    cfg = raw.get("legacy")
+    if not isinstance(cfg, dict):
+        raise Blocked("POLICY_LEGACY_MISSING")
+    required = ("container", "image", "image_id", "target",
+                "legacy_recipe_label", "port", "bind", "repo_relative",
+                "state_relative", "cache_name")
+    if any(not isinstance(cfg.get(key), str) or not cfg[key]
+           for key in required if key != "port"):
+        raise Blocked("POLICY_LEGACY_FIELDS_INVALID")
+    if not isinstance(cfg.get("port"), int) or isinstance(cfg["port"], bool) or not 1 <= cfg["port"] <= 65535:
+        raise Blocked("POLICY_PORT_INVALID")
+    if (not re.fullmatch(r"sha256:[0-9a-f]{64}", cfg["image_id"]) or
+            not all(_relative(cfg[name]) for name in
+                    ("repo_relative", "state_relative", "cache_name")) or
+            "/" in cfg["cache_name"]):
+        raise Blocked("POLICY_IMAGE_OR_PATH_INVALID")
+    return cfg
+
+
+def load_legacy_policy() -> dict:
+    if POLICY_PATH.is_symlink() or not POLICY_PATH.is_file() or POLICY_PATH.stat().st_size > 65536:
+        raise Blocked("POLICY_FILE_UNAVAILABLE")
+    try:
+        raw = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        raise Blocked("POLICY_FILE_UNREADABLE") from None
+    return policy_legacy(raw)
+
+
+LEGACY = load_legacy_policy()
+NAME = LEGACY["container"]
+IMAGE_TAG = LEGACY["image"]
+IMAGE_ID = LEGACY["image_id"]
+TARGET = LEGACY["target"]
+RECIPE = LEGACY["legacy_recipe_label"]
+
+
 def state_receipt(home: Path) -> dict:
-    base = home / ".local/state/yslab-qwen38-bf16ple"
+    base = home / LEGACY["state_relative"]
     if not base.is_dir() or base.is_symlink():
         raise Blocked("STATE_UNAVAILABLE")
     files = {}
@@ -36,8 +86,8 @@ def state_receipt(home: Path) -> dict:
             files[key] = p.read_text(encoding="utf-8").strip()
         except (OSError, UnicodeError):
             raise Blocked("RECEIPT_UNREADABLE") from None
-    expected_repo = home / "Workspace/llm/yslab-qwen38-bf16ple-dgx-spark"
-    expected_cache = expected_repo / "hf-cache"
+    expected_repo = home / LEGACY["repo_relative"]
+    expected_cache = expected_repo / LEGACY["cache_name"]
     expected_views = expected_repo / "recipe-views"
     if files["paths"].splitlines() != [str(expected_repo), str(expected_cache)]:
         raise Blocked("RECORDED_PATHS_MISMATCH")
@@ -66,8 +116,8 @@ def verify_identity(container: dict, image: dict, receipt: dict) -> bool:
     host = container.get("HostConfig") or {}
     if (host.get("RestartPolicy") or {}).get("Name", "no") not in ("no", ""):
         raise Blocked("RESTART_POLICY_MISMATCH")
-    port = (host.get("PortBindings") or {}).get("8000/tcp")
-    if port != [{"HostIp": "0.0.0.0", "HostPort": "8000"}]:
+    port = (host.get("PortBindings") or {}).get(str(LEGACY["port"]) + "/tcp")
+    if port != [{"HostIp": LEGACY["bind"], "HostPort": str(LEGACY["port"])}]:
         raise Blocked("PORT_8000_BINDING_MISMATCH")
     mounts = {(m.get("Source"), m.get("Destination"))
               for m in container.get("Mounts") or [] if m.get("Type") == "bind"}

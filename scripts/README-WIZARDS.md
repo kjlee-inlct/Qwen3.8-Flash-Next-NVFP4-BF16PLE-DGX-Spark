@@ -126,10 +126,18 @@ scripts/install.sh --skip-login --yes
 
 `scripts/install.sh` 또는 `scripts/uninstall.sh`만 실행하면 TTY에서 숫자 메뉴를 사용한다. 비대화형 환경에서는 모드 옵션과 `--yes`를 명시한다. `--dry-run`과 상태 조회는 확인 없이 실행 가능하다.
 
+**배포 정책의 단일 출처:** `scripts/deployment-manifest.json`의 `legacy` 항목(컨테이너·이미지·image_id·target·label·port·mount 출처); 실제 ID는 로컬 YSLAB `container-id`/`image-id` 영수증 및 Docker inspect와 대조한다. `source-state-manifest.json`은 Git 파일 무결성 검사만 담당한다.
+
+## P1 기존 운영 서비스 stop/start (2026-10-29)
+
+현재 `scripts/stop.sh`의 기본 목적은 **기존 YSLAB 이미지 `yslab-qwen38-bf16ple:9492b78c`로 생성된 실행 중 컨테이너 `qwen38-flash-orca-uncensored-bf16-mtp`만 안전하게 stop-only**하는 것이다. 이미지 자체를 중지하는 기능은 없으며 `docker rm`은 사용하지 않는다. 정확한 Git HEAD, full container ID, 원래 설치 receipt, image digest, labels, 8000 포트와 bind mounts를 검증하는 `scripts/p1-legacy-service-window.sh`로만 위임한다.
+
+`scripts/stop.sh --preflight --expected-head SHA`는 읽기 전용이다. 실제 정지는 `scripts/stop.sh --expected-head SHA --confirm-id FULL64 --execute`, 동일 컨테이너 복구는 `scripts/start.sh --expected-head SHA --confirm-id FULL64 --execute`를 사용한다. **시험 후보/복구 절차가 준비될 때까지 stop을 실행하지 않는다.** 기존 새 Wizard 정지는 이제 반드시 `scripts/stop.sh --wizard --yes`처럼 `--wizard`를 명시한다. 인자 없거나 `--yes` 단독 사용은 거부된다. [상세 운영 절차](../docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md).
+
 ## 신규 자산만 제거
 
 ```bash
-scripts/stop.sh --yes
+scripts/stop.sh --wizard --yes
 scripts/uninstall.sh --remove-container --yes
 scripts/uninstall.sh --remove-image --yes
 ```
