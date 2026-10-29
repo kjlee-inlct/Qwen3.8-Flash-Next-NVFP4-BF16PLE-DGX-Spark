@@ -7,6 +7,12 @@
 
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 common start idempotency and user DGX evidence
+
+- 사용자 제공 정확한 실 DGX source `f4d6fa84e56255241446ff0b666e4f20eae0cc6a` 로그: `git pull --ff-only` fast-forward, 14/14 `test_blazux_phase6_legacy_window.py` tests `OK` (실 Docker 미사용 CPU mocks 포함), `PASS_SOURCE_ONLY: 256 tracked file(s)` **2회**, 그리고 `scripts/pause.sh --preflight` 및 `scripts/start.sh --preflight` 각각 `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING`. 따라서 정지·일시중지·재시작은 실제 실행하지 않았고 운영 서비스는 그 시점 running.
+- 사용자가 공통 `start.sh`에 `running → ignore/no-op`을 요청함. `src/p1_legacy_service_window.py`의 정확한 `start + running` 분기에서 **배포 Manifest·receipt·container/image ID·label·port·mount·restart policy·status 검증 후 성공(0), Docker 변경 명령 0회**로 종료하고 `P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED`를 출력하도록 구현. 상태 오류·ID 불일치는 여전히 BLOCKED. `paused → unpause`, `exited → start` 유지. 새 테스트는 정상 no-op 및 잘못된 ID의 fail-closed을 mock으로 검증하며 실제 Docker 명령을 수행하지 않음.
+- **증거 상태:** 앞서 보고된 14/14·256/256·preflight 2회 PASS는 `f4d6fa84`에만 적용; 이 기록/코드 변경의 **신규 HEAD는 DGX_NOT_RUN**. 성공 NO-OP도 HTTP API health 또는 실제 Prefix-cache 검증이 아니므로 readiness로 승격 금지. `P1_GPU_PREFIX_CACHE=NOT_RUN`, `P6-A ACTIVE_ABI=BLOCKED`, production pause/stop/start `NOT_RUN`.
+
 ## 2026-10-29 P1 Manifest-driven legacy service selection — implementation prepared
 
 - 사용자 확인: 중지 스크립트의 **배포 대상은 `scripts/deployment-manifest.json`에서 읽어야 함**. 신규 `legacy.image_id`에 실제 DGX 검증된 레거시 이미지 digest를 고정. `src/p1_legacy_service_window.py`는 컨테이너/이미지/target/recipe label/port/bind/paths를 **이 배포 Manifest에서만** 읽도록 변경하고 로컬 원본 `paths`, `container-id`, `image-id` receipt 및 Docker inspect로 교차 검증한다. `scripts/source-state-manifest.json`은 별개의 Git blob/mode 체크용으로만 사용한다.

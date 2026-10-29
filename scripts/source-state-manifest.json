@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "f92fbe17545f0db8d916ecbdd099aeed1cef9e2c"
+      "blob_sha": "64ad5854cef0e6a1cd1c2f4f97a49a16f9a4fa34"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -446,12 +446,12 @@
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
       "mode": "100644",
-      "blob_sha": "182d6c472c0bc2ee21ea0ec059b137339d760c33"
+      "blob_sha": "11e8f5d3bd19fa05cfd0503a0923bd57aa4a94ff"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "967a7e9b56bfc620c9babe480ff530d52dcdc8bd"
+      "blob_sha": "00069716a8ea167e4b9aeae519b932ec2662ce85"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -916,7 +916,7 @@
     {
       "path": "src/p1_legacy_service_window.py",
       "mode": "100644",
-      "blob_sha": "91de771bc35d904598ed685d80ff6ff3cff8ed63"
+      "blob_sha": "620aec2097fa441d09523c72f049915b07274dd1"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1296,7 +1296,7 @@
     {
       "path": "tests/test_blazux_phase6_legacy_window.py",
       "mode": "100644",
-      "blob_sha": "322d48895ee55551be7a6bfd6397a399feccf8de"
+      "blob_sha": "d5db3707251976bbc475dabb9b183a2fde8cf6e7"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_candidate.py",

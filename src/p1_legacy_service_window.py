@@ -178,7 +178,11 @@ def run(args: list[str] | None = None) -> int:
         if a.action == "stop" and status != "running":
             raise Blocked("STOP_REQUIRES_RUNNING")
         if a.action == "start" and status == "running":
-            raise Blocked("SERVICE_ALREADY_RUNNING")
+            # Idempotent start: successful no-op only AFTER all ownership,
+            # manifest, image, mount and running-state checks above pass.
+            # Do not call Docker start or claim API readiness.
+            print("P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED")
+            return 0
         if a.action == "pause":
             command = ["docker", "pause", receipt["id"]]
             expected, marker = ("paused", "PAUSED_SAME_ID_GPU_MEMORY_NOT_RELEASED")

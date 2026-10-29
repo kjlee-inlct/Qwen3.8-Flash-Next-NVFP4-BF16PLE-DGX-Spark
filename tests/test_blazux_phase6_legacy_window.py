@@ -127,6 +127,48 @@ class LegacyWindowTests(unittest.TestCase):
                 self.assertEqual(argv[-1], r["id"])
                 self.assertIn(marker, stream.getvalue())
 
+    def test_start_on_running_is_idempotent_success_without_docker_mutation(self):
+        """Manifest/receipt/ID are verified, but repeated start never invokes Docker."""
+        c, image, receipt = valid()
+        observed = []
+        def safe_inspect(kind, target):
+            observed.append((kind, target))
+            return c if kind == "container" else image
+        stream = io.StringIO()
+        with patch.object(w.os, "geteuid", return_value=1000), \
+             patch.object(w, "state_receipt", return_value=receipt), \
+             patch.object(w, "inspect", side_effect=safe_inspect), \
+             patch.object(w.subprocess, "run") as docker_run, \
+             redirect_stdout(stream):
+            result = w.run([
+                "--action", "start", "--confirm-id", receipt["id"],
+                "--execute"])
+        self.assertEqual(result, 0)
+        self.assertEqual(observed, [
+            ("container", w.NAME), ("image", w.IMAGE_TAG)])
+        docker_run.assert_not_called()
+        self.assertEqual(
+            stream.getvalue().strip(),
+            "P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED")
+
+    def test_running_noop_still_rejects_wrong_container_identity(self):
+        """No-op must not bypass immutable legacy container ownership checks."""
+        c, image, receipt = valid()
+        c["Id"] = "b" * 64
+        stream = io.StringIO()
+        with patch.object(w.os, "geteuid", return_value=1000), \
+             patch.object(w, "state_receipt", return_value=receipt), \
+             patch.object(w, "inspect",
+                          side_effect=lambda kind, _: c if kind == "container" else image), \
+             patch.object(w.subprocess, "run") as docker_run, \
+             redirect_stdout(stream):
+            result = w.run([
+                "--action", "start", "--confirm-id", receipt["id"],
+                "--execute"])
+        self.assertEqual(result, 2)
+        docker_run.assert_not_called()
+        self.assertNotIn("ALREADY_RUNNING_NOOP", stream.getvalue())
+
     def test_illegal_transitions_refuse_docker_calls(self):
         states = {
             "running": {"Status": "running", "Running": True, "Paused": False},
@@ -134,8 +176,7 @@ class LegacyWindowTests(unittest.TestCase):
             "exited": {"Status": "exited", "Running": False, "Paused": False},
         }
         for action, status in (("pause", "paused"), ("pause", "exited"),
-                               ("stop", "paused"), ("stop", "exited"),
-                               ("start", "running")):
+                               ("stop", "paused"), ("stop", "exited")):
             with self.subTest(action=action, state=status):
                 c, i, r = valid()
                 c["State"] = states[status]
