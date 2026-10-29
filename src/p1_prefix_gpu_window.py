@@ -441,6 +441,15 @@ def read_candidate_observer() -> dict:
         "physical_table_sample_count": len(physical),
         "physical_block_entries_observed": sum(
             p.get("physical_entry_observed") is True for p in physical),
+        "physical_id_within_allocation_count": sum(
+            p.get("physical_id_within_state_allocation") is True
+            for p in physical),
+        "physical_id_outside_allocation_count": sum(
+            p.get("physical_id_within_state_allocation") is False
+            for p in physical),
+        "physical_id_allocation_unknown_count": sum(
+            p.get("physical_id_within_state_allocation") is None
+            for p in physical),
         "physical_entry_out_of_bounds_count": sum(
             p.get("row_in_bounds") is False or
             p.get("column_in_bounds") is False for p in physical),
@@ -466,7 +475,9 @@ def read_candidate_observer() -> dict:
             if e.get("state_seed_observed") is True],
         "physical_mapping_observed_partial": (
             bool(physical) and
-            any(p.get("physical_entry_observed") is True for p in physical)),
+            any(p.get("physical_id_within_state_allocation") is True
+                and p.get("block_size_matches_mamba_config") is True
+                for p in physical)),
         "physical_mapping_and_reuse_verified": False,
         "mtp_speculative_acceptance_observed": False,
         "provenance": "LIVE_CANDIDATE_WORKER_STDOUT_NOT_STATIC_AST",

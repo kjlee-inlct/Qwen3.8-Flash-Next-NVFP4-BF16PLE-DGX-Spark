@@ -116,10 +116,18 @@ class Tests(unittest.TestCase):
                 super().__init__()
                 self._mamba_group_ids = [0]
                 self._mamba_state_idx_gpu = Vector()
+                self.vllm_config = VllmCfg()
             def initialize_kv_cache(self, kv_cache_config, block_tables):
                 return True
             def add_request(self, req_index, new_req_data):
                 return req_index
+        class Config:
+            def __init__(self):
+                self.static_forward_context = {"gdn0": type(
+                    "Attention", (), {"kv_cache": [Vector()]})()}
+        class VllmCfg:
+            def __init__(self):
+                self.compilation_config = Config()
         class Request:
             def __init__(self):
                 self.num_computed_tokens = 129
@@ -145,8 +153,24 @@ class Tests(unittest.TestCase):
             self.assertEqual(mapping["physical_block_id"], 3)
             self.assertTrue(mapping["physical_entry_nonnegative"])
             self.assertTrue(mapping["block_size_matches_mamba_config"])
+            self.assertEqual(mapping["state_allocation_blocks"], 8)
+            self.assertTrue(mapping["state_allocation_complete"])
+            self.assertTrue(mapping["physical_id_within_state_allocation"])
         finally:
             Vector.__getitem__ = old_getitem
+
+    def test_missing_model_state_allocation_remains_unknown(self):
+        class Spec:
+            block_size = 32
+        class Group:
+            layer_names = ["gdn"]
+            kv_cache_spec = {"gdn": Spec()}
+        class Config:
+            kv_cache_groups = [Group()]
+        obj = Mamba()
+        allocation = obs._state_group_allocations(obj, Config(), 0)
+        self.assertIsNone(allocation["allocation_blocks"])
+        self.assertFalse(allocation["allocation_complete"])
 
     def test_uninitialized_tables_are_not_mapping_evidence(self):
         obs._counts.clear()

@@ -102,6 +102,52 @@ def _kv_spec_info(kv_cache_config, group_ids):
     return result
 
 
+def _state_group_allocations(instance, kv_cache_config, gid):
+    """Read actual allocated model cache tensor metadata, without addresses.
+
+    No state tensor contents, request IDs, logits or GPU pointer values leak.
+    Missing any selected layer is explicitly unknown, never a passed bound.
+    """
+    groups = _direct(kv_cache_config, "kv_cache_groups")
+    if not isinstance(groups, (list, tuple)) or gid >= len(groups):
+        return {"allocation_blocks": None, "state_tensor_count": 0,
+                "allocation_complete": False, "sample_tensors": []}
+    layers = _direct(groups[gid], "layer_names")
+    config = _direct(instance, "vllm_config")
+    compilation = _direct(config, "compilation_config")
+    context = _direct(compilation, "static_forward_context")
+    if (not isinstance(layers, (list, tuple)) or not layers or
+            len(layers) > 128 or not isinstance(context, dict)):
+        return {"allocation_blocks": None, "state_tensor_count": 0,
+                "allocation_complete": False, "sample_tensors": []}
+    blocks = []
+    samples = []
+    complete = True
+    n = 0
+    for layer in layers:
+        if not isinstance(layer, str) or layer not in context:
+            complete = False
+            continue
+        caches = _direct(context[layer], "kv_cache")
+        if not isinstance(caches, (list, tuple)) or not caches:
+            complete = False
+            continue
+        for tensor in caches:
+            n += 1
+            meta = _tensor_metadata(tensor)
+            if meta is None or not meta["shape"] or not meta["view_within_allocation"]:
+                complete = False
+                continue
+            blocks.append(meta["shape"][0])
+            if len(samples) < 4:
+                samples.append(meta)
+    minimum = min(blocks) if complete and blocks else None
+    return {"allocation_blocks": minimum,
+            "state_tensor_count": n,
+            "allocation_complete": minimum is not None,
+            "sample_tensors": samples}
+
+
 def _remember_physical_tables(instance, args, kwargs, fn):
     """References are candidate-only; no model tensor is copied or mutated."""
     try:
@@ -123,8 +169,11 @@ def _remember_physical_tables(instance, args, kwargs, fn):
             meta = _tensor_metadata(bt)
             if meta is None or len(meta["shape"]) != 2:
                 continue
+            allocation = _state_group_allocations(
+                instance, kv_config, gid)
             saved[gid] = {"table": bt, "meta": meta,
-                          "group": spec_info.get(gid, {})}
+                          "group": spec_info.get(gid, {}),
+                          "allocation": allocation}
         # Never assume an unobserved table or allocation is valid.
         instance._p1_observer_mamba_tables = saved
     except (TypeError, AttributeError, ValueError, RuntimeError):
@@ -147,7 +196,12 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
         group_sizes = [
             part.get("block_size") for part in info["group"].get("specs", [])
             if part.get("block_size") is not None]
+        allocation = info.get("allocation", {})
+        allocated = allocation.get("allocation_blocks")
         entry = {"group_id": gid, "group_block_sizes": group_sizes,
+                 "state_allocation_blocks": allocated,
+                 "state_allocation_complete": allocation.get(
+                     "allocation_complete") is True,
                  "table_shape": shape,
                  "table_row_stride_elements": meta["element_strides"][0],
                  "table_within_allocation": meta["view_within_allocation"],
@@ -164,6 +218,8 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
                     entry["physical_entry_observed"] = True
                     entry["physical_block_id"] = block
                     entry["physical_entry_nonnegative"] = block >= 0
+                    entry["physical_id_within_state_allocation"] = (
+                        0 <= block < allocated if type(allocated) is int else None)
             except (TypeError, IndexError, RuntimeError, ValueError):
                 entry["physical_read_unavailable"] = True
         snapshots.append(entry)
@@ -184,7 +240,8 @@ def _observe(kind, instance, fn, args, kwargs):
             len(tables) if isinstance(tables, dict) else 0)
         event["physical_table_metadata"] = [
             {"group_id": gid, "table": table["meta"],
-             "group": table["group"]}
+             "group": table["group"],
+             "state_allocation": table.get("allocation")}
             for gid, table in list(sorted(tables.items()))[:8]
         ] if isinstance(tables, dict) else []
         context = _direct(instance, "_mamba_ctx")
