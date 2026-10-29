@@ -12,6 +12,10 @@ import json
 PREFIX = "P1_PREFIX_ACTIVE_ABI_JSON:"
 MAX_EVENTS = 12
 _counts = {}
+_seen_calls = {}
+# Sample startup plus spaced later steps instead of exhausting the 12-event
+# allowance on the first 12 startup calls. Values are call ordinals, not IDs.
+_SAMPLE_CALLS = frozenset((1, 2, 3, 4, 8, 16, 32, 64, 128, 256, 512, 1024))
 # Bounded diagnostic-only process state; no request IDs or tensor contents.
 _recent_mamba_slot = {}
 _saved_mamba_tables = {}
@@ -203,13 +207,20 @@ def _remember_physical_tables(instance, args, kwargs, fn):
                 continue
             if not isinstance(tables, (list, tuple)) or gid >= len(tables):
                 continue
-            bt = _direct(tables[gid], "gpu")
-            meta = _tensor_metadata(bt)
+            # Actual pinned Preview ABI is tuple[torch.Tensor, ...]:
+            # block_tables[gid] is itself a batch-order 2-D GPU tensor.
+            # The old .gpu-only lookup silently dropped every real group.
+            raw = tables[gid]
+            direct_meta = _tensor_metadata(raw)
+            batch_order = direct_meta is not None
+            bt = raw if batch_order else _direct(raw, "gpu")
+            meta = direct_meta if batch_order else _tensor_metadata(bt)
             if meta is None or len(meta["shape"]) != 2:
                 continue
             allocation = _state_group_allocations(
                 instance, kv_config, gid)
             saved[gid] = {"table": bt, "meta": meta,
+                          "batch_order_rows": batch_order,
                           "group": spec_info.get(gid, {}),
                           "allocation": allocation}
         # Keep references outside the model object: no injected model attrs.
@@ -240,21 +251,34 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
             if part.get("block_size") is not None]
         allocation = info.get("allocation", {})
         allocated = allocation.get("allocation_blocks")
+        # A batch-order table row is NOT a persistent req_index slot. Without
+        # the input_batch permutation, never read [req_index, col] or claim
+        # a matching physical block ID. Metadata is still useful evidence.
+        batch_order = info.get("batch_order_rows") is True
         entry = {"group_id": gid, "group_block_sizes": group_sizes,
+                 "table_row_semantics": ("BATCH_ORDER_ROW_UNRESOLVED"
+                                         if batch_order else
+                                         "OPAQUE_WRAPPER_LEGACY_PROBE"),
+                 "request_slot_to_table_row_verified": False,
                  "state_allocation_blocks": allocated,
                  "state_allocation_complete": allocation.get(
                      "allocation_complete") is True,
                  "table_shape": shape,
                  "table_row_stride_elements": meta["element_strides"][0],
                  "table_within_allocation": meta["view_within_allocation"],
-                 "row_in_bounds": 0 <= request_idx < shape[0],
+                 "row_in_bounds": (None if batch_order else
+                                   0 <= request_idx < shape[0]),
                  "column_in_bounds": 0 <= expected_col < shape[1],
                  "block_size_matches_mamba_config": (
                      None if not group_sizes or mamba_block_size is None
                      else all(x == mamba_block_size for x in group_sizes)),
-                 "physical_entry_observed": False}
-        if (meta["view_within_allocation"] and entry["row_in_bounds"]
-                and entry["column_in_bounds"]):
+                 "physical_entry_observed": False,
+                 "physical_id_within_state_allocation": None}
+        if batch_order:
+            entry["physical_read_skipped_reason"] = (
+                "BATCH_ROW_TO_REQUEST_SLOT_UNVERIFIED")
+        if (not batch_order and meta["view_within_allocation"]
+                and entry["row_in_bounds"] and entry["column_in_bounds"]):
             try:
                 block = _number(info["table"][request_idx, expected_col].item())
                 if block is not None:
@@ -285,6 +309,9 @@ def _observe(kind, instance, fn, args, kwargs):
             len(tables) if isinstance(tables, dict) else 0)
         event["physical_table_metadata"] = [
             {"group_id": gid, "table": table["meta"],
+             "table_row_semantics": ("BATCH_ORDER_ROW_UNRESOLVED" if
+                                     table.get("batch_order_rows") else
+                                     "OPAQUE_WRAPPER_LEGACY_PROBE"),
              "group": table["group"],
              "state_allocation": table.get("allocation")}
             for gid, table in list(sorted(tables.items()))[:8]
@@ -376,14 +403,17 @@ def install(cls, method, kind):
         result = fn(self, *args, **kwargs)
         if kind == "align_ctx":
             _remember_physical_tables(self, args, kwargs, fn)
+        ordinal = _seen_calls.get(kind, 0) + 1
+        _seen_calls[kind] = ordinal
         current = _counts.get(kind, 0)
-        if current < MAX_EVENTS:
+        if ordinal in _SAMPLE_CALLS and current < MAX_EVENTS:
             _counts[kind] = current + 1
             try:
                 event = _observe(kind, self, fn, args, kwargs)
             except Exception:
                 event = {"schema": 1, "kind": kind,
                          "observer_error": "SNAPSHOT_UNAVAILABLE"}
+            event["observer_call_ordinal"] = ordinal
             print(PREFIX + json.dumps(event, sort_keys=True, separators=(",", ":")),
                   flush=True)
         return result

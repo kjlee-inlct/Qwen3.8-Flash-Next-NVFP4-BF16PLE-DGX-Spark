@@ -74,3 +74,9 @@
 - 사용자 DGX 최신 확인: HEAD b0ccbe8d206a4ba8023fcf63dd65f1b06f74508c 에서 CPU mock 32/32, Source265/265 PASS. 승인된 GPU window는 원본 HTTP probe 정상 후 ACTIVE_OBSERVER_METHOD_NOT_IN_STAGE_MAMBA_HYBRID 로 exit 2, 원본 동일 컨테이너 Running + port 8000 HTTP PASS, 후보 부재. GPU 기동·원본 중지 없음. 복구 명령 불필요.
 - 실제 private Stage 두 파일 SHA 검증 후 AST에서 MambaHybridModelState에는 initialize_kv_cache가 없고 _ensure_align_ctx(self, kv_cache_config, mamba_group_ids, block_tables), add_request(self, req_index, new_req_data)가 존재함을 사용자 확인. Scheduler._mamba_block_aligned_split 메서드도 실제 signature를 확인.
 - 본 후속 변경은 _ensure_align_ctx + add_request와 Scheduler만 후보에 hook, group_ids를 실제 인자로 읽고, Stage signature 검증을 read-only preflight 단계에서 실행. add_request가 align ctx 이전 호출될 때는 제한된 최근 slot 표본을 이후 align ctx에서 재관측. 원본 모델 instance에 observer 필드를 쓰지 않고 모듈 전용 저장소 사용. 물리/재사용 완전 검증은 계속 false. 새로운 HEAD 자체 CPU/GPU 시험은 NOT_RUN; 신규 GPU 윈도 승인으로 확대하지 않음.
+
+### 2026-10-29 실제 Stage 코드 확인 후 observer tensor ABI 교정 (새 코드 DGX_NOT_RUN)
+
+- 사용자가 Stage SHA 고정 실제 `_get_mamba_group_info` 및 `_ensure_align_ctx` 원문을 제공했다. `_ensure_align_ctx(self, kv_cache_config, mamba_group_ids: list[int], block_tables: tuple[torch.Tensor, ...])`; 실제 엔진은 `[block_tables[gid] for gid in mamba_group_ids]`로 GPU context에 배치순서 테이블 텐서 슬라이스를 전달한다. 구 observer의 `block_tables[gid].gpu` 접근은 실제 tensor에 맞지 않아 그룹 수가 0으로 기록됐다.
+- 수정은 direct `torch.Tensor`의 metadata(shape/strides/storage offset/capacity) 수집을 허용하고, 초기화 시점을 지나도 표본을 볼 수 있도록 observer 로그 12회 예산을 startup 1~4 및 8/16/32/... 호출 순서로 분산한다. 그러나 실제 block table **행은 batch-order**, `add_request(req_index)`의 request-slot과 동일하다는 증거가 없으므로 direct tensor는 `BATCH_ORDER_ROW_UNRESOLVED`로 표시, `[req_index, column]` GPU scalar read를 **수행하지 않고** block-ID/상태 재사용 PASS를 금지한다. 실제 batch index ↔ request slot 연결을 증명할 자료는 후속 `preprocess_state`/input-batch ABI 관측이 필요하다. Stage와 운영 컨테이너 변경 없음.
+- 신규 CPU mock은 direct tuple tensor와 초기/후기 이벤트 sampling을 추가했지만 신규 HEAD **DGX CPU/GPU NOT_RUN**. 기존 원본 HTTP 복구 PASS와 별도로 새로운 GPU 시험 승인은 없음.

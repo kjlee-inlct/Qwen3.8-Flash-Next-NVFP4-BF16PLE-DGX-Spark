@@ -485,6 +485,8 @@ def read_candidate_observer() -> dict:
         "active_mamba_align_ctx_event_count": len(align_ctx),
         "active_mamba_align_ctx_table_group_counts": [
             e.get("mamba_group_table_count") for e in align_ctx[:4]],
+        "active_mamba_align_ctx_call_ordinals": [
+            e.get("observer_call_ordinal") for e in align_ctx[:12]],
         "physical_table_sample_count": len(physical),
         "physical_block_entries_observed": sum(
             p.get("physical_entry_observed") is True for p in physical),
@@ -500,6 +502,9 @@ def read_candidate_observer() -> dict:
         "physical_entry_out_of_bounds_count": sum(
             p.get("row_in_bounds") is False or
             p.get("column_in_bounds") is False for p in physical),
+        "physical_batch_row_mapping_unknown_count": sum(
+            p.get("table_row_semantics") == "BATCH_ORDER_ROW_UNRESOLVED"
+            for p in physical),
         "physical_group_block_size_mismatch_count": sum(
             p.get("block_size_matches_mamba_config") is False
             for p in physical),

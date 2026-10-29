@@ -46,6 +46,12 @@ class Scheduler:
         return 42
 
 class Tests(unittest.TestCase):
+    def setUp(self):
+        obs._counts.clear()
+        obs._seen_calls.clear()
+        obs._saved_mamba_tables.clear()
+        obs._recent_mamba_slot.clear()
+
     def test_real_method_wrappers_emit_numeric_runtime_metadata(self):
         obs._counts.clear()
         obs.install(Mamba, "add_request", "mamba")
@@ -297,6 +303,63 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertIsNone(result[0]["block_size_matches_mamba_config"])
         self.assertIsNone(result[0]["physical_id_within_state_allocation"])
+
+
+    def test_preview_tuple_of_gpu_tensors_is_observed_without_gpu_index_read(self):
+        class DirectGpuTable:
+            shape = (8, 16)
+            device = "cuda:0"
+            def stride(self): return (16, 1)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            class Storage:
+                def nbytes(self): return 512
+            def untyped_storage(self): return self.Storage()
+            def __getitem__(self, key):
+                raise AssertionError("batch-order rows are not request slots")
+        class Group:
+            layer_names = ["gdn"]
+            kv_cache_spec = {"gdn": type("Spec", (), {"block_size": 1600})()}
+        class Config:
+            kv_cache_groups = [Group()]
+        class Model(Mamba):
+            def _ensure_align_ctx(self, kv_cache_config, mamba_group_ids,
+                                  block_tables):
+                return True
+        obj = Model()
+        obs.install(Model, "_ensure_align_ctx", "align_ctx")
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertTrue(obj._ensure_align_ctx(
+                Config(), [0], (DirectGpuTable(),)))
+        event = json.loads(output.getvalue().split(obs.PREFIX, 1)[1])
+        self.assertEqual(event["mamba_group_table_count"], 1)
+        self.assertEqual(event["physical_table_metadata"][0]["table"]["shape"],
+                         [8, 16])
+        self.assertEqual(event["physical_table_metadata"][0]
+                         ["table_row_semantics"], "BATCH_ORDER_ROW_UNRESOLVED")
+        sample = obs._sample_physical(obj, 2, 4, 1600)[0]
+        self.assertFalse(sample["physical_entry_observed"])
+        self.assertIsNone(sample["row_in_bounds"])
+        self.assertIsNone(sample["physical_id_within_state_allocation"])
+        self.assertEqual(sample["physical_read_skipped_reason"],
+                         "BATCH_ROW_TO_REQUEST_SLOT_UNVERIFIED")
+
+    def test_spaced_observer_events_capture_later_calls_not_only_startup(self):
+        class Model:
+            def add_request(self, req_index, new_req_data):
+                return True
+        obs.install(Model, "add_request", "mamba")
+        obj = Model()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            for _ in range(130):
+                self.assertTrue(obj.add_request(0, None))
+        events = [json.loads(line.split(obs.PREFIX, 1)[1])
+                  for line in output.getvalue().splitlines()]
+        ordinals = [event["observer_call_ordinal"] for event in events]
+        self.assertEqual(ordinals, [1, 2, 3, 4, 8, 16, 32, 64, 128])
+        self.assertLessEqual(len(events), obs.MAX_EVENTS)
 
     def test_refuses_unapproved_hook(self):
         with self.assertRaises(ValueError):
