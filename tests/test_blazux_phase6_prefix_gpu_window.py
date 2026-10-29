@@ -132,8 +132,8 @@ class CandidateWindowTests(unittest.TestCase):
                              "1000:1000")
             self.assertEqual(sum(arg == "--mount" for arg in commands[0]), 2)
             self.assertNotIn(str(stage), repr(commands[0]))
-            self.assertEqual(cp.call_count, 2)
-            self.assertEqual(verify.call_count, 2)
+            self.assertEqual(cp.call_count, 3)
+            self.assertEqual(verify.call_count, 3)
             self.assertEqual(os.stat(stage).st_mode & 0o777, 0o700)
             self.assertEqual(os.stat(stage / "mamba_hybrid.py").st_mode & 0o777,
                              0o600)
@@ -366,6 +366,29 @@ class CandidateWindowTests(unittest.TestCase):
                     "Config": {"Labels": {gpu.LABEL_KEY: "foreign"}}}):
             with self.assertRaisesRegex(gpu.Blocked, "REFUSE_CLEANUP_FOREIGN"):
                 gpu.cleanup_candidate()
+
+    def test_live_candidate_observer_log_summary_is_not_physical_mapping_pass(self):
+        examples = [
+            {"schema": 1, "kind": "scheduler",
+             "self_block": {"block_size": 16}},
+            {"schema": 1, "kind": "mamba",
+             "cache_config": {"mamba_block_size": 32},
+             "tensor_metadata": {"_mamba_state_idx_gpu": {"shape": [8]}},
+             "state_seed_observed": True, "state_seed_value": 7},
+        ]
+        lines = "\n".join("P1_PREFIX_ACTIVE_ABI_JSON:" + json.dumps(x)
+                         for x in examples)
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0, stdout=lines,
+                                            stderr="")):
+            observed = gpu.read_candidate_observer()
+        self.assertEqual(observed["active_scheduler_event_count"], 1)
+        self.assertEqual(observed["active_mamba_add_request_event_count"], 1)
+        self.assertEqual(observed["mamba_state_seed_observed_count"], 1)
+        self.assertEqual(observed["scheduler_effective_blocks"], [16])
+        self.assertEqual(observed["mamba_sampled_seeds"], [7])
+        self.assertFalse(observed["physical_mapping_and_reuse_verified"])
+        self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
     def test_wrapper_requires_exact_head_and_source_manifest(self):
         script = (Path(__file__).resolve().parents[1] /
