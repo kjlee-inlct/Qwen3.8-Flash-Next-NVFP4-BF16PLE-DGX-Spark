@@ -2,6 +2,11 @@
 import base64
 import hashlib
 import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 from src import p1_prefix_mamba_utils_probe as probe
@@ -77,6 +82,30 @@ class Tests(unittest.TestCase):
             probe.source_from_export(bad)
         with self.assertRaisesRegex(probe.SourceBlocked,'SOURCE_EXPORT_SHA_OR_SIZE_INVALID'):
             probe.source_from_export('{"source_base64":"?","sha256":"a"}')
+
+    def test_direct_script_invocation_imports_project_package_without_docker(self):
+        script = Path(probe.__file__).resolve()
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ)
+            env["PATH"] = tmp  # No access to docker/git.
+            env["PYTHONPATH"] = ""
+            env["PYTHONDONTWRITEBYTECODE"] = "1"
+            done = subprocess.run(
+                [sys.executable, str(script), "--inspect-image"],
+                cwd=tmp, env=env, capture_output=True, text=True,
+                timeout=20, check=False)
+        self.assertEqual(done.returncode, 2, done.stdout + done.stderr)
+        self.assertNotIn("ModuleNotFoundError", done.stderr)
+        self.assertNotIn("Traceback", done.stderr)
+        self.assertIn("BLOCKED_NO_GPU", done.stdout)
+
+    def test_window_preflight_exception_fails_closed_without_traceback(self):
+        from src import p1_prefix_gpu_window as window
+        with patch.object(window, "preflight",
+                          side_effect=window.Blocked("SUBPROCESS_FAILED_GIT")):
+            with self.assertRaisesRegex(
+                    probe.SourceBlocked, "PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED"):
+                probe.inspect_installed_image()
 
     def test_actual_image_probe_is_mocked_not_executed(self):
         fake_original={'Config':{'User':'1000:1000'}}

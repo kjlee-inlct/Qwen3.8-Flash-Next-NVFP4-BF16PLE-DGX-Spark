@@ -53,3 +53,9 @@
 ### GDN/PLE conv window shift 반례 처리 — 후속 CPU 계약 보강
 
 공개 vLLM fused-copy의 convolution 경로에는 `token_bias=num_accepted-1`을 적용해 source window를 shift하는 경우가 있다. state buffer의 원시 바이트가 다르더라도 올바른 복사일 수 있으므로, 현재 CPU full-state checksum 계약은 `token_bias == 0`이고 `copy_semantics == FULL_BLOCK_EXACT`가 실제 evidence로 입증된 경우만 같은 전체 바이트 digest를 직접 비교한다. 바이어스가 0이 아니거나 의미가 unknown이면 `INCONCLUSIVE_WINDOW_SHIFT_OR_COPY_SEMANTICS`으로 보류한다. 이 규칙은 공개 v0.32로부터 얻은 보수적 반례 대비이며, 실제 Preview에서 `MambaSpecDecodeGPUContext` ABI를 검증하기 전까지의 추가 사전 조건일 뿐이다. 후속 Stage runtime hook 감사 없이 live GPU PASS로 승격하지 않는다.
+
+### 2026-10-29 직접 실행 import 실패 원인과 수정
+
+- DGX 검증 HEAD 01d6e7af382815b6fea18a8bed0b8556bbdcb6ab: CPU 61/61 PASS, source 270/270 PASS, Stage/원본 running preflight PASS. 직후 직접 python3 src/p1_prefix_mamba_utils_probe.py --inspect-image --show-source 호출 시 ModuleNotFoundError: No module named 'src'. Mamba utils ABI 분석은 미시작, GPU 및 기존 서비스 변경 없음.
+- 신규 수정: 직접 실행 때 repo root 모듈 경로를 설정하며 window.Blocked는 bounded BLOCKED_NO_GPU로 처리. Docker를 호출할 수 없는 PATH에서 직접 실행을 검증하는 CPU 테스트와 blocked preflight 반례 2개 추가. 총 CPU 63개 정의, 새 HEAD DGX_NOT_RUN.
+- 권장 호출: python3 -m src.p1_prefix_mamba_utils_probe --inspect-image --show-source. 직접 실행 CLI도 정상 모듈 경로를 확보하도록 수정. 오직 고정 원본 이미지 digest의 GPU 없는 read-only CPU probe만 허용한다.

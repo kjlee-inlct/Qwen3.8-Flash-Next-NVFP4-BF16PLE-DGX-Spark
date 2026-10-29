@@ -1,5 +1,7 @@
 # P1 Prefix-cache — 현재 진행 작업 인수인계 (2026-10-29)
 
+> 최신 DGX 결과: 01d6e7af382815b6fea18a8bed0b8556bbdcb6ab에서 CPU 61/61 PASS, Source270/270 PASS, 원본 running 및 Stage preflight PASS. 직접 CLI 모듈 경로 오류로 Mamba utils 실제 이미지 ABI는 아직 미수집. 후속 HEAD에서 direct CLI sys.path 및 blocked preflight 처리 + CPU tests 2개 수정, 새 DGX CPU/GPU NOT_RUN. 권장 명령: python3 -m src.p1_prefix_mamba_utils_probe --inspect-image --show-source. GPU 정비창 추가 승인 없음.
+
 > **최신 진행 (2026-10-29, 새 코드 DGX_NOT_RUN):** 직전 HEAD `c9351e8af2620b4037cf319989f1e37c0cfad1e1`에서 DGX CPU **55/55 PASS**, Source268/268 PASS, pinned Stage read-only AST/source preflight PASS, 원본 running. 실제 Stage의 `preprocess_state → ctx.run_fused_precopy`, `postprocess_state → ctx.run_fused_postprocess_align`를 확인했다. 그러나 메서드 호출과 실제 block copy는 별개다. 고정 Preview 운영 이미지 `vllm/v1/worker/mamba_utils.py`의 **정확한 SHA·kernel 구현/버퍼 ABI**를 CPU-only sandbox에서 읽는 scanner와 mock 5개를 추가했다. 이 변경은 GPU 검증/운영 반영이 아니다. 자세한 사용/차단 조건: [Blazux 비교 및 다음 근거](P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md).
 
 > **Blazux 최신 공개 원본과 P1 비교/상태 검증 계약 추가 — 새 코드 DGX_NOT_RUN:** `blazux/qwen3.8-Flash-DGX` `main` HEAD `7e63dbe5761448ea833ed28781c1d32ce0d56f4c`의 실제 Mamba 2-site 수정과 GDN/PLE 체크섬 검증 근거를 비교했다. P1은 물리 ID 표본 40개를 확보했으나 **full-state content cold-capture→hit-restore checksum 증거 없음**. 신규 CPU 계약 및 Stage SHA read-only inspector와 반례 unit tests를 추가했다. 기존 strict 1e-4/운영 스크립트는 그대로, GPU 및 운영 서비스 신규 실행 없음. 세부 문서: [P1/Blazux 비교](P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md). 아래 실제 GPU 마지막 영수증 SHA는 `f5bcbb...`로 유지.

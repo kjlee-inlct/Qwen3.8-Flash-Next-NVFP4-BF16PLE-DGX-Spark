@@ -14,6 +14,12 @@ import hashlib
 import json
 import re
 import sys
+from pathlib import Path
+
+# Direct invocation from src/ puts only src on Python's sys.path.
+# Resolve this checked-out repo root in both CLI forms.
+if __name__ == "__main__" and not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 TARGET = "v1/worker/mamba_utils.py"
 MAX_SOURCE_BYTES = 400_000
@@ -138,11 +144,14 @@ def inspect_installed_image() -> dict:
     # Existing preflight verifies branch, exact original image / container
     # identity, candidate absence, host stage hashes and worker/sched source.
     from src import p1_prefix_gpu_window as window
-    _, original, _, _, _, _ = window.preflight()
-    runtime_user = (original.get("Config") or {}).get("User") or ""
-    root = window.probe_vllm_root(runtime_user)
-    argv = cpu_probe_argv(window.IMAGE, runtime_user, root + "/" + TARGET)
-    output = window.checked(argv, timeout=90)
+    try:
+        _, original, _, _, _, _ = window.preflight()
+        runtime_user = (original.get("Config") or {}).get("User") or ""
+        root = window.probe_vllm_root(runtime_user)
+        argv = cpu_probe_argv(window.IMAGE, runtime_user, root + "/" + TARGET)
+        output = window.checked(argv, timeout=90)
+    except window.Blocked:
+        raise SourceBlocked("PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED") from None
     report = inspect_source(source_from_export(output))
     report["source_path_relative"] = TARGET
     return report
