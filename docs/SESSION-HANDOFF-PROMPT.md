@@ -1,5 +1,10 @@
 # SESSION-HANDOFF-PROMPT.md
 
+> **P1 현행 요약 — 2026-10-29 (이전 스냅샷보다 우선):** 사용자 DGX에서 확정 검증된 마지막 GPU 후보 코드 SHA `c342e033c6e601f374520eefb6a9d0e9277b54ef`: targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**, 원본 Chat API probe PASS, 후보 소스 SHA 두 개 확인 및 GPU HTTP READY PASS. 9,492 입력 토큰을 cold+repeat×3으로 총 4회 요청한 결과 Prefix-cache query delta `[9492,9492,9492,9492]`, hit delta **`[0,6400,6400,6400]`**. 출력 텍스트·3개 token IDs·finish reasons는 모두 동일했지만 최대 token logprob 절대차 **0.0033205938525497913**, strict 1e-4 초과 → **수치 정합성 INCONCLUSIVE, exit 2**. 활성 Mamba state-slot/physical mapping 및 MTP 실 acceptance는 **미관측**. `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`를 실제 수신했고 후보는 cleanup됨. **원본 운영 서비스는 이 시험 종료 시 이미 재시작 완료**였으므로 중복 start 불필요. 현재 시점의 호스트 running/HTTP 상태는 DGX에서 읽기 전용으로 재확인해야 한다.
+
+> **GitHub 소스와 현장 검증 구분:** 문서 정리 직전 feature 브랜치 HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`는 Cold↔Repeat, Repeat↔Repeat의 숫자형 logprob 차이 분해 계측을 추가했지만 **DGX_NOT_RUN**. 이 문서 변경 HEAD도 자체적으로 DGX 재시험된 것이 아니다. 새 GPU 시험 자동 반복 금지; 다음 실질 작업은 active Mamba block/group/state-slot physical ABI를 후보 컨테이너 내부에서 안전하게 계측할 최소 observer를 먼저 설계하고, 같은 1회 후보 시험에 로그프로브와 길이가 충분한 출력 정합성 비교를 함께 수행하는 것. P1 이외 P2/P3/PR/merge/CI·운영 배포 금지. 상세 수치: [결과 장부](BLAZUX-PHASE6-RESULTS.md), 운영 절차: [P1 서비스 창](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md), 진행 인수인계: [활성 세션](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md).
+
+
 > **2026-10-29 현행 P1 문서 경로 및 권한 범위 보충:** 본 파일은 **상시 규칙과 과거 기록**을 보존한다. 현재 진행 중인 작업·마지막 실제 DGX 결과·next step은 [P1 활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 증거/정확한 SHA는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 유지보수 안전 조건은 [P1 운영 절차](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md)가 정본이다. 2026-10-28 main/Wizard 전용 `scripts/stop.sh` 설명은 **당시 main 배포 이력**이다. 2026-10-29 Phase6 기능 브랜치의 `scripts/stop.sh`는 사용자 승인하에 Manifest·영수증·실제 Docker 신원 검증을 통과한 **기존 YSLAB 컨테이너 stop-only** 전용이며, `--wizard`를 명시할 때만 예전 Wizard 소유 컨테이너를 대상으로 한다. `pause.sh`는 프로세스를 얼려 GPU 메모리를 돌려주지 않고, 공통 `start.sh`는 paused→unpause, exited→start, running→NO-OP를 수행한다. **이 별도 승인으로 YSLAB uninstall/삭제·이미지 재빌드·운영 중단 자동 실행·CI/PR/merge/P2 착수가 허용되지는 않는다.** 시험 성공을 새 HEAD·실모델 GPU·HTTP/API로 확대 해석하지 않는다.
 
 

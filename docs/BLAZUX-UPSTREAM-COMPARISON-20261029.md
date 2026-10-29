@@ -1,5 +1,8 @@
 # blazux 최신 원본과 Orcarouter BF16 PLE/MTP 구현 비교 (2026-10-29)
 
+> **2026-10-29 우리 구현의 실제 GPU 후속 증거:** 이 문서의 pinned `7372721` ↔ upstream `7e63dbe` 비교와 표의 'cold/hit NOT_RUN'은 **비교 당시 상태**이며 현행 P1 실측을 대체하지 않는다. 사용자 DGX `c342e033c6e601f374520eefb6a9d0e9277b54ef`: 9,492-token synthetic cold+repeat 3회, Prefix-cache HIT delta **[0,6400,6400,6400]**, nonempty 최종 text 및 token IDs 일치, strict logprob delta **0.003320594 > 1e-4**, active physical Mamba mapping 미관측, 원본 same-ID/HTTP 복구 PASS. 개선 코드가 원본 vLLM 0.32 기능과 1:1 완전 동등함을 입증하지 않는다. [실측 결과](BLAZUX-PHASE6-RESULTS.md), [현행 P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 우선한다.
+
+
 > **분류:** 외부 공개 소스/검증 보고와 내부 DGX 증거의 비교 기록. **적용·GPU 실험·새 테스트·운영 승인 아님.** 새 upstream 기능이 Orcarouter BF16 PLE/31개 BF16 MTP overlay에 그대로 적용된다는 의미도 아니다. 장기 Track A/Track B 규칙은 [기존 도입 계획](BLAZUX-VLLM032-ADOPTION-PLAN.md), 정확한 현재 테스트 영수증은 [Phase 6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 현재 진행 경계는 [P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 따른다.
 
 ## 1. 정확한 비교 대상과 판정 원칙

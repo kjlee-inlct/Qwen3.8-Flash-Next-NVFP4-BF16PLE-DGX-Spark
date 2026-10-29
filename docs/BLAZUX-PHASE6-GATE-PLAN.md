@@ -1,5 +1,8 @@
 # blazux Track A Phase 6 — Approval-gated runtime verification
 
+> **현재 P1 상태 정정 (2026-10-29):** 아래 2026-10-28 계획과 기존 `8e7b2e7` 단계의 '운영 stop/GPU NOT_RUN' 표현은 **그 시점의 기록**이다. 사용자 DGX-tested `c342e033c6e601f374520eefb6a9d0e9277b54ef`에서 단일 GPU 후보 실제 Prefix HIT delta `[0,6400,6400,6400]`(9492 tokens cold+repeat 3회), 비어 있지 않은 text/3 token IDs 일치를 확인했고 후보 정리 후 원본 same-ID HTTP 복구도 완료했다. Strict logprob delta **0.003320594 > 1e-4**, active Mamba physical mapping 미관측이므로 **P1 수치/물리 상태 정합성 NOT_PASS**. 최신 소스·작업 단계는 [활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 증거는 [결과 장부](BLAZUX-PHASE6-RESULTS.md)를 우선한다. 본 계획을 새로운 GPU 중지/실행 승인으로 읽지 않는다.
+
+
 > **2026-10-29 P1 진행 주석:** 하위 Gate의 2026-10-28 수치와 승인 상태는 당시 기록이며 최신 결과를 대체하지 않는다. 사용자 DGX `8e7b2e7`에서 Prefix 소스 두 파일을 CPU-only로 실제 생성한 것은 **SOURCE_STAGE_PASS**이지 `P6-A ACTIVE ABI` 또는 GPU Prefix ON/cold-hit 정합성 PASS가 아니다. 기존 서비스는 아직 중지하지 않았다. [현재 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) 및 [Stage 영수증](BLAZUX-PHASE6-RESULTS.md)을 우선 읽는다.
 
 

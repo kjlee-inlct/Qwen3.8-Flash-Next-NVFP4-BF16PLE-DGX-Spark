@@ -1,5 +1,16 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+## 2026-10-29 P1 현행 인수인계 — 과거 단락보다 우선
+
+- **사용자 질문에 대한 운영 답:** 기존 `qwen38-flash-orca-uncensored-bf16-mtp`는 마지막 GPU 시험 `c342e033c6e601f374520eefb6a9d0e9277b54ef` 종료 시 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`가 출력되어 **동일 ID로 재시작되었음**. `start.sh` 중복 실행은 필요 없음. 이후 상태 변경은 직접 관측되지 않았으므로 새 세션에서는 먼저 `docker inspect`/포트 8000 GET `/health` 및 `/v1/models`를 **읽기 전용** 확인한다. 정상 실행 중이면 **아무것도 시작하지 말 것**. 중지된 경우에도 검증된 feature checkout `scripts/start.sh --expected-head <실제 정확 SHA> --confirm-id <영수증 full 64 hex> --execute`의 신원 확인 후 재시작하며 `docker run`/재설치/삭제·uninstall을 사용하지 않는다. 동일 ID/HTTP까지 최종 확인한다.
+- **진행 중 작업:** P1 Prefix-cache GPU 수치/내부 상태 정합성. 기능 브랜치 `feature/blazux-phase6-runtime-gates`, DGX checkout `~/Workspace/llm/blazux-phase6-gates`. 현재 확인된 마지막 GitHub HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`; 별도 문서 정리 커밋은 DGX 미시험. 마지막 **실제 DGX 테스트 코드 `c342e033c6e601f374520eefb6a9d0e9277b54ef`**, targeted CPU20/20·Source263/263. 모델은 단일 DGX Spark의 기존 이미지 `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`과 고정 BF16 PLE+MTP=2를 재사용; 원본 운영 Prefix-cache OFF, 후보에만 ON.
+- **실제 GPU 증거:** 9,492-token synthetic prompt, Cold+3 Repeat. query deltas `[9492,9492,9492,9492]`, hit deltas **`[0,6400,6400,6400]`**. 응답 4회 final text nonempty 및 동일, 실제 token IDs 3개 전부 동일, finish reason 동일. 최대 token logprob delta `0.0033205938525497913`은 strict `0.0001` 초과. 따라서 **GPU/HTTP 기동 PASS · Prefix HIT PASS · 출력 tokens 동일 PASS · strict logprob INCONCLUSIVE · P1 전체 NOT_PASS**. 활성 Mamba group block size, 실제 state-slot/physical addresses 및 MTP acceptance 실증 없음. hit 6400이 1600×4인 사실로 block_size=1600을 확정하지 않는다.
+- **생성·적용 방식:** host Stage `/tmp/p1-prefix-stage.2dSPVPR6`은 원본 0700/0600으로 보존, 각각 `mamba_hybrid.py` SHA256 `1dfb7b5566c8e683afff6640b1764c774c27daaa817437862fd465e63da9f381`, `scheduler.py` SHA256 `0501cec135d23a21f988c67371f8f1dbf97cc63726c9c44b89e350c8887178d7`. **두 패치는 후보 stopped Docker overlay에만** `docker cp`로 0644 복사·readback SHA 검증; 원본 vLLM/컨테이너/이미지/모델/cache RO mount 불변. 이전 두 source RO bind 방식은 폐기.
+- **미완료/우선순위:** (1) 별도 후보에만 적용되는 **active Scheduler/CacheConfig/Mamba group 실제 block sizes, state-slot seed와 물리 주소/stride**를 민감 정보 제거 후 확정할 안전한 관측 방법, (2) cold↔hit 및 hit↔hit logprob 수치 오차 기원 분리(현재 `05ee525e19553f46b0b5634f839e58d96ba1357a`에 후속 코드 있으나 DGX_NOT_RUN), (3) 더 긴 생성/다양한 prefix 길이와 MTP=2 실제 acceptance 또는 관련 메트릭 검증, (4) 동일-ID 자동 복구 포함한 **단 한 번의 목적 있는 GPU 통합 시험**. 2회 추론에서 zero hit였던 이전 2142-token 시도는 9492-token HIT 결과로 **원인이 완전히 규명된 것은 아님**. 캐시 HIT는 실증됐지만 수치 정합성 PASS가 아님.
+- **운영·개발 금지:** 원본 서비스 임의 stop/restart/exec/삭제/재빌드, 사용자 승인되지 않은 추가 GPU 시험/운영 교체, main/P0/Phase1–5 수정, P2/P3 착수, PR/merge/CI 금지. 후보 시험 시 기존 서비스를 `scripts/stop.sh`로만 중지하고 `scripts/start.sh`로 복구하며 포트 8000 HTTP 200 확인. source manifest 갱신과 SHA pin/clean checkout 필수. 이 인수인계로 새로운 GPU 실행 승인이 자동 생성되는 것은 아니다.
+- **참조 관계:** 이 문서는 진행 중 작업 상태의 정본. [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)는 각 SHA의 영수증, [P1 운영 절차](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md)는 stop/restore 계약, [영구 SESSION-HANDOFF](SESSION-HANDOFF-PROMPT.md)는 보존 규칙, [drift 교정](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)은 실효성 우선 원칙이다.
+
+
 > **최신 사용자 DGX 실측 `c342e033c6e601f374520eefb6a9d0e9277b54ef`:** CPU20/20, Source263/263, 실제 GPU 후보 HTTP + Prefix HIT PASS. 9,492 token Cold/Repeat×3 cache query delta [9492×4], HIT delta **[0,6400,6400,6400]**, 출력 text/token IDs 모두 일치. 단 최대 logprob delta **0.003320594** > 0.0001 strict → **P1 전체 수치 정합성 INCONCLUSIVE/exit2**; active Mamba physical mapping 未관측. 후보 삭제 후 원본 동일 ID HTTP 복구 PASS. 후속 logprob drift 분해 오라클은 DGX_NOT_RUN. [실증 장부](BLAZUX-PHASE6-RESULTS.md).
 
 
@@ -38,7 +49,7 @@
 - 우선 DGX 전용 feature checkout을 신규 정확한 HEAD로 `git pull --ff-only`한 뒤 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_gpu_window.py' -v`와 `bash scripts/p1-prefix-gpu-window.sh --expected-head <NEW_FULL_SHA> --preflight` **만** 수행하여 검사 결과를 확보한다. 실패하면 기존 서비스를 중지하지 않는다. 이후 실행기 구현의 실제 실패 복구 가능성과 환경 차이, 후보 시간 예산을 확인한 다음에만 정비창 `--execute`를 진행한다. 오류·시간초과 시 `--recover` 및 기존 start.sh를 통해 동일 ID 복구하고 HTTP를 확인한다.
 
 
-## 현행 최신 상태 (이전 시점 기록보다 우선)
+## 역사적 상태 스냅샷 — 8e7b2e7 당시 기준 (현행 상태 아님)
 
 - **Fork / branch / 현행 GitHub 코드:** `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` / `feature/blazux-phase6-runtime-gates` / `8e7b2e7535d7c27500b55046220c3f68de788aab`. 전용 DGX checkout `~/Workspace/llm/blazux-phase6-gates`에서만 P1 운영 스크립트 실행. 원래 YSLAB checkout `~/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark`의 `main`용 stop.sh와 혼동 금지.
 - **최신 실제 DGX 증거 — 정확한 SHA별:** `f4d6fa84e56255241446ff0b666e4f20eae0cc6a`: 운영 스크립트 CPU **14/14**, Source **256/256**, pause/start 각 `P1_LEGACY_WINDOW_PREFLIGHT_PASS_RUNNING`. `7fecba294341b9e3d017cbdeda0438c23106b977`: 운영 스크립트 CPU **16/16**, Source **256/256**, start preflight PASS_RUNNING. 이어서 실제 실행 중 컨테이너에 공통 `start.sh --execute` 호출이 **NO-OP**: `P1_LEGACY_ALREADY_RUNNING_NOOP_SAME_ID_HEALTH_NOT_CHECKED`, `P1_START_RUNNING_NOOP_DGX_PASS_UNCHANGED` (전후 Docker full ID/StartedAt/Status/Paused 동일). `8e7b2e7535d7c27500b55046220c3f68de788aab`: 새 Stage CPU **6/6 PASS**, Source **259/259 PASS** 및 실제 격리 CPU-only Stage **PASS** (아래 파일 2개). 후속 문서 전용 HEAD는 이 실측에 소급 포함하지 않는다.

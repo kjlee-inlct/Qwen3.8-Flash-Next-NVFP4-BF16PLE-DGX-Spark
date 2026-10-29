@@ -401,7 +401,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-GATE-PLAN.md",
       "mode": "100644",
-      "blob_sha": "5d170930a250edfd62280f988404b96f9f050cc0"
+      "blob_sha": "1d5e5c30924c9eb7752aaa714285df7a4b70663a"
     },
     {
       "path": "docs/BLAZUX-PHASE6-LIVE-ABI-AND-PRE-B-EXECUTION-20261028.md",
@@ -411,12 +411,12 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "5ac1a7555fa5f77a358ebdd07680eb89f9f925af"
+      "blob_sha": "58311b18ad2790ec51b1211e973151b48c1e5a14"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "06813db24849c9faf0ef3bbcd82188fb047b46e9"
+      "blob_sha": "537006f5b43b8f9eea1457ea2e55c2afdc647436"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -436,17 +436,17 @@
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
       "mode": "100644",
-      "blob_sha": "86d85efd70517403743a3eb82e2d1f67b16023c3"
+      "blob_sha": "d7ea34f6e2f0e442b0473a189494c54f0c3b4f7c"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "b1c8a758306a45bba1aee950ff642791703d7e67"
+      "blob_sha": "16b3c4319a81d9a1063568d8fd9837de595ea37a"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "9b0702b1c936346ad5236444fc4bc637596dbeb4"
+      "blob_sha": "fecb9973e4bc3f48002ab7b37f8522d65df0810c"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -476,7 +476,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "blob_sha": "9fbcdd3694384f3bc4b118d2173ccc5d0ffc352a"
+      "blob_sha": "d06ff3491a86d62cd38dda2c15268b3fadfc884b"
     },
     {
       "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/environment.public.json",

@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 핸즈오프/운영상태 정합 보완 — 기존 GPU 결과 재판정 아님
+
+- 사용자 제공 마지막 P1 GPU candidate run **`c342e033c6e601f374520eefb6a9d0e9277b54ef`**: CPU 20/20, Source Manifest 263/263, candidate HTTP ready. 9,492 prompt tokens에 대해 4회 cache queries delta `[9492,9492,9492,9492]`, HIT delta `[0,6400,6400,6400]`, nonempty 동일 text와 3개 token IDs 및 finish reasons 확인. Strict logprob max delta **0.0033205938525497913 > 0.0001**, 출력 `P1_PREFIX_GPU_ORACLE_INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE`, exit **2**. **Prefix HIT 실기기 확인; full GPU P1 수치/물리 상태 정합성 미완료**.
+- **복구 완료 근거:** 같은 사용자 종료 로그 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`; 기존 후보 제거 및 원래 동일-ID 서비스 HTTP 준비 후 반환. 현재 시점의 live Docker running 상태까지 주장하지는 않는다. 따라서 **마지막 시험 이후 중단이 없었다면 재시작 불필요**.
+- **이전 2회 요청 GPU 시험 `0168cee29775c2c8104dc584d039900723df7f8b`의 후속 정정:** 처음 기록 시 복구 출력이 미제출이었으나 이후 사용자로부터 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`와 exit `2`, 원본 container running 로그를 수신했다. 당시 2,142토큰 repeat cache hit 0 및 strict logprob delta 0.000113669 결과는 변경 없음. 이전 문단의 '복구 아직 미제출'은 **작성 당시 시점**이며 지금은 해결됨.
+- `05ee525e19553f46b0b5634f839e58d96ba1357a` 후속 커밋: Cold→Repeat 및 Repeat→Repeat logprob drift 분해 계측 신규 코드/테스트를 GitHub에 커밋했으나 **DGX_NOT_RUN**. 이 문서 변경 SHA 역시 문서/manifest만 업데이트한 것이지 새로운 DGX 시험 영수증이 아니다.
+
+
 ## 2026-10-29 세 번째 실제 GPU Prefix-cache 적중 확인 — SHA c342e033c6e601f374520eefb6a9d0e9277b54ef
 
 - 사용자 DGX: targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**. 원본 Chat API pre-stop `PASS_ORIGINAL_CHAT_PROTOCOL`, 후보의 stopped-overlay 두 패치 SHA 검증, Prefix ON GPU 후보 HTTP READY 확인.

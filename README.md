@@ -1,5 +1,8 @@
 # Qwen3.8-Flash-Next BF16 PLE recipe for DGX Spark
 
+> **P1 진행 상태 (2026-10-29, 기능 브랜치):** 마지막 사용자 DGX-tested SHA `c342e033c6e601f374520eefb6a9d0e9277b54ef`에서 Prefix-cache ON 격리 GPU 후보가 **9,492-token cold+3 repeat 중 HIT 6,400 tokens ×3**, 비어 있지 않은 텍스트·3 token IDs 일치 및 기존 서비스 동일-ID/HTTP 복구까지 확인됐다. Strict token logprob max diff **0.003320594** > `1e-4`, 실제 Mamba physical state mapping 및 full P1 correctness는 **미완료**. 원본 port 8000 운영 Prefix-cache는 계속 OFF이고 후보 패치를 운영 서비스/이미지에 적용하지 않았다. 새 세션은 [영구 운영규칙](docs/SESSION-HANDOFF-PROMPT.md) → [P1 활성 인수인계](docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) → [GPU 실측 결과](docs/BLAZUX-PHASE6-RESULTS.md) → [안전한 stop/restore 절차](docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md) 순서로 확인한다. 기존 서비스는 마지막 시험 종료 시 복구됐으므로 `running`이면 **재시작하지 않는다**. 최신 feature HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`의 logprob drift 추가 계측은 DGX 미실행이다.
+
+
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
 
 ## Latest blazux upstream comparison (2026-10-29)

@@ -1,5 +1,13 @@
 # P1 Prefix-cache: 승인된 legacy 서비스 중지·복구 준비 (2026-10-29)
 
+## 2026-10-29 현재 적용 완료 상태 — 이전 'NOT_RUN' 준비 단락보다 우선
+
+- **현재 서비스 조작 불필요:** 사용자 DGX GPU 시험 `c342e033c6e601f374520eefb6a9d0e9277b54ef` 종료 메시지 `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED` 확인, 원본 동일 Docker ID 재기동 및 모델 HTTP 준비 성공, 후보 정리됨. 실시간 시점은 별도 읽기 전용 상태 조회로만 판단. `running`이면 `start.sh` 실행할 이유가 없다. `start.sh`는 정확한 HEAD/영수증 ID를 검사하는 `running → NO-OP` 계약으로 구현되어 있지만 불필요한 재호출은 하지 않는다.
+- **서비스 실행 계약은 이미 실 DGX 검증됨:** 정상 후보 준비 → guarded `stop.sh` → GPU candidate Prefix ON, original BF16 PLE + MTP=2 유지 → 4회 API 확인 → candidate cleanup → **same-ID `start.sh` 및 `/health`·`/v1/models` 복구**. 실제 결과는 9,492 tokens, query deltas `[9492,9492,9492,9492]`, hit deltas `[0,6400,6400,6400]`; text/3 token IDs 일치, logprob drift 최대 `0.003320594`로 strict (1e-4) 미충족. **P1 correctness 완료 아님.**
+- **구현·보안:** 원본 private Stage 0700 directory/0600 두 files 유지. 독립 후보가 `docker create`된 정지 상태에서 pinned Python 두 파일만 in-memory tar `docker cp`(0644)로 후보 writable overlay에 적용하고 readback SHA 검증. **호스트 Stage를 후보의 source RO mount로 사용한다는 과거 설계는 폐기**되었다. 모델 cache/views 원래 RO mounts 그대로. 원본 패치/이미지/가중치 변경 없음.
+- **다음 시험 전 조건:** 현재 코드 HEAD와 사용자 DGX-tested SHA 구분. 활성 Mamba physical block/group mapping을 관측할 안전한 후보 내부 계측을 준비한 뒤 숫자 logprob drift 분해와 긴 생성 검사를 묶는 최소 실험만 제안. 복구 실패 시에만 현 checkout 정확한 `scripts/p1-prefix-gpu-window.sh --expected-head SHA --recover --confirm-id FULL64`로 후보 소유권 검증·cleanup 후 원본 복구를 시도한다. **현재는 --recover 또는 수동 docker start를 실행하지 말 것.** P2/P3·운영 배포 불승인.
+
+
 > **최신 사용자 DGX 실측 `c342e033c6e601f374520eefb6a9d0e9277b54ef`:** CPU20/20, Source263/263, 실제 GPU 후보 HTTP + Prefix HIT PASS. 9,492 token Cold/Repeat×3 cache query delta [9492×4], HIT delta **[0,6400,6400,6400]**, 출력 text/token IDs 모두 일치. 단 최대 logprob delta **0.003320594** > 0.0001 strict → **P1 전체 수치 정합성 INCONCLUSIVE/exit2**; active Mamba physical mapping 未관측. 후보 삭제 후 원본 동일 ID HTTP 복구 PASS. 후속 logprob drift 분해 오라클은 DGX_NOT_RUN. [실증 장부](BLAZUX-PHASE6-RESULTS.md).
 
 
@@ -24,7 +32,7 @@
 - 신규 `src/p1_prefix_stage_files.py`와 `scripts/p1-prefix-stage.sh`는 **운영 서비스 가동 중** GPU 사용 없이, 고정 이미지에서 원본 SHA 확인 및 Mamba Hybrid/Scheduler 두 개의 정확한 AST 패치를 수행해 개인 호스트 임시 폴더에 결과 파일을 생성한다. 기존 검증은 패치한 임시 사본을 지웠지만 이번 단계는 외부 후보 Docker에 RO mount할 두 파일을 실제 남긴다는 차이가 있다.
 - 출력은 `/tmp/p1-prefix-stage.XXXXXXXX/mamba_hybrid.py`와 `scheduler.py` **두 개만** 허용하며 root 디렉터리는 mode 0700, 파일은 mode 0600이다. 기존 이미지, 설치 vLLM, 레거시 컨테이너, 모델/캐시는 수정하지 않는다. 원본 소스 SHA가 어긋나거나 출력 디렉터리가 깨끗하지 않으면 fail-closed. CPU Docker는 `--runtime=runc --network=none` / no GPU / no model mounts / 메모리 512 MiB.
 - **실행 전에 신규 코드를 시험:** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_stage_files.py' -v`. 성공 시 후보 파일 생성은 `bash scripts/p1-prefix-stage.sh --expected-head <LATEST_COMMITTED_HEAD> --execute`. 기대 `P1_PREFIX_GPU_SOURCE_STAGE_READY_ONLY_NOT_APPLIED` 및 `P1_PREFIX_STAGE_DGX_CPU_ONLY_READY_NOT_GPU_TESTED` 출력. 경로는 로컬 메모리/파일시스템의 임시 staging이며 이미지에 설치된 경로가 아니다.
-- **GPU 후보 기동과 운영 중지는 아직 금지:** 후보 Docker launch, RO mount 지점, 실제 active ABI 관측, prefix ON/OFF cold/cache-hit 오라클, 메모리·타임아웃 제한, 실패 시 기존 서비스 복구가 준비되어야 이후 `scripts/stop.sh`로 메모리를 확보한다. 지금의 stage PASS는 GPU 정합성 증거가 아니다.
+- **당시 Stage 완료 직후에는 GPU 후보 기동과 운영 중지가 금지였음(역사적 단계):** 후보 Docker launch, RO mount 지점, 실제 active ABI 관측, prefix ON/OFF cold/cache-hit 오라클, 메모리·타임아웃 제한, 실패 시 기존 서비스 복구가 준비되어야 이후 `scripts/stop.sh`로 메모리를 확보한다. 지금의 stage PASS는 GPU 정합성 증거가 아니다.
 
 
 > **현행 상태 (2026-10-29): 운영 관리 스크립트 CPU 16/16·Source 256/256 및 실제 start → start NO-OP PASS at `7fecba2`; Stage CPU 6/6·Source 259/259 및 실제 후보 Python 파일 2개 출력 PASS at `8e7b2e7`. 기존 서비스 실제 stop/pause/복구는 NOT_RUN, GPU 후보 런타임·Prefix hit correctness·활성 ABI는 NOT_RUN/BLOCKED.** 사용자는 기존 서비스를 멈추고 P1 검증해도 된다고 했지만, 반드시 **만들어진 스크립트로 중지할 것**을 조건으로 승인했다. 이 변경은 실제 중지/재시작이 아니다.
