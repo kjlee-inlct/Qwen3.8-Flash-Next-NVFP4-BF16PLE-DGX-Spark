@@ -429,6 +429,7 @@ class CandidateWindowTests(unittest.TestCase):
         self.assertFalse(observed["physical_mapping_and_reuse_verified"])
         self.assertFalse(observed["physical_mapping_observed_partial"])
         self.assertEqual(observed["active_mamba_align_ctx_event_count"], 0)
+        self.assertEqual(observed["physical_table_sample_count"], 0)
         self.assertFalse(observed["mtp_speculative_acceptance_observed"])
 
     def test_actual_stage_observer_abi_is_checked_without_docker(self):

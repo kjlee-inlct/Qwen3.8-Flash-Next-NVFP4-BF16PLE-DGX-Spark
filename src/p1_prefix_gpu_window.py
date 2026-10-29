@@ -476,8 +476,10 @@ def read_candidate_observer() -> dict:
     mamba = [e for e in events if e["kind"] == "mamba"]
     sched = [e for e in events if e["kind"] == "scheduler"]
     align_ctx = [e for e in events if e["kind"] == "align_ctx"]
-    physical = [p for e in mamba for p in e.get("physical_map_samples", [])
-                if isinstance(p, dict)]
+    physical = [p for e in (mamba + align_ctx)
+                for key in ("physical_map_samples",
+                            "deferred_state_to_physical_samples")
+                for p in e.get(key, []) if isinstance(p, dict)]
     return {
         "active_scheduler_event_count": len(sched),
         "active_mamba_align_ctx_event_count": len(align_ctx),

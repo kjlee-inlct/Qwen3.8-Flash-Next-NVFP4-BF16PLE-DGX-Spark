@@ -159,6 +159,55 @@ class Tests(unittest.TestCase):
         finally:
             Vector.__getitem__ = old_getitem
 
+    def test_state_slot_arrives_before_align_context_and_samples_after(self):
+        class Table:
+            shape = (8, 16)
+            device = "cuda:0"
+            def stride(self): return (16, 1)
+            def storage_offset(self): return 0
+            def element_size(self): return 4
+            def untyped_storage(self):
+                return type("Storage", (), {"nbytes": lambda s: 512})()
+            def __getitem__(self, indexes):
+                return Scalar(3)
+        class Group:
+            layer_names = ["gdn"]
+            kv_cache_spec = {"gdn": type("Spec", (), {"block_size": 32})()}
+        class Config:
+            kv_cache_groups = [Group()]
+        class Wrapped:
+            gpu = Table()
+        class Tables:
+            block_tables = [Wrapped()]
+        class Req:
+            num_computed_tokens = 129
+        class Probe(Mamba):
+            def add_request(self, req_index, new_req_data):
+                return True
+            def _ensure_align_ctx(self, kv_cache_config, mamba_group_ids,
+                                  block_tables):
+                return True
+        obs._counts.clear()
+        obs._recent_mamba_slot.clear()
+        obs._saved_mamba_tables.clear()
+        obs.install(Probe, "add_request", "mamba")
+        obs.install(Probe, "_ensure_align_ctx", "align_ctx")
+        instance = Probe()
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertTrue(instance.add_request(2, Req()))
+            self.assertTrue(instance._ensure_align_ctx(Config(), [0], Tables()))
+        events = [json.loads(line.split(obs.PREFIX, 1)[1])
+                  for line in output.getvalue().splitlines()]
+        self.assertEqual([event["kind"] for event in events],
+                         ["mamba", "align_ctx"])
+        self.assertEqual(events[0]["physical_map_samples"], [])
+        samples = events[1]["deferred_state_to_physical_samples"]
+        self.assertEqual(len(samples), 1)
+        self.assertEqual(samples[0]["physical_block_id"], 3)
+        self.assertEqual(samples[0]["table_shape"], [8, 16])
+        self.assertIsNone(samples[0]["physical_id_within_state_allocation"])
+
     def test_missing_model_state_allocation_remains_unknown(self):
         class Spec:
             block_size = 32

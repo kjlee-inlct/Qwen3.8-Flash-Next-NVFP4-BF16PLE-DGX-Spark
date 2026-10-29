@@ -12,6 +12,9 @@ import json
 PREFIX = "P1_PREFIX_ACTIVE_ABI_JSON:"
 MAX_EVENTS = 12
 _counts = {}
+# Bounded diagnostic-only process state; no request IDs or tensor contents.
+_recent_mamba_slot = {}
+_saved_mamba_tables = {}
 
 
 def _number(value):
@@ -188,7 +191,8 @@ def _remember_physical_tables(instance, args, kwargs, fn):
         bound = inspect.signature(fn).bind_partial(instance, *args, **kwargs)
         kv_config = bound.arguments.get("kv_cache_config")
         tables_obj = bound.arguments.get("block_tables")
-        tables = _direct(tables_obj, "block_tables")
+        tables = (tables_obj if isinstance(tables_obj, (list, tuple))
+                  else _direct(tables_obj, "block_tables"))
         group_ids = bound.arguments.get("mamba_group_ids")
         if not isinstance(group_ids, (list, tuple)) or len(group_ids) > 8:
             group_ids = ()
@@ -208,10 +212,12 @@ def _remember_physical_tables(instance, args, kwargs, fn):
             saved[gid] = {"table": bt, "meta": meta,
                           "group": spec_info.get(gid, {}),
                           "allocation": allocation}
-        # Never assume an unobserved table or allocation is valid.
-        instance._p1_observer_mamba_tables = saved
-    except (TypeError, AttributeError, ValueError, RuntimeError):
-        instance._p1_observer_mamba_tables = {}
+        # Keep references outside the model object: no injected model attrs.
+        if len(_saved_mamba_tables) >= 8 and id(instance) not in _saved_mamba_tables:
+            _saved_mamba_tables.clear()
+        _saved_mamba_tables[id(instance)] = saved
+    except (TypeError, AttributeError, ValueError, RuntimeError, IndexError):
+        _saved_mamba_tables.pop(id(instance), None)
 
 
 def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
@@ -221,7 +227,9 @@ def _sample_physical(instance, request_idx, expected_col, mamba_block_size):
     cold-to-hit state reuse. A scalar GPU read is diagnostic-only.
     """
     snapshots = []
-    saved = _direct(instance, "_p1_observer_mamba_tables")
+    saved = _saved_mamba_tables.get(id(instance))
+    if saved is None:
+        saved = _direct(instance, "_p1_observer_mamba_tables")
     if not isinstance(saved, dict) or request_idx is None or expected_col is None:
         return snapshots
     for gid, info in list(sorted(saved.items()))[:8]:
@@ -270,7 +278,9 @@ def _observe(kind, instance, fn, args, kwargs):
     event["cache_groups"] = _groups(cache)
     event["instance_groups"] = _groups(instance)
     if kind == "align_ctx":
-        tables = _direct(instance, "_p1_observer_mamba_tables")
+        tables = _saved_mamba_tables.get(id(instance))
+        if tables is None:
+            tables = _direct(instance, "_p1_observer_mamba_tables")
         event["mamba_group_table_count"] = (
             len(tables) if isinstance(tables, dict) else 0)
         event["physical_table_metadata"] = [
@@ -280,6 +290,10 @@ def _observe(kind, instance, fn, args, kwargs):
             for gid, table in list(sorted(tables.items()))[:8]
         ] if isinstance(tables, dict) else []
         context = _direct(instance, "_mamba_ctx")
+        recent = _recent_mamba_slot.get(id(instance))
+        event["deferred_state_to_physical_samples"] = (
+            _sample_physical(instance, recent[0], recent[1], recent[2])
+            if isinstance(recent, tuple) and len(recent) == 3 else [])
         event["fused_ctx_present"] = context is not None
         if context is not None:
             event["fused_ctx_block_stride_req"] = _number(
@@ -335,6 +349,11 @@ def _observe(kind, instance, fn, args, kwargs):
                 if seed is not None:
                     event["state_seed_observed"] = True
                     event["state_seed_value"] = seed
+                    if (idx is not None and idx >= 0 and expected is not None
+                            and expected >= 0 and mamba_bs is not None):
+                        if len(_recent_mamba_slot) >= 8 and id(instance) not in _recent_mamba_slot:
+                            _recent_mamba_slot.clear()
+                        _recent_mamba_slot[id(instance)] = (idx, expected, mamba_bs)
                     event["state_seed_matches_expected"] = (
                         expected is not None and expected == seed)
             except (RuntimeError, TypeError, ValueError, IndexError):

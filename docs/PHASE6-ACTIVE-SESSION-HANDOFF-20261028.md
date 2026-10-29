@@ -66,3 +66,9 @@
 - 마지막 사용자 실제 CPU 증거는 SHA `6f018dd283aea95f9babb0c3473d9cca0400725e`의 23+3 mock/265 Manifest PASS로 한정. 이후 물리 mapping 계측 코드는 **GPU/CPU 미실행**.
 - `vars(obj)` 단독 접근은 실제 `__slots__` 구성 데이터 및 클래스 속성 구현의 유효한 `num_computed_tokens`, `mamba_block_size`, `kv_cache`를 누락시킬 수 있다. 승인된 수치/구조 필드 whitelist로만 `getattr` fallback을 제한해 진단을 보정했다. `UniformTypeKVCacheSpecs.kv_cache_specs` layer mapping을 실제 layer 이름 순서로 해석해 Mamba spec block-size를 읽는다. spec 누락은 `unknown`이며 잘못된 mismatch/physical PASS가 아니다.
 - CPU-only 신규 mock은 slots + Uniform wrapper 및 unknown block-size 삼상값을 검증하도록 추가했다. 신규 코드는 GitHub 소스 준비뿐이며 DGX CPU/GPU/HTTP 시험, active physical table 값, state-content reuse 모두 **NOT_RUN/UNVERIFIED**이다.
+
+### 2026-10-29 실제 Stage ABI 확인 및 GPU 사전 차단
+
+- 사용자 DGX 최신 확인: HEAD b0ccbe8d206a4ba8023fcf63dd65f1b06f74508c 에서 CPU mock 32/32, Source265/265 PASS. 승인된 GPU window는 원본 HTTP probe 정상 후 ACTIVE_OBSERVER_METHOD_NOT_IN_STAGE_MAMBA_HYBRID 로 exit 2, 원본 동일 컨테이너 Running + port 8000 HTTP PASS, 후보 부재. GPU 기동·원본 중지 없음. 복구 명령 불필요.
+- 실제 private Stage 두 파일 SHA 검증 후 AST에서 MambaHybridModelState에는 initialize_kv_cache가 없고 _ensure_align_ctx(self, kv_cache_config, mamba_group_ids, block_tables), add_request(self, req_index, new_req_data)가 존재함을 사용자 확인. Scheduler._mamba_block_aligned_split 메서드도 실제 signature를 확인.
+- 본 후속 변경은 _ensure_align_ctx + add_request와 Scheduler만 후보에 hook, group_ids를 실제 인자로 읽고, Stage signature 검증을 read-only preflight 단계에서 실행. add_request가 align ctx 이전 호출될 때는 제한된 최근 slot 표본을 이후 align ctx에서 재관측. 원본 모델 instance에 observer 필드를 쓰지 않고 모듈 전용 저장소 사용. 물리/재사용 완전 검증은 계속 false. 새로운 HEAD 자체 CPU/GPU 시험은 NOT_RUN; 신규 GPU 윈도 승인으로 확대하지 않음.
