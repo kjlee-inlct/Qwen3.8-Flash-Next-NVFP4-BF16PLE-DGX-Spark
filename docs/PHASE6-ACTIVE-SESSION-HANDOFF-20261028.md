@@ -1,5 +1,15 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+
+## 2026-10-29 P1 격리 후보 실행기 소스 준비 — DGX 실행 전
+
+- 신규 `src/p1_prefix_gpu_window.py`, `src/p1_prefix_gpu_oracle.py`, `scripts/p1-prefix-gpu-window.sh`는 원본 동일-ID 서비스의 중지·복구를 전제로 한 **독립 GPU 후보 실행기 구현**이다. 스테이지 파일 두 SHA256·소유자·0600/0700 권한, 원본 이미지 ID·receipt·Cmd·MT P=2(실제 `MTP=2`)·Prefix OFF, 모델 읽기 전용 마운트, Entrypoint와 허용 환경 키, 호스트 통합 메모리를 점검한 뒤에만 별도 후보를 구성한다. CPU-only source probe는 이미지 원본 두 소스 SHA를 확인한다.
+- 후보는 고정 이미지/모델을 재사용하고 **Stage 두 소스만 읽기 전용으로 overlay**한다. 후보의 Prefix ON, 포트 `127.0.0.1:18080`, original BF16 PLE/MTP Cmd, GPU 단독 사용, 메모리 112 GiB 제한, 정지 후 호스트 MemAvailable 96 GiB 이상, readiness 1200초, 복구 900초 기준을 사용한다. 실행기는 `--preflight` 기본 조회와 `--execute --confirm-id FULL64` 명시 GPU 정비창을 분리하며, 예외 시 후보 제거와 **원래 동일 ID start + /health + /v1/models 검증**을 시도한다. `--recover --confirm-id FULL64`는 중단 이후 수동 응급복구 경로다.
+- `tests/test_blazux_phase6_prefix_gpu_window.py`는 스테이지 소유권·파일 해시·Cmd MTP·미승인 환경 키·복구 소유권·오라클 계측 fail-closed의 CPU 단위 회귀다. **신규 코드는 DGX에서 아직 실행하지 않았고, 이 문서의 설명은 GPU PASS·API PASS 또는 활성 Scheduler/Mamba ABI의 실측이 아니다.** 특히 오라클은 텍스트 일치만으로 cache-hit PASS를 선언하지 않으며 hit counter 또는 응답 cached_tokens 증거가 없으면 `INCONCLUSIVE`이다. Mamba physical block mapping은 여전히 미관측이다.
+- 사용자 제공 최신 읽기 전용 DGX 결과: Stage 두 파일 `exists=true, sha256_match=true`, 원래 컨테이너 `Running=true`, 엔트리포인트 2요소, GPU DeviceRequest 1개, IPC host, SHM 16 GiB, PLE/HF/Flashinfer 관련 환경변수 키 존재, cache/views 두 RO 마운트. **스테이지 파일 소유권·권한, image original 실행 환경 전체 차이, 실제 GPU 메모리, probe 출력 및 후보 런타임은 이 출력에서 확인되지 않음.** 서비스 사용자의 접근 중단과 stop 가능 상태는 사용자가 별도 통지함.
+- 우선 DGX 전용 feature checkout을 신규 정확한 HEAD로 `git pull --ff-only`한 뒤 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_gpu_window.py' -v`와 `bash scripts/p1-prefix-gpu-window.sh --expected-head <NEW_FULL_SHA> --preflight` **만** 수행하여 검사 결과를 확보한다. 실패하면 기존 서비스를 중지하지 않는다. 이후 실행기 구현의 실제 실패 복구 가능성과 환경 차이, 후보 시간 예산을 확인한 다음에만 정비창 `--execute`를 진행한다. 오류·시간초과 시 `--recover` 및 기존 start.sh를 통해 동일 ID 복구하고 HTTP를 확인한다.
+
+
 ## 현행 최신 상태 (이전 시점 기록보다 우선)
 
 - **Fork / branch / 현행 GitHub 코드:** `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark` / `feature/blazux-phase6-runtime-gates` / `8e7b2e7535d7c27500b55046220c3f68de788aab`. 전용 DGX checkout `~/Workspace/llm/blazux-phase6-gates`에서만 P1 운영 스크립트 실행. 원래 YSLAB checkout `~/Workspace/llm/yslab-qwen38-bf16ple-dgx-spark`의 `main`용 stop.sh와 혼동 금지.

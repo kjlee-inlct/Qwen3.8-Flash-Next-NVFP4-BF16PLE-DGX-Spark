@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-10-29 P1 GPU 후보 실행기 GitHub 구현 (본 커밋 DGX_NOT_RUN)
+
+실제 동작/성능 증거는 **없음**. 새로운 실행기·API 오라클·CPU 회귀를 기능 브랜치에 추가했으며 정비창 `--preflight`, image-probe, Docker create/start, 원본 stop/restore, cache-hit, 실제 Mamba physical mapping, 모델 API inference 모두 **NOT_RUN**. 최신 사용자 DGX 읽기 전용 스냅샷에서 Stage 파일 2개 digest-match 및 원본 서비스 running, RO cache/views mounts, GPU request/IPC host, 필수 환경변수 key 존재를 확인함. 스테이지 파일 소유자·mode와 실행 불가 구성은 신규 runner preflight로 추후 검증해야 함. 8e7b2e7의 6/6 Source259와 다른 SHA의 실제 실행으로 혼동 금지. 최신 현행 상태는 [활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md).
+
+
 ## 2026-10-29 DGX Prefix 후보 두 파일 실제 Stage PASS — SHA 8e7b2e7535d7c27500b55046220c3f68de788aab
 
 - **사용자 제공 실제 실행 로그:** `git pull --ff-only`로 해당 HEAD fast-forward; `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_blazux_phase6_prefix_stage_files.py' -v` → `Ran 6 tests in 0.005s`, `OK` (**6/6**). `scripts/p1-prefix-stage.sh --expected-head 8e7b2e7535d7c27500b55046220c3f68de788aab --execute` → `PASS_SOURCE_ONLY: 259 tracked file(s)` 및 실제 생성 `files=2`, `actual_gpu_or_model_run=false`, `status=SOURCE_STAGE_ONLY_NOT_INSTALLED`.

@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 259,
+  "tracked_file_count": 263,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -164,26 +164,6 @@
       "blob_sha": "b65cdb70eda0da34458496bae7166202ed370db7"
     },
     {
-      "path": "Dockerfile",
-      "mode": "100644",
-      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
-    },
-    {
-      "path": "LICENSE",
-      "mode": "100644",
-      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
-    },
-    {
-      "path": "NOTICE",
-      "mode": "100644",
-      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
-    },
-    {
-      "path": "README.md",
-      "mode": "100644",
-      "blob_sha": "9fbcdd3694384f3bc4b118d2173ccc5d0ffc352a"
-    },
-    {
       "path": "benchmarks/common.py",
       "mode": "100644",
       "blob_sha": "5d74efcca6022e3986c2d53fc709e5d16e08e76c"
@@ -212,6 +192,16 @@
       "path": "compatibility.json",
       "mode": "100644",
       "blob_sha": "267f122555cf6984d092f9aacf29e196128a0926"
+    },
+    {
+      "path": "Dockerfile",
+      "mode": "100644",
+      "blob_sha": "feca0e71fb2942158204bcba8142a1082def41f5"
+    },
+    {
+      "path": "docs/benchmark/LLAMA-BENCHY-BASELINE-20261027.md",
+      "mode": "100644",
+      "blob_sha": "ca5df16ed6cc112d70aa4426c47f93bcf7703d9b"
     },
     {
       "path": "docs/BENCHMARKS.md",
@@ -421,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "131f65600cc46bc1a7cde06bd8bf09cfaba21670"
+      "blob_sha": "d6de7f7d92d7e970b7157655771f0e928a604ffa"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +441,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "8eb125d02ec1cb438240766e1ef9d96ee8805fa3"
+      "blob_sha": "4dd622d9c6a493822793291e65caf9c39ab46b8f"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -469,19 +459,24 @@
       "blob_sha": "df7b597acf95a6d7ba83b0398559a5d38935c2a4"
     },
     {
-      "path": "docs/benchmark/LLAMA-BENCHY-BASELINE-20261027.md",
-      "mode": "100644",
-      "blob_sha": "ca5df16ed6cc112d70aa4426c47f93bcf7703d9b"
-    },
-    {
       "path": "huggingface/README.md",
       "mode": "100644",
       "blob_sha": "819e8aca3e941f28d2e4b50907474b42444b211a"
     },
     {
-      "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/SHA256SUMS.original",
+      "path": "LICENSE",
       "mode": "100644",
-      "blob_sha": "24b36b6f99065f526cb227a5b2291c7a322de5fe"
+      "blob_sha": "5c9f8c77acf87ef32fc31326d4a4408f914f351a"
+    },
+    {
+      "path": "NOTICE",
+      "mode": "100644",
+      "blob_sha": "cf7758766ed1e6788b2bb8df1b3437704812dc9f"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "blob_sha": "9fbcdd3694384f3bc4b118d2173ccc5d0ffc352a"
     },
     {
       "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/environment.public.json",
@@ -492,6 +487,11 @@
       "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/result.json",
       "mode": "100644",
       "blob_sha": "218da9c7b834f4731eda55d10c2f414571f8d318"
+    },
+    {
+      "path": "results/llama-benchy/baseline/pre-blazux/20261026T221925Z/SHA256SUMS.original",
+      "mode": "100644",
+      "blob_sha": "24b36b6f99065f526cb227a5b2291c7a322de5fe"
     },
     {
       "path": "results/llama-benchy/phase6/pre-b-provisional/20261027T234639Z/README.md",
@@ -609,61 +609,6 @@
       "blob_sha": "83e016be37d0b74a24ff2b907447338924ef3c5f"
     },
     {
-      "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
-      "mode": "100644",
-      "blob_sha": "b0d0ea1cdeb21bb5496af49834e68a4a5223434f"
-    },
-    {
-      "path": "scripts/LEGACY-INSTALLATION.md",
-      "mode": "100644",
-      "blob_sha": "4c4be0321a6498da2b3209ffd9379aaad8a13240"
-    },
-    {
-      "path": "scripts/LEGACY-OBSERVATION-20261026.md",
-      "mode": "100644",
-      "blob_sha": "4e4b6168b7ebf7bdd356c57b254bffb3935ba60e"
-    },
-    {
-      "path": "scripts/MANIFEST-SCHEMA.md",
-      "mode": "100644",
-      "blob_sha": "d73489d215eff3ee16cf6278473ff8dddbae8835"
-    },
-    {
-      "path": "scripts/OPERATIONS.md",
-      "mode": "100644",
-      "blob_sha": "28c3b4ede7da4e52b80d2e1c594f88f4db3e85f2"
-    },
-    {
-      "path": "scripts/README-WIZARDS.md",
-      "mode": "100644",
-      "blob_sha": "5db82535d1876073c3709b122a16f0b805e7ee6b"
-    },
-    {
-      "path": "scripts/SAFETY-AND-RECOVERY.md",
-      "mode": "100644",
-      "blob_sha": "1fd4cc6c1ea8522705ca951368c88863558d8d60"
-    },
-    {
-      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
-      "mode": "100644",
-      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
-    },
-    {
-      "path": "scripts/TEST-PLAN.md",
-      "mode": "100644",
-      "blob_sha": "1ac7a86c12016887657175c4b4fd361634f756d1"
-    },
-    {
-      "path": "scripts/VALIDATION-RESULTS-20261026.md",
-      "mode": "100644",
-      "blob_sha": "50876f9f3bfecfc1415424b293f7e96f02d4614a"
-    },
-    {
-      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
-      "mode": "100644",
-      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
-    },
-    {
       "path": "scripts/activate.sh",
       "mode": "100755",
       "blob_sha": "56ad3f856021c88062ceb131f04cd67f5bc04a95"
@@ -704,9 +649,29 @@
       "blob_sha": "fcd061abe117b23eb179b703a1a5f3fe7bdf7e30"
     },
     {
+      "path": "scripts/INSTALL-UNINSTALL-WIZARD-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "b0d0ea1cdeb21bb5496af49834e68a4a5223434f"
+    },
+    {
       "path": "scripts/install.sh",
       "mode": "100755",
       "blob_sha": "e649b1adc0294a409410a7323402edde3f65d060"
+    },
+    {
+      "path": "scripts/LEGACY-INSTALLATION.md",
+      "mode": "100644",
+      "blob_sha": "4c4be0321a6498da2b3209ffd9379aaad8a13240"
+    },
+    {
+      "path": "scripts/LEGACY-OBSERVATION-20261026.md",
+      "mode": "100644",
+      "blob_sha": "4e4b6168b7ebf7bdd356c57b254bffb3935ba60e"
+    },
+    {
+      "path": "scripts/MANIFEST-SCHEMA.md",
+      "mode": "100644",
+      "blob_sha": "d73489d215eff3ee16cf6278473ff8dddbae8835"
     },
     {
       "path": "scripts/manifest.sh",
@@ -714,9 +679,19 @@
       "blob_sha": "de7afca67b1cf7f63ca363f070b79f7233c8d882"
     },
     {
+      "path": "scripts/OPERATIONS.md",
+      "mode": "100644",
+      "blob_sha": "28c3b4ede7da4e52b80d2e1c594f88f4db3e85f2"
+    },
+    {
       "path": "scripts/p1-legacy-service-window.sh",
       "mode": "100755",
       "blob_sha": "1c09d0188fa24d39d3550a6f256d9794916bc692"
+    },
+    {
+      "path": "scripts/p1-prefix-gpu-window.sh",
+      "mode": "100755",
+      "blob_sha": "af18608509aed533a65df34800702e5672fdb62a"
     },
     {
       "path": "scripts/p1-prefix-stage.sh",
@@ -829,9 +804,19 @@
       "blob_sha": "f17888dd1bdd4b0e50a014529b6476b85fbeb7d4"
     },
     {
+      "path": "scripts/README-WIZARDS.md",
+      "mode": "100644",
+      "blob_sha": "5db82535d1876073c3709b122a16f0b805e7ee6b"
+    },
+    {
       "path": "scripts/run-mock-tests.sh",
       "mode": "100755",
       "blob_sha": "d04288fc62a63da79b7d7c6bd28329602727aa6b"
+    },
+    {
+      "path": "scripts/SAFETY-AND-RECOVERY.md",
+      "mode": "100644",
+      "blob_sha": "1fd4cc6c1ea8522705ca951368c88863558d8d60"
     },
     {
       "path": "scripts/serve.sh",
@@ -849,6 +834,11 @@
       "blob_sha": "0a1f856a0e4464b1735d2f32523c555aa94b604f"
     },
     {
+      "path": "scripts/STATUS-COMPARE-AND-HEALTH.md",
+      "mode": "100644",
+      "blob_sha": "7d5d835d2a65b0594b28026f1fd4d03680292fc3"
+    },
+    {
       "path": "scripts/status.sh",
       "mode": "100755",
       "blob_sha": "466b530bcd4f329453cf1355efa74a7bfd797e52"
@@ -864,9 +854,24 @@
       "blob_sha": "8d7c657a111ed8df4d93c804470eba00621f4396"
     },
     {
+      "path": "scripts/TEST-PLAN.md",
+      "mode": "100644",
+      "blob_sha": "1ac7a86c12016887657175c4b4fd361634f756d1"
+    },
+    {
       "path": "scripts/uninstall.sh",
       "mode": "100755",
       "blob_sha": "c9bc36d041899c5afccfd1c26f5d304a4b2eb6b0"
+    },
+    {
+      "path": "scripts/VALIDATION-RESULTS-20261026.md",
+      "mode": "100644",
+      "blob_sha": "50876f9f3bfecfc1415424b293f7e96f02d4614a"
+    },
+    {
+      "path": "scripts/VERIFY-FROM-GIT-PULL.md",
+      "mode": "100644",
+      "blob_sha": "0a641d2f46929013d2eb37f4a225455cb06c36f9"
     },
     {
       "path": "scripts/verify-main-readonly.sh",
@@ -922,6 +927,16 @@
       "path": "src/p1_legacy_service_window.py",
       "mode": "100644",
       "blob_sha": "620aec2097fa441d09523c72f049915b07274dd1"
+    },
+    {
+      "path": "src/p1_prefix_gpu_oracle.py",
+      "mode": "100644",
+      "blob_sha": "4872a3ee7e2de9b8882ab672ba72d9aab23c725d"
+    },
+    {
+      "path": "src/p1_prefix_gpu_window.py",
+      "mode": "100644",
+      "blob_sha": "33b8c60943e2039ee42d57caae06d91c1abc45fd"
     },
     {
       "path": "src/p1_prefix_stage_files.py",
@@ -999,14 +1014,14 @@
       "blob_sha": "7b5a2cfaab645a0fd50ecf0903f4bb056792700d"
     },
     {
-      "path": "src/phase6_a3b1_evidence.py",
-      "mode": "100644",
-      "blob_sha": "48127a515d8a84ce41b903b28dfa29b217273d43"
-    },
-    {
       "path": "src/phase6_a3b_cpu_config.py",
       "mode": "100644",
       "blob_sha": "cdb5bbd646aad0aa9b1fea8668f5193e4f519696"
+    },
+    {
+      "path": "src/phase6_a3b1_evidence.py",
+      "mode": "100644",
+      "blob_sha": "48127a515d8a84ce41b903b28dfa29b217273d43"
     },
     {
       "path": "src/phase6_a4_live_observer.py",
@@ -1164,6 +1179,11 @@
       "blob_sha": "9322b89875f96c6343c1b153ca2d3a07a7abc0f3"
     },
     {
+      "path": "src/test_ple_phase_stats_cpu.py",
+      "mode": "100644",
+      "blob_sha": "57bda15fed4318b730ef428b18e77dc9a1a5d431"
+    },
+    {
       "path": "src/test_ple_phase2_cpu.py",
       "mode": "100644",
       "blob_sha": "ea01de150cb409b078ef06f3d6ea13d6cada83e8"
@@ -1177,11 +1197,6 @@
       "path": "src/test_ple_phase5_bench_cpu.py",
       "mode": "100644",
       "blob_sha": "17b7d2465cdf6e943667077310ff8003c2bbd36f"
-    },
-    {
-      "path": "src/test_ple_phase_stats_cpu.py",
-      "mode": "100644",
-      "blob_sha": "57bda15fed4318b730ef428b18e77dc9a1a5d431"
     },
     {
       "path": "src/vllm_ple_mmap.py",
@@ -1264,14 +1279,14 @@
       "blob_sha": "5b63e7caeb3d1be35c0ac89d71c3719493641295"
     },
     {
-      "path": "tests/test_blazux_phase6_a3b1_gate.py",
-      "mode": "100644",
-      "blob_sha": "cd75ee93bc562bdd0fa7e7562beb96a6a2d9dbc8"
-    },
-    {
       "path": "tests/test_blazux_phase6_a3b_cpu.py",
       "mode": "100644",
       "blob_sha": "385def975e67446f8208808c79e2ea26dc2b2461"
+    },
+    {
+      "path": "tests/test_blazux_phase6_a3b1_gate.py",
+      "mode": "100644",
+      "blob_sha": "cd75ee93bc562bdd0fa7e7562beb96a6a2d9dbc8"
     },
     {
       "path": "tests/test_blazux_phase6_a4_live.py",
@@ -1312,6 +1327,11 @@
       "path": "tests/test_blazux_phase6_prefix_candidate.py",
       "mode": "100644",
       "blob_sha": "0cf498e70f9e3576065f180d3d3ad22f63f8bf50"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
+      "mode": "100644",
+      "blob_sha": "03e4cbb406644754e2a2f013b0d09dcfc924fe15"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
@@ -1379,11 +1399,6 @@
       "blob_sha": "7128f6527d5f473aa2ddc7b4af6973183d10784b"
     },
     {
-      "path": "tests/test_mtp.py",
-      "mode": "100644",
-      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
-    },
-    {
       "path": "tests/test_mtp_compressed_ignore_patch.py",
       "mode": "100644",
       "blob_sha": "8b8a044089b2a62fd2fba225df86332f2c099460"
@@ -1392,6 +1407,11 @@
       "path": "tests/test_mtp_load_guard_patch.py",
       "mode": "100644",
       "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
+    },
+    {
+      "path": "tests/test_mtp.py",
+      "mode": "100644",
+      "blob_sha": "22db07a1be0ee0501f2ff4fa601af31fb7820be5"
     },
     {
       "path": "tests/test_publication_audit.py",
