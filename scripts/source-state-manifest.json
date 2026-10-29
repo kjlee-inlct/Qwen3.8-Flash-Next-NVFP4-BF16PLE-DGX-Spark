@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 265,
+  "tracked_file_count": 268,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -434,6 +434,11 @@
       "blob_sha": "203a5cf1de74f91af11db2d036e0473197607775"
     },
     {
+      "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
+      "mode": "100644",
+      "blob_sha": "128b3219cb20694dc04ee0d95061b6c970864744"
+    },
+    {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
       "mode": "100644",
       "blob_sha": "34654240f098639935bf74edeb102df6c4cf58ff"
@@ -441,7 +446,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "26f54c8cac180873d9d6275e23d04f8b219bc2cc"
+      "blob_sha": "7490062a0ed36526f85d81d4aae692f4702e24b6"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -936,7 +941,7 @@
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "fde725a5961dfb2fd804ee12a2fbebe27a9102fd"
+      "blob_sha": "1936e937d508530e17cdd208b60bcbbe222739a5"
     },
     {
       "path": "src/p1_prefix_live_observer.py",
@@ -947,6 +952,11 @@
       "path": "src/p1_prefix_stage_files.py",
       "mode": "100644",
       "blob_sha": "7158807d1bce95fa3d00d3bb55d8f7c71896f19e"
+    },
+    {
+      "path": "src/p1_prefix_state_reuse_contract.py",
+      "mode": "100644",
+      "blob_sha": "92e7d3fb806c4243cfbfc23a75c89174200da3b5"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1347,6 +1357,11 @@
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
       "mode": "100644",
       "blob_sha": "9ae3d1c4296062a8fc7174f4f3c8a4a09f0b1897"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_state_reuse_contract.py",
+      "mode": "100644",
+      "blob_sha": "0b2f092cf9cd4fdf5bef17133f33c9ea16a4a6da"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_marker.py",

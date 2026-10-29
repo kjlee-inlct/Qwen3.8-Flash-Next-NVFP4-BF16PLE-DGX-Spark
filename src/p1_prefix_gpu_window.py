@@ -553,6 +553,7 @@ def read_candidate_observer() -> dict:
                 and p.get("block_size_matches_mamba_config") is True
                 for p in physical)),
         "physical_mapping_and_reuse_verified": False,
+        "state_content_checksum_evidence_status": "NOT_COLLECTED_NO_LIVE_STATE_HOOK",
         "mtp_speculative_acceptance_observed": False,
         "provenance": "LIVE_CANDIDATE_WORKER_STDOUT_NOT_STATIC_AST",
     }
