@@ -386,8 +386,8 @@ class CandidateWindowTests(unittest.TestCase):
              "vllm:prefix_cache_hits_total": 6400.0 * i,
              "vllm:spec_decode_num_accepted_tokens_total": 2.0 * (i + 1)}
             for i in range(4)]
-        with patch.object(oracle, "request_json", side_effect=[response] * 4), \\
-                patch.object(oracle, "metrics", return_value=before), \\
+        with patch.object(oracle, "request_json", side_effect=[response] * 4), \
+                patch.object(oracle, "metrics", return_value=before), \
                 patch.object(oracle, "settled_metrics", side_effect=after):
             result = oracle.run_oracle("m", 18080, min_output_tokens=24)
         self.assertEqual(result["status"],
