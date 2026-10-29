@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 268,
+  "tracked_file_count": 270,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "128b3219cb20694dc04ee0d95061b6c970864744"
+      "blob_sha": "d7ea8ac50beaa9ad4182effc6c33f3de6a648368"
     },
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
@@ -446,7 +446,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "7490062a0ed36526f85d81d4aae692f4702e24b6"
+      "blob_sha": "089df9a08067e91a396ab20d3001dfcd50d0bd0b"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -949,6 +949,11 @@
       "blob_sha": "d0b1a4d167a6f491f7a9a0ede1698fee04c5ed61"
     },
     {
+      "path": "src/p1_prefix_mamba_utils_probe.py",
+      "mode": "100644",
+      "blob_sha": "ff29e89d51be26aa9b1eddd579179d30c1058817"
+    },
+    {
       "path": "src/p1_prefix_stage_files.py",
       "mode": "100644",
       "blob_sha": "7158807d1bce95fa3d00d3bb55d8f7c71896f19e"
@@ -1352,6 +1357,11 @@
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",
       "mode": "100644",
       "blob_sha": "138e885b3107406df74a94ab168e5030f7c6bcb4"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_mamba_utils_probe.py",
+      "mode": "100644",
+      "blob_sha": "013797abd4084c8e608e027be90b2ced40f2d8e4"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
