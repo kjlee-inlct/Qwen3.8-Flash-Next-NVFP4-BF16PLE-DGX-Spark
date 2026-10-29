@@ -57,10 +57,33 @@ class CandidateWindowTests(unittest.TestCase):
 
     def test_no_gpu_transitions_in_preflight(self):
         identity = {"id": "a" * 64}
-        with patch.object(gpu.os, "geteuid", return_value=1000), patch.object(gpu, "preflight",
-                          return_value=(identity, {"State": {"Status": "running"}},
-                                        {}, [], [], "orc")):
+        with patch.object(gpu.os, "geteuid", return_value=1000), \
+                patch.object(gpu, "preflight",
+                             return_value=(identity, {"State": {"Status": "running"},
+                                                      "Config": {"User": "1000:1000"}},
+                                           {}, [], [], "orc")), \
+                patch.object(gpu, "probe_vllm_root", return_value="/opt/venv/vllm") as probe:
             self.assertEqual(gpu.run(["--preflight"]), 0)
+            probe.assert_called_once_with("1000:1000")
+
+    def test_user_override_preserved_by_candidate_and_cpu_probe(self):
+        with patch.object(gpu, "checked", return_value=""), \
+                patch.object(gpu, "inspect_json", return_value={
+                    "Image": gpu.IMAGE, "Config": {"Labels": {
+                        gpu.LABEL_KEY: gpu.LABEL_VALUE}}}):
+            commands = []
+            def capture(argv, **kwargs):
+                commands.append(argv)
+                return ""
+            with patch.object(gpu, "checked", side_effect=capture):
+                gpu.create_candidate("/opt/python/vllm",
+                                     {"cache": "/a", "views": "/b"},
+                                     ["recipe-views"], [], "runc", "1000:1000", "/recipe")
+            self.assertIn("--user", commands[0])
+            self.assertEqual(commands[0][commands[0].index("--workdir")+1],
+                             "/recipe")
+            self.assertEqual(commands[0][commands[0].index("--user")+1],
+                             "1000:1000")
 
     def test_oracle_requires_real_hit_evidence(self):
         self.assertFalse(oracle.hit_evidence({}, {}))

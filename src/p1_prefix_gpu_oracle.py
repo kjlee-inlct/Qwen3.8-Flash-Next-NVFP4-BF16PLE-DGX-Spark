@@ -35,6 +35,8 @@ def hit_evidence(before: dict, after: dict) -> bool:
         if "prefix_cache" in name and "hit" in name:
             if name.endswith(("hits", "hits_total")) and value > before.get(key, 0.0):
                 return True
+            if name.endswith("hit_rate") and value > max(before.get(key, 0.0), 0.0):
+                return True
     return False
 
 
@@ -62,16 +64,22 @@ def run_oracle(model: str, port: int) -> dict:
     cached = ((hit.get("usage") or {}).get("prompt_tokens_details") or {}).get("cached_tokens")
     if isinstance(cached, int) and cached > 0:
         observed_hit = True
+    first_token_lp_equal = bool(
+        logprobs_a and logprobs_b and
+        logprobs_a[0] is not None and logprobs_b[0] is not None and
+        abs(logprobs_a[0] - logprobs_b[0]) <= 1e-4)
     status = ("PASS_CACHE_HIT_AND_IDENTICAL_TEXT_TOKENS" if observed_hit and a == b and tokens_same
+              and first_token_lp_equal
               else "FAIL_OUTPUT_MISMATCH" if a != b or (cold_tokens and hit_tokens and not tokens_same)
               else "INCONCLUSIVE_TOKENS_UNAVAILABLE" if a == b and not tokens_same
+              else "FAIL_FIRST_TOKEN_LOGPROB_MISMATCH" if observed_hit and not first_token_lp_equal
               else "INCONCLUSIVE_NO_HIT_TELEMETRY")
     return {"status": status, "requests": 2, "mtp_tokens": 2,
             "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
             "cold_text_sha256": hashlib.sha256(a.encode()).hexdigest(),
             "repeat_text_sha256": hashlib.sha256(b.encode()).hexdigest(),
             "text_equal": a == b, "token_sequence_equal": tokens_same,
-            "first_token_logprob_equal": bool(logprobs_a and logprobs_b and logprobs_a[0] == logprobs_b[0]),
+            "first_token_logprob_equal": first_token_lp_equal,
             "cache_hit_observed": observed_hit,
             "cache_metric_names": sorted({k.split("{", 1)[0] for k in [*initial, *final]}),
             "active_mamba_physical_mapping_observed": False}

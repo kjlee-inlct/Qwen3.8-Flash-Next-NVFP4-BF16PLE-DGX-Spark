@@ -1,5 +1,12 @@
 # P1 현재 작업 상태 — 2026-10-29 DGX 결과 반영
 
+## 2026-10-29 실제 DGX 초기 후보 실행기 검증 및 사용자 계정 차단
+
+- **정확한 DGX 검증 SHA `742662df4920913abccfad99fd0fb9c3e26d6142`:** 사용자가 `git pull --ff-only` 이후 신규 `test_blazux_phase6_prefix_gpu_window.py` **7/7 PASS** 및 `PASS_SOURCE_ONLY: 263 tracked file(s)`를 보고. 읽기 전용 `scripts/p1-prefix-gpu-window.sh --preflight`에서 `P1_PREFIX_GPU_BLOCKED_USER_DRIFT` (exit 2) 발생. 원인은 컨테이너 Config.User가 이미지 기본 User와 다른 것. **이 사용자 차이가 오류라는 증거는 없으며 GPU·HTTP 모델 후보 실행은 전혀 시작되지 않았음.**
+- 실제 컨테이너는 이전 조회에서 running, 전용 후보 없음. 기존 Stage 두 digest-match 결과 보존. 새로운 코드에서는 원본 Docker runtime user/workdir override를 명시적으로 동일 적용하고, Stage 0600 파일 읽기 권한과 원본 Preview SHA를 모델/GPU 없는 **일회용 CPU-only 이미지 probe**로 검사한다. 검사가 불가능하면 기존 컨테이너 중지 전에 fail-closed. 사용자가 요구한 대로 단계별 확인은 최소로 묶는다.
+- **이 후속 수정 커밋 자체는 아직 DGX 재시험되지 않았음.** 후보 GPU start, cold/hit, MTP 실동작, actual block/physical state, 원본 stop/start/HTTP restore 모두 미실행. [P1 운영](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md)과 [Phase6 결과](BLAZUX-PHASE6-RESULTS.md)의 정확한 SHA 원칙을 따른다.
+
+
 
 ## 2026-10-29 P1 격리 후보 실행기 소스 준비 — DGX 실행 전
 

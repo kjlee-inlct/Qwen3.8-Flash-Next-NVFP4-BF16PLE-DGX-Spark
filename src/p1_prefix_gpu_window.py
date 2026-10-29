@@ -163,12 +163,28 @@ def preflight() -> tuple[dict, dict, dict, list[str], list[str], str]:
     cc = container.get("Config") or {}
     if cc.get("Entrypoint") != ic.get("Entrypoint"):
         raise Blocked("ENTRYPOINT_NOT_IMAGE_DEFAULT")
-    if cc.get("User") != ic.get("User"):
-        raise Blocked("USER_DRIFT")
-    if cc.get("WorkingDir") != ic.get("WorkingDir"):
-        raise Blocked("WORKDIR_DRIFT")
-    if cc.get("User") not in ("", None, "root", "0"):
-        raise Blocked("STAGED_0600_FILES_REQUIRE_ROOT")
+    # A container may legitimately override the image's USER. Preserve that
+    # exact runtime user instead of demanding image-default/root identity.
+    runtime_user = cc.get("User")
+    image_user = ic.get("User")
+    if not isinstance(runtime_user, str) or not re.fullmatch(
+            r"(?:[A-Za-z0-9_.-]+(?::[A-Za-z0-9_.-]+)?)?", runtime_user):
+        raise Blocked("ORIGINAL_USER_UNSUPPORTED")
+    if runtime_user == "" and image_user not in ("", None, "root", "0"):
+        raise Blocked("AMBIGUOUS_IMAGE_DEFAULT_USER")
+    # Docker --workdir may also be an intentional runtime override.
+    runtime_workdir = cc.get("WorkingDir")
+    image_workdir = ic.get("WorkingDir")
+    if not isinstance(runtime_workdir, str):
+        raise Blocked("WORKDIR_UNSUPPORTED")
+    if runtime_workdir:
+        parts = runtime_workdir.split("/")
+        if (not runtime_workdir.startswith("/") or
+                any(part in (".", "..") for part in parts) or
+                chr(0) in runtime_workdir or chr(10) in runtime_workdir):
+            raise Blocked("WORKDIR_UNSAFE")
+    elif image_workdir not in ("", None, "/"):
+        raise Blocked("WORKDIR_IMAGE_DEFAULT_AMBIGUOUS")
     if hc.get("IpcMode") != "host":
         raise Blocked("IPC_MODE_DRIFT")
     requests = hc.get("DeviceRequests") or []
@@ -203,8 +219,10 @@ def preflight() -> tuple[dict, dict, dict, list[str], list[str], str]:
     return receipt, container, img, cmd, env, model
 
 
-def probe_vllm_root() -> str:
-    # CPU only; no model mounts, GPU, network or host runtime mutation.
+def probe_vllm_root(runtime_user: str) -> str:
+    # CPU only. Preserve the original effective Docker user and check that
+    # 0700/0600 staged sources are readable by that user BEFORE stopping.
+    # No GPU, model mounts, serving network or installed-package writes.
     code = (
         "import importlib.util,json,pathlib,hashlib;"
         "s=importlib.util.find_spec('vllm');"
@@ -219,7 +237,14 @@ def probe_vllm_root() -> str:
         "assert all((p/k).is_file() and not (p/k).is_symlink()"
         " and hashlib.sha256((p/k).read_bytes()).hexdigest()==h"
         " for k,h in checks);"
-        "print(json.dumps({'root':str(p),'sha256_pins_match':True}))"
+        "stage=["
+        "('mamba_hybrid.py','1dfb7b5566c8e683afff6640b1764c774c27daaa817437862fd465e63da9f381'),"
+        "('scheduler.py','0501cec135d23a21f988c67371f8f1dbf97cc63726c9c44b89e350c8887178d7')"
+        "];"
+        "assert all((pathlib.Path('/p1stage')/n).is_file()"
+        " and hashlib.sha256((pathlib.Path('/p1stage')/n).read_bytes()).hexdigest()==h"
+        " for n,h in stage);"
+        "print(json.dumps({'root':str(p),'sha256_pins_match':True,'stage_access':True}))"
     )
     command = [
         "docker", "run", "--rm", "--pull=never", "--runtime=runc",
@@ -227,11 +252,15 @@ def probe_vllm_root() -> str:
         "--security-opt=no-new-privileges", "--cpus=1", "--memory=512m",
         "--memory-swap=512m", "--pids-limit=64",
         "--env", "NVIDIA_VISIBLE_DEVICES=void", "--env", "CUDA_VISIBLE_DEVICES=-1",
-        "--entrypoint", "python3", IMAGE, "-c", code
+        "--env", "PYTHONDONTWRITEBYTECODE=1",
+        "--mount", f"type=bind,src={STAGE},dst=/p1stage,readonly",
     ]
+    if runtime_user:
+        command += ["--user", runtime_user]
+    command += ["--entrypoint", "python3", IMAGE, "-c", code]
     data = json.loads(checked(command, timeout=90))
-    if data.get("sha256_pins_match") is not True:
-        raise Blocked("PROBE_SOURCE_SHA_MISMATCH")
+    if data.get("sha256_pins_match") is not True or data.get("stage_access") is not True:
+        raise Blocked("PROBE_SOURCE_OR_STAGE_ACCESS_FAILED")
     root = data.get("root")
     if not isinstance(root, str) or not re.fullmatch(
             r"/(?:[A-Za-z0-9_.+-]+/)+vllm", root):
@@ -239,7 +268,7 @@ def probe_vllm_root() -> str:
     return root
 
 
-def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], runtime: str) -> None:
+def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], runtime: str, runtime_user: str, runtime_workdir: str) -> None:
     args = ["docker", "create", "--name", NAME, "--pull=never",
             "--label", LABEL_KEY + "=" + LABEL_VALUE,
             "--network=bridge", "--publish", f"127.0.0.1:{PORT}:8000",
@@ -248,6 +277,10 @@ def create_candidate(root: str, receipt: dict, cmd: list[str], env: list[str], r
             "--restart=no", "--security-opt=no-new-privileges"]
     if runtime:
         args += ["--runtime=" + runtime]
+    if runtime_user:
+        args += ["--user", runtime_user]
+    if runtime_workdir:
+        args += ["--workdir", runtime_workdir]
     for source, dest in ((receipt["cache"], "/recipe/hf-cache"),
                          (receipt["views"], "/recipe/recipe-views"),
                          (str(STAGE / "mamba_hybrid.py"),
@@ -331,12 +364,15 @@ def run(argv: list[str] | None = None) -> int:
         if a.preflight:
             if a.confirm_id:
                 raise Blocked("PREFLIGHT_CONFIRM_ID_FORBIDDEN")
-            print(json.dumps({"status": "PREFLIGHT_HOST_ONLY_NOT_GPU_TESTED",
+            root = probe_vllm_root((ci.get("Config") or {}).get("User") or "")
+            print(json.dumps({"status": "PREFLIGHT_CPU_PROBE_NO_GPU",
                               "stage_files_sha256_match": True,
                               "original_state": ci["State"]["Status"],
                               "candidate_port": PORT,
+                              "installed_vllm_root_verified": bool(root),
+                              "stage_access_as_original_user": True,
                               "gpu_model_loaded": False}, sort_keys=True))
-            print("P1_PREFIX_GPU_PREFLIGHT_METADATA_ONLY")
+            print("P1_PREFIX_GPU_PREFLIGHT_SOURCE_AND_USER_CPU_PROBE_PASS_NOT_GPU")
             return 0
         if not re.fullmatch(r"[0-9a-f]{64}", a.confirm_id or "") or a.confirm_id != receipt["id"]:
             raise Blocked("EXACT_RECEIPT_ID_CONFIRMATION_REQUIRED")
@@ -349,12 +385,15 @@ def run(argv: list[str] | None = None) -> int:
             return 0
         if ci["State"]["Status"] != "running":
             raise Blocked("EXECUTE_REQUIRES_ORIGINAL_RUNNING")
-        root = probe_vllm_root()
+        root = probe_vllm_root((ci.get("Config") or {}).get("User") or "")
         # Confirm pinned original sources at exact imported module paths INSIDE image
         # via CPU-only probe (stage export already compared original source SHA).
         stopped = False
         try:
-            create_candidate(root, receipt, cmd, env, (ci.get("HostConfig") or {}).get("Runtime") or "")
+            create_candidate(root, receipt, cmd, env,
+                             (ci.get("HostConfig") or {}).get("Runtime") or "",
+                             (ci.get("Config") or {}).get("User") or "",
+                             (ci.get("Config") or {}).get("WorkingDir") or "")
             stopped = True  # Restore even if the stop subprocess reports an error AFTER stopping.
             checked(["bash", str(REPO / "scripts/stop.sh"), "--expected-head",
                      checked(["git", "-C", str(REPO), "rev-parse", "HEAD"]),
@@ -368,6 +407,8 @@ def run(argv: list[str] | None = None) -> int:
             result = run_oracle(model, PORT)
             print(json.dumps(result, sort_keys=True))
             print("P1_PREFIX_GPU_ORACLE_" + result["status"])
+            if not result["status"].startswith("PASS_"):
+                raise Blocked("ORACLE_NOT_VERIFIED_" + result["status"])
         finally:
             # NEVER restore the original while candidate might still own GPU memory.
             # A cleanup failure leaves original stopped and requires explicit --recover.
@@ -383,5 +424,8 @@ def run(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(Blocked("INTERRUPTED")))
+    def _interrupted(*_):
+        raise Blocked("INTERRUPTED")
+    for sig in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+        signal.signal(sig, _interrupted)
     raise SystemExit(run())
