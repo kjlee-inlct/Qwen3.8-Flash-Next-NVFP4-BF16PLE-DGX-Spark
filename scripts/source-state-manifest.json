@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "6b33b30948f2ec5baa5677af6c9b3322ee468419"
+      "blob_sha": "5801850b3cf74ce43837a6bd4a6a8098de30b303"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
-      "blob_sha": "42b132cfcc58a6d003d0bc867d5166013efdbde4"
+      "blob_sha": "604d5adaaf35913c642fb870d4d905f53c0fcbfb"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +451,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "7a608ebd4252363a1f1a2b851004aa3d52407dfb"
+      "blob_sha": "ca03e145aaad219f453102f72fd31da49513d5b6"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -956,7 +956,7 @@
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "f054e1ea3c47116157bb8ca7b957775e496cad21"
+      "blob_sha": "f72f16a1e71cad6cdab29300ff196a3bd3171b3c"
     },
     {
       "path": "src/p1_prefix_live_observer.py",
@@ -981,7 +981,7 @@
     {
       "path": "src/p1_prefix_state_snapshot.py",
       "mode": "100644",
-      "blob_sha": "2fcb43c83beb398de649805b3b96c504736f4e7f"
+      "blob_sha": "ca0f8d8efc2601a2f73a47b2be3656c7578c24b7"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1406,7 +1406,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_state_snapshot.py",
       "mode": "100644",
-      "blob_sha": "24b798a9cf960c5d3893037d2afe0c3770efe0b6"
+      "blob_sha": "159aebdb04851845c79e221b6832565959a7b455"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_marker.py",

@@ -608,7 +608,8 @@ def read_candidate_observer() -> dict:
                      "layer_sha256_prefix", "state_kind_index",
                      "shape", "dtype", "natural_byte_length",
                      "state_sha256", "block_boundary_tokens",
-                     "state_column", "gpu_completed_before_read")}
+                     "state_column", "observed_computed_tokens",
+                     "gpu_completed_before_read")}
                  for sample in e.get("samples", [])[:4]
                  if isinstance(sample, dict)
                  and isinstance(sample.get("state_sha256"), str)

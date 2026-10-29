@@ -17,6 +17,8 @@ PREFIX = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
 MAX_EVENTS_PER_PHASE = 8
 MAX_STATE_BYTES = 32 * 1024 * 1024
 MAX_STATES_PER_EVENT = 4
+# Actual last GPU run observed prefix-hit blocks equal to 6400 tokens.
+TARGET_PREFIX_TOKENS = 6400
 MAX_GROUPS = 8
 MAX_LAYERS_PER_GROUP = 64
 _seen = {}
@@ -45,6 +47,22 @@ def _boundary(num_computed, block_size):
     if n is None or b is None or n == 0 or n % b != 0:
         return None
     return n // b - 1
+
+
+def _target_column(computed_tokens, mamba_block_size):
+    """Read the completed 6400-token cache boundary in long cold/hit runs.
+
+    Do not require the request itself to end exactly at the boundary:
+    a 9503-token cold prefill may contain a completed cached 6400-token
+    block while num_computed_tokens is already 9503. Unknown or smaller
+    prefixes are INCONCLUSIVE, not misclassified as reusable.
+    """
+    n = _int(computed_tokens)
+    b = _int(mamba_block_size, minimum=1)
+    if (n is None or b is None or TARGET_PREFIX_TOKENS % b != 0
+            or n < TARGET_PREFIX_TOKENS):
+        return None
+    return TARGET_PREFIX_TOKENS // b - 1
 
 
 def _sample(instance, *, phase, mapping, computed, tables, kv_config):
@@ -82,7 +100,7 @@ def _sample(instance, *, phase, mapping, computed, tables, kv_config):
             result["status"] = "INCONCLUSIVE_COMPUTED_BOUNDS"
             return result
         n = _scalar(computed[slot])
-        col = _boundary(n, block_size)
+        col = _target_column(n, block_size)
         if col is None:
             return result
         group_ids = instance._get_mamba_group_info(kv_config)[0]
@@ -154,7 +172,8 @@ def _sample(instance, *, phase, mapping, computed, tables, kv_config):
                         "dtype": str(state_block.dtype),
                         "natural_byte_length": size,
                         "state_sha256": digest,
-                        "block_boundary_tokens": n,
+                        "block_boundary_tokens": TARGET_PREFIX_TOKENS,
+                        "observed_computed_tokens": n,
                         "state_column": col,
                         "batch_row": batch_row,
                         "state_slot": slot,
@@ -171,7 +190,8 @@ def _sample(instance, *, phase, mapping, computed, tables, kv_config):
         result["status"] = ("SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF"
                             if result["samples"] else
                             "INCONCLUSIVE_NO_STATE_TENSORS")
-        result["block_boundary_tokens"] = n
+        result["block_boundary_tokens"] = TARGET_PREFIX_TOKENS
+        result["observed_computed_tokens"] = n
     except Exception:
         result["status"] = "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE"
     return result

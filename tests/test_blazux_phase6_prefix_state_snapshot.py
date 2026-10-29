@@ -106,6 +106,15 @@ class Tests(unittest.TestCase):
                          (-1, 1600), (True, 1600), (6400.0, 1600)]:
             self.assertIsNone(snap._boundary(n, block))
 
+    def test_long_cold_prompt_9503_and_hit_6400_select_same_block(self):
+        self.assertEqual(snap.TARGET_PREFIX_TOKENS, 6400)
+        self.assertEqual(snap._target_column(9503, 1600), 3)
+        self.assertEqual(snap._target_column(6400, 1600), 3)
+        self.assertEqual(snap._target_column(9600, 1600), 3)
+        self.assertIsNone(snap._target_column(6399, 1600))
+        self.assertIsNone(snap._target_column(9503, 1024))
+        self.assertIsNone(snap._target_column(True, 1600))
+
     def test_bad_mapping_error_does_not_reach_model_state(self):
         class NoContext:
             _mamba_ctx = None
