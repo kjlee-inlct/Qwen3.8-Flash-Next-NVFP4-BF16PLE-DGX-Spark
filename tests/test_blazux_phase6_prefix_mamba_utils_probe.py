@@ -107,6 +107,16 @@ class Tests(unittest.TestCase):
                     probe.SourceBlocked, "PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED"):
                 probe.inspect_installed_image()
 
+    def test_legacy_docker_inspect_blocked_is_caught_fail_closed(self):
+        from src import p1_prefix_gpu_window as window
+        self.assertIsNot(window.Blocked, window.legacy.Blocked)
+        with patch.object(window, "preflight",
+                          side_effect=window.legacy.Blocked("DOCKER_INSPECT_FAILED")):
+            with self.assertRaisesRegex(
+                    probe.SourceBlocked,
+                    "PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED"):
+                probe.inspect_installed_image()
+
     def test_actual_image_probe_is_mocked_not_executed(self):
         fake_original={'Config':{'User':'1000:1000'}}
         src=fixture()

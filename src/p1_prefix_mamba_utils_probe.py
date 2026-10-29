@@ -150,7 +150,11 @@ def inspect_installed_image() -> dict:
         root = window.probe_vllm_root(runtime_user)
         argv = cpu_probe_argv(window.IMAGE, runtime_user, root + "/" + TARGET)
         output = window.checked(argv, timeout=90)
-    except window.Blocked:
+    except (window.Blocked, window.legacy.Blocked):
+        # preflight() delegates Docker/state identity checks to the legacy
+        # service module, whose Blocked type is intentionally distinct.
+        # An unavailable Docker daemon must remain a bounded CPU-only block
+        # (exit 2), not an uncaught exception/traceback (exit 1).
         raise SourceBlocked("PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED") from None
     report = inspect_source(source_from_export(output))
     report["source_path_relative"] = TARGET

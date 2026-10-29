@@ -59,3 +59,8 @@
 - DGX 검증 HEAD 01d6e7af382815b6fea18a8bed0b8556bbdcb6ab: CPU 61/61 PASS, source 270/270 PASS, Stage/원본 running preflight PASS. 직후 직접 python3 src/p1_prefix_mamba_utils_probe.py --inspect-image --show-source 호출 시 ModuleNotFoundError: No module named 'src'. Mamba utils ABI 분석은 미시작, GPU 및 기존 서비스 변경 없음.
 - 신규 수정: 직접 실행 때 repo root 모듈 경로를 설정하며 window.Blocked는 bounded BLOCKED_NO_GPU로 처리. Docker를 호출할 수 없는 PATH에서 직접 실행을 검증하는 CPU 테스트와 blocked preflight 반례 2개 추가. 총 CPU 63개 정의, 새 HEAD DGX_NOT_RUN.
 - 권장 호출: python3 -m src.p1_prefix_mamba_utils_probe --inspect-image --show-source. 직접 실행 CLI도 정상 모듈 경로를 확보하도록 수정. 오직 고정 원본 이미지 digest의 GPU 없는 read-only CPU probe만 허용한다.
+
+### 2026-10-29 DGX CPU 62/63 실패 교정: 분리된 legacy.Blocked
+
+- DGX HEAD `ac3830f4d603a9a0ad6f721020d10a9b4a780816`에서 이미지 검사기 CPU **6/7 PASS**, 통합 사전검사 이후 이미지를 읽기 전에 단위시험 `test_direct_script_invocation_imports_project_package_without_docker` 실패. traceback: `window.preflight() → p1_legacy_service_window.inspect() → p1_legacy_service_window.Blocked("DOCKER_INSPECT_FAILED")`, 기존 검사기는 `window.Blocked`만 포착. 이는 **원본 Docker 실패 처리 반례**이며 실제 DGX Docker나 Mamba fused-copy 오류가 아님; 해당 통합 실행은 CPU-only 이후 중단, GPU 미실행.
+- 수정: 두 타입 `window.Blocked`, `window.legacy.Blocked` 모두 catch 후 `PINNED_IMAGE_CPU_PREFLIGHT_OR_PROBE_BLOCKED`로 bounded 종료 코드 2. 기존 직접실행 PATH-empty 반례를 유지하고 별도 legacy exception mocking test 추가. 신규 HEAD의 검사기 unit test **8개 정의, DGX_NOT_RUN**. P1 최종 게이트 및 원본 서비스/Stage 변경 없음.
