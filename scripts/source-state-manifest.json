@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "d7ea8ac50beaa9ad4182effc6c33f3de6a648368"
+      "blob_sha": "0518e71fd39e1dbfa57e6177e40d2dae89d1125b"
     },
     {
       "path": "docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md",
@@ -961,7 +961,7 @@
     {
       "path": "src/p1_prefix_state_reuse_contract.py",
       "mode": "100644",
-      "blob_sha": "92e7d3fb806c4243cfbfc23a75c89174200da3b5"
+      "blob_sha": "58f64f78124b957be083aa32606477cdb47bd30a"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1371,7 +1371,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_state_reuse_contract.py",
       "mode": "100644",
-      "blob_sha": "0b2f092cf9cd4fdf5bef17133f33c9ea16a4a6da"
+      "blob_sha": "817c73a98a975563aae8d40cf5e7687cb63b8ea3"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_marker.py",

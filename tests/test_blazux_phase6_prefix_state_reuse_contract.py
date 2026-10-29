@@ -28,6 +28,7 @@ def live_pair():
                 "group_id": 0, "physical_block_id": block,
                 "shape": [1600, 8], "dtype": "bfloat16",
                 "state_sha256": DIGEST,
+                "token_bias": 0, "copy_semantics": "FULL_BLOCK_EXACT",
             })
     return events
 
@@ -95,6 +96,17 @@ class StateReuseEvidenceTests(unittest.TestCase):
         v[1]["has_initial_state"] = None
         x = contract.validate_state_reuse(v, prefix_hit_tokens=6400)
         self.assertEqual(x["status"], "INCONCLUSIVE_HIT_RESTORE_POINT")
+
+    def test_nonzero_conv_window_shift_or_unknown_copy_semantics_is_inconclusive(self):
+        for field, value in (("token_bias", 1),
+                             ("copy_semantics", "SHIFTED_CONV_WINDOW"),
+                             ("copy_semantics", None)):
+            events = live_pair()
+            events[3][field] = value
+            result = contract.validate_state_reuse(events, prefix_hit_tokens=6400)
+            self.assertEqual(result["status"],
+                             "INCONCLUSIVE_WINDOW_SHIFT_OR_COPY_SEMANTICS")
+            self.assertFalse(result["verified"])
 
     def test_no_state_data_in_stage_source_inspector(self):
         fake = (

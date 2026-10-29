@@ -60,6 +60,14 @@ def validate_state_reuse(events: object, *, prefix_hit_tokens: int) -> dict:
                  item.get("cache_copy_completed") is not True or
                  item.get("has_initial_state") is not True)):
             return _result("INCONCLUSIVE_HIT_RESTORE_POINT")
+        # The GPU conv copy can shift the state window by token_bias.
+        # Equal full-byte digests are sound only for an explicitly audited
+        # full-block/no-shift copy. Otherwise compare transformed slices in a
+        # future separately validated contract; never report false mismatch.
+        if (type(item.get("token_bias")) is not int or
+                item["token_bias"] != 0 or
+                item.get("copy_semantics") != "FULL_BLOCK_EXACT"):
+            return _result("INCONCLUSIVE_WINDOW_SHIFT_OR_COPY_SEMANTICS")
         if (not isinstance(item.get("state_sha256"), str)
                 or HEX64.fullmatch(item["state_sha256"]) is None):
             return _result("INCONCLUSIVE_FULL_STATE_HASH_UNAVAILABLE")
