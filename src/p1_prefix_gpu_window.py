@@ -514,7 +514,7 @@ def read_candidate_snapshot_events() -> list[dict]:
         observed.append({
             "phase": item["phase"], "ordinal": item.get("ordinal"),
             "request_epoch_ordinal": (
-                epoch if type(epoch) is int and 0 <= epoch <= 8 else None),
+                epoch if type(epoch) is int and 0 <= epoch <= 65535 else None),
             "status": item.get("status"), "samples": samples})
         if len(observed) >= 128:
             break
@@ -536,9 +536,35 @@ def read_candidate_observer() -> dict:
         raise Blocked("CANDIDATE_OBSERVER_LOG_UNAVAILABLE")
     prefix = "P1_PREFIX_ACTIVE_ABI_JSON:"
     snapshot_prefix = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
+    diagnostic_prefix = "P1_PREFIX_STATE_PROBE_DIAG_JSON:"
+    valid_diag_reasons = {
+        "REQUEST_EPOCH_LIMIT", "PHASE_CAPTURE_BUDGET",
+        "GLOBAL_CAPTURE_BUDGET", "NO_SOURCE_CONTEXT",
+        "POST_COMPUTED_UNAVAILABLE", "INCONCLUSIVE_NO_VALID_BOUNDARY",
+        "INCONCLUSIVE_CONTEXT_UNINITIALIZED", "INCONCLUSIVE_MAMBA_BLOCK_SIZE",
+        "INCONCLUSIVE_BATCH_MAPPING", "INCONCLUSIVE_BLOCK_TABLES",
+        "INCONCLUSIVE_REQUEST_SLOT", "INCONCLUSIVE_COMPUTED_BOUNDS",
+        "INCONCLUSIVE_NO_STATE_TENSORS", "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE",
+    }
     events = []
     snapshot_events = []
+    diagnostic_events = []
     for line in (cp.stdout + "\n" + cp.stderr).splitlines():
+        if diagnostic_prefix in line:
+            try:
+                diag = json.loads(line.split(diagnostic_prefix, 1)[1])
+            except (ValueError, TypeError):
+                diag = None
+            if (isinstance(diag, dict) and diag.get("schema") == 1
+                    and diag.get("phase") in ("before_preprocess", "after_postprocess")
+                    and diag.get("reason") in valid_diag_reasons
+                    and len(diagnostic_events) < 16):
+                epoch = diag.get("request_epoch_ordinal")
+                diagnostic_events.append({
+                    "phase": diag["phase"], "reason": diag["reason"],
+                    "request_epoch_ordinal": (
+                        epoch if type(epoch) is int and
+                        0 <= epoch <= 65536 else None)})
         if snapshot_prefix in line:
             try:
                 item = json.loads(line.split(snapshot_prefix, 1)[1])
@@ -647,6 +673,11 @@ def read_candidate_observer() -> dict:
         "candidate_state_snapshot_sample_count": sum(
             len(e.get("samples", [])) for e in snapshot_events
             if isinstance(e.get("samples"), list)),
+        "candidate_state_snapshot_diagnostic_count": len(diagnostic_events),
+        "candidate_state_snapshot_diagnostic_reasons": {
+            reason: sum(e["reason"] == reason for e in diagnostic_events)
+            for reason in sorted({e["reason"] for e in diagnostic_events})},
+        "candidate_state_snapshot_diagnostic_records": diagnostic_events,
         "candidate_state_snapshot_error_count": sum(
             e.get("status") == "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE"
             for e in snapshot_events),
@@ -656,7 +687,7 @@ def read_candidate_observer() -> dict:
              "request_epoch_ordinal": (
                  e.get("request_epoch_ordinal")
                  if type(e.get("request_epoch_ordinal")) is int
-                 and 0 <= e["request_epoch_ordinal"] <= 8 else None),
+                 and 0 <= e["request_epoch_ordinal"] <= 65535 else None),
              "status":e.get("status"),
              "samples": [
                  {field: sample.get(field) for field in (

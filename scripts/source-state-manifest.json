@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "37ef107c039cf1bbb99feff86fdb0ef83f2e4f7e"
+      "blob_sha": "f2f515068121d4906372116e122c0322e1a9c56c"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
-      "blob_sha": "3186eaee577ed5ec44daf6cb4d0b9b453987930d"
+      "blob_sha": "43ede393415d8169e05780cfb58984438c7f45ea"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +451,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "f4d4459e5241ebca6855a08b6eca78fcb563e23b"
+      "blob_sha": "976d960893e383642a2cc5524d21cec6f91c5b5e"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -956,7 +956,7 @@
     {
       "path": "src/p1_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "d524d3035eb0397c7f62fdbc76f826ec25694163"
+      "blob_sha": "cf8831399c981f926653a860e7da698bbb716b41"
     },
     {
       "path": "src/p1_prefix_live_observer.py",
@@ -981,7 +981,7 @@
     {
       "path": "src/p1_prefix_state_snapshot.py",
       "mode": "100644",
-      "blob_sha": "f6062546cf4495d5d9d0952a15c29e5558183798"
+      "blob_sha": "93e0fbbd264d7605c9727f3a3e0fe454deb5ad55"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1381,7 +1381,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "544193516773255594df57e87d329120882ec419"
+      "blob_sha": "48a2ba2db2149975344df2496f8de789eb970187"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_live_observer.py",
@@ -1406,7 +1406,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_state_snapshot.py",
       "mode": "100644",
-      "blob_sha": "18fe91648b629b9a6185ebb6f2c09968d574e646"
+      "blob_sha": "c47b81ff8fb2258bcd50a0a8f173c594d9f348f5"
     },
     {
       "path": "tests/test_blazux_phase6_preview_native_marker.py",

@@ -40,11 +40,13 @@ class Tests(unittest.TestCase):
         snap._seen.clear()
         snap._contexts.clear()
         snap._request_epochs.clear()
+        snap._diagnostics.clear()
 
     def tearDown(self):
         snap._seen.clear()
         snap._contexts.clear()
         snap._request_epochs.clear()
+        snap._diagnostics.clear()
 
     def test_disabled_by_default_does_not_wrap_or_touch_gpu(self):
         class Disabled(MambaHybridModelState):
@@ -139,16 +141,25 @@ class Tests(unittest.TestCase):
             self.assertEqual(i.add_request(0, None), "request_added")
             for _ in range(12):
                 consume_forward()  # Cold prefill + decoding.
-            self.assertEqual(emit.call_count, 4)
+            self.assertEqual(sum(
+                str(call.args[0]).startswith(snap.PREFIX)
+                for call in emit.call_args_list), 4)
             self.assertEqual(i.add_request(1, None), "request_added")
             consume_forward()  # First HIT request.
-            self.assertEqual(emit.call_count, 6)
+            self.assertEqual(sum(
+                str(call.args[0]).startswith(snap.PREFIX)
+                for call in emit.call_args_list), 6)
             consume_forward()
-            self.assertEqual(emit.call_count, 8)
+            self.assertEqual(sum(
+                str(call.args[0]).startswith(snap.PREFIX)
+                for call in emit.call_args_list), 8)
             consume_forward()
-            self.assertEqual(emit.call_count, 8)
+            self.assertEqual(sum(
+                str(call.args[0]).startswith(snap.PREFIX)
+                for call in emit.call_args_list), 8)
         raw = [json.loads(call.args[0].split(snap.PREFIX, 1)[1])
-               for call in emit.call_args_list]
+               for call in emit.call_args_list
+               if str(call.args[0]).startswith(snap.PREFIX)]
         by_epoch = {(x["request_epoch_ordinal"], x["phase"])
                     for x in raw}
         self.assertEqual(by_epoch, {
@@ -163,10 +174,62 @@ class Tests(unittest.TestCase):
         i = Instrumented()
         with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
             snap.install(Instrumented)
-        for _ in range(snap.MAX_REQUEST_EPOCHS + 3):
+        with patch.object(snap, "MAX_REQUEST_EPOCHS", 12):
+            for _ in range(15):
+                self.assertEqual(i.add_request(0, None), "request_added")
+            self.assertEqual(snap._epoch(i), 13)
+            self.assertFalse(snap._capture_allowed(i, "before_preprocess"))
+
+    def test_warmup_more_than_eight_requests_can_snapshot_later_hit(self):
+        Instrumented = type("MambaHybridModelState", (MambaHybridModelState,), {})
+        i = Instrumented()
+        with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
+            snap.install(Instrumented)
+        for _ in range(20):
             self.assertEqual(i.add_request(0, None), "request_added")
-        self.assertEqual(snap._epoch(i), snap.MAX_REQUEST_EPOCHS + 1)
-        self.assertFalse(snap._capture_allowed(i, "before_preprocess"))
+        self.assertEqual(snap._epoch(i), 20)
+        self.assertTrue(snap._capture_allowed(i, "before_preprocess"))
+        payload = {"status": "SNAPSHOTS_COLLECTED_NOT_REUSE_PROOF",
+                   "block_boundary_tokens": 6400,
+                   "samples": [{"state_sha256": "b" * 64}]}
+        with patch.object(snap, "_sample", return_value=payload), \
+                patch("builtins.print") as printer:
+            i.preprocess_state(FakeBatch(), ["table"], object(), [9503])
+        self.assertTrue(any(str(x.args[0]).startswith(snap.PREFIX)
+                            for x in printer.call_args_list))
+        self.assertEqual(snap._seen.get((20, "before_preprocess")), 1)
+
+    def test_missing_boundary_emits_bounded_diagnostic_not_fake_snapshot(self):
+        Instrumented = type("MambaHybridModelState", (MambaHybridModelState,), {})
+        i = Instrumented()
+        with patch.dict(os.environ, {"P1_PREFIX_STATE_SNAPSHOT": "1"}):
+            snap.install(Instrumented)
+        i.add_request(0, None)
+        with patch.object(snap, "_sample", return_value={
+                "status": "INCONCLUSIVE_NO_VALID_BOUNDARY", "samples": []}), \
+                patch("builtins.print") as printer:
+            for _ in range(10):
+                i.preprocess_state(FakeBatch(), ["table"], object(), [6400])
+        diagnostics = [json.loads(x.args[0].split(snap.DIAG_PREFIX)[1])
+                       for x in printer.call_args_list
+                       if str(x.args[0]).startswith(snap.DIAG_PREFIX)]
+        snapshots = [x for x in printer.call_args_list
+                     if str(x.args[0]).startswith(snap.PREFIX)]
+        self.assertEqual(len(diagnostics), 2)
+        self.assertFalse(snapshots)
+        self.assertTrue(all(
+            d["reason"] == "INCONCLUSIVE_NO_VALID_BOUNDARY"
+            and not d["reuse_verified"] for d in diagnostics))
+
+    def test_global_event_budget_keeps_probe_bounded(self):
+        class Stub: pass
+        instance = Stub()
+        snap._request_epochs[id(instance)] = 20
+        snap._seen[(20, "after_postprocess")] = snap.MAX_TOTAL_EVENTS
+        self.assertFalse(snap._capture_allowed(instance, "before_preprocess"))
+        self.assertEqual(
+            snap._denial_reason(instance, "before_preprocess"),
+            "GLOBAL_CAPTURE_BUDGET")
 
     def test_epoch_is_only_advanced_after_successful_model_add(self):
         class Failing(MambaHybridModelState):
@@ -202,7 +265,9 @@ class Tests(unittest.TestCase):
 
     def test_sample_limits_are_small_and_explicit(self):
         self.assertLessEqual(snap.MAX_EVENTS_PER_PHASE, 2)
-        self.assertLessEqual(snap.MAX_REQUEST_EPOCHS, 8)
+        self.assertGreater(snap.MAX_REQUEST_EPOCHS, 8)
+        self.assertLessEqual(snap.MAX_REQUEST_EPOCHS, 65535)
+        self.assertLessEqual(snap.MAX_DIAGNOSTICS, 16)
         self.assertLessEqual(snap.MAX_TOTAL_EVENTS, 40)
         self.assertLessEqual(snap.MAX_STATES_PER_EVENT, 4)
         self.assertLessEqual(snap.MAX_STATE_BYTES, 32 * 1024 * 1024)

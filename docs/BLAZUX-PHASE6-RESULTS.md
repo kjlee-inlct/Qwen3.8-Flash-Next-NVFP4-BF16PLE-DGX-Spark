@@ -1,5 +1,15 @@
 # Phase 6 evidence ledger
 
+## 2026-10-30 DGX 2nd candidate GPU run (HEAD 4d4afb3): HIT/MTP functional, snapshots entirely absent, strict FAIL
+
+- Submitted DGX summary from exact feature HEAD `4d4afb305fc5ff7dd40637989bb2395316ff40fc`: CPU-only closure **105/105 PASS**, source manifest **277/277 PASS**, SHA-pinned installed Mamba ABI and Stage preflight PASS, original same ID and HTTP healthy before and after maintenance; candidate GPU oracle exit **2** (`INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE`). Original same-ID HTTP `RESTORED_PASS`; no candidate remains according to caller's final checks.
+- Actual candidate Prefix HIT delta per request: **[0, 6400, 6400, 6400]**; repeat output token IDs identical; MTP speculative accepted draft tokens **+400**. No evidence of output ID mismatch.
+- Measured numeric gate max Cold/HIT logprob abs delta **0.00015660659119021147**, max first-token **0.00011087273014709353**, *no-HIT control/control* **0.0001164395798696205** (strict `0.0001`), hence still strict fail and cache-specific numeric fault not proven.
+- Request-window extraction from existing local `/tmp/p1-final-gpu-evidence.p4L5E1TM.log`: JSON **1/1 parsed**, four serial request windows all **0 snapshot events and 0 samples**; comparison `INCONCLUSIVE_COLD_HIT_STATE_WINDOWS` (0 matched, 0 mismatched), NOT an observed content mismatch. The active_candidate_abi diagnostic counters were **not included in the user's abbreviated output**, so source of zero events cannot yet be proven.
+- Source review discovered probe hard cap `MAX_REQUEST_EPOCHS=8` in `src/p1_prefix_state_snapshot.py` which suppresses sampling on later model-state `add_request` ordinals; this is a **plausible cause, not confirmed** without worker log/counters. New source patch separates anonymous epoch counter bound (65535) from **global max 40 actual state snapshots**, keeps 2/phase/epoch, adds bounded allowlisted `P1_PREFIX_STATE_PROBE_DIAG_JSON` diagnostics to discriminate epoch/copy-context/boundary/phase and sync-related blocks; GPU observer aggregates reason counts and anonymous epochs. CPU mock regressions cover >8 warmup events and missing-boundary suppressed snapshots.
+- New feature HEAD CPU/GPU and actual diagnostic logs **NOT_RUN**. Do not repeat GPU maintenance without CPU preflight and a reviewed service window. No strict threshold relaxation, no new deployed runtime, no Stage edits, PR or merge. Full P1 remains **BLOCKED** pending actual Cold/HIT GDN/Conv snapshot content attribution, layer coverage and strict numeric policy.
+- See [candidate snapshot documentation](P1-CANDIDATE-STATE-SNAPSHOT-20261030.md).
+
 ## 2026-10-30 DGX actual P1 candidate GPU and original recovery — STRICT_NUMERIC_GATE_NOT_PASS
 
 - User-provided DGX terminal log on feature HEAD `d0f87f279cada71f9d8bbb15f581106b827e8334`: targeted CPU **39+14+14+10+9+12+2=100/100 PASS**, Source Manifest **277/277 PASS**, image ABI SHA `25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`, Stage and CPU/source preflight PASS, original same-ID and HTTP before stop PASS.

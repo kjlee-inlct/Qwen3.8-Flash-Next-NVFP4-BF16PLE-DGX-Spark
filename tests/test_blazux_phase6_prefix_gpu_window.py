@@ -618,6 +618,59 @@ class CandidateWindowTests(unittest.TestCase):
             got = gpu.read_candidate_snapshot_events()
         self.assertIsNone(got[0]["request_epoch_ordinal"])
 
+    def test_suppressed_snapshot_reason_and_high_epoch_are_preserved(self):
+        diag = {
+            "schema": 1, "phase": "before_preprocess",
+            "reason": "INCONCLUSIVE_NO_VALID_BOUNDARY",
+            "request_epoch_ordinal": 20,
+            "reuse_verified": False,
+        }
+        event = {
+            "schema": 1, "phase": "after_postprocess",
+            "request_epoch_ordinal": 20,
+            "ordinal": 1,
+            "samples": [{"state_sha256": "e" * 64,
+                         "group_id": 2, "physical_block_id": 7,
+                         "layer_sha256_prefix": "a" * 16,
+                         "state_kind_index": 0,
+                         "block_boundary_tokens": 6400}],
+        }
+        output = "\n".join((
+            "P1_PREFIX_STATE_PROBE_DIAG_JSON:" + json.dumps(diag),
+            "P1_PREFIX_STATE_SNAPSHOT_JSON:" + json.dumps(event),
+        ))
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0,
+                                            stdout=output, stderr="")):
+            result = gpu.read_candidate_observer()
+        self.assertEqual(result["candidate_state_snapshot_diagnostic_count"], 1)
+        self.assertEqual(result["candidate_state_snapshot_diagnostic_reasons"],
+                         {"INCONCLUSIVE_NO_VALID_BOUNDARY": 1})
+        self.assertEqual(
+            result["candidate_state_snapshot_records"][0]
+            ["request_epoch_ordinal"], 20)
+        self.assertFalse(result["physical_mapping_and_reuse_verified"])
+
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0,
+                                            stdout=output, stderr="")):
+            events = gpu.read_candidate_snapshot_events()
+        self.assertEqual(events[0]["request_epoch_ordinal"], 20)
+
+    def test_unrecognized_diag_reason_is_not_ingested(self):
+        bad = {
+            "schema": 1, "phase": "before_preprocess",
+            "reason": "USER_PRIVATE_DATA",
+            "request_epoch_ordinal": 2,
+        }
+        out = "P1_PREFIX_STATE_PROBE_DIAG_JSON:" + json.dumps(bad)
+        with patch.object(gpu.subprocess, "run",
+                          return_value=Mock(returncode=0,
+                                            stdout=out, stderr="")):
+            result = gpu.read_candidate_observer()
+        self.assertEqual(result["candidate_state_snapshot_diagnostic_count"], 0)
+        self.assertFalse(result["physical_mapping_and_reuse_verified"])
+
     def test_actual_stage_observer_abi_is_checked_without_docker(self):
         with tempfile.TemporaryDirectory() as td:
             stage = Path(td)

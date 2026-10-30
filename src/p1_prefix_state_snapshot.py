@@ -14,11 +14,13 @@ import json
 import os
 
 PREFIX = "P1_PREFIX_STATE_SNAPSHOT_JSON:"
+DIAG_PREFIX = "P1_PREFIX_STATE_PROBE_DIAG_JSON:"
 # Per active request epoch, not per model lifetime. Cold prefill alone used
 # the old global 8-event budget before any HIT request was observed.
 MAX_EVENTS_PER_PHASE = 2
-MAX_REQUEST_EPOCHS = 8
+MAX_REQUEST_EPOCHS = 65535  # ordinal safety bound, NOT a sampling budget
 MAX_TOTAL_EVENTS = 40
+MAX_DIAGNOSTICS = 16
 MAX_STATE_BYTES = 32 * 1024 * 1024
 MAX_STATES_PER_EVENT = 4
 # Actual last GPU run observed prefix-hit blocks equal to 6400 tokens.
@@ -28,6 +30,7 @@ MAX_LAYERS_PER_GROUP = 64
 _seen = {}
 _contexts = {}
 _request_epochs = {}
+_diagnostics = {}
 
 
 def _int(value, *, minimum=0, maximum=10_000_000):
@@ -202,6 +205,43 @@ def _sample(instance, *, phase, mapping, computed, tables, kv_config):
     return result
 
 
+def _diagnostic(instance, phase, reason):
+    """Fail-closed, bounded reason codes when no state snapshot is emitted."""
+    if phase not in ("before_preprocess", "after_postprocess"):
+        return
+    approved = {
+        "REQUEST_EPOCH_LIMIT", "PHASE_CAPTURE_BUDGET",
+        "GLOBAL_CAPTURE_BUDGET", "NO_SOURCE_CONTEXT",
+        "POST_COMPUTED_UNAVAILABLE", "INCONCLUSIVE_NO_VALID_BOUNDARY",
+        "INCONCLUSIVE_CONTEXT_UNINITIALIZED", "INCONCLUSIVE_MAMBA_BLOCK_SIZE",
+        "INCONCLUSIVE_BATCH_MAPPING", "INCONCLUSIVE_BLOCK_TABLES",
+        "INCONCLUSIVE_REQUEST_SLOT", "INCONCLUSIVE_COMPUTED_BOUNDS",
+        "INCONCLUSIVE_NO_STATE_TENSORS", "INCONCLUSIVE_GPU_SNAPSHOT_UNAVAILABLE",
+    }
+    if reason not in approved or sum(_diagnostics.values()) >= MAX_DIAGNOSTICS:
+        return
+    key = (phase, reason)
+    if _diagnostics.get(key, 0) >= 2:
+        return
+    _diagnostics[key] = _diagnostics.get(key, 0) + 1
+    print(DIAG_PREFIX + json.dumps({
+        "schema": 1, "phase": phase, "reason": reason,
+        "request_epoch_ordinal": _epoch(instance),
+        "reuse_verified": False,
+    }, sort_keys=True, separators=(",", ":")), flush=True)
+
+
+def _denial_reason(instance, phase):
+    epoch = _epoch(instance)
+    if epoch > MAX_REQUEST_EPOCHS:
+        return "REQUEST_EPOCH_LIMIT"
+    if sum(_seen.values()) >= MAX_TOTAL_EVENTS:
+        return "GLOBAL_CAPTURE_BUDGET"
+    if _seen.get((epoch, phase), 0) >= MAX_EVENTS_PER_PHASE:
+        return "PHASE_CAPTURE_BUDGET"
+    return None
+
+
 def _epoch(instance):
     return _request_epochs.get(id(instance), 0)
 
@@ -209,8 +249,7 @@ def _epoch(instance):
 def _capture_allowed(instance, phase):
     epoch = _epoch(instance)
     return (
-        (id(instance) in _request_epochs or len(_request_epochs) < 8)
-        and 0 <= epoch <= MAX_REQUEST_EPOCHS
+        0 <= epoch <= MAX_REQUEST_EPOCHS
         and _seen.get((epoch, phase), 0) < MAX_EVENTS_PER_PHASE
         and sum(_seen.values()) < MAX_TOTAL_EVENTS
     )
@@ -222,10 +261,6 @@ def _advance_request_epoch(instance):
     Strictly bounded per-instance and globally. Never log a real req_index.
     """
     key = id(instance)
-    if key not in _request_epochs and len(_request_epochs) >= 8:
-        # This diagnostic must never break a healthy model request.
-        # Leave the over-cap instance uninstrumented.
-        return
     _request_epochs[key] = min(
         _request_epochs.get(key, 0) + 1, MAX_REQUEST_EPOCHS + 1)
 
@@ -291,8 +326,12 @@ def install(cls):
     def align_wrapper(self, kv_cache_config, mamba_group_ids, block_tables):
         result = align(self, kv_cache_config, mamba_group_ids, block_tables)
         pending = _contexts.get(id(self))
-        if (pending is not None and pending[1] is kv_cache_config
-                and _capture_allowed(self, "before_preprocess")):
+        if pending is None or pending[1] is not kv_cache_config:
+            _diagnostic(self, "before_preprocess", "NO_SOURCE_CONTEXT")
+        elif not _capture_allowed(self, "before_preprocess"):
+            _diagnostic(self, "before_preprocess",
+                        _denial_reason(self, "before_preprocess"))
+        else:
             snapshot = _sample(
                 self, phase="before_preprocess",
                 mapping=pending[2], computed=pending[3],
@@ -300,14 +339,23 @@ def install(cls):
             if snapshot.get("block_boundary_tokens") is not None:
                 _emit("before_preprocess", snapshot,
                       epoch=_epoch(self))
+            else:
+                _diagnostic(self, "before_preprocess",
+                            snapshot.get("status", "INCONCLUSIVE_NO_VALID_BOUNDARY"))
         return result
 
     @functools.wraps(post)
     def post_wrapper(self, idx_mapping, num_sampled, num_computed_tokens=None):
         result = post(self, idx_mapping, num_sampled, num_computed_tokens)
         pair = _contexts.get(id(self))
-        if (pair is not None and num_computed_tokens is not None
-                and _capture_allowed(self, "after_postprocess")):
+        if pair is None:
+            _diagnostic(self, "after_postprocess", "NO_SOURCE_CONTEXT")
+        elif num_computed_tokens is None:
+            _diagnostic(self, "after_postprocess", "POST_COMPUTED_UNAVAILABLE")
+        elif not _capture_allowed(self, "after_postprocess"):
+            _diagnostic(self, "after_postprocess",
+                        _denial_reason(self, "after_postprocess"))
+        else:
             snapshot = _sample(
                 self, phase="after_postprocess",
                 mapping=idx_mapping, computed=num_computed_tokens,
@@ -315,6 +363,9 @@ def install(cls):
             if snapshot.get("block_boundary_tokens") is not None:
                 _emit("after_postprocess", snapshot,
                       epoch=_epoch(self))
+            else:
+                _diagnostic(self, "after_postprocess",
+                            snapshot.get("status", "INCONCLUSIVE_NO_VALID_BOUNDARY"))
         return result
 
     pre_wrapper._p1_content_probe = True
