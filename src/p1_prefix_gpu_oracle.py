@@ -372,20 +372,46 @@ def compare_snapshot_windows(windows: object, hit_indices: object) -> dict:
         return mapped
 
     cold = flatten(windows[0], "after_postprocess")
-    hits = {}
+    output["cold_sampled_state_count"] = len(cold)
+    per_hit = []
+    total_matches = 0
+    total_mismatches = 0
     for index in hit_indices:
         if type(index) is not int or not 2 <= index <= 4:
             return output
-        hits.update(flatten(windows[index-1], "before_preprocess"))
-    keys = set(cold) & set(hits)
-    if not keys:
-        return output
-    matched = sum(cold[key] == hits[key] for key in keys)
-    output["matched_selected_state_blocks"] = matched
-    output["mismatched_selected_state_blocks"] = len(keys) - matched
-    output["status"] = ("INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS"
-                        if matched != len(keys) else
-                        "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF")
+        hit = flatten(windows[index-1], "before_preprocess")
+        keys = set(cold) & set(hit)
+        matches = sum(cold[key] == hit[key] for key in keys)
+        mismatches = len(keys) - matches
+        total_matches += matches
+        total_mismatches += mismatches
+        per_hit.append({
+            "request_index_1_based": index,
+            "cold_sampled_state_count": len(cold),
+            "hit_sampled_state_count": len(hit),
+            "comparable_state_count": len(keys),
+            "matched_selected_state_blocks": matches,
+            "mismatched_selected_state_blocks": mismatches,
+            "status": (
+                "INCONCLUSIVE_NO_SHARED_STATE_IDENTITY"
+                if not keys else
+                "INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS"
+                if mismatches else
+                "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF"),
+            "full_state_reuse_verified": False,
+        })
+    output["per_hit_request_state_comparisons"] = per_hit
+    output["matched_selected_state_blocks"] = total_matches
+    output["mismatched_selected_state_blocks"] = total_mismatches
+    output["all_hit_requests_have_comparable_samples"] = (
+        bool(cold) and all(item["comparable_state_count"] > 0
+                           for item in per_hit))
+    if total_mismatches:
+        output["status"] = "INCONCLUSIVE_SELECTED_STATE_CONTENT_DIFFERS"
+    elif not output["all_hit_requests_have_comparable_samples"]:
+        output["status"] = "INCONCLUSIVE_MISSING_COMPARABLE_STATE_FOR_HIT"
+    else:
+        output["status"] = "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF"
     return output
 
 

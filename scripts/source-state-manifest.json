@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 277,
+  "tracked_file_count": 279,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "f2f515068121d4906372116e122c0322e1a9c56c"
+      "blob_sha": "4f4ec78c849f467f940c902016b899b71cc67400"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
-      "blob_sha": "43ede393415d8169e05780cfb58984438c7f45ea"
+      "blob_sha": "771d5f7c2e227bc99cfb31e553f2475681879069"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +451,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "976d960893e383642a2cc5524d21cec6f91c5b5e"
+      "blob_sha": "50be0346c799f8a7672f04a7dabf78bf4ad93c47"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -701,7 +701,7 @@
     {
       "path": "scripts/p1-prefix-closure-prep.sh",
       "mode": "100644",
-      "blob_sha": "b15d2ae7e41eb193763aa9eea0069db63ed27e22"
+      "blob_sha": "1bf41a7ca708846333c79ab0f559294308a735e9"
     },
     {
       "path": "scripts/p1-prefix-gpu-window.sh",
@@ -951,7 +951,7 @@
     {
       "path": "src/p1_prefix_gpu_oracle.py",
       "mode": "100644",
-      "blob_sha": "0d1f2b3f92479d17f858118738f9d55c262b5cea"
+      "blob_sha": "fa9a271cf034ed4a7523f5bd0512ca62dec6c58e"
     },
     {
       "path": "src/p1_prefix_gpu_window.py",
@@ -967,6 +967,11 @@
       "path": "src/p1_prefix_mamba_utils_probe.py",
       "mode": "100644",
       "blob_sha": "2926bff3cf0793e33962029f41f1c99ff2738ec9"
+    },
+    {
+      "path": "src/p1_prefix_offline_evidence.py",
+      "mode": "100644",
+      "blob_sha": "37b32380907a27ad6b8f743ba54b267327efe138"
     },
     {
       "path": "src/p1_prefix_stage_files.py",
@@ -1371,7 +1376,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_closure_prep.py",
       "mode": "100644",
-      "blob_sha": "57b5e6b6378884f1d3d2a17ee8d63e017bbef926"
+      "blob_sha": "f8cd113cf4d0712a324b011fbc2f71cfb77d7e30"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_copy_region_contract.py",
@@ -1392,6 +1397,11 @@
       "path": "tests/test_blazux_phase6_prefix_mamba_utils_probe.py",
       "mode": "100644",
       "blob_sha": "3917f932e298317e781145ab2fd3a5ab6c4a9daa"
+    },
+    {
+      "path": "tests/test_blazux_phase6_prefix_offline_evidence.py",
+      "mode": "100644",
+      "blob_sha": "a2c99acd7cb4e8bea00e7389f7d11cec20600a0a"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
