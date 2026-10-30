@@ -101,6 +101,55 @@ def token_drift_summary(report: dict, *, strict: float = STRICT_TOL) -> dict:
     return output
 
 
+def classify_numeric_control(report: dict, *, strict: float = STRICT_TOL) -> dict:
+    """Triangulate Cold-vs-HIT using BOTH no-HIT numerical baselines.
+
+    Control/control alone passing is insufficient. The original Cold run must
+    also agree with the salted cold controls; neither result alone attributes
+    a difference to prefix state. Never claims a causal fault or PASS.
+    """
+    output = {
+        "status": "INCONCLUSIVE_CONTROL_TRIANGULATION",
+        "strict_abs_tolerance": strict,
+        "cold_reference_to_no_hit_controls_max_abs_delta": None,
+        "no_hit_control_to_control_max_abs_delta": None,
+        "cold_to_hit_max_abs_delta": None,
+        "cache_specific_numeric_fault_proven": False,
+        "strict_p1_gate_relaxed": False,
+    }
+    if not isinstance(report, dict):
+        return output
+    controls = report.get("same_input_cold_controls")
+    if (not isinstance(controls, dict)
+            or controls.get("status") !=
+            "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED"
+            or controls.get("all_controls_no_prefix_hit_observed") is not True
+            or controls.get("all_controls_token_ids_match_reference") is not True
+            or controls.get("cold_reference_logprob_comparison_available") is not True):
+        return output
+    cold_ref = controls.get("cold_reference_to_control_max_abs_delta")
+    ctrl_ctrl = controls.get("control_to_control_max_abs_delta")
+    cold_hit = report.get("max_token_logprob_abs_delta")
+    if (not _valid_nonnegative(strict) or strict == 0
+            or not all(_valid_nonnegative(x)
+                       for x in (cold_ref, ctrl_ctrl, cold_hit))):
+        return output
+    output.update({
+        "cold_reference_to_no_hit_controls_max_abs_delta": cold_ref,
+        "no_hit_control_to_control_max_abs_delta": ctrl_ctrl,
+        "cold_to_hit_max_abs_delta": cold_hit,
+    })
+    if ctrl_ctrl > strict:
+        output["status"] = "NO_HIT_CONTROL_REPRODUCIBILITY_EXCEEDS_STRICT"
+    elif cold_ref > strict:
+        output["status"] = "COLD_REFERENCE_TO_NO_HIT_CONTROL_EXCEEDS_STRICT"
+    elif cold_hit > strict:
+        output["status"] = "CACHE_PATH_ASSOCIATED_DRIFT_NOT_CAUSAL_PROOF"
+    else:
+        output["status"] = "MEASURED_NUMERIC_COMPARISONS_WITHIN_STRICT"
+    return output
+
+
 def analyze_report(report: dict) -> dict:
     """Keep original verdict separate from sampled-state and numeric evidence."""
     if not isinstance(report, dict):
@@ -125,6 +174,7 @@ def analyze_report(report: dict) -> dict:
         "mtp_accepted_draft_token_counter_delta":
             report.get("mtp_accepted_draft_token_counter_delta"),
         "numeric": token_drift_summary(report),
+        "numeric_control_triangulation": classify_numeric_control(report),
         "no_hit_control_status": baseline.get("status"),
         "no_hit_control_to_control_max_abs_delta":
             baseline.get("no_hit_control_to_control_max_abs_delta"),

@@ -142,6 +142,90 @@ class Tests(unittest.TestCase):
         self.assertEqual(out["per_hit_request_state_comparisons"][1]
                          ["comparable_state_count"], 0)
 
+    def test_control_triangulation_identifies_cache_association_only(self):
+        r = report()
+        r["max_token_logprob_abs_delta"] = 0.00034
+        r["same_input_cold_controls"] = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "cold_reference_to_control_max_abs_delta": 0.00006,
+            "control_to_control_max_abs_delta": 0.00005,
+        }
+        classified = audit.classify_numeric_control(r)
+        self.assertEqual(classified["status"],
+                         "CACHE_PATH_ASSOCIATED_DRIFT_NOT_CAUSAL_PROOF")
+        self.assertFalse(classified["cache_specific_numeric_fault_proven"])
+        self.assertFalse(audit.analyze_report(r)["p1_final_pass"])
+
+    def test_control_to_control_strict_failure_precedes_cache_inference(self):
+        r = report()
+        r["max_token_logprob_abs_delta"] = 0.00034
+        r["same_input_cold_controls"] = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "cold_reference_to_control_max_abs_delta": 0.00008,
+            "control_to_control_max_abs_delta": 0.0002,
+        }
+        result = audit.classify_numeric_control(r)
+        self.assertEqual(
+            result["status"], "NO_HIT_CONTROL_REPRODUCIBILITY_EXCEEDS_STRICT")
+        self.assertFalse(result["cache_specific_numeric_fault_proven"])
+
+    def test_cold_reference_to_control_failure_is_not_cache_fault_proof(self):
+        r = report()
+        r["max_token_logprob_abs_delta"] = 0.00034
+        r["same_input_cold_controls"] = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "cold_reference_to_control_max_abs_delta": 0.00021,
+            "control_to_control_max_abs_delta": 0.00005,
+        }
+        classified = audit.classify_numeric_control(r)
+        self.assertEqual(
+            classified["status"],
+            "COLD_REFERENCE_TO_NO_HIT_CONTROL_EXCEEDS_STRICT")
+        self.assertFalse(classified["cache_specific_numeric_fault_proven"])
+
+    def test_invalid_or_unverified_control_never_claims_cache_causation(self):
+        r = report()
+        r["max_token_logprob_abs_delta"] = 0.00034
+        for invalid in (None, {}, {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "cold_reference_to_control_max_abs_delta": float("nan"),
+            "control_to_control_max_abs_delta": 0.00005,
+        }):
+            r["same_input_cold_controls"] = invalid
+            classified = audit.classify_numeric_control(r)
+            self.assertEqual(
+                classified["status"], "INCONCLUSIVE_CONTROL_TRIANGULATION")
+            self.assertFalse(classified["cache_specific_numeric_fault_proven"])
+
+    def test_all_control_pairs_within_tolerance_are_not_p1_pass(self):
+        r = report()
+        r["max_token_logprob_abs_delta"] = 0.00008
+        r["same_input_cold_controls"] = {
+            "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+            "all_controls_no_prefix_hit_observed": True,
+            "all_controls_token_ids_match_reference": True,
+            "cold_reference_logprob_comparison_available": True,
+            "cold_reference_to_control_max_abs_delta": 0.00006,
+            "control_to_control_max_abs_delta": 0.00005,
+        }
+        classified = audit.classify_numeric_control(r)
+        self.assertEqual(
+            classified["status"], "MEASURED_NUMERIC_COMPARISONS_WITHIN_STRICT")
+        self.assertFalse(classified["cache_specific_numeric_fault_proven"])
+        self.assertFalse(audit.analyze_report(r)["p1_final_pass"])
+
     def test_input_log_symlink_rejected_no_file_write(self):
         with tempfile.TemporaryDirectory() as d:
             orig = Path(d) / "source.log"

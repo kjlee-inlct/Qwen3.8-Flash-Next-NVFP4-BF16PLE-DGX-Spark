@@ -411,7 +411,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "4f4ec78c849f467f940c902016b899b71cc67400"
+      "blob_sha": "834534d19cd4506bb179be538be9cd04e2b7b429"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -436,7 +436,7 @@
     {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
-      "blob_sha": "771d5f7c2e227bc99cfb31e553f2475681879069"
+      "blob_sha": "9458d213bbf29db1a3f642b34a6369ae1e07b984"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -451,7 +451,7 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "50be0346c799f8a7672f04a7dabf78bf4ad93c47"
+      "blob_sha": "5d7781d600c96e9c83df475f491f7d089d173d09"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
@@ -971,7 +971,7 @@
     {
       "path": "src/p1_prefix_offline_evidence.py",
       "mode": "100644",
-      "blob_sha": "37b32380907a27ad6b8f743ba54b267327efe138"
+      "blob_sha": "d51982b31c8106b6d69b120b4ba58800f249e53d"
     },
     {
       "path": "src/p1_prefix_stage_files.py",
@@ -1401,7 +1401,7 @@
     {
       "path": "tests/test_blazux_phase6_prefix_offline_evidence.py",
       "mode": "100644",
-      "blob_sha": "a2c99acd7cb4e8bea00e7389f7d11cec20600a0a"
+      "blob_sha": "66bb87a6b94b61eb04dddf7e0a19a2c0ad03ee55"
     },
     {
       "path": "tests/test_blazux_phase6_prefix_stage_files.py",
