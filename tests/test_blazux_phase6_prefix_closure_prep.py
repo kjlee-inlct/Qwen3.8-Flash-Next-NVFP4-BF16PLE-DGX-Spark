@@ -27,6 +27,7 @@ class ClosurePrepTests(unittest.TestCase):
         self.assertIn("test_blazux_phase6_prefix_copy_region_contract.py", body)
         self.assertIn("test_blazux_phase6_prefix_state_snapshot.py", body)
         self.assertIn("test_blazux_phase6_prefix_offline_evidence.py", body)
+        self.assertIn("test_blazux_phase6_prefix_release.py", body)
         self.assertIn("src.p1_prefix_state_reuse_contract", body)
         self.assertNotIn("--execute", body)
         self.assertNotIn("--recover", body)
