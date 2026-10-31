@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 292,
+  "tracked_file_count": 295,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -447,6 +447,11 @@
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
       "blob_sha": "9458d213bbf29db1a3f642b34a6369ae1e07b984"
+    },
+    {
+      "path": "docs/P1-INTEGRATED-RUNTIME-WINDOW.md",
+      "mode": "100644",
+      "blob_sha": "6e4d49451024a56c23cd68dba7a13368da1dcb3b"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -962,6 +967,11 @@
       "path": "scripts/wizard/state.py",
       "mode": "100644",
       "blob_sha": "711cab1809240183102e069f8c057047e01285d8"
+    },
+    {
+      "path": "src/p1_integrated_runtime.py",
+      "mode": "100644",
+      "blob_sha": "3397802f466f76335e422005aecb75b109e32f4b"
     },
     {
       "path": "src/p1_legacy_service_window.py",
@@ -1542,6 +1552,11 @@
       "path": "tests/test_mtp_load_guard_patch.py",
       "mode": "100644",
       "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
+    },
+    {
+      "path": "tests/test_p1_integrated_runtime.py",
+      "mode": "100644",
+      "blob_sha": "22d1b55390ca677e75267b1c8cb8406c999e128f"
     },
     {
       "path": "tests/test_p1_preview_ple_integrated_image.py",
