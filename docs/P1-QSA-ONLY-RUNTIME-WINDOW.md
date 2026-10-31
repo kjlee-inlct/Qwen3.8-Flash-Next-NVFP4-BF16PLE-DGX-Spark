@@ -68,3 +68,66 @@ a B PASS is evidence of a QSA contribution only after controlled repeats;
 it does not prove cache correctness or full GDN/PLE state reuse. B strict
 failure motivates separately approved MTP2 ON/OFF isolation. No relaxation
 of 1e-4, deployment, PR, main merge or P1 final PASS.
+
+## 2026-10-31 operator-authorized single-window bundle — execution source only
+
+The operator explicitly approved A 4-request baseline, original stop, B 4
+requests, same-ID restore, and batching toward the P1 integrated checks.
+The bundle adds NO new Docker image, GPU kernel code, model payload or service
+configuration. It automates the existing pinned controllers.
+
+New entry point `src.p1_qsa_window_bundle` has an explicit `--execute`
+switch and must be called with the new exact Git HEAD and **both** the pinned
+original container ID and pinned B image ID. It fails closed if checks drift.
+Under one top-level invocation:
+
+1. Before stop, verify B image/original and, if requested, integrated image;
+   measure A **exactly four** sequential same-payload Chat requests to the
+   current original (Prefix OFF/MTP2/stock QSA). If incomplete, abort before
+   stop. Pre-existing original work/other external traffic may confound A.
+2. Stop the original only through `scripts/stop.sh` with exact ID. Launch B
+   at 127.0.0.1:18080 (Prefix OFF/MTP2/exact QSA) and issue **exactly four**
+   synthetic Chat requests. Compute A and B within-arm pairwise strict
+   logprob maxima and, only when IDs match, aligned cross-arm drift. All
+   prompts/seed/temperature/max_tokens are from **one shared payload**,
+   never exposed in output.
+3. In `finally`, independently inspect and remove ONLY exact owned B,
+   restore the ORIGINAL same container ID (start.sh) and check port8000
+   /health + /v1/models. A measurement FAIL or model exception must not
+   bypass attempted restoration.
+4. **Optional** `--include-integrated-if-b-strict`: only when B has
+   measured within 1e-4, attempt a *second* stop/launch/restore cycle
+   in the same authorized operator invocation, using the exact existing
+   integrated image. Run corrected forced-tool roundtrip + Responses smoke
+   and integrated Prefix HIT/MTP/no-HIT-control strict oracle. Independent
+   label-owned cleanup/restore is still mandatory after failed probes.
+   If B exceeds strict, **skip integrated**: isolate MTP next rather than
+   consuming GPU on an already nonreproducible baseline. No automatic
+   MTP-off launch or new image is created.
+5. On terminal SIGINT/SIGTERM, try to unwind with finally; repeated signals
+   are ignored during recovery. SIGKILL, Docker daemon crash, host reboot
+   or ambiguous candidate ownership cannot guarantee automatic recovery.
+   In ambiguous ownership, do NOT force-start production alongside a
+   possible live GPU candidate: inspect IDs and recover manually.
+6. Print sanitized numeric summaries and recovery markers. Never claim
+   a strict result from source/CPU tests, never report P1 completed just
+   because numeric, tools or Prefix checks pass: **entire GDN/PLE live state
+   provenance and PLE GPU phase stats remain separately unproven**.
+   A/B order (A then B), maintenance interruption and scheduling may
+   confound causal inference even in a single approved window.
+
+One DGX operator command after pulling this source HEAD (exact SHA will be
+provided with the commit):
+```bash
+export PYTHONDONTWRITEBYTECODE=1
+python3 -m src.p1_qsa_window_bundle \
+  --expected-head "$HEAD" \
+  --confirm-original-id "3fc5a3d5be1d52595602287acd87895220219bad050484251ac0408a163ffc45" \
+  --confirm-b-image-id "sha256:3d1c21c8fea3ed57dafad2f97c4cd8af1c3bce1f3cb22897cd87901b021b9fe7" \
+  --include-integrated-if-b-strict --execute
+```
+Do not add extra manual `start.sh` when the original same ID is already
+running/HTTP PASS. If the bundle exits 2, read its last restoration marker,
+then inspect original/B/integrated container identity before any manual
+action. Log output is the user's DGX local receipt; GitHub documents only
+summaries provided by the operator after execution.
