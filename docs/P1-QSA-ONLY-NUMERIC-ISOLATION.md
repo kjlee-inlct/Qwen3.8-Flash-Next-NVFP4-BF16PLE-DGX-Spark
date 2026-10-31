@@ -42,3 +42,23 @@ If B is strict-stable, investigate QSA stock selection as a major
 contributor (still not definitive proof from one window). If B still
 drifts, test MTP ON/OFF with only that variable changed next.
 No strict threshold relaxation. Do not merge main or change service.
+
+## DGX CPU build receipt and next B-only runtime (2026-10-31)
+
+Actual operator CPU build ran at source HEAD
+`c3d31b7f3ab30d91e3562acb87555df19385c1db`:
+Source Manifest **307/307 PASS**, isolated builder unit tests **5/5 PASS**.
+Pinned B image `kjlee-qwen38-p1-qsa-isolation:c3d31b7f3ab3`
+has exact image ID
+`sha256:3d1c21c8fea3ed57dafad2f97c4cd8af1c3bce1f3cb22897cd87901b021b9fe7`,
+original base ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`,
+patched QSA SHA256 `7cb6299c6b58dc051197d4a516c85a8d07552ecf81f29db21f900b8a44a2334f`.
+Original same-ID Running and HTTP port 8000 PASS. No B GPU execution.
+
+The next source-only feature implements a dedicated B-only lifecycle/numeric
+controller at `src/p1_qsa_only_runtime.py`; see
+[P1 QSA-only runtime](P1-QSA-ONLY-RUNTIME-WINDOW.md). That controller and
+its tests are **GitHub source-only until actual DGX verification**. It keeps
+the original exact Prefix-OFF command, requires fresh GPU-window approval,
+and restores the same-ID original after B. Do not reuse the integrated
+Prefix-ON controller or compare historical A maxima as matched A/B evidence.

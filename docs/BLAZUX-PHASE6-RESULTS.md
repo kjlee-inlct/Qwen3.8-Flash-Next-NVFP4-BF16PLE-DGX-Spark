@@ -1,5 +1,24 @@
 # Phase 6 evidence ledger
 
+## 2026-10-31 P1 QSA-only CPU image B built, GPU B NOT_RUN
+
+- Operator-executed source HEAD **`c3d31b7f3ab30d91e3562acb87555df19385c1db`**:
+  Manifest **307/307 PASS**, new QSA-only builder CPU tests **5/5 PASS**.
+  B image `kjlee-qwen38-p1-qsa-isolation:c3d31b7f3ab3` built without GPU;
+  exact ID **`sha256:3d1c21c8fea3ed57dafad2f97c4cd8af1c3bce1f3cb22897cd87901b021b9fe7`**;
+  original base ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`;
+  QSA patched SHA256 `7cb6299c6b58dc051197d4a516c85a8d07552ecf81f29db21f900b8a44a2334f`.
+  Original same 64-character ID Running, port 8000 health PASS after build.
+- Dedicated B runtime + four-serialized-request strict numeric checker added
+  as **GitHub SOURCE_ONLY, DGX CPU NOT_RUN, B GPU NOT_RUN**. It pins that
+  existing image, keeps Prefix OFF/MTP2, isolates 127.0.0.1:18080, and
+  implements candidate ownership and original same-ID restore under future
+  explicit approval. See [QSA B runtime](P1-QSA-ONLY-RUNTIME-WINDOW.md).
+- No matched same-window A/B result yet, no causal QSA conclusion, no strict
+  1e-4 relaxation, no P1 PASS, no PR/merge/deployment.
+
+---
+
 ## 2026-10-31 P1 latest: original Prefix-OFF numeric baseline FAIL + QSA-only CPU experiment staged
 
 - **새 코드 HEAD `c3d31b7f3ab30d91e3562acb87555df19385c1db`**: QSA-only 1-COPY image CPU builder `src/p1_qsa_isolation_image.py` + five new stdlib unit tests + `docs/P1-QSA-ONLY-NUMERIC-ISOLATION.md`. **SOURCE_ONLY committed** (Manifest 307), DGX 5 tests/build **NOT_RUN**, QSA-only candidate image ID **NOT_AVAILABLE**, GPU B arm **NOT_RUN**. No original image/container mutation or GPU load.
