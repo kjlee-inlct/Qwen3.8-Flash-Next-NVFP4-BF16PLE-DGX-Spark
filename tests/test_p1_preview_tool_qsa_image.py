@@ -11,6 +11,7 @@ class Tests(unittest.TestCase):
         self.assertIn("FROM kjlee-qwen38-p1-qsa-exact:3852995a19f4", df)
         self.assertEqual(df.count("\nCOPY "), 1)
         self.assertNotIn("\nRUN ", df)
+        self.assertNotIn("--chmod=0644 vllm/", df)
         self.assertNotIn("docker run", df)
         self.assertNotIn("docker exec", df)
         self.assertNotIn("VLLM_PLE_PHASE_STATS=1", df)

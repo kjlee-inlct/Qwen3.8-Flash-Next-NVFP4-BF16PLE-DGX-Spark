@@ -40,7 +40,7 @@ def dockerfile() -> str:
     """One COPY of only the allowlisted patched vllm subtree."""
     return (
         "FROM " + qsa.tag(QSA_HEAD) + "\n"
-        "COPY --chown=0:0 --chmod=0644 vllm/ " + SITE + "/vllm/\n"
+        "COPY --chown=0:0 vllm/ " + SITE + "/vllm/\n"
     )
 
 
@@ -129,6 +129,22 @@ def prepare_overlay(context: Path) -> tuple[list[str], dict[str, str]]:
             raise qsa.Blocked("PATCHED_SOURCE_SYNTAX_ERROR") from None
         output[relpath] = sha(file.read_bytes())
     stage.check_implemented_hooks(context)
+    # Verify nothing outside the allowlist can enter the Docker COPY layer.
+    nodes = list(context.rglob("*"))
+    for node in nodes:
+        if node.is_symlink():
+            raise qsa.Blocked("STAGED_SYMLINK_FORBIDDEN")
+    actual_files = {p.relative_to(context).as_posix()
+                    for p in nodes if p.is_file()}
+    if actual_files != touched:
+        raise qsa.Blocked("STAGED_FILES_NOT_EXACT_ALLOWLIST")
+    # Preserve importable 0755 dirs and readable 0644 files in the image,
+    # even when the invoking operator uses umask 077.
+    for node in nodes:
+        if node.is_dir():
+            node.chmod(0o755)
+        elif node.is_file():
+            node.chmod(0o644)
     if set(output) != touched:
         raise qsa.Blocked("PATCHED_SOURCE_SET_DRIFT")
     return sorted(touched), output

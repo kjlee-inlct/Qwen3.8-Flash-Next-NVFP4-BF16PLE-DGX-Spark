@@ -16,6 +16,8 @@ another synthetic gate. No P2/P3 work or vLLM 0.32 migration.
 - Six exact observed Preview preimage SHA pins and AST hook requirements
   are enforced using src/preview_p1_tool_responses_stage.py.
 - One Docker COPY layer of only the touched allowlisted Python source files.
+All staged Python files are chmod 0644 and subdirectories 0755 before COPY;
+any unexpected patch artifact is rejected, including with operator umask 077.
 - No RUN, import vllm, Docker exec, stop, GPU, model or HTTP requests.
 
 ## PLE mmap compatibility
