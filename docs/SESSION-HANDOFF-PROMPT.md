@@ -1,5 +1,14 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-10-31 최신 P1 진입점 — 이전 '현행' 스냅샷보다 우선
+
+현재 진행 과제는 **원본 Prefix OFF에서도 발생하는 strict 1e-4 logprob 비재현성 원인 분리 및 QSA-only CPU 이미지 빌드**다. 최신 기능 브랜치 소스 HEAD는 `c3d31b7f3ab30d91e3562acb87555df19385c1db` (신규 QSA-only 빌더 **DGX NOT_RUN**, Manifest 307개 GitHub source inventory). 마지막 실제 DGX 실행 SHA는 `c9eaccbca557a5157c4134f963bcfdf3c1d57bb1`: Source **304/304 PASS**, 새 원본 수치 측정 단위시험 **7/7 PASS**, 사용자 명시 `RUN` 후 기존 Prefix **OFF**/MTP2/stock QSA 원본 서비스에 실제 순차 추론 4회, 각 150 토큰 ID 동일, 전 쌍 최대 logprob abs drift `0.00036634469870477915` > `1e-4`. 실행 중 원본 ID는 동일 running으로 확인됨. 이전 통합 P1 GPU 창은 `6c1397d78433b1fa2082047367b042b6e372a431`: Prefix HIT `[0,6400,6400,6400]`, MTP accepted `+400`, Responses PASS, Chat tool 검사 `TOOL_FINISH_REASON_INVALID`, strict FAIL, **원본 동일 ID+HTTP RESTORED_PASS**. 검증기 개선 `8c86f54...`에서 CPU **27/27 PASS**, Tool roundtrip GPU 재시험은 NOT_RUN. **P1 최종 PASS 아님**, full GDN/PLE live state reuse 미입증, PLE phase stats GPU 미측정.
+
+최신 진행·다음 행동·DGX 증거 구분은 [활성 P1 핸드오프](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)와 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)를 정본으로 사용. A/B 분리 설계는 [QSA-only 실험 문서](P1-QSA-ONLY-NUMERIC-ISOLATION.md), 원본 4회 실측은 [원본 수치 기준선](P1-ORIGINAL-NUMERIC-BASELINE.md), 통합 GPU 영수증은 [P1 통합 증거](P1-INTEGRATED-EVIDENCE-20261031.md)에 보존. 이 아래 '2026-10-29 현행' 등 과거 제목/승인 상태는 **작성 당시 기록**이지 10월 31일 현재 실행 지침이 아니다. 영구 보안·운영·정비창 절차, 단계별 승인은 계속 이 문서와 기존 정본을 따른다. 이번 기록 커밋은 DGX/CI 미실행이며 PR/merge 승인으로 해석하지 않는다.
+
+---
+
+
 > **P1 현행 요약 — 2026-10-29 (이전 스냅샷보다 우선):** 사용자 DGX에서 확정 검증된 마지막 GPU 후보 코드 SHA `c342e033c6e601f374520eefb6a9d0e9277b54ef`: targeted CPU **20/20 PASS**, Source Manifest **263/263 PASS**, 원본 Chat API probe PASS, 후보 소스 SHA 두 개 확인 및 GPU HTTP READY PASS. 9,492 입력 토큰을 cold+repeat×3으로 총 4회 요청한 결과 Prefix-cache query delta `[9492,9492,9492,9492]`, hit delta **`[0,6400,6400,6400]`**. 출력 텍스트·3개 token IDs·finish reasons는 모두 동일했지만 최대 token logprob 절대차 **0.0033205938525497913**, strict 1e-4 초과 → **수치 정합성 INCONCLUSIVE, exit 2**. 활성 Mamba state-slot/physical mapping 및 MTP 실 acceptance는 **미관측**. `P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED`를 실제 수신했고 후보는 cleanup됨. **원본 운영 서비스는 이 시험 종료 시 이미 재시작 완료**였으므로 중복 start 불필요. 현재 시점의 호스트 running/HTTP 상태는 DGX에서 읽기 전용으로 재확인해야 한다.
 
 > **GitHub 소스와 현장 검증 구분:** 문서 정리 직전 feature 브랜치 HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`는 Cold↔Repeat, Repeat↔Repeat의 숫자형 logprob 차이 분해 계측을 추가했지만 **DGX_NOT_RUN**. 이 문서 변경 HEAD도 자체적으로 DGX 재시험된 것이 아니다. 새 GPU 시험 자동 반복 금지; 다음 실질 작업은 active Mamba block/group/state-slot physical ABI를 후보 컨테이너 내부에서 안전하게 계측할 최소 observer를 먼저 설계하고, 같은 1회 후보 시험에 로그프로브와 길이가 충분한 출력 정합성 비교를 함께 수행하는 것. P1 이외 P2/P3/PR/merge/CI·운영 배포 금지. 상세 수치: [결과 장부](BLAZUX-PHASE6-RESULTS.md), 운영 절차: [P1 서비스 창](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md), 진행 인수인계: [활성 세션](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md).

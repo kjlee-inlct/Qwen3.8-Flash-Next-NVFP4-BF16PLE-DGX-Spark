@@ -421,7 +421,7 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "9f36048018a25fed2ee7655beaf71e9725009917"
+      "blob_sha": "abd02b07d4d11b9b2aabd93eb06558f7ff693fd2"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -431,7 +431,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "240ae8a1f1d06ee04c4c9c85be0130f75ca24df7"
+      "blob_sha": "06c19ba1d59ada6daab497a4a9865b6f98dedaa6"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -461,7 +461,7 @@
     {
       "path": "docs/P1-INTEGRATED-WINDOW-ORCHESTRATION.md",
       "mode": "100644",
-      "blob_sha": "06d45d338dee21d9f6bee9a38bf17312d511eaa8"
+      "blob_sha": "e1e1b116629268341c61da752acf008a78fec246"
     },
     {
       "path": "docs/P1-ORIGINAL-NUMERIC-BASELINE.md",
@@ -506,12 +506,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "21c96e9e9f4c1f4eb2283b130bc890f37a7ff844"
+      "blob_sha": "1da5047bf811cd04f39e869e2dcf34f8ef9b7578"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "fecb9973e4bc3f48002ab7b37f8522d65df0810c"
+      "blob_sha": "1a56387f094695ede71d06543c08b4f93693f1ef"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",

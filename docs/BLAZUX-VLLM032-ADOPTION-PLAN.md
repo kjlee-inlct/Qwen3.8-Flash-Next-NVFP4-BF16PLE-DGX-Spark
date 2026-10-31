@@ -1,5 +1,8 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
+> **2026-10-31 최신 Track A/P1 상태 교정 (과거 '운영 적용 0/미실행'은 작성 당시 기록):** 실측 통합 P1 Docker 후보 `sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d`가 승인된 단일 DGX 정비창에서 실제 BF16 PLE + MTP2 + Prefix ON + Exact QSA로 기동, Prefix HIT `[0,6400,6400,6400]`, accepted draft +400, Responses API PASS, 원본 동일 ID/HTTP 복구 PASS. 그러나 Tool result roundtrip 미검증, strict `1e-4` 수치 FAIL, full GDN/PLE reuse/PLE GPU phase stats 미검증 → **P1 미완료 및 운영 배포 미적용**. 원본 Prefix OFF/MTP2/stock QSA도 4회 동일 요청 all-pairs logprob abs drift `0.00036634469870477915`로 FAIL (DGX source HEAD `c9eaccbca557a5157c4134f963bcfdf3c1d57bb1`). 현재 우선 작업은 A 원본 대비 **QSA-only B CPU 이미지 후보** (`c3d31b7f3ab30d91e3562acb87555df19385c1db`, DGX_NOT_RUN), 다음 GPU window는 **별도 승인**. 영구 결과/상세 수치는 [활성 핸드오프](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), [Phase6 ledger](BLAZUX-PHASE6-RESULTS.md), [QSA-only 문서](P1-QSA-ONLY-NUMERIC-ISOLATION.md) 참조. vLLM 0.32 Track B/P2/P3 승격 금지. 아래 10월 28~29일 'latest' 문구는 역사적 시점 기록.
+
+
 > **2026-10-29 upstream 최신 HEAD 비교:** [blazux `7e63dbe` ↔ Orcarouter BF16 PLE/MTP 현재 구현 및 P1–P3 상태](BLAZUX-UPSTREAM-COMPARISON-20261029.md). 이 비교는 기존 `8bb7a717` 고정점의 *역사적 분석*을 대체하지 않으며 신규 패치/GPU/HTTP/v0.32 포팅 승인이 아니다. 최신 DGX CPU 기능 SHA `29e78cdc`와 해당 비교 직전 docs-only SHA `73727212`를 분리한다. Prefix-cache 실제 ABI는 계속 `BLOCKED`, PLE 계측 및 Tool/Responses는 **CPU_VERIFIED**, 신규 기능 운영 적용 0건이다. 아래의 과거 Phase별 설명은 당일 계획/영수증으로 보존한다.
 
 ## 2026-10-28 중요 교정 — 검증 활동이 실제 blazux 기능 적용 목표를 대체하지 않도록 할 것
