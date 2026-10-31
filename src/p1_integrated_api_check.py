@@ -114,7 +114,12 @@ def tool_smoke(model: str) -> None:
                     break
     if valid_call is None:
         raise Blocked("TOOL_CALL_OR_ARGUMENTS_MISSING")
-    if choices[0].get("finish_reason") != "tool_calls":
+    # The request uses a *named, forced* function tool_choice. vLLM's
+    # Chat serving path may report "stop" for that case even when the
+    # message contains a valid ToolCall. Auto/required may use "tool_calls".
+    # Accept only these two terminal reasons and still require the
+    # complete, executable tool-result roundtrip below.
+    if choices[0].get("finish_reason") not in ("tool_calls", "stop"):
         raise Blocked("TOOL_FINISH_REASON_INVALID")
 
     # Real tool-call roundtrip: feed the exact returned call ID and a

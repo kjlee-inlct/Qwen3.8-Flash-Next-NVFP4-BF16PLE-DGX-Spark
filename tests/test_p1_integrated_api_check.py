@@ -102,6 +102,47 @@ class Tests(unittest.TestCase):
         self.assertFalse(result["cold_reference_to_no_hit_strict_pass"])
         self.assertFalse(result["strict_numeric_pass"])
 
+    def test_named_forced_tool_stop_reason_permits_full_roundtrip(self):
+        # vLLM can use "stop" rather than "tool_calls" for named tool_choice.
+        first = {"choices": [{"finish_reason": "stop", "message": {
+            "role": "assistant", "content": None,
+            "tool_calls": [{"id": "call_named_1", "type": "function",
+                "function": {"name": "weather",
+                             "arguments": '{"city":"Seoul"}'}}]}}]}
+        final = {"choices": [{"finish_reason": "stop", "message": {
+            "role": "assistant", "content": "Fictional forecast: clear."}}]}
+        with patch.object(candidate, "request",
+                          side_effect=[first, final]) as transport:
+            candidate.tool_smoke("model")
+        self.assertEqual(transport.call_count, 2)
+        self.assertEqual(
+            transport.call_args_list[1].args[1]["messages"][-1]["tool_call_id"],
+            "call_named_1")
+
+    def test_tool_length_does_not_pass_even_with_valid_arguments(self):
+        first = {"choices": [{"finish_reason": "length", "message": {
+            "role": "assistant", "content": None,
+            "tool_calls": [{"id": "call_named_1", "type": "function",
+                "function": {"name": "weather",
+                             "arguments": '{"city":"Seoul"}'}}]}}]}
+        with patch.object(candidate, "request", return_value=first) as transport:
+            with self.assertRaisesRegex(candidate.Blocked,
+                                        "TOOL_FINISH_REASON_INVALID"):
+                candidate.tool_smoke("model")
+        transport.assert_called_once()
+
+    def test_named_tool_without_arguments_never_passes(self):
+        first = {"choices": [{"finish_reason": "stop", "message": {
+            "role": "assistant", "content": None,
+            "tool_calls": [{"id": "call_named_1", "type": "function",
+                "function": {"name": "weather",
+                             "arguments": '{"city":"Mars"}'}}]}}]}
+        with patch.object(candidate, "request", return_value=first) as transport:
+            with self.assertRaisesRegex(candidate.Blocked,
+                                        "TOOL_CALL_OR_ARGUMENTS_MISSING"):
+                candidate.tool_smoke("model")
+        transport.assert_called_once()
+
     def test_tool_roundtrip_requires_valid_call_id_and_followup(self):
         first = {"choices": [{"finish_reason": "tool_calls",
             "message": {"role": "assistant", "content": None,
