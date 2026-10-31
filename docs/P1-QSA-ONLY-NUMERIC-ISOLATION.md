@@ -62,3 +62,58 @@ its tests are **GitHub source-only until actual DGX verification**. It keeps
 the original exact Prefix-OFF command, requires fresh GPU-window approval,
 and restores the same-ID original after B. Do not reuse the integrated
 Prefix-ON controller or compare historical A maxima as matched A/B evidence.
+
+## Actual same-window A/B result (operator DGX, 2026-10-31)
+
+Exact execution source HEAD `5f3eb29eece1470090c0623a4890161a42a7f342`:
+source Manifest **312/312 PASS**, targeted CPU **18/18 PASS**,
+both B and integrated read-only preflight PASS.
+A and B used the SAME shared long synthetic payload (seed=42) and four
+serial requests each. Each arm returned identical 150 token IDs and
+finish reasons. **A stock QSA / Prefix OFF / MTP2** all-pairs max
+`0.00022305361926555634`, exceed token indices `[0,2]`;
+**B exact QSA / Prefix OFF / MTP2** all-pairs max
+`0.00031112757278606296`, exceed indices `[0,148]`.
+Both exceed **strict 0.0001**. Corresponding A-vs-B max
+`0.00026372616412118077`, exceed index `[0]`;
+same-index A/B token IDs and finishes matched. No causal effect estimated
+from the ratio of observed sample maxima.
+
+B candidate ID `d5fee689d47637e26b6b2d64d0d7278fcfe19535c0c5f4d0867476cd953482d2`
+was launched and removed by the owner-checked lifecycle; receipt:
+`B_CLEANED_ORIGINAL_SAME_ID_HTTP_PASS`. Conditional integrated arm was
+**SKIPPED_B_NOT_STRICT_OR_DISABLED**, exactly as programmed. Bundle exit=2
+indicates numerical failure, not a service-restore failure. DGX local full
+log: `/tmp/p1-qsa-ab-window.ZT1Kzy9d.log` (not a GitHub attachment).
+
+**Inference:** QSA Exact Top-K alone is insufficient to restore strict
+repeatability. It remains possible that QSA changes numerical behavior;
+these four-request arm-wise maxima do not determine that. Prefix-enabled
+cache is also unnecessary for the strict error. Next isolate common
+MTP2 speculative decoding from non-MTP numerical nondeterminism.
+
+## Next C-arm: MTP OFF, stock QSA, original image, Prefix OFF
+
+A new source-only one-window controller
+`src/p1_mtp_off_numeric_isolation.py` (CPU tests in
+`tests/test_p1_mtp_off_numeric_isolation.py`) prepares **C** by using
+the original exact Docker image and runtime settings, but removing the
+single `--speculative-config {"method":"mtp","num_speculative_tokens":2}`
+CLI pair. No candidate image build, QSA patch, Prefix ON, BF16 PLE
+change or model-view edit. Dedicated 127.0.0.1:18080 container and
+existing strict baseline `1e-4` oracle. It verifies the live candidate
+Docker Cmd lacks the speculative flag and checks accepted-draft-token
+counter delta (expected zero), while making no claim of GPU execution
+until operator evidence is received. A fresh 4-request stock/MTP2
+baseline is sampled before stopping the original; C runs four matching
+requests; ownership-checked cleanup and same-ID original HTTP restore
+are mandatory independent of numeric result.
+
+This **next** GPU maintenance window has NOT been approved or run.
+After exact Git HEAD checkout, operator may run read-only source/CPU
+tests and `--preflight`. Actual `--execute` is forbidden until the
+operator explicitly approves a new original-service outage and GPU
+load. A successful C strict result suggests investigating MTP2 but
+cannot by itself establish causal exclusivity or P1 PASS. If C fails,
+the next target is non-MTP common GPU/PLE/sampling reproducibility,
+not another speculative QSA conclusion. No strict relaxation.

@@ -1,5 +1,32 @@
 # Phase 6 evidence ledger
 
+## 2026-10-31 P1 A/B QSA-only actual GPU isolation: BOTH STRICT FAIL, ORIGINAL RESTORED
+
+- DGX operator source HEAD `5f3eb29eece1470090c0623a4890161a42a7f342`:
+  Manifest **312/312 PASS**, A/B bundle + B runtime CPU **18/18 PASS**;
+  B/integrated read-only image preflights PASS.
+- **A stock QSA, Prefix OFF, MTP2:** 4 serialized identical synthetic requests,
+  150 token IDs/finishes identical, all-pairs max absolute logprob drift
+  **0.00022305361926555634**, exceed indices **[0,2]**.
+- **B exact QSA, Prefix OFF, MTP2:** 4 serial requests under the SAME payload,
+  150 token IDs/finishes identical, all-pairs max **0.00031112757278606296**,
+  exceed indices **[0,148]**. Same-index cross-arm max
+  **0.00026372616412118077**, exceed **[0]**, token IDs/finishes match.
+  Strict threshold remains **0.0001**; **B NOT STRICT**. Do not infer that
+  QSA worsens drift from the sample-max difference; no QSA causal proof.
+- Candidate B id `d5fee689d47637e26b6b2d64d0d7278fcfe19535c0c5f4d0867476cd953482d2`
+  cleaned; **`B_CLEANED_ORIGINAL_SAME_ID_HTTP_PASS`**. Conditional integrated
+  GPU run **SKIPPED_B_NOT_STRICT_OR_DISABLED**, bundle exit 2 (numeric failure).
+  Local operator receipt `/tmp/p1-qsa-ab-window.ZT1Kzy9d.log` not imported.
+- Next **source-only** C-arm MTP-OFF controller and tests change only
+  original `--speculative-config` flag for a dedicated candidate, retaining
+  base image/stock QSA/Prefix OFF/BF16 PLE and strict 1e-4. **C GPU NOT_RUN,
+  no new service-window approval**, no P1 final PASS. See
+  [QSA/A-B and MTP-C isolation](P1-QSA-ONLY-NUMERIC-ISOLATION.md).
+
+---
+
+
 ## 2026-10-31 P1 QSA-only CPU image B built, GPU B NOT_RUN
 
 - Operator-executed source HEAD **`c3d31b7f3ab30d91e3562acb87555df19385c1db`**:
