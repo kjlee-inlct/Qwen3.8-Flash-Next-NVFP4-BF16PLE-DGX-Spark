@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 301,
+  "tracked_file_count": 304,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -462,6 +462,11 @@
       "path": "docs/P1-INTEGRATED-WINDOW-ORCHESTRATION.md",
       "mode": "100644",
       "blob_sha": "06d45d338dee21d9f6bee9a38bf17312d511eaa8"
+    },
+    {
+      "path": "docs/P1-ORIGINAL-NUMERIC-BASELINE.md",
+      "mode": "100644",
+      "blob_sha": "09e307021a54f811d770c136f87a62d9a94a95e4"
     },
     {
       "path": "docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -997,6 +1002,11 @@
       "path": "src/p1_legacy_service_window.py",
       "mode": "100644",
       "blob_sha": "620aec2097fa441d09523c72f049915b07274dd1"
+    },
+    {
+      "path": "src/p1_original_numeric_baseline.py",
+      "mode": "100644",
+      "blob_sha": "4cd56ad65255392a3e64f1dac790d1d7c8eae776"
     },
     {
       "path": "src/p1_prefix_copy_region_contract.py",
@@ -1587,6 +1597,11 @@
       "path": "tests/test_p1_integrated_window.py",
       "mode": "100644",
       "blob_sha": "d974c99c6f7ed7077cfb82da24ef0d2c4ef391f2"
+    },
+    {
+      "path": "tests/test_p1_original_numeric_baseline.py",
+      "mode": "100644",
+      "blob_sha": "7f99105891b9eed87f7da8b412460001afac40e8"
     },
     {
       "path": "tests/test_p1_preview_ple_integrated_image.py",
