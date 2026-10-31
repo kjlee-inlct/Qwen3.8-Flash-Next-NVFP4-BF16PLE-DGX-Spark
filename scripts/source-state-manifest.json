@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 295,
+  "tracked_file_count": 298,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -447,6 +447,11 @@
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
       "blob_sha": "9458d213bbf29db1a3f642b34a6369ae1e07b984"
+    },
+    {
+      "path": "docs/P1-INTEGRATED-EVIDENCE-20261031.md",
+      "mode": "100644",
+      "blob_sha": "086d3b7ae2fc4bfb07de67b1b4b1b8f1412cbbaa"
     },
     {
       "path": "docs/P1-INTEGRATED-RUNTIME-WINDOW.md",
@@ -967,6 +972,11 @@
       "path": "scripts/wizard/state.py",
       "mode": "100644",
       "blob_sha": "711cab1809240183102e069f8c057047e01285d8"
+    },
+    {
+      "path": "src/p1_integrated_api_check.py",
+      "mode": "100644",
+      "blob_sha": "d9796559babb9cd9445802e5a5b70f482f363dff"
     },
     {
       "path": "src/p1_integrated_runtime.py",
@@ -1552,6 +1562,11 @@
       "path": "tests/test_mtp_load_guard_patch.py",
       "mode": "100644",
       "blob_sha": "fc7b50b7491b1d0503f51d4501723899ca25ba9f"
+    },
+    {
+      "path": "tests/test_p1_integrated_api_check.py",
+      "mode": "100644",
+      "blob_sha": "2e33a7856b7589733786df869cdf084cf42af547"
     },
     {
       "path": "tests/test_p1_integrated_runtime.py",
