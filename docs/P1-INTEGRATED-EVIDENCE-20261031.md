@@ -30,3 +30,17 @@ src.p1_integrated_runtime --restore step MUST still be performed using
 the exact original and candidate IDs. Do not put restore only after
 a success-only shell chain. Existing original stays running until
 separately authorized stop; no P1 final PASS or production promotion.
+
+## 2026-10-31 readiness fixes before any GPU window
+
+- The first integration API smoke only checked tool_call generation. It now
+  sends one more Chat request with the exact emitted tool_call_id and a
+  fictional tool result, then requires a nonempty final assistant message.
+  This measures a complete nonstream Tool roundtrip (not comprehensive tool API).
+- Numeric report now distinguishes Cold/HIT strict, no-HIT control-to-control
+  reproducibility, and cold-reference-to-no-HIT reproducibility. The combined
+  strict_numeric_pass requires all three under the unmodified 1e-4 threshold.
+  A no-HIT control API/telemetry failure is INCONCLUSIVE, not PASS.
+- Even if combined strict_numeric_pass is true, full_state_reuse_verified and
+  p1_final_pass remain false until separate candidate-only full-state evidence.
+- Existing integrated image SHA and original container are unchanged.

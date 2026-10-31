@@ -98,6 +98,7 @@ def tool_smoke(model: str) -> None:
         raise Blocked("TOOL_CHOICES_INVALID")
     msg = choices[0].get("message") or {}
     calls = msg.get("tool_calls") or []
+    valid_call = None
     for item in calls:
         fn = item.get("function") if isinstance(item, dict) else None
         if isinstance(fn, dict) and fn.get("name") == "weather":
@@ -106,8 +107,38 @@ def tool_smoke(model: str) -> None:
             except (TypeError, ValueError):
                 continue
             if isinstance(params, dict) and params.get("city") == "Seoul":
-                return
-    raise Blocked("TOOL_CALL_OR_ARGUMENTS_MISSING")
+                call_id = item.get("id")
+                if isinstance(call_id, str) and re.fullmatch(
+                        r"[A-Za-z0-9_-]{1,128}", call_id):
+                    valid_call = call_id
+                    break
+    if valid_call is None:
+        raise Blocked("TOOL_CALL_OR_ARGUMENTS_MISSING")
+    if choices[0].get("finish_reason") != "tool_calls":
+        raise Blocked("TOOL_FINISH_REASON_INVALID")
+
+    # Real tool-call roundtrip: feed the exact returned call ID and a
+    # synthetic result back into the *same* conversation. This exercises
+    # the parser/serializer together, not merely XML-to-JSON extraction.
+    followup = request("/v1/chat/completions", {
+        "model": model, "temperature": 0, "max_tokens": 96,
+        "chat_template_kwargs": {"enable_thinking": False},
+        "messages": [
+            {"role": "user", "content": "Call weather for Seoul."},
+            msg,
+            {"role": "tool", "tool_call_id": valid_call,
+             "content": '{"city":"Seoul","condition":"clear"}'},
+        ],
+    })
+    replies = followup.get("choices")
+    if not isinstance(replies, list) or len(replies) != 1:
+        raise Blocked("TOOL_ROUNDTRIP_CHOICES_INVALID")
+    message = replies[0].get("message")
+    if not isinstance(message, dict) or not isinstance(
+            message.get("content"), str) or not message["content"].strip():
+        raise Blocked("TOOL_ROUNDTRIP_FINAL_CONTENT_MISSING")
+    if replies[0].get("finish_reason") not in ("stop", "length"):
+        raise Blocked("TOOL_ROUNDTRIP_FINISH_INVALID")
 
 
 def responses_smoke(model: str) -> None:
@@ -162,13 +193,46 @@ def prefix_oracle(head: str, candidate_id: str) -> dict:
                 "full_state_reuse_verified": False, "p1_final_pass": False}
     status = report.get("status")
     delta = report.get("max_token_logprob_abs_delta")
-    passed = (
+    # Keep cold/HIT strict comparison distinct from no-HIT reproducibility.
+    # A first-token/cold-reference shift is not evidence of cache causation.
+    cold_hit_pass = (
         status == "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS"
         and report.get("mtp_acceptance_observed") is True
         and report.get("cache_hit_observed") is True
-        and type(delta) in (float, int) and delta <= 1e-4)
+        and report.get("all_repeats_token_ids_equal") is True
+        and type(delta) in (float, int) and 0 <= delta <= 1e-4)
+    controls = report.get("same_input_cold_controls")
+    baseline = report.get("no_hit_strict_numeric_baseline")
+    baseline_pass = (
+        isinstance(baseline, dict) and
+        baseline.get("status") == "NO_HIT_BASELINE_WITHIN_STRICT_GATE" and
+        baseline.get("no_hit_numeric_reproducibility_at_strict_gate") is True)
+    reference_control_max = (
+        controls.get("cold_reference_to_control_max_abs_delta")
+        if isinstance(controls, dict) else None)
+    reference_control_pass = (
+        isinstance(controls, dict) and
+        controls.get("status") ==
+        "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED" and
+        controls.get("all_controls_no_prefix_hit_observed") is True and
+        controls.get("all_controls_token_ids_match_reference") is True and
+        type(reference_control_max) in (float, int) and
+        0 <= reference_control_max <= 1e-4)
+    passed = cold_hit_pass and baseline_pass and reference_control_pass
+    per_token = report.get("per_token_cold_repeat_max_deltas")
+    above_gate = (
+        [i for i, value in enumerate(per_token)
+         if type(value) in (float, int) and value > 1e-4][:16]
+        if isinstance(per_token, list) else None)
     return {
         "status": status,
+        "cold_hit_strict_pass": cold_hit_pass,
+        "no_hit_baseline_strict_pass": baseline_pass,
+        "cold_reference_to_no_hit_strict_pass": reference_control_pass,
+        "cold_reference_to_no_hit_max_abs_delta": reference_control_max,
+        "cold_hit_positions_above_strict_0_based_first16": above_gate,
+        "repeat_to_repeat_max_deltas": report.get(
+            "repeat_to_repeat_consecutive_max_deltas"),
         "hit_token_deltas": report.get("cache_hit_token_deltas_per_request"),
         "mtp_accepted_token_delta": report.get(
             "mtp_accepted_draft_token_counter_delta"),
@@ -176,7 +240,7 @@ def prefix_oracle(head: str, candidate_id: str) -> dict:
         "logprob_max_abs_delta": delta,
         "first_token_logprob_max_abs_delta": report.get(
             "max_first_token_logprob_abs_delta"),
-        "no_hit_control": report.get("no_hit_strict_numeric_baseline"),
+        "no_hit_control": baseline,
         "strict_abs_tolerance": 1e-4,
         "strict_numeric_pass": passed,
         "full_state_reuse_verified": False,

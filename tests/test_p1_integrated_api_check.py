@@ -50,16 +50,71 @@ class Tests(unittest.TestCase):
         self.assertFalse(result["p1_final_pass"])
         self.assertEqual(result["strict_abs_tolerance"], 1e-4)
 
-    def test_even_strict_pass_is_not_full_state_proof(self):
+    def test_cold_hit_strict_without_verified_controls_not_final_numeric(self):
         report = {"status": "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS",
                   "cache_hit_observed": True, "mtp_acceptance_observed": True,
+                  "all_repeats_token_ids_equal": True,
                   "max_token_logprob_abs_delta": 0.00008}
+        with patch.object(candidate, "verify_live", return_value="model"), \
+             patch.object(candidate.oracle, "run_oracle", return_value=report):
+            result = candidate.prefix_oracle(self.H, self.ID)
+        self.assertTrue(result["cold_hit_strict_pass"])
+        self.assertFalse(result["strict_numeric_pass"])
+        self.assertFalse(result["p1_final_pass"])
+
+    def test_full_numeric_requires_both_independent_controls(self):
+        report = {"status": "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS",
+                  "cache_hit_observed": True, "mtp_acceptance_observed": True,
+                  "all_repeats_token_ids_equal": True,
+                  "max_token_logprob_abs_delta": 0.00008,
+                  "same_input_cold_controls": {
+                      "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+                      "all_controls_no_prefix_hit_observed": True,
+                      "all_controls_token_ids_match_reference": True,
+                      "cold_reference_to_control_max_abs_delta": 0.00005},
+                  "no_hit_strict_numeric_baseline": {
+                      "status": "NO_HIT_BASELINE_WITHIN_STRICT_GATE",
+                      "no_hit_numeric_reproducibility_at_strict_gate": True}}
         with patch.object(candidate, "verify_live", return_value="model"), \
              patch.object(candidate.oracle, "run_oracle", return_value=report):
             result = candidate.prefix_oracle(self.H, self.ID)
         self.assertTrue(result["strict_numeric_pass"])
         self.assertFalse(result["p1_final_pass"])
         self.assertFalse(result["full_state_reuse_verified"])
+
+    def test_original_cold_reference_drift_blocks_numeric(self):
+        report = {"status": "PASS_CACHE_HIT_NONEMPTY_OUTPUT_TOKENS_AND_STRICT_LOGPROBS",
+                  "cache_hit_observed": True, "mtp_acceptance_observed": True,
+                  "all_repeats_token_ids_equal": True,
+                  "max_token_logprob_abs_delta": 0.00008,
+                  "same_input_cold_controls": {
+                      "status": "CONTROL_NO_PREFIX_HIT_OBSERVED_NUMERIC_PARITY_MEASURED",
+                      "all_controls_no_prefix_hit_observed": True,
+                      "all_controls_token_ids_match_reference": True,
+                      "cold_reference_to_control_max_abs_delta": 0.0002452},
+                  "no_hit_strict_numeric_baseline": {
+                      "status": "NO_HIT_BASELINE_WITHIN_STRICT_GATE",
+                      "no_hit_numeric_reproducibility_at_strict_gate": True}}
+        with patch.object(candidate, "verify_live", return_value="model"), \
+             patch.object(candidate.oracle, "run_oracle", return_value=report):
+            result = candidate.prefix_oracle(self.H, self.ID)
+        self.assertTrue(result["cold_hit_strict_pass"])
+        self.assertFalse(result["cold_reference_to_no_hit_strict_pass"])
+        self.assertFalse(result["strict_numeric_pass"])
+
+    def test_tool_roundtrip_requires_valid_call_id_and_followup(self):
+        first = {"choices": [{"finish_reason": "tool_calls",
+            "message": {"role": "assistant", "content": None,
+                "tool_calls": [{"id": "call_abc123", "type": "function",
+                    "function": {"name": "weather", "arguments": '{"city":"Seoul"}'}}]}}]}
+        second = {"choices": [{"finish_reason": "stop",
+            "message": {"role": "assistant", "content": "Clear."}}]}
+        with patch.object(candidate, "request", side_effect=[first, second]) as send:
+            candidate.tool_smoke("model")
+        self.assertEqual(send.call_count, 2)
+        second_payload = send.call_args_list[1].args[1]
+        self.assertEqual(second_payload["messages"][-1]["tool_call_id"], "call_abc123")
+        self.assertEqual(second_payload["messages"][-1]["role"], "tool")
 
 
 if __name__ == "__main__":
