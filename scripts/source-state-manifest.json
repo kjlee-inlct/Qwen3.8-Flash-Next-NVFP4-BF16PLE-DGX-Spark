@@ -471,7 +471,7 @@
     {
       "path": "docs/P1-PREVIEW-TOOL-QSA-IMAGE.md",
       "mode": "100644",
-      "blob_sha": "2de296d612938ffd033e5aeefaafa649b7f74ad8"
+      "blob_sha": "16846494263785e5cdfe7e8dc311df8b9b04ebf0"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
@@ -1021,7 +1021,7 @@
     {
       "path": "src/p1_preview_tool_qsa_image.py",
       "mode": "100644",
-      "blob_sha": "66ccd64be58aeab44791a2b3cfd09efc7dd01258"
+      "blob_sha": "9b418cbffd51030d3127a16e32431245732f2d96"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1541,7 +1541,7 @@
     {
       "path": "tests/test_p1_preview_tool_qsa_image.py",
       "mode": "100644",
-      "blob_sha": "9c6ca9c9030e694ec7d200059d7b9470484240b1"
+      "blob_sha": "91e1e52dd1c41cfd7e5e5767b5a51adaeb5c44ad"
     },
     {
       "path": "tests/test_publication_audit.py",

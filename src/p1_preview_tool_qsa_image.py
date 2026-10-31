@@ -22,6 +22,7 @@ from src import p1_preview_qsa_exact_topk as qsa
 from src import p1_prefix_release as release
 from src import p1_legacy_service_window as legacy
 from src import preview_p1_tool_responses_stage as stage
+from src import preview_p1_real_parser_cpu as native
 
 QSA_HEAD = "3852995a19f4778be5683496fdb0cceb56a4addf"
 QSA_IMAGE_ID = "sha256:56b9df34daa5207956ded935f38ee900a44c4f8a737302b18abb03a58e46c518"
@@ -94,29 +95,34 @@ def inspect_ple() -> dict:
 
 
 def prepare_overlay(context: Path) -> tuple[list[str], dict[str, str]]:
-    """Rebase upstream patches against exact original Preview source in temp."""
-    patches, touched = stage.read_patch_bundle()
-    if touched - stage.ALLOWED_FILES or stage.NEW_FILE not in touched:
-        raise qsa.Blocked("PATCH_TARGETS_UNEXPECTED")
-    for relpath in sorted(touched):
-        if relpath == stage.NEW_FILE:
-            continue
-        raw = docker_copy(relpath)
-        path = context / relpath
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(raw)
-    stage.read_preview_sources(context, touched)
-    for index, patch_data in enumerate(patches, start=1):
-        try:
-            cp = subprocess.run(
-                ["patch", "--batch", "--forward", "--fuzz=0", "-p1",
-                 "--silent", "--no-backup-if-mismatch"],
-                input=patch_data, cwd=context, capture_output=True,
-                check=False, timeout=15)
-        except (OSError, subprocess.TimeoutExpired):
-            raise qsa.Blocked("PATCH_TOOL_UNAVAILABLE") from None
-        if cp.returncode:
-            raise qsa.Blocked("PREVIEW_PATCH_CONTEXT_MISMATCH_" + str(index))
+    """Re-use the Preview-native, already CPU-integrated parser/Responses port.
+
+    The blazux v0.32 PATCHES bundle does not apply to this Preview. The
+    native._stage routine uses pinned Preview marker -> schema -> Responses
+    patches and fails closed on their exact SHA and source preimages.
+    """
+    touched = set(native.TARGETS) | {native.NEW_MODULE}
+    if (not touched or touched - stage.ALLOWED_FILES
+            or native.NEW_MODULE != stage.NEW_FILE
+            or len(touched) > len(stage.ALLOWED_FILES)):
+        raise qsa.Blocked("NATIVE_PATCH_TARGETS_UNEXPECTED")
+    with tempfile.TemporaryDirectory(prefix="p1-preview-source-") as tmp:
+        original = Path(tmp)
+        original.chmod(0o700)
+        for relpath in sorted(native.TARGETS):
+            expected = native.SOURCE_PINS.get(relpath)
+            if expected is None:
+                raise qsa.Blocked("SOURCE_PIN_MISSING")
+            raw = docker_copy(relpath)
+            if sha(raw) != expected:
+                raise qsa.Blocked("PREVIEW_SOURCE_SHA_DRIFT")
+            path = original / relpath
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        # Stage patches into the *output* build context, not the installed
+        # Preview or the temp source tree. No vLLM import or runtime.
+        native._stage(original, context)
+
     output = {}
     for relpath in sorted(touched):
         file = context / relpath
@@ -128,18 +134,16 @@ def prepare_overlay(context: Path) -> tuple[list[str], dict[str, str]]:
         except (SyntaxError, UnicodeError):
             raise qsa.Blocked("PATCHED_SOURCE_SYNTAX_ERROR") from None
         output[relpath] = sha(file.read_bytes())
-    stage.check_implemented_hooks(context)
-    # Verify nothing outside the allowlist can enter the Docker COPY layer.
+
+    # Reject any patch rejects, backups, or unrelated files in the COPY tree.
     nodes = list(context.rglob("*"))
-    for node in nodes:
-        if node.is_symlink():
-            raise qsa.Blocked("STAGED_SYMLINK_FORBIDDEN")
+    if any(node.is_symlink() for node in nodes):
+        raise qsa.Blocked("STAGED_SYMLINK_FORBIDDEN")
     actual_files = {p.relative_to(context).as_posix()
                     for p in nodes if p.is_file()}
     if actual_files != touched:
         raise qsa.Blocked("STAGED_FILES_NOT_EXACT_ALLOWLIST")
-    # Preserve importable 0755 dirs and readable 0644 files in the image,
-    # even when the invoking operator uses umask 077.
+    # Build invoked with umask 077; Python imports need traversable dirs.
     for node in nodes:
         if node.is_dir():
             node.chmod(0o755)

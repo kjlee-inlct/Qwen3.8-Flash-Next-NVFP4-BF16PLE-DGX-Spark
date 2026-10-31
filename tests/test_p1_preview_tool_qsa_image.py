@@ -20,6 +20,16 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(candidate.qsa.Blocked, "NOT_ALLOWLISTED"):
             candidate.docker_copy("../etc/passwd")
         self.assertIn(candidate.stage.NEW_FILE, candidate.stage.ALLOWED_FILES)
+        self.assertEqual(candidate.native.NEW_MODULE, candidate.stage.NEW_FILE)
+        self.assertTrue(candidate.native.TARGETS <= candidate.stage.ALLOWED_FILES)
+
+    def test_native_patches_not_v032_bundle(self):
+        import inspect
+        source = inspect.getsource(candidate.prepare_overlay)
+        self.assertIn("native._stage(original, context)", source)
+        self.assertNotIn("stage.read_patch_bundle(", source)
+        self.assertIn("native.SOURCE_PINS.get", source)
+        self.assertIn("STAGED_FILES_NOT_EXACT_ALLOWLIST", source)
 
     def test_ple_report_read_only_and_non_promoting(self):
         with patch.object(candidate, "docker_copy", return_value=b"other"), \

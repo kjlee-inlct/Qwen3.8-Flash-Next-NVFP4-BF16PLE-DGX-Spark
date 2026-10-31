@@ -2,7 +2,13 @@
 
 Purpose: materially integrate P1 Blazux parser/Responses functionality into
 the existing pinned Prefix ON + QSA candidate image, rather than adding
-another synthetic gate. No P2/P3 work or vLLM 0.32 migration.
+another synthetic gate.
+
+2026-10-31 correction: first DGX build at 969bc377 failed closed with
+PREVIEW_PATCH_CONTEXT_MISMATCH_1 because the initial builder invoked the
+v0.32 patch family on Preview sources. The revised builder uses the already
+implemented Preview-native marker -> schema -> Responses patches, keeping the
+strict source pins. The failed build did not stop the original. No P2/P3 work or vLLM 0.32 migration.
 
 ## Components and exact parent
 
@@ -10,11 +16,13 @@ another synthetic gate. No P2/P3 work or vLLM 0.32 migration.
   sha256:56b9df34daa5207956ded935f38ee900a44c4f8a737302b18abb03a58e46c518.
 - Existing two-file Prefix cache fixes and opt-in QSA exact top-k remain
   in parent; this build does not modify their layers.
-- Source: four pinned Blazux patch files in src/preview_p1_patches.
+- Source: three pinned Preview-native patches (marker, schema, Responses) already
+  verified by the existing Preview Parser/Responses CPU integration.
 - Rebase against original Preview Python parser/Responses source from
   read-only docker cp, then apply with patch --fuzz=0 in private temp context.
-- Six exact observed Preview preimage SHA pins and AST hook requirements
-  are enforced using src/preview_p1_tool_responses_stage.py.
+- All observed Preview source SHA pins and native patch SHA pins are checked
+  via src/preview_p1_real_parser_cpu.py::_stage, then AST parsing.
+  The v0.32-only qwen-tool-preamble.patch bundle is NOT applied.
 - One Docker COPY layer of only the touched allowlisted Python source files.
 All staged Python files are chmod 0644 and subdirectories 0755 before COPY;
 any unexpected patch artifact is rejected, including with operator umask 077.
