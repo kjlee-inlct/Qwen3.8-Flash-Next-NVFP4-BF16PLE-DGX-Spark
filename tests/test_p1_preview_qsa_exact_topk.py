@@ -11,7 +11,7 @@ def fixture():
     return ("import torch\n\n"
             "def select(logits, visible_blocks, blocks, topk_workspace, "
             "block_topk, columns, use_cooperative_topk):\n"
-            + mod.ANCHOR + "    return blocks\n").encode()
+            + "    if True:\n" + mod.ANCHOR + "    return blocks\n").encode()
 
 
 class Tests(unittest.TestCase):
