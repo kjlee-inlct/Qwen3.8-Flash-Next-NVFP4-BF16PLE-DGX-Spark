@@ -116,7 +116,7 @@ def _p1_numeric_skip_mode(logprobs_mode):
 def _p1_numeric_emit(record, logprobs_mode, result_overridden):
     record["logprobs_mode"] = str(logprobs_mode)[:48]
     record["sampler_logprobs_overridden"] = bool(result_overridden)
-    record["raw_to_api_logprobs_path_proven"] = (
+    record["sampler_raw_logprobs_not_overridden"] = (
         record["status"] == "BOUNDARY_CAPTURED"
         and logprobs_mode == "raw_logprobs"
         and not result_overridden
