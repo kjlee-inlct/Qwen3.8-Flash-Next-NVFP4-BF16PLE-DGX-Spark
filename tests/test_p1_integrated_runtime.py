@@ -55,6 +55,12 @@ class Tests(unittest.TestCase):
                 r.cleanup(self.HEAD, "d" * 64)
             mutate.assert_not_called()
 
+    def test_generated_candidate_tap_is_python_syntax_valid(self):
+        import ast
+        ast.parse(r.PLE_APPEND)
+        ast.parse(r.MAMBA_APPEND)
+        self.assertIn('output.write(line + "\\n")', r.PLE_APPEND)
+
     def test_functional_env_and_default_off(self):
         original = {"Config": {"Cmd": ["serve", "model"]}, "HostConfig": {}}
         base = {"Config": {}}

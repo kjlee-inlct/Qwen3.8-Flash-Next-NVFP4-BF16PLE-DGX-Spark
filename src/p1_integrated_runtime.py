@@ -59,7 +59,7 @@ if _env_flag("P1_PLE_FUNCTIONAL_PROBE") and _env_flag("VLLM_PLE_PHASE_STATS"):
         print("P1_PLE_PHASE_SNAPSHOT_JSON:" + line, flush=True)
         try:
             with open("/tmp/p1-ple-stats.jsonl", "a", encoding="utf-8") as output:
-                output.write(line + "\n")
+                output.write(line + "\\n")
         except OSError:
             pass
     MmapPleTable._record_forward_stats = _p1_probe_forward_record
