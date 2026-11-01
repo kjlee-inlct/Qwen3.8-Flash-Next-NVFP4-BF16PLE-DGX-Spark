@@ -1021,7 +1021,7 @@
     {
       "path": "src/p1_numeric_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "c8e4ad61b65c4c103022e10d8157e3005952a943"
+      "blob_sha": "fa526730d7c66547300ac4a5fff89a508dd4d412"
     },
     {
       "path": "src/p1_numeric_rejection_stage.py",
@@ -1671,7 +1671,7 @@
     {
       "path": "tests/test_p1_numeric_gpu_window.py",
       "mode": "100644",
-      "blob_sha": "21b6d948a8cf8cfba0b2c1223afcea3b0dfff991"
+      "blob_sha": "d54e53e6f34f5caed25c2724ce011f8371f9c1b1"
     },
     {
       "path": "tests/test_p1_numeric_rejection_stage.py",
