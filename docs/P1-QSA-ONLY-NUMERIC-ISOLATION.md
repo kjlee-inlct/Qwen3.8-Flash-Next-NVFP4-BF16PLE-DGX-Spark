@@ -235,3 +235,35 @@ After approval, execute exactly once with latest pinned full Git HEAD,
 confirmed original 64-char container ID, full B2 image ID and
 `--execute`. Never run GPU candidates simultaneously; never skip
 owner-checked original restoration. No CI, PR, main merge or deployment.
+
+## B2 actual GPU numeric results (2026-11-01 operator receipt)
+
+At DGX source HEAD `27f2c1a971bdf73f4710be51fb99f583e9fdfbd8`, Manifest
+**319/319 PASS**, targeted canonical CPU tests **16/16 PASS** and B2
+passive preflight PASS. One approved window measured A and B2 with
+identical synthetic prompt hash
+`1b6782fe5048cf43e979a741a4d699f6866fefd0a6306b31b6b9c690e407f439`.
+
+| Output | Stock A max | Canonical B2 max | Strict |
+|---|---:|---:|---|
+| Four 150-token outputs | 0.0003492125542834401 | 0.00022390164667740464 | BOTH FAIL |
+| Four first-token outputs | 0.00031109555857256055 | 0.00019106297986581922 | BOTH FAIL |
+
+Both arms preserved token IDs and finish reasons internally; A/B2 token
+IDs/finishes match in aligned comparisons. Strict `1e-4` unchanged.
+B2 candidate `80d76533013b669301b0e5fa324a1c084352d7f3ad9c2b91692d57d967b50ed6`
+removed; original exact-ID running/HTTP PASS, `ORIGINAL_RECOVERY_VERIFIED`.
+GPU exit 2 is strict numeric failure. Local log:
+`/tmp/p1-b2-canonical-gpu.OucO9PSN.log` (not in GitHub).
+
+B2 index sorting alone does not fix reproducibility; this measured
+sample-max difference cannot prove stable improvement. First-token-only
+logprob variability means the cause is not limited to the *later*
+autoregressive decode steps. Next read-only-first plan: pin the installed
+vLLM/version/kernel capabilities, then compare 4 short-context and 4
+long-context original first-token logprobs without stopping service,
+subject to **new operator authorization for the 8 GPU API calls**.
+No further QSA/MTP re-builds before that discrimination. Look up whether
+vLLM online batch invariance (beta; `VLLM_BATCH_INVARIANT=1`) is actually
+supported by the pinned Preview image and the QSA/GDN/BF16 PLE path.
+No P1 PASS, no deployment, and no strict-gate relaxation.

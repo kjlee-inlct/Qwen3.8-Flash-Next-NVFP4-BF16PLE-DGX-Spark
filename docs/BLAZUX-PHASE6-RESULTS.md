@@ -1,5 +1,54 @@
 # Phase 6 evidence ledger
 
+## 2026-11-01 B2 Canonical QSA GPU window: both long and first-token strict FAIL, original same-ID restored
+
+- DGX operator test source **`27f2c1a971bdf73f4710be51fb99f583e9fdfbd8`**:
+  Source Manifest **319/319 PASS**, combined canonical CPU **16/16 PASS**,
+  passive B2 image/original preflight PASS. Pinned B2 image ID
+  `sha256:fc74fa28ffc3bee18f630ee5dd54441ba93d21b73698700d19859a6829b9693b`.
+- Original A (stock QSA, Prefix OFF, MTP2): four 150-token outputs, identical
+  IDs/finish reasons, all-pairs max abs logprob **0.0003492125542834401**,
+  exceed positions **[0,29,145]**. Four `max_tokens=1` completions:
+  same ID/finish, first-token all-pairs max **0.00031109555857256055**.
+- B2 canonical-index QSA (Prefix OFF, MTP2): four 150-token outputs,
+  identical IDs/finish, all-pairs max abs logprob **0.00022390164667740464**,
+  exceed positions **[0,148]**. Four `max_tokens=1` completions:
+  same ID/finish, first-token all-pairs max **0.00019106297986581922**.
+  Cross-arm long max **0.0001740259467624128** (matched token IDs/finish);
+  cross-arm single-token max **0.00027907779440283775**
+  (matched token IDs/finish). **ALL four strict checks FAIL 0.0001.**
+  The smaller sample maxima in B2 do NOT establish a causal benefit.
+- B2 candidate `80d76533013b669301b0e5fa324a1c084352d7f3ad9c2b91692d57d967b50ed6`
+  removed, `REMAINING_B2_CANDIDATE=NONE`.
+  Original exact full ID `3fc5a3d5be1d52595602287acd87895220219bad050484251ac0408a163ffc45`
+  running; `ORIGINAL_ID_CHECK=0`, `ORIGINAL_STATE_CHECK=0`,
+  `ORIGINAL_HTTP_CHECK=0`, `ORIGINAL_RECOVERY_VERIFIED`.
+  Exit **2** denotes numeric FAIL, NOT recovery failure.
+  Operator-local log `/tmp/p1-b2-canonical-gpu.OucO9PSN.log`, not uploaded.
+- **Correct interpretation:** the unchanged strict error is present on
+  a *single generated token*, not merely a later autoregressive step.
+  It may originate in prefill/first-token forward computation or logprob
+  extraction/normalization, rather than necessarily at post-first-token
+  decoding. It does not imply the entire system is deterministic except QSA.
+- **Next discriminating test, not yet authorized or executed:** use original
+  already-running service (no stop/build/restart) for 4× `max_tokens=1`
+  short/dense-context and 4× `max_tokens=1` long context with same seed.
+  If short FAIL, focus shared forward/logprob/numerics/scheduling before
+  experimenting with more QSA variants. If short PASS and long FAIL,
+  scrutinize long-prefill QSA and batching. Do not infer causality from
+  a single PASS. Inspect exact installed vLLM version and whether beta
+  `VLLM_BATCH_INVARIANT=1` supports this unusual QSA/GDN/PLE architecture
+  before ever suggesting a candidate with this flag.
+  vLLM docs: https://docs.vllm.ai/en/latest/usage/reproducibility/
+  and https://docs.vllm.ai/en/latest/features/batch_invariance/.
+- P1 remains **NOT_COMPLETE**: strict numeric 1e-4 FAIL in A/B/C/B2;
+  corrected Tool roundtrip GPU, Prefix ON + MTP2 strict integration,
+  full GDN/PLE live state provenance and phase stats still unfinished.
+  No CI/PR/merge/main/deployment; no new GPU approval from this entry.
+
+---
+
+
 ## 2026-11-01 B2 canonical QSA one-COPY image: operator CPU BUILT, no GPU execution
 
 - DGX user checkout HEAD `6aa092842c354ef2b6ce63a58fc42d2edd3b806d`,
