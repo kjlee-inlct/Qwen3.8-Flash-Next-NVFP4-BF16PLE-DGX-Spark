@@ -1,4 +1,35 @@
-# P1 — 현재 진행 작업 인수인계 (2026-10-31)
+# P1 — 현재 진행 작업 인수인계 (2026-11-01)
+
+## 2026-11-01 현행 활성 인수인계 — P1 수치 계산 경로의 최초 비결정성 위치 특정
+
+**최우선 실제 성과 목표:** Orcarouter Qwen3.8 Flash Next BF16 PLE/MTP2 vLLM 추론의 strict per-token logprob 절대오차 `1e-4` 초과 원인을 **raw forward/logits 및 서빙 배치/GDN 연산**과 **logprob 처리·API 반환** 사이에서 구분하고, 확인된 코드 위치만 고친 후 P1의 기존 통합 기능을 완료한다. 10월 31일 QSA-only CPU 빌드가 '다음'이라는 이전 항목은 완료된 역사적 상태다. QSA/MTP/Prefix 후보 이미지·테스트 Gate를 또 늘리지 말 것. [작업 방향 교정](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 우선 적용한다.
+
+**GitHub 및 출처 구분 (2026-11-01 조회):**
+- Repo `kjlee-inlct/Qwen3.8-Flash-Next-NVFP4-BF16PLE-DGX-Spark`, active `feature/blazux-phase6-runtime-gates`, 문서 갱신 직전 HEAD **`4eb5ce0889602140daba89faafe9ef3902999e74`**. `main=b0c7d9067c555dd43a31b49bca9be75664c06c97` (불변). 갱신 HEAD는 별도 docs-only 커밋으로 바뀔 수 있으니 다음 세션에서는 실제 `git rev-parse HEAD`와 GitHub ref를 재조회한다.
+- GitHub API: **open PR 0**, 마지막 PR **#7** (2026-10-29 merged, target 이 feature branch); feature branch Actions runs **0**, parent HEAD check runs **0**, statuses **0**; GitHub aggregated status `pending`은 CI 실행 PASS가 아니라 status 부재이다. **CI NOT_RUN / PR review NOT_RUN**. 현행 P1은 main/PR/merge 자동 진행 금지. 사용자 일반적 PR 요청만으로 기존 세션별 정비창 승인을 확대하지 않는다.
+- 마지막 실제 DGX **소스/원본 8회 GPU API 측정 SHA**: **`db3f334b2d2a4939543762fe8f6db8cc61ae9481`**; Source Manifest **319/319 PASS**. 그 뒤 `4eb5ce0`와 이 문서 갱신 commit은 GitHub source/docs-only, DGX 테스트 증거가 아니다. 로컬 기록의 결과는 현장 사용자가 제공한 transcript에 기반하며 CLI 로그 파일 본문은 GitHub에 업로드되지 않았다.
+
+**DGX 실제 확인 결과 — 핵심만 (상세 수치는 결과 장부 참조):**
+- Stock 원본, Prefix OFF / MTP2, 동일 `max_tokens=1` 합성 요청 4회씩: 짧은 입력 첫 토큰 all-pairs max **`0.00203007273375988`**, 긴 입력 **`0.00028153276070952415`**, 둘 다 strict **`0.0001` FAIL**, 각 arm token IDs/finish reasons 동일. 이 작업은 원본을 중지·재기동하지 않았다. 요청 종료 시 원본 동일 ID Running/HTTP 확인.
+- 이전 같은 정비창 QSA-only **B** (Prefix OFF/MTP2) long 150-token max `0.00031112757278606296` vs stock A `0.00022305361926555634`, 둘 다 FAIL. MTP-OFF stock **C** long max `0.00021604698849841952` vs A `0.0004490568535402417` 둘 다 FAIL; C accepted draft token delta 0. Canonical-index QSA **B2** long max `0.00022390164667740464` vs A `0.0003492125542834401`; B2 `max_tokens=1` max `0.00019106297986581922` vs A `0.00031109555857256055`: 모두 FAIL. 단일 최대값 비교로 개선/악화 인과관계 주장 금지. 장문/QSA-only/Cache-HIT/MTP2/후반 decode에 국한되지 않는 공통 numeric 경로 결함/비결정성이 **가능**하나 최초 위치는 아직 미확정.
+- 마지막 B2 정비창 후보 제거/원본 복구 영수증 `ORIGINAL_RECOVERY_VERIFIED` / `REMAINING_B2_CANDIDATE=NONE`; 최신 short/long 시험도 원본 동일 ID Running/HTTP PASS. 원본 ID **`3fc5a3d5be1d52595602287acd87895220219bad050484251ac0408a163ffc45`**, 원본 image ID `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`, port 8000. 원본 상태는 과거 측정 시점 증거이므로 현재 명령 전 passive re-check.
+- 통합 이미지 `sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d` 기존 GPU 실측: Prefix HIT `[0,6400,6400,6400]`, MTP accepted `+400`, Responses nonstream/stream PASS, strict numeric FAIL. Forced Tool 검사기 수정 후 실제 full roundtrip **NOT_RUN**. 선택된 Mamba/GDN state SHA 12/12 증거는 전체 GDN/PLE 실상태·복사 provenance 증명 아님. 실제 PLE GPU phase stats **NOT_RUN**. P1 final PASS/운영 적용 금지.
+
+**최신 차단과 검증해야 할 내용:**
+1. **수치 정합성 주 차단:** 반복 같은 ID·동일 seed 출력의 logprob가 첫 토큰부터 달라짐. Raw logits의 비재현성과 logprob 후처리 변동 중 무엇이 최초인지 **증명되지 않음**. 원본에 strict 1e-4 실패하므로 Cache 관련 코드만 변경해서 P1 최종 합격 주장 불가.
+2. **GDN batch-invariant 업스트림 경계:** https://github.com/vllm-project/vllm/issues/42960 (Open), https://github.com/vllm-project/vllm/pull/45819 (Open/미머지), https://github.com/vllm-project/vllm/pull/49827 (Closed/미머지) 확인. VLLM_BATCH_INVARIANT=1 무작정 활성화 금지. 이 upstream의 버전/아키텍처는 현재 사용 중인 커스텀 Preview QSA/GDN/PLE와 동일하다는 증거가 없으므로 **설치된 정확한 경로·ABI·커널 support 먼저 확인**.
+3. **남은 통합 합격 조건:** strict numeric 통과와 별개로 Prefix ON/MTP2 cold+HIT 정합성, 수정된 Tool Calling 강제 named function **완전 왕복**(실서버), full GDN/PLE state content + copy timing/physical provenance, PLE 단계별 실제 GPU 계측. P1 완료를 구분해서 판정; 모든 항목이 소스/CPU test PASS만으로 승격되지 않는다.
+
+**다음 대화 최우선 행동 (새 실행 승인은 없음):**
+1. GitHub branch/HEAD clean+Manifest 및 현재 수정된 정본 위주로 읽고, 이미 확보한 실측을 재실행하지 않는다. 첫 활동은 **코드 원인 분석**: `src/p1_prefix_gpu_oracle.py`, `src/p1_original_numeric_baseline.py`, installed-Preview 패치 추적 `src/p1_preview_qsa_exact_topk.py`, `src/preview_p1_patches/`, `src/p1_preview_ple_integrated_image.py`, PLE/GDN 서빙 단계와 실제 logprob 응답 산출 위치를 연결한다. 필요 시 원본 **이미지/모델 메타데이터는 읽기 전용** 확인; 근거 없는 소스/커널 위치 추정 금지.
+2. **두 단계 경계 판정:** (a) logits 자체가 흔들리는지 (b) logits→logprob가 흔들리는지에 필요한 **가장 작은 단일 계측 포인트**를 코드로 구현하거나, 그 전에는 정확한 코드 경로/판정 방법만 제시한다. 근거와 테스트를 최소화하며 새 candidate/gate/반복 문서를 만들지 않는다. 수정할 커널/후처리 위치가 확정되기 전 B2, C, 다른 QSA 이미지 반복 빌드 중지.
+3. 확인된 최초 변동 위치의 **실제 패치**(기본 OFF/분리 격리/roll back 가능)와 최소 CPU 계약/오프라인 검사만 통합 feature commit + Manifest 동기화. 실제 DGX GPU/serving 사용, 원본 stop, 실모델 HTTP, CPU-only 별도 Docker도 해당 실행 범위의 신규 명시 승인이 필요하다.
+4. 패치가 실험 가능해지면 **최종 단일 정비창** 계획: strict 1e-4 재현성 → Prefix ON+MTP2 실제 HIT → 수정된 Tool/Responses 왕복 → 전체 GDN/PLE 상태 재사용 증거 + GPU PLE phase stats → 소유권 확인·원본 동일-ID HTTP 복구. 위험/실행 권한이 맞는 것만 묶는다. 합격 조건에 미달하면 BLOCKED 유지, 단계·후속 이미지 무한 증식하지 않는다.
+
+**진행 한정 주의:** 기존 정확 FULL64 운영 컨테이너, 이미지, Docker volumes/cache/weights 및 Stage 절대 변경 금지. `pause`를 GPU 해제 대신 사용 금지, `scripts/stop.sh`/`start.sh`는 기존 서비스 보호용이며 stop/restore 승인 없이 실행하지 않는다. 원본 이미 running/HTTP면 중복 start 금지. 과거 GPU 창 승인·API 8회 승인 소진, 새 추론·GPU 모델·벤치·CI·PR/merge/main·P2/P3 자동 수행 금지. 이번 소스/문서 HEAD와 DGX 실측 source SHA를 분리하여 보고한다. 영구 규칙/상세 실측 복제 대신 [SESSION-HANDOFF](SESSION-HANDOFF-PROMPT.md), [Phase6 결과](BLAZUX-PHASE6-RESULTS.md), [QSA·MTP 실험](P1-QSA-ONLY-NUMERIC-ISOLATION.md), [P1 통합](P1-INTEGRATED-EVIDENCE-20261031.md), [복구 정본](P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md), [방향 교정](BLAZUX-DELIVERY-DRIFT-POSTMORTEM-AND-GUARDRAILS-20261028.md)을 참조.
+
+---
+
 
 ## 2026-10-31 최신 활성 인수인계 — P1 원인 분리 (이 항목이 우선)
 

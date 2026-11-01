@@ -1,5 +1,16 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-01 P1 최신 진입점 — 실제 근거 우선, 이전 '최신' 기록보다 우선
+
+**현행 과제는 strict `1e-4` logprob 비재현성의 최초 발생 경로(모델 forward/GDN·PLE·서빙 배칭 vs. logits→logprob 변환/반환)를 찾아 수정 가능한 실제 코드 위치를 확정하는 것**이다. A/B/C/B2와 원본 short/long 첫 토큰 실제 GPU 시험은 전부 strict FAIL이며, 개별 QSA·MTP·Prefix 설정을 계속 바꾸는 추가 실험은 중단한다. 원본 서비스는 가장 마지막 승인된 8회 API 측정 종료 시 고정 ID Running/HTTP PASS였다. **P1 최종 PASS 아님.**
+
+진행 중인 작업의 우선순위·미해결 항목·최신 GitHub 상태 및 마지막 DGX 실제 영수증은 [활성 P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)의 **2026-11-01 항목**을 따른다. 숫자/실행 SHA/각 후보 ID는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md) 및 [QSA·MTP·B2 실측](P1-QSA-ONLY-NUMERIC-ISOLATION.md)을 확인한다. 이 문서의 이후 2026-10-31 및 그 전 '현행/다음' 서술은 역사적 시점의 기록일 뿐 지금의 실행 지시가 아니다. 영구 운영 안전·기능 단계 규칙은 이 문서의 나머지 본문 및 연결된 정본이 유지한다.
+
+2026-11-01 확인된 실행 소스: DGX `db3f334b2d2a4939543762fe8f6db8cc61ae9481` (Source Manifest 319/319, 원본 short/long 실측). 다음 GitHub 문서-only parent HEAD `4eb5ce0889602140daba89faafe9ef3902999e74`은 **DGX_NOT_RUN**; 이 진입점 갱신으로 생성될 새 커밋 또한 **문서-only / DGX_NOT_RUN**이다. 최근 GPU/운영 서비스 재승인은 자동 연장되지 않는다. 허용되지 않은 운영 중단/추론·새 이미지/컨테이너·CI/PR/머지/배포 금지. 별도 승인은 정확한 작업 범위에 대해 받아야 한다.
+
+---
+
+
 ## 2026-10-31 최신 P1 진입점 — 이전 '현행' 스냅샷보다 우선
 
 현재 진행 과제는 **원본 Prefix OFF에서도 발생하는 strict 1e-4 logprob 비재현성 원인 분리 및 QSA-only CPU 이미지 빌드**다. 최신 기능 브랜치 소스 HEAD는 `c3d31b7f3ab30d91e3562acb87555df19385c1db` (신규 QSA-only 빌더 **DGX NOT_RUN**, Manifest 307개 GitHub source inventory). 마지막 실제 DGX 실행 SHA는 `c9eaccbca557a5157c4134f963bcfdf3c1d57bb1`: Source **304/304 PASS**, 새 원본 수치 측정 단위시험 **7/7 PASS**, 사용자 명시 `RUN` 후 기존 Prefix **OFF**/MTP2/stock QSA 원본 서비스에 실제 순차 추론 4회, 각 150 토큰 ID 동일, 전 쌍 최대 logprob abs drift `0.00036634469870477915` > `1e-4`. 실행 중 원본 ID는 동일 running으로 확인됨. 이전 통합 P1 GPU 창은 `6c1397d78433b1fa2082047367b042b6e372a431`: Prefix HIT `[0,6400,6400,6400]`, MTP accepted `+400`, Responses PASS, Chat tool 검사 `TOOL_FINISH_REASON_INVALID`, strict FAIL, **원본 동일 ID+HTTP RESTORED_PASS**. 검증기 개선 `8c86f54...`에서 CPU **27/27 PASS**, Tool roundtrip GPU 재시험은 NOT_RUN. **P1 최종 PASS 아님**, full GDN/PLE live state reuse 미입증, PLE phase stats GPU 미측정.

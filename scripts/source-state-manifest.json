@@ -501,12 +501,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "1da5047bf811cd04f39e869e2dcf34f8ef9b7578"
+      "blob_sha": "50460872d1f577b35231950d6ae913b5e90b85d4"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "1a56387f094695ede71d06543c08b4f93693f1ef"
+      "blob_sha": "27c35b0709442c7913691d37921cacdba3dfc0f2"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
