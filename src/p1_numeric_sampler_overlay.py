@@ -21,7 +21,7 @@ from src import p1_preview_qsa_exact_topk as qsa
 
 SAMPLER_PATH = source_trace.SOURCES["sampler"]
 SAMPLER_SHA256 = "f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216"
-INTEGRATED_IMAGE_ID = "sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d"
+BASE_IMAGE_ID = source_trace.ORIGINAL_IMAGE
 TAP_ENV = "VLLM_P1_NUMERIC_TAP"
 HELPER_MARKER = "# -- P1 single-candidate numeric tap, default OFF --"
 
@@ -162,13 +162,13 @@ def transform(raw: bytes) -> bytes:
 
 
 def dockerfile() -> str:
-    """ONE existing integrated-image parent + ONE Python source overlay.
+    """ONE pinned original image parent + ONE Python source overlay.
 
     Does NOT enable the tap; only an explicitly approved isolated candidate
     runtime may set VLLM_P1_NUMERIC_TAP=1 after confirming ownership and SHA.
     """
     return (
-        "FROM " + INTEGRATED_IMAGE_ID + "\n"
+        "FROM " + BASE_IMAGE_ID + "\n"
         "COPY --chown=0:0 --chmod=0644 sampler.py "
         + source_trace.PACKAGE_ROOT + SAMPLER_PATH + "\n"
         "ENV VLLM_P1_NUMERIC_TAP=0\n"
@@ -201,7 +201,7 @@ def stage() -> dict:
         "stage_directory": str(root),
         "original_sampler_sha256": SAMPLER_SHA256,
         "patched_sampler_sha256": hashlib.sha256(patched).hexdigest(),
-        "parent_integrated_image_id": INTEGRATED_IMAGE_ID,
+        "parent_original_image_id": BASE_IMAGE_ID,
         "tap_environment_default_off": True,
         "gpu_or_api_executed": False,
         "original_same_id_running_unchanged": True,

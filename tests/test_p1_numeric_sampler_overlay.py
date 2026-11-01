@@ -57,7 +57,8 @@ class SamplerTapTests(unittest.TestCase):
 
     def test_dockerfile_defaults_off_and_pins_parent(self):
         df = tap.dockerfile()
-        self.assertTrue(df.startswith("FROM " + tap.INTEGRATED_IMAGE_ID))
+        self.assertEqual(tap.BASE_IMAGE_ID, tap.source_trace.ORIGINAL_IMAGE)
+        self.assertTrue(df.startswith("FROM " + tap.BASE_IMAGE_ID))
         self.assertEqual(df.count("COPY "), 1)
         self.assertIn("ENV VLLM_P1_NUMERIC_TAP=0", df)
         self.assertNotIn("RUN ", df)
