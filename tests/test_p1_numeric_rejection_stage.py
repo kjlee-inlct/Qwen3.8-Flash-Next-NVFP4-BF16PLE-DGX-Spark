@@ -39,7 +39,13 @@ class RejectionStageTests(unittest.TestCase):
             rejection.transform(synthetic())
 
     def test_anchor_drift_fails_closed(self):
-        raw = synthetic().replace(rejection.ACCEPTED_ANCHOR.encode(), b"")
+        # Keep Python valid so SHA and AST checks pass before the anchor gate.
+        raw = synthetic().replace(
+            b"if self.is_logits_logprobs_mode\n",
+            b"if not self.is_logits_logprobs_mode\n",
+            1,
+        )
+        ast.parse(raw)
         with patch.object(rejection, "ORIGINAL_SOURCE_SHA",
                           hashlib.sha256(raw).hexdigest()):
             with self.assertRaisesRegex(rejection.Blocked, "ANCHOR_DRIFT"):

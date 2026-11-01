@@ -1676,7 +1676,7 @@
     {
       "path": "tests/test_p1_numeric_rejection_stage.py",
       "mode": "100644",
-      "blob_sha": "ef4d52db2443b8f04fce2039d58ed59bd76094f0"
+      "blob_sha": "dd2c4ab1ec9f5160d3c76c7acabff7f87c776dfe"
     },
     {
       "path": "tests/test_p1_numeric_sampler_overlay.py",
