@@ -30,6 +30,32 @@ def run(logprob, *, logits="a"*64, lp="b"*64, accepted=True):
 
 
 class NumericGpuWindowTests(unittest.TestCase):
+    def test_mtp_counters_only_count_candidate_runtime_delta(self):
+        keys = ("spec_decode_num_drafts_total", "spec_decode_num_draft_tokens_total",
+                "spec_decode_num_accepted_tokens_total")
+        before = {"vllm:" + k + '{engine="0"}': float(i)
+                  for i, k in enumerate(keys)}
+        after = {"vllm:" + k + '{engine="0"}': float(i + v)
+                 for i, (k, v) in enumerate(zip(keys, (5, 10, 7)))}
+        result = window.mtp_metrics_delta(before, after)
+        self.assertEqual(result["mtp_metrics_status"], "OBSERVED_CANDIDATE_COUNTERS")
+        self.assertEqual(result["mtp_drafts_delta"], 5)
+        self.assertEqual(result["mtp_draft_tokens_delta"], 10)
+        self.assertEqual(result["mtp_accepted_draft_tokens_delta"], 7)
+        self.assertTrue(result["mtp_acceptance_observed"])
+
+    def test_zero_and_missing_mtp_counters_remain_distinct(self):
+        keys = ("spec_decode_num_drafts_total", "spec_decode_num_draft_tokens_total",
+                "spec_decode_num_accepted_tokens_total")
+        zero = {"vllm:" + k: 0.0 for k in keys}
+        result = window.mtp_metrics_delta(zero, zero)
+        self.assertEqual(result["mtp_metrics_status"], "OBSERVED_CANDIDATE_COUNTERS")
+        self.assertEqual(result["mtp_drafts_delta"], 0)
+        self.assertFalse(result["mtp_acceptance_observed"])
+        missing = window.mtp_metrics_delta({}, zero)
+        self.assertEqual(missing["mtp_metrics_status"], "MISSING_COUNTERS")
+        self.assertIsNone(missing["mtp_drafts_delta"])
+
 
     def test_rejection_patch_sha_pinned_full_length(self):
         # Regression: the previous 63-digit constant blocked before GPU stop.

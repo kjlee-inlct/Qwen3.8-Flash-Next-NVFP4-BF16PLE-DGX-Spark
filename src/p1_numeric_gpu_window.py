@@ -36,7 +36,7 @@ NAME = "p1-numeric-rejection-window"
 LABEL = "ai.kjlee.p1-numeric-rejection-window"
 PORT = 18080
 N_REQUESTS = 4
-MAX_TOKENS = 8
+MAX_TOKENS = 64
 STRICT_ABS = 1e-4
 
 
@@ -336,9 +336,42 @@ def analyse(runs: list[dict], taps: list[list[dict]]) -> dict:
         "final_p1_pass": False, "diagnostic_only": True,
     }
 
+def mtp_metrics_delta(before: dict | None, after: dict | None) -> dict:
+    """Bounded candidate-only evidence; missing and zero counters differ."""
+    counters = (
+        "spec_decode_num_drafts_total",
+        "spec_decode_num_draft_tokens_total",
+        "spec_decode_num_accepted_tokens_total",
+    )
+    out = {"mtp_metrics_status": "UNAVAILABLE", "mtp_drafts_delta": None,
+           "mtp_draft_tokens_delta": None,
+           "mtp_accepted_draft_tokens_delta": None,
+           "mtp_acceptance_observed": None}
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        return out
+    def contains(metrics: dict, name: str) -> bool:
+        return any(k.split("{", 1)[0] == "vllm:" + name for k in metrics)
+    if not all(contains(before, c) and contains(after, c) for c in counters):
+        out["mtp_metrics_status"] = "MISSING_COUNTERS"
+        return out
+    vals = [oracle.counter_delta(before, after, c) for c in counters]
+    out.update(mtp_metrics_status="OBSERVED_CANDIDATE_COUNTERS",
+               mtp_drafts_delta=vals[0],
+               mtp_draft_tokens_delta=vals[1],
+               mtp_accepted_draft_tokens_delta=vals[2],
+               mtp_acceptance_observed=vals[2] > 0)
+    return out
+
+
 def run_diagnostic(model: str, cid: str) -> dict:
     payload = oracle.build_payload(model, long_prompt=True)
     payload["max_tokens"] = MAX_TOKENS
+    # The accepted MTP counter is observed on the candidate, not on the
+    # restored original whose counters reset after each maintenance window.
+    try:
+        mtp_before = oracle.metrics(PORT)
+    except oracle.OracleBlocked:
+        mtp_before = None
     runs, snapshots = [], []
     initial = read_rejection_events(cid)
     previous = len(initial or [])
@@ -360,6 +393,25 @@ def run_diagnostic(model: str, cid: str) -> dict:
         snapshots.append(current[previous:])
         previous = len(current)
     report = analyse(runs, snapshots)
+    # Asynchronous vLLM metrics need a short bounded flush window.
+    mtp_after = None
+    for attempt in range(4):
+        if attempt:
+            time.sleep(1.0)
+        try:
+            mtp_after = oracle.metrics(PORT)
+        except oracle.OracleBlocked:
+            continue
+        delta = mtp_metrics_delta(mtp_before, mtp_after)
+        if delta["mtp_drafts_delta"] is not None and delta["mtp_drafts_delta"] > 0:
+            break
+    report.update(mtp_metrics_delta(mtp_before, mtp_after))
+    if report["status"] == "INCONCLUSIVE_NO_REJECTION_FORWARD":
+        if report["mtp_drafts_delta"] is not None:
+            report["status"] = (
+                "INCONCLUSIVE_MTP_ACTIVE_BUT_REJECTION_TAP_ABSENT"
+                if report["mtp_drafts_delta"] > 0 else
+                "INCONCLUSIVE_NO_MTP_DRAFTS_OBSERVED")
     stderr = probe_logs(cid)
     report["rejection_tap_file_events_total"] = previous
     report["rejection_tap_stderr_events_total"] = len(stderr)
