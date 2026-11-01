@@ -17,11 +17,13 @@ import sys
 import tempfile
 
 from src import p1_numeric_source_trace as source_trace
+from src import p1_legacy_service_window as legacy
 from src import p1_preview_qsa_exact_topk as qsa
 
 SAMPLER_PATH = source_trace.SOURCES["sampler"]
 SAMPLER_SHA256 = "f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216"
 BASE_IMAGE_ID = source_trace.ORIGINAL_IMAGE
+BASE_IMAGE_TAG = legacy.IMAGE_TAG  # Docker FROM uses local tag; bare image ID is not a valid repo reference.
 TAP_ENV = "VLLM_P1_NUMERIC_TAP"
 HELPER_MARKER = "# -- P1 single-candidate numeric tap, default OFF --"
 
@@ -161,6 +163,18 @@ def transform(raw: bytes) -> bytes:
     return patched.encode("utf-8")
 
 
+def verify_base_image_tag() -> None:
+    """Resolve local FROM tag read-only; require its exact pinned image ID."""
+    if BASE_IMAGE_ID != legacy.IMAGE_ID or BASE_IMAGE_TAG != legacy.IMAGE_TAG:
+        raise Blocked("BASE_IMAGE_POLICY_DRIFT")
+    try:
+        image = legacy.inspect("image", BASE_IMAGE_TAG)
+    except (legacy.Blocked, OSError, ValueError, KeyError, TypeError):
+        raise Blocked("BASE_IMAGE_TAG_UNAVAILABLE") from None
+    if not isinstance(image, dict) or image.get("Id") != BASE_IMAGE_ID:
+        raise Blocked("BASE_IMAGE_TAG_ID_DRIFT")
+
+
 def dockerfile() -> str:
     """ONE pinned original image parent + ONE Python source overlay.
 
@@ -168,7 +182,7 @@ def dockerfile() -> str:
     runtime may set VLLM_P1_NUMERIC_TAP=1 after confirming ownership and SHA.
     """
     return (
-        "FROM " + BASE_IMAGE_ID + "\n"
+        "FROM " + BASE_IMAGE_TAG + "\n"
         "COPY --chown=0:0 --chmod=0644 sampler.py "
         + source_trace.PACKAGE_ROOT + SAMPLER_PATH + "\n"
         "ENV VLLM_P1_NUMERIC_TAP=0\n"
@@ -176,6 +190,7 @@ def dockerfile() -> str:
 
 
 def stage() -> dict:
+    verify_base_image_tag()
     before = source_trace.original_identity()
     try:
         raw = source_trace._run_docker_cp(SAMPLER_PATH)
@@ -202,6 +217,7 @@ def stage() -> dict:
         "original_sampler_sha256": SAMPLER_SHA256,
         "patched_sampler_sha256": hashlib.sha256(patched).hexdigest(),
         "parent_original_image_id": BASE_IMAGE_ID,
+        "parent_original_image_tag": BASE_IMAGE_TAG,
         "tap_environment_default_off": True,
         "gpu_or_api_executed": False,
         "original_same_id_running_unchanged": True,

@@ -58,10 +58,24 @@ class SamplerTapTests(unittest.TestCase):
     def test_dockerfile_defaults_off_and_pins_parent(self):
         df = tap.dockerfile()
         self.assertEqual(tap.BASE_IMAGE_ID, tap.source_trace.ORIGINAL_IMAGE)
-        self.assertTrue(df.startswith("FROM " + tap.BASE_IMAGE_ID))
+        self.assertEqual(tap.BASE_IMAGE_ID, tap.legacy.IMAGE_ID)
+        self.assertEqual(tap.BASE_IMAGE_TAG, tap.legacy.IMAGE_TAG)
+        self.assertTrue(df.startswith("FROM " + tap.BASE_IMAGE_TAG + "\n"))
+        self.assertNotIn("FROM sha256:", df)
         self.assertEqual(df.count("COPY "), 1)
         self.assertIn("ENV VLLM_P1_NUMERIC_TAP=0", df)
         self.assertNotIn("RUN ", df)
+
+    def test_original_tag_id_drift_blocks_before_cp(self):
+        with patch.object(tap.legacy, "inspect", return_value={"Id": "sha256:wrong"}), \
+             patch.object(tap.source_trace, "original_identity") as original:
+            with self.assertRaisesRegex(tap.Blocked, "BASE_IMAGE_TAG_ID_DRIFT"):
+                tap.stage()
+        original.assert_not_called()
+
+    def test_original_tag_id_matches_pin(self):
+        with patch.object(tap.legacy, "inspect", return_value={"Id": tap.BASE_IMAGE_ID}):
+            tap.verify_base_image_tag()
 
     def test_wrong_identity_never_reads_original(self):
         with patch.object(tap.qsa, "preflight") as pre, \
