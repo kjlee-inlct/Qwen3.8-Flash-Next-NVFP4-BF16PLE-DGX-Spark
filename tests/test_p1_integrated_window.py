@@ -13,6 +13,15 @@ class WindowTests(unittest.TestCase):
     def _pre(self):
         return {"original_state": "running", "original_id": self.ID}
 
+    def test_minimal_mode_cannot_bypass_approval(self):
+        with patch.object(window.qsa, "preflight") as guarded:
+            result = window.main([
+                "--expected-head", self.H, "--confirm-original-id", self.ID,
+                "--minimal-functional",
+            ])
+        self.assertEqual(result, 2)
+        guarded.assert_not_called()
+
     def test_no_approval_exits_before_any_preflight(self):
         with patch.object(window.qsa, "preflight") as guarded:
             self.assertEqual(window.main([
@@ -66,6 +75,36 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(result["status"], "P1_INTEGRATED_GPU_VALIDATION_INCOMPLETE")
         numeric.assert_called_once()
         restore.assert_called_once()
+
+    def test_minimal_window_collects_all_and_restores(self):
+        report = {"cache_hit_observed": True, "mtp_acceptance_observed": True,
+                  "all_repeats_token_ids_equal": True,
+                  "cache_hit_token_deltas_per_request": [0, 6400, 6400, 6400],
+                  "mtp_accepted_draft_token_counter_delta": 400,
+                  "candidate_snapshot_request_correlation": {
+                      "status": "BOUNDED_STATE_HASH_MATCH_NOT_FULL_REUSE_PROOF",
+                      "all_hit_requests_have_comparable_samples": True,
+                      "mismatched_selected_state_blocks": 0}}
+        with patch.object(window.runtime, "preflight", return_value=self._pre()), \
+             patch.object(window, "assert_original_running", return_value="model"), \
+             patch.object(window.release, "_run"), \
+             patch.object(window.release, "_legacy_state_for_release",
+                          return_value=({"id": self.ID}, {"Id": self.ID}, {}, "exited")), \
+             patch.object(window.runtime, "launch", return_value={"candidate_id": self.C}), \
+             patch.object(window.api, "verify_live", return_value="model"), \
+             patch.object(window.api, "tool_smoke") as tool, \
+             patch.object(window.oracle, "run_oracle", return_value=report) as oracle, \
+             patch.object(window.runtime, "ple_functional_report",
+                          return_value={"ple_phase_stats_observed": True}), \
+             patch.object(window, "safe_restore_after_window",
+                          return_value={"same_id_http_verified": True}) as restore:
+            result = window.execute_window(self.H, self.ID, minimal=True)
+        tool.assert_called_once_with("model")
+        oracle.assert_called_once()
+        restore.assert_called_once_with(self.H, self.ID, self.C, "model")
+        self.assertEqual(result["status"], "P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE")
+        self.assertFalse(result["p1_final_pass"])
+        self.assertTrue(result["release_blocked"])
 
     def test_stop_failure_still_checks_and_restores_original(self):
         with patch.object(window.runtime, "preflight", return_value=self._pre()), \

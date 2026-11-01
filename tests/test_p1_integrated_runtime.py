@@ -55,6 +55,29 @@ class Tests(unittest.TestCase):
                 r.cleanup(self.HEAD, "d" * 64)
             mutate.assert_not_called()
 
+    def test_functional_env_and_default_off(self):
+        original = {"Config": {"Cmd": ["serve", "model"]}, "HostConfig": {}}
+        base = {"Config": {}}
+        receipt = {"cache": "/tmp/cache", "views": "/tmp/views"}
+        with patch.object(r.gpu, "candidate_cmd", return_value=(["serve", "model"], "model")), \
+             patch.object(r.gpu, "environment_delta", return_value=[]):
+            normal, _ = r.container_args(self.HEAD, original, base, receipt)
+            probe, _ = r.container_args(self.HEAD, original, base, receipt, functional=True)
+        self.assertIn("VLLM_PLE_PHASE_STATS=0", normal)
+        self.assertIn("P1_PLE_FUNCTIONAL_PROBE=0", normal)
+        self.assertIn("VLLM_PLE_PHASE_STATS=1", probe)
+        self.assertIn("P1_PLE_FUNCTIONAL_PROBE=1", probe)
+        self.assertIn("P1_PREFIX_STATE_SNAPSHOT=1", probe)
+        self.assertIn("VLLM_PLE_FAST_GATHER=0", probe)
+
+    def test_unsafe_candidate_never_receives_overlays(self):
+        with patch.object(r, "owned", return_value={
+            "Id": "c"*64, "State": {"Status": "running"}}), \
+             patch.object(r, "_put_candidate_file") as write:
+            with self.assertRaisesRegex(r.qsa.Blocked, "NOT_CREATED"):
+                r.stage_functional(self.HEAD, "c"*64)
+            write.assert_not_called()
+
     def test_preflight_is_readonly(self):
         with patch.object(r.release, "_legacy_state_for_release",
                           return_value=({"id": self.ORIGINAL},
