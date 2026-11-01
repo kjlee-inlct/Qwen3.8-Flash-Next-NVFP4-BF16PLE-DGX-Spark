@@ -1,5 +1,47 @@
 # Phase 6 evidence ledger
 
+## 2026-11-01 original first-token SHORT/LONG strict triage — COMMON-PATH DRIFT CONFIRMED
+
+- Operator DGX source HEAD `db3f334b2d2a4939543762fe8f6db8cc61ae9481`,
+  Source Manifest **319/319 PASS**, original same-ID Running/HTTP.
+  In-place original service (stock QSA, Prefix OFF, MTP2): 4 serial
+  `max_tokens=1` requests each at two prompt lengths, same seed.
+- **SHORT prompt:** four identical token IDs/finish reasons, first-token
+  all-pairs max abs logprob **0.00203007273375988** (> strict **0.0001**),
+  synthetic prompt SHA
+  `fa9c1e6dbc493b722d6d5a21ba79678e45c5949b0d1e44f58f88c8730cd9cf12`.
+- **LONG prompt:** four identical token IDs/finish reasons, first-token
+  max **0.00028153276070952415** (> strict **0.0001**), synthetic
+  prompt SHA
+  `1b6782fe5048cf43e979a741a4d699f6866fefd0a6306b31b6b9c690e407f439`.
+  No container stop/restart or new candidate; same original ID and HTTP
+  verified after both arms.
+- **Direction freeze:** A/B/C/B2 and short/long all demonstrate strict
+  nondeterministic **logprob on the stock original even with no cache HIT,
+  no MTP, no canonical QSA, and in a one-generated-token run**. These
+  experiments do not prove whether raw model logits vs logprob
+  normalization/reporting is the first divergent stage. STOP adding
+  QSA/MTP/PREFIX variant images, wrapper gates and repeated short/long
+  experiments. Next source investigation must localize forward/GDN/PLE
+  numerical path vs logits/logprob path before patch selection. No
+  ungrounded numeric fix, no tolerance relaxation.
+- Relevant vLLM upstream: official online batch invariance beta
+  `VLLM_BATCH_INVARIANT=1` (docs.vllm.ai/en/latest/features/batch_invariance/).
+  GDN backend incompatibility issue
+  https://github.com/vllm-project/vllm/issues/42960 remains Open;
+  https://github.com/vllm-project/vllm/pull/45819 open/unmerged and
+  https://github.com/vllm-project/vllm/pull/49827 closed/unmerged on
+  current GitHub lookup. Do NOT enable batch invariance blindly:
+  confirm installed custom Preview vLLM source and exact GDN backend.
+- P1 **BLOCKED** against original strict 1e-4 requirement; this is
+  a critical numeric correctness/compatibility blocker, distinct
+  from cache/state feature completion. No new source build, GPU
+  execution, PR/CI/main merge or production change in this update.
+  Separate GPU approval required for any eventual integrated test.
+
+---
+
+
 ## 2026-11-01 B2 Canonical QSA GPU window: both long and first-token strict FAIL, original same-ID restored
 
 - DGX operator test source **`27f2c1a971bdf73f4710be51fb99f583e9fdfbd8`**:
