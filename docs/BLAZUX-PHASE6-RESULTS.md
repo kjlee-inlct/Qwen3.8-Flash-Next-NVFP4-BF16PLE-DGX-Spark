@@ -1,5 +1,36 @@
 # Phase 6 evidence ledger
 
+## 2026-11-01 C/MTP-OFF GPU test: STRICT FAIL, original restored; B2 canonical QSA source prepared
+
+- Operator DGX source HEAD `add9aceb535d0067e5ffc258a85100b0e04cee84`,
+  targeted CPU **9/9**, source **314/314** PASS, C passive preflight PASS.
+  Approved GPU maintenance completed A/C, matching shared synthetic prompt
+  SHA `1b6782fe5048cf43e979a741a4d699f6866fefd0a6306b31b6b9c690e407f439`.
+- Original **A/MTP2** (stock QSA, Prefix OFF) 4×150 identical token IDs
+  and finishes, all-pairs max abs logprob `0.0004490568535402417`,
+  exceed [0,29,145,148]. Identical **C/MTP OFF** 4×150 all-pairs
+  max `0.00021604698849841952`, exceed [0,148].
+  Both > unchanged strict `0.0001`; cross-arm IDs/finishes equal;
+  C accepted draft delta = **0**. MTP2 not required for drift.
+- C candidate `943ca16c93ea446713ad2a2acf7882e44f26adb5c0ed30af4f08fefeb3a06b52`
+  removed; `C_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`. Exit 2 from
+  strict numeric gate, not recovery. DGX-local receipt
+  `/tmp/p1-mtp-off-gpu.bskEGW2b.log`, not uploaded.
+- New B2 canonical block-index ordering one-COPY image builder,
+  isolated from existing B image, is **GITHUB SOURCE ONLY**, no
+  DGX CPU/build/GPU evidence at new commit. Its motivation is the
+  missing canonical sort in current `torch.topk(..., sorted=False)`
+  QSA patch, with upstream external nondeterministic Top-K discussion.
+  Does not claim the cause is proven; see
+  [QSA/MTP numerical isolation](P1-QSA-ONLY-NUMERIC-ISOLATION.md).
+- P1 final still **INCOMPLETE**: strict numerical gate fails;
+  corrected Tool Calling GPU roundtrip, full GDN/PLE state provenance
+  and PLE phase GPU measurements remain unproven. No production
+  image/Stage change, no PR/merge/CI and no new GPU approval.
+
+---
+
+
 ## 2026-10-31 P1 A/B QSA-only actual GPU isolation: BOTH STRICT FAIL, ORIGINAL RESTORED
 
 - DGX operator source HEAD `5f3eb29eece1470090c0623a4890161a42a7f342`:

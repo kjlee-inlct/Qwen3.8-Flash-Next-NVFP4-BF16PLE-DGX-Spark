@@ -117,3 +117,66 @@ load. A successful C strict result suggests investigating MTP2 but
 cannot by itself establish causal exclusivity or P1 PASS. If C fails,
 the next target is non-MTP common GPU/PLE/sampling reproducibility,
 not another speculative QSA conclusion. No strict relaxation.
+
+## Actual DGX MTP-OFF C result (operator 2026-11-01, not CI)
+
+Execution source SHA `add9aceb535d0067e5ffc258a85100b0e04cee84`.
+Previous DGX source 314/314 and targeted C CPU 9/9 PASS, passive C
+preflight PASS. In the newly approved GPU window, A (original stock
+QSA, Prefix OFF, MTP2) and C (same original stock image/PLE/QSA,
+Prefix OFF, **MTP OFF**) each ran four identical 150-token serial
+requests. Prompt hash in both arms:
+`1b6782fe5048cf43e979a741a4d699f6866fefd0a6306b31b6b9c690e407f439`.
+
+- A all-pairs max abs logprob delta `0.0004490568535402417`;
+  reference-to-repeats `0.0003914100816473365`;
+  strict-exceed 0-based token indices `[0,29,145,148]`.
+- C all-pairs max abs logprob delta `0.00021604698849841952`;
+  reference-to-repeats `0.000157083326485008`;
+  strict-exceed indices `[0,148]`.
+- Each arm had identical internal token IDs/finish reasons; cross-arm
+  IDs/finish reasons matched. C accepted draft token counter delta **0**.
+  Both arms FAIL strict `0.0001`. C MTP-OFF candidate
+  `943ca16c93ea446713ad2a2acf7882e44f26adb5c0ed30af4f08fefeb3a06b52`
+  was removed, **`C_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`** confirmed.
+  Exit code **2** is a strict-numeric failure, not recovery failure.
+  DGX-local log: `/tmp/p1-mtp-off-gpu.bskEGW2b.log` (NOT uploaded).
+
+These measurements prove the observed strict drift does not require
+MTP2, just as earlier A/B measurements proved it does not require
+candidate Prefix ON or a particular QSA Exact-TopK opt-in. No
+single-window max ratio establishes the size or causal impact of MTP.
+Actual common numeric computation path remains unidentified.
+
+## New focused B2 experiment: canonical block order after exact Top-K
+
+Source review of our B image found `torch.topk(safe, k=k, dim=1,
+sorted=False).indices` copied to QSA `blocks` without canonical
+index ordering. This **does not** prove the B failure comes from
+selection order: CUDA/PyTorch and tie selection may still differ.
+However, upstream vLLM issue
+https://github.com/vllm-project/vllm/issues/54521 and an independent
+DGX Spark investigation
+https://www.docai.hu/en/blog/qwen38-flash-next-nondeterministic-vllm-kernel
+identify Top-K selected-index ordering/ties as realistic
+nondeterminism sources.
+
+Prepare **B2 source only** in `src/p1_qsa_canonical_image.py`.
+Starting from the pinned original QSA SHA256, it performs the exact
+B transform, then applies one additional change:
+`torch.topk(..., sorted=False).indices.sort(dim=1).values`.
+This creates a separately labeled one-COPY image based on the
+original image. Original B image, production original, model files,
+MTP2 and Prefix OFF remain untouched. No runtime controller or GPU
+execution is authorized by this preparation.
+
+First DGX step: `python3 -m unittest -v
+tests.test_p1_qsa_canonical_image`, source Manifest verification,
+then `python3 -m src.p1_qsa_canonical_image --expected-head "$HEAD"
+--build` for the *CPU-only* isolated B2 image. Capture the exact
+new image ID and patched SHA after build; only then plan a bounded,
+independently authorized B2 GPU A/B test. No more routine MTP2 ON/OFF
+or unmodified exact Top-K repeat experiments. Strict 1e-4 unchanged.
+A B2 success would motivate evidence-backed root-cause isolation,
+not automatically P1 PASS; full GDN/PLE live reuse and Tool roundtrip
+remain separate unfinished conditions.
