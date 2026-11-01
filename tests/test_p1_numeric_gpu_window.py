@@ -30,6 +30,19 @@ def run(logprob, *, logits="a"*64, lp="b"*64, accepted=True):
 
 
 class NumericGpuWindowTests(unittest.TestCase):
+
+    def test_rejection_patch_sha_pinned_full_length(self):
+        # Regression: the previous 63-digit constant blocked before GPU stop.
+        expected = "0de6c713a944dc781e3ff64c23f6e378b7b37ecbd28c2d5d080a3130da8c5e4e"
+        self.assertEqual(len(window.PATCH_SHA), 64)
+        self.assertEqual(window.PATCH_SHA, expected)
+        self.assertEqual(window.IMAGE_TAG,
+                         "kjlee-qwen38-p1-numeric-rejection:1cbd6361d610")
+        self.assertEqual(window.IMAGE_ID,
+                         "sha256:e16c45ce13b52a874b3caf95c2963e42c27340a0cd421f1924d6ae97c627f4aa")
+        self.assertEqual(window.STRICT_ABS, 1e-4)
+        self.assertFalse(window.analyse([], [])["final_p1_pass"])
+
     def test_strict_delta_without_relaxation(self):
         a, b = zip(run(0.1), run(0.1), run(0.10021), run(0.1))
         result = window.analyse(list(a), list(b))

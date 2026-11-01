@@ -31,7 +31,7 @@ from src import p1_preview_qsa_exact_topk as qsa
 
 IMAGE_TAG = "kjlee-qwen38-p1-numeric-rejection:1cbd6361d610"
 IMAGE_ID = "sha256:e16c45ce13b52a874b3caf95c2963e42c27340a0cd421f1924d6ae97c627f4aa"
-PATCH_SHA = "0de6c713a944dc781e3ff64c23f6e378b7b37ecbd28c2d5d080a3130da8c5e4"
+PATCH_SHA = "0de6c713a944dc781e3ff64c23f6e378b7b37ecbd28c2d5d080a3130da8c5e4e"
 NAME = "p1-numeric-rejection-window"
 LABEL = "ai.kjlee.p1-numeric-rejection-window"
 PORT = 18080
