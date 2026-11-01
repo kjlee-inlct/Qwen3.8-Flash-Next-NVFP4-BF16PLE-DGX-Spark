@@ -1,4 +1,27 @@
-# P1 — 현재 진행 작업 인수인계 (2026-11-01)
+# P1 — 현재 진행 작업 인수인계 (2026-11-02)
+
+## 2026-11-02 현행 P1 완료 계획 — 기능 검증과 전역 수치 안정성 분리
+
+**사용자가 단계별 범위 변경을 승인했다.** P1은 PLE 단계별 계측, Prefix-cache 정확성, Tool Calling/Responses의 **기능별 최소 구현/실동작 검증**에 집중한다. Prefix OFF·MTP OFF·단일 토큰에서도 발생한 공통 strict logprob 비재현성 원인 분석과 최소 안전 범위를 넘어선 full-layer physical copy/timing 감사를 P2로 이관한다. 원래 P2 세 기능·P3 두 기능은 불변. **strict abs 1e-4는 출시 Gate에서 계속 필수이며 미달 상태를 PASS로 재분류하지 않는다.**
+
+| P1 기능 | 지금까지 입증 | 실제 P1 잔여 작업 | P2로 넘길 범위 |
+| --- | --- | --- | --- |
+| PLE mmap phase stats | CPU 계측/byte-exact, default OFF, 테이블별 stats_snapshot 구현 | 실제 BF16 PLE 실행 경로에서 opt-in 계측값을 안전하게 읽어 기록: 현재 통합 런처의 해당 출력 경로는 미확인. 스위치 ON만으로 PASS 금지 | 실제 DMA 완료시간, NVMe 물리 bytes, H2D/TTFT/TPS, Fast Gather 성능 |
+| Prefix-cache | 격리 Prefix ON HIT [0,6400,6400,6400], MTP accepted +400, Token IDs 동일, 선택 state Cold→HIT 12/12 SHA 일치 | 최소 Mamba state/index/physical block 안전성·정확성: 선택 SHA만으로 전체-state PASS 주장 불가, 오류가 묵살되지 않을 독립 불변식 검증 필요 | 최소 correctness를 초과하는 all-layer state/copy timing provenance 정밀 감사 |
+| Tool Calling/Responses | Parser/Serving CPU 통합, non-stream/stream Responses 실증, corrected forced-tool client 구현 | 실제 named tool call ID/args → tool result → final text 완전 왕복 1회 검증 | vLLM 0.32 Track B로 이식/성능 |
+
+**현 상태:** P1 코드 세 기능의 일부는 이미 구현되어 있으나 P1_FUNCTIONAL_VERIFIED=NOT_YET. P1_RELEASE_BLOCKED=TRUE 및 P2_NUMERIC_STABILITY_OPEN=TRUE. Prefix ON strict 합격과 배포 승인은 미확정. User DGX 최신 HEAD 07cad147bceda365f698bd93c11faef7842039a4에서 Source 327/327, targeted CPU 21/21, Prefix OFF MTP2 4×64 토큰, accepted draft +168, 동일 ID·HTTP 복구 PASS; Rejection Tap 0건, first-reference logprob max 8.230487583205104e-05 (all-pairs가 아님). 이미 끝낸 MTP/OFF/QSA A/B/short-long 실험은 재실행하지 않는다.
+
+**실행 순서:**
+1. 기존 src/p1_integrated_api_check.py의 tool_smoke와 src/p1_integrated_window.py의 기존 안전한 동일-ID 원본 복구 경로를 사용한다. Responses 기존 PASS를 반복하는 대신 부족한 함수 왕복 검증을 우선한다.
+2. src/vllm_ple_mmap.py의 MmapPleTable.stats_snapshot은 테이블 로컬 CPU 관측값이다. 통합 서비스에서 이를 확인 가능한 기존 출구가 있는지 먼저 검토한다. 없으면 신규 Docker variant/범용 Tap 없이 **최소 후보 전용 관측 연결**만 설계하고 실제 GPU 승인 전 CPU 소스 검증한다.
+3. 기존 Prefix HIT/MTP 및 12/12 선택-state SHA 증거를 재사용하되 최소 안전성 입증이 부족하면 P1 Prefix 기능은 BLOCKED 유지. 모든 계층/주소의 후속 정밀 감사를 P2로 넘기는 것이 최소 정확성 면제가 아니다.
+4. 셋을 결합할 수 있는 같은 격리 정비창 조건을 마련한 후 **별도 승인**을 받고 실행한다. Strict 숫자 실패는 P2 원인 과제로 별도 표시하되 RELEASE_BLOCKED 유지. 원본 stop/restore, 후보 삭제, 동일-ID/HTTP 검증을 필수로 한다.
+
+**작업 금지:** 이미 검증한 CPU 21/21 반복, Rejection Tap 이벤트 0 추가 추적, 동일조건 MTP/QSA 재측정, 기능 없는 새 이미지·Gate, 원본 이미지/Stage/weights 변경, 새 GPU 승인 없는 운영 중지/CI/PR/merge/main 변경. 이 커밋은 문서만 바꾸며 DGX 미실행. 아래 2026-11-01 현행·다음 문단은 변경 당시 역사 기록이다.
+
+---
+
 
 ## 2026-11-01 현행 활성 인수인계 — P1 수치 계산 경로의 최초 비결정성 위치 특정
 

@@ -1,5 +1,15 @@
 # Phase 6 evidence ledger
 
+## 2026-11-02 DGX 운영자 실측 및 사용자 승인 단계 재분류
+
+- 마지막 DGX 실측 소스 HEAD: **07cad147bceda365f698bd93c11faef7842039a4** (feature/blazux-phase6-runtime-gates). Source 327/327, numeric window CPU 13/13, rejection stage CPU 8/8, preflight PASS.
+- 승인된 Prefix OFF/stock QSA/MTP2 격리 후보 GPU 4×64 토큰, token ID 모두 동일, draft 실행 +84, draft token +168, accepted draft token +168. MTP 수락 입증. Rejection Tap forward/accepted 이벤트 모두 [0,0,0,0], file/stderr 각 0. **INCONCLUSIVE_MTP_ACTIVE_BUT_REJECTION_TAP_ABSENT**. API logprob 최대 8.230487583205104e-05는 **첫 요청 기준 최대**이지 모든 쌍 최대가 아님. 이전 strict FAIL 및 Prefix ON 정합성 미검증 결론 불변.
+- 진단 exit 2, 후보 제거 및 원본 정확 SAME-ID running, health/models HTTP PASS. 이 문서-only 변경은 신규 DGX/CI 시험이 아니다.
+- **2026-11-02 사용자가 P1/P2/P3 완료 계획 분리를 승인:** P1 세 기능(PLE 단계별 계측, Prefix-cache 최소 state 정확성, Tool/Responses 실왕복)을 우선 완성. 전역 first-token logprob 수치 안정성 원인 분석과 P1 최소 안전성을 넘어서는 all-layer state/copy timing 정밀 감사, H2D/TTFT/TPS 최적화는 P2로. P2의 reduced vocab/Gather/0.32, P3의 YaRN500K/Hybrid FP8 원래 기능 불변. Strict 1e-4 출시 기준은 변경하지 않았고 기존 FAIL은 release blocker. P1_FUNCTIONAL_VERIFIED=NOT_YET, P1_RELEASE_BLOCKED=TRUE, P2_NUMERIC_STABILITY_OPEN=TRUE, P1_FINAL_PASS=FALSE, DEPLOYED=FALSE.
+- 다음에는 이미 있는 통합 Tool/API와 복구 코드를 사용하고 실서버 forced tool 왕복 및 PLE opt-in stats의 실제 관측 경로를 한 번에 준비한다. src/vllm_ple_mmap.py의 stats_snapshot 구현은 실제 후보 출력/검증 완료를 뜻하지 않는다. 새 이미지, GPU 창, 운영 중단, CI, PR, main/merge, P2/P3 착수는 별도 승인 없이는 하지 않는다.
+
+---
+
 ## 2026-11-01 original first-token SHORT/LONG strict triage — COMMON-PATH DRIFT CONFIRMED
 
 - Operator DGX source HEAD `db3f334b2d2a4939543762fe8f6db8cc61ae9481`,

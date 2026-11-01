@@ -1,5 +1,21 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-02 사용자 승인 — P1 기능 종료와 P2/P3 이관 구분
+
+**이 절은 이후의 옛 현행 작업 계획보다 우선한다.** 기존 기능 목록(P1 세 가지, P2 세 가지, P3 두 가지)을 변경하지 않고, 과도하게 묶여 있던 검증 범위를 재분류한다. 정확한 최신 상황은 [활성 P1 계획](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 기존 증거는 [결과 장부](BLAZUX-PHASE6-RESULTS.md)를 참고한다.
+
+- **P1 기본 세 기능:** (1) BF16 PLE mmap opt-in 단계별 계측의 실제 값 관측, (2) Prefix-cache ON에서 실제 HIT 및 MTP2 공존과 **최소 state/index 재사용 정확성**, (3) Preview Tool Calling/Responses의 실제 tool-call ID/arguments → tool result → final answer 왕복. 기존 실측을 재사용하며 중복된 QSA/MTP 실험·CPU Gate를 반복하지 않는다.
+- **P2 범위:** 원본 Prefix OFF 및 MTP OFF에서도 발생했던 first-token logprob 비재현성의 공통 수치 원인 분석(raw forward/logits vs log-softmax/API), **P1 최소 correctness를 넘어서는** all-layer GDN/PLE physical state/copy timing 심화 감사, PLE 실제 H2D/TTFT/TPS 및 Gather 최적화. 기존 P2 본래 기능인 MTP reduced draft vocabulary, PLE Gather, 독립 vLLM v0.32 Track B는 유지한다. QSA 추가 실험은 실제 필요가 확인될 때만 P2 내 검토한다.
+- **P3 범위:** YaRN 500K와 M-RoPE/긴 문맥 정확성, Hybrid FP8 변환/품질/메모리 검증 유지. 이번 범위 재분류가 P2/P3 자동 시작 승인은 아니다.
+- **strict abs logprob 1e-4 기준은 불변:** P2로 전역 원인 분석을 옮긴다고 과거 Prefix ON 또는 원본 strict 실패가 PASS가 되지 않는다. 운영 배포는 계속 BLOCKED. 또한 필요한 Prefix **최소 상태 재사용 안전성**은 P1에서 P2로 넘기지 않는다. 확실하지 않은 full-state reuse를 PASS로 표시 금지.
+- **상태 표기(신규 코드 Gate 아님):** P1_FEATURE_IMPLEMENTED는 기능 코드 준비 상태만, P1_FUNCTIONAL_VERIFIED는 세 기능 최소 실경로/안전성 모두 실측한 경우만, P1_RELEASE_BLOCKED는 strict 및 출시 차단, P2_NUMERIC_STABILITY_OPEN은 별도 원인 추적 상태를 말한다. 현재 P1_FUNCTIONAL_VERIFIED=NOT_YET, P1_RELEASE_BLOCKED=TRUE, P2_NUMERIC_STABILITY_OPEN=TRUE, P1_FINAL_PASS=FALSE, DEPLOYED=FALSE.
+- **최신 DGX 운영자 증거 2026-11-02:** 소스 HEAD 07cad147bceda365f698bd93c11faef7842039a4, Source 327/327, CPU 13/13+8/8, Prefix OFF/stock QSA/MTP2 후보 4×64 동일 token IDs, drafts +84, drafted +168, accepted +168, Rejection tap 0. 첫 기준 요청 대비 최대 logprob 차이 8.230487583205104e-05는 **모든 요청 쌍의 최대치가 아님**. 진단 exit2, 후보 제거, 원본 정확 동일 ID/HTTP 모델 복구 PASS. 이 증거는 P1 Prefix ON strict 정합성 PASS가 아니다.
+- **다음 진행:** 기존 통합 Tool/Responses API 왕복 경로와 same-ID 복구 컨트롤러 재사용. PLE stats_snapshot() CPU 경로는 있으나 실서버 계측값 수집 경로 미입증: 최소 후보 전용 수집 수단이 필요하면 source-only로 좁혀서 준비. Prefix 기존 HIT와 12/12 선택적 state SHA는 재사용하되 최소 state/index 안전성 추가 입증 전 기능 검증 완료 금지. 묶음 GPU 정비창은 별도 명시적 승인 후만 가능하며, 새 이미지·게이트·반복 A/B 실험을 우선하지 않는다.
+- **영구 보호:** 원본 정확 이미지·컨테이너 ID/weights/cache/Stage/port8000 불변, 중지 전 명시 승인, 안전한 후보 제거 후 동일 ID 복구. 무승인 GPU, 운영 중단, CI/PR/merge/main 및 자동 P2/P3 착수 금지. 본 계획 문서 커밋 자체는 DGX에서 실행되거나 검증된 것이 아니다.
+
+---
+
+
 ## 2026-11-01 P1 최신 진입점 — 실제 근거 우선, 이전 '최신' 기록보다 우선
 
 **현행 과제는 strict `1e-4` logprob 비재현성의 최초 발생 경로(모델 forward/GDN·PLE·서빙 배칭 vs. logits→logprob 변환/반환)를 찾아 수정 가능한 실제 코드 위치를 확정하는 것**이다. A/B/C/B2와 원본 short/long 첫 토큰 실제 GPU 시험은 전부 strict FAIL이며, 개별 QSA·MTP·Prefix 설정을 계속 바꾸는 추가 실험은 중단한다. 원본 서비스는 가장 마지막 승인된 8회 API 측정 종료 시 고정 ID Running/HTTP PASS였다. **P1 최종 PASS 아님.**

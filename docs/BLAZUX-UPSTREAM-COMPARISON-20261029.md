@@ -1,5 +1,23 @@
 # blazux 최신 원본과 Orcarouter BF16 PLE/MTP 구현 비교 (2026-10-29)
 
+## 2026-11-02 사용자 승인 단계 범위 재분류 — 아래 기존 8개 목표 표보다 최신
+
+기능 숫자와 소유 단계는 **P1 세 개, P2 세 개, P3 두 개 그대로 유지**한다. 기능 구현 여부와 독립 strict 출시 기준을 분리하며, [활성 P1 계획](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)의 최신 실증을 우선한다.
+
+| 기능/검증 | P1에 남길 최소 검증 | P2/P3에 둘 심화 검증 |
+| --- | --- | --- |
+| PLE phase stats | 기본 OFF + BF16 opt-in 계측값 실제 관측 | P2 비동기 CUDA/H2D 완료, NVMe 실 bytes, TTFT/TPS/Gather 성능 |
+| Prefix-cache | HIT+MTP2 실증, token ID 및 최소 Mamba state/index 정확성 | P2 전계층 GDN/PLE physical state/copy timing 심화 감사. **최소 상태 안전성은 P1 유지** |
+| Tool Calling/Responses | corrected forced tool call/result/final 왕복; 기존 stream/nonstream 실증 재사용 | P2 vLLM 0.32 Track B 이식 및 추가 성능 |
+| 공통 logprob 수치 | 기존 strict 1e-4 실패를 출시 차단으로 계속 표기 | P2 Prefix OFF 및 MTP OFF에서도 발생하는 raw logits vs log-softmax/API 최초 비재현성 위치, 재현성 개선 |
+| P2 원래 목표 | P1 수행을 이유로 착수하지 않음 | MTP reduced draft vocab, PLE Gather, vLLM 0.32 Track B |
+| P3 원래 목표 | P1 수행을 이유로 착수하지 않음 | YaRN 500K/M-RoPE 및 Hybrid FP8 전환·회귀 |
+
+P1_FEATURE_IMPLEMENTED / P1_FUNCTIONAL_VERIFIED / P1_RELEASE_BLOCKED / P2_NUMERIC_STABILITY_OPEN은 보고 표기이며 신규 Gate/테스트 규칙이 아니다. 현재 기능별 실검증 남음, P1_RELEASE_BLOCKED=TRUE, P2_NUMERIC_STABILITY_OPEN=TRUE, P1_FINAL_PASS=FALSE. Strict 완화/운영 배포 없음. P2/P3 자동 착수·실행 권한 없음.
+
+---
+
+
 > **2026-10-29 우리 구현의 실제 GPU 후속 증거:** 이 문서의 pinned `7372721` ↔ upstream `7e63dbe` 비교와 표의 'cold/hit NOT_RUN'은 **비교 당시 상태**이며 현행 P1 실측을 대체하지 않는다. 사용자 DGX `c342e033c6e601f374520eefb6a9d0e9277b54ef`: 9,492-token synthetic cold+repeat 3회, Prefix-cache HIT delta **[0,6400,6400,6400]**, nonempty 최종 text 및 token IDs 일치, strict logprob delta **0.003320594 > 1e-4**, active physical Mamba mapping 미관측, 원본 same-ID/HTTP 복구 PASS. 개선 코드가 원본 vLLM 0.32 기능과 1:1 완전 동등함을 입증하지 않는다. [실측 결과](BLAZUX-PHASE6-RESULTS.md), [현행 P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 우선한다.
 
 

@@ -421,12 +421,12 @@
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
       "mode": "100644",
-      "blob_sha": "a52c19f9f802f280cfb751094a00fec611fb6e80"
+      "blob_sha": "97bacbabb4b9b325f87080f068b23ec442d23826"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
       "mode": "100644",
-      "blob_sha": "537006f5b43b8f9eea1457ea2e55c2afdc647436"
+      "blob_sha": "1913bcbbda1d86af2ada257bbdce278676edaba2"
     },
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
@@ -511,12 +511,12 @@
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
       "mode": "100644",
-      "blob_sha": "50460872d1f577b35231950d6ae913b5e90b85d4"
+      "blob_sha": "aaad98f45c0257ac3a29d3cb95816846c9946e00"
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "27c35b0709442c7913691d37921cacdba3dfc0f2"
+      "blob_sha": "06977e5a63721c943bcf8d52a623055598fbdede"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
