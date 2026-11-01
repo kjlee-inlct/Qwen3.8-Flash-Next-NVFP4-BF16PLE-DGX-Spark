@@ -180,3 +180,58 @@ or unmodified exact Top-K repeat experiments. Strict 1e-4 unchanged.
 A B2 success would motivate evidence-backed root-cause isolation,
 not automatically P1 PASS; full GDN/PLE live reuse and Tool roundtrip
 remain separate unfinished conditions.
+
+## B2 canonical image: operator CPU build PASS, GPU controller SOURCE ONLY
+
+On DGX, source HEAD `6aa092842c354ef2b6ce63a58fc42d2edd3b806d`
+passed Source Manifest **316/316**, `tests.test_p1_qsa_canonical_image`
+**5/5**, and CPU-only `src.p1_qsa_canonical_image --build`.
+It produced the exact unexecuted GPU image:
+`kjlee-qwen38-p1-qsa-canonical:6aa092842c35`
+with **image ID**
+`sha256:fc74fa28ffc3bee18f630ee5dd54441ba93d21b73698700d19859a6829b9693b`,
+parent base ID
+`sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`,
+canonical patched QSA SHA256
+`7a76dad0c02e7cd29ce399b2c23f5fd7977334802f1a50574b8ad023f579a278`.
+Original same ID remained Running, original port8000 /health PASS.
+**B2 GPU inference and strict numeric are NOT_RUN**.
+
+A subsequent feature-only source commit adds
+`src/p1_qsa_canonical_runtime.py` and
+`src/p1_qsa_canonical_window.py`, with
+`tests/test_p1_qsa_canonical_window.py`. It pins the *already-built*
+B2 image by full ID, patched SHA, ancestor and immutable
+one-COPY image labels; there is no image rebuild or original patch.
+The launcher preserves original Prefix OFF, MTP2, BF16 PLE, read-only
+cache/weight mounts and loopback port18080. Candidate name/ownership
+labels are isolated from B/C/integrated candidates and recovery verifies
+original same-ID port8000 HTTP. If candidate state/mount/owner is
+ambiguous, **do not start the original alongside an unknown candidate**.
+
+The one-shot numeric window has two independent sets of four requests
+for each arm:
+1. Original A long synthetic prompt, up to 256 generated tokens and
+   at least 128 actual output tokens, strict full token-aligned logprobs.
+2. Original A same prompt truncated at `max_tokens=1`, strict
+   first-token-only logprob (one actual token required; no false
+   128-token gate).
+3. Operator-approved stop; B2 long and first-token sets with the
+   same seed, messages and payload parameters except max_tokens.
+4. Independent B2 owned cleanup and original same-ID HTTP restoration
+   in `finally`, regardless of numeric result.
+
+A incomplete/inconclusive aborts BEFORE any original stop. The result
+reports per-arm all-pairs drift, same-index cross-arm delta only when
+token identities/finish match, and strictly unchanged `1e-4` gates.
+Even B2 numeric PASS alone is neither QSA causality proof nor P1
+final PASS: full GDN/PLE state reuse provenance, GPU phase stats and
+corrected Tool Calling roundtrip remain unproven.
+
+The new B2 GPU maintenance window requires **separate explicit
+operator authorization**. On DGX, perform only source Manifest,
+targeted CPU tests and passive `--preflight` before that approval.
+After approval, execute exactly once with latest pinned full Git HEAD,
+confirmed original 64-char container ID, full B2 image ID and
+`--execute`. Never run GPU candidates simultaneously; never skip
+owner-checked original restoration. No CI, PR, main merge or deployment.

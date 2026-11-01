@@ -1,5 +1,28 @@
 # Phase 6 evidence ledger
 
+## 2026-11-01 B2 canonical QSA one-COPY image: operator CPU BUILT, no GPU execution
+
+- DGX user checkout HEAD `6aa092842c354ef2b6ce63a58fc42d2edd3b806d`,
+  source **316/316 PASS**, canonical builder tests **5/5 PASS**.
+- CPU-only image built:
+  `kjlee-qwen38-p1-qsa-canonical:6aa092842c35`, pinned ID
+  `sha256:fc74fa28ffc3bee18f630ee5dd54441ba93d21b73698700d19859a6829b9693b`,
+  patched QSA SHA
+  `7a76dad0c02e7cd29ce399b2c23f5fd7977334802f1a50574b8ad023f579a278`.
+  Parent original base ID
+  `sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a`.
+  Same-ID original Running and port8000 /health PASS after build.
+- Dedicated B2 launcher and matched A/B2 150-token + first-token
+  isolated window added at **GitHub SOURCE ONLY**. GPU **NOT_RUN**;
+  no same-window A/B2 numeric result; no new maintenance approval.
+  Restore requires exact owned candidate removed and original same-ID
+  HTTP proof. Further interpretation
+  [B2 canonical QSA](P1-QSA-ONLY-NUMERIC-ISOLATION.md).
+- No P1 final PASS, deployment, CI, PR or main merge.
+
+---
+
+
 ## 2026-11-01 C/MTP-OFF GPU test: STRICT FAIL, original restored; B2 canonical QSA source prepared
 
 - Operator DGX source HEAD `add9aceb535d0067e5ffc258a85100b0e04cee84`,
