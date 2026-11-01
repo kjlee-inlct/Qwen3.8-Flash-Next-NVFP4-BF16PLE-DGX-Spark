@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 325,
+  "tracked_file_count": 327,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -1024,6 +1024,11 @@
       "blob_sha": "c8e4ad61b65c4c103022e10d8157e3005952a943"
     },
     {
+      "path": "src/p1_numeric_rejection_stage.py",
+      "mode": "100644",
+      "blob_sha": "8b6267d5212fb87beab1cf4f65be2248e16bc03d"
+    },
+    {
       "path": "src/p1_numeric_sampler_overlay.py",
       "mode": "100644",
       "blob_sha": "2f3365fa6fa1d1d3b18c78a4c85c0c47546ca6ad"
@@ -1667,6 +1672,11 @@
       "path": "tests/test_p1_numeric_gpu_window.py",
       "mode": "100644",
       "blob_sha": "21b6d948a8cf8cfba0b2c1223afcea3b0dfff991"
+    },
+    {
+      "path": "tests/test_p1_numeric_rejection_stage.py",
+      "mode": "100644",
+      "blob_sha": "ef4d52db2443b8f04fce2039d58ed59bd76094f0"
     },
     {
       "path": "tests/test_p1_numeric_sampler_overlay.py",
