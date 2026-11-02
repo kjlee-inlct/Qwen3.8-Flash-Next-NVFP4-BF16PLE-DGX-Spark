@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 350,
+  "tracked_file_count": 353,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,12 +510,12 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "d5255336e926364614dc284b7e704257118dfcc3",
+      "blob_sha": "aabad1a042c69aed46b42ab8e6691263ea59f3cb",
       "mode": "100644"
     },
     {
       "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
-      "blob_sha": "8bd50a189c5df325876e7ca9c664a9e30040cc25",
+      "blob_sha": "ee82056b67fc5f864a88e53246d0b781bce6aab9",
       "mode": "100644"
     },
     {
@@ -826,6 +826,11 @@
     {
       "path": "scripts/p2-batch-dgx.sh",
       "blob_sha": "d0a08c4f817e3ca0bbec122b26c9f8ab87c6f316",
+      "mode": "100755"
+    },
+    {
+      "path": "scripts/p2-functional-bundle-dgx.sh",
+      "blob_sha": "c8200fb1b2aea6633b5a0a218a6371fe0c728c88",
       "mode": "100755"
     },
     {
@@ -1182,6 +1187,11 @@
       "path": "src/p1_qsa_window_bundle.py",
       "mode": "100644",
       "blob_sha": "bc9b016fcc365c94a46c93efb6aef3fc03120ef5"
+    },
+    {
+      "path": "src/p2_functional_bundle.py",
+      "blob_sha": "92ec0246a4f5c21a50e06971f9a006744475f49d",
+      "mode": "100644"
     },
     {
       "path": "src/p2_mtp_draft_vocab.py",
@@ -1807,6 +1817,11 @@
       "path": "tests/test_p1_qsa_window_bundle.py",
       "mode": "100644",
       "blob_sha": "4ef4d47d5199c546d4c9c4f8c8c2b1837f50a0aa"
+    },
+    {
+      "path": "tests/test_p2_functional_bundle.py",
+      "blob_sha": "05c57a831722b37ed968ac597352665f41fc45ab",
+      "mode": "100644"
     },
     {
       "path": "tests/test_p2_mtp_draft_vocab.py",

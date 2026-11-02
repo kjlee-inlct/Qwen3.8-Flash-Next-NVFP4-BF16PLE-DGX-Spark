@@ -55,3 +55,23 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m src.p2_numeric_report --input /path/to/appr
 - **가능성이 높은 근본 원인:** Runner `--user=65534:65534`가 호스트 체크아웃 내 제한된 모드(예: 0600)의 Python 소스를 읽지 못함. 정확한 호스트 파일 owner/mode는 로그에 출력되지 않았으므로 0600 자체는 추정이다. 호스트 Python은 동일 파일을 import하여 preflight를 통과함.
 - **수정:** 컨테이너만 `--user "$HOST_UID:$HOST_GID"`로 실행(실제 DGX checkout을 사용하는 **호스트 비root 계정의 UID/GID**를 `id -u`/ `id -g`로 조회). 숫자 및 root(UID/GID 0)를 fail-closed로 차단하고, 문제 소스와 신규 PLE 시험 파일의 호스트 읽기 권한을 사전에 검증. **호스트 chmod/chown 금지**, 원본 모델/이미지·Docker 상태 변경 없음. Docker repo bind/rootfs read-only, network none, GPU void, nonroot, 2CPU/2GiB, 원본 동일 container ID/StartedAt 전후 확인 및 40/40 no-SKIP 원칙 불변.
 - **다음 DGX 1회 명령:** `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-batch-cpu-container.sh --execute`. 새 runner는 **DGX_NOT_RUN**, 결과 미예측. 불가 시 증거를 기반으로 다음 실패 지점을 정확히 분리한다. Numeric root cause OPEN / strict 1e-4 / P1_RELEASE_BLOCKED 불변.
+
+## 2026-11-02 P2 후속 — Numeric Sampler witness + PLE Unique-H2D 공동 후보
+
+**실 DGX 성공 체크포인트**: 정확한 SHA `798575ed34acadb9eb83f004ce76ffc3bf2a2ac4`, 1회성 네트워크·GPU 차단 CPU container에서 **40 tests / 0 skip / OK**, host import/UID 4 tests PASS, original container unchanged. PLE BF16 byte-exact synthetic CPU는 검증 완료. 수치 strict 1e-4는 해소되지 않았음.
+
+### 실제 기능 준비
+
+- `src/p2_functional_bundle.py`는 현재 Fork HEAD/source manifest를 검증한 뒤 원본 고정 image tag가 원본 image ID를 가리키는지 read-only inspect한다. Sampler의 설치 SHA `f95805b2...`를 확인해 기존 `src/p2_numeric_sampler_witness.py`를 적용하고, `src/vllm_ple_mmap.py`에서 실제 Unique-H2D forward function 및 opt-in을 AST로 검증한다.
+- 사용자 HOME의 active repository가 아니라 **새 개인 `/tmp/p2-functional-bundle-*/`** 안에 `sampler.py`, `vllm_ple_mmap.py`, 정확한 기존 원본 이미지 기반의 **2-COPY Dockerfile**만 쓴다. 파일 0600/디렉터리 0700. 원본 컨테이너 실행·이미지·시작 시각을 read-only 전후 비교. Numeric witness와 Unique-H2D는 **Dockerfile 기본 OFF**. 두 소스가 같은 GPU candidate에 존재하도록 연결하는 source feature이며 실제 `docker build`·로딩·실추론·H2D 측정은 **미실행/별도 승인**.
+- MTP 경로들(`vllm/models/qwen3_8_flash_next/nvidia/{mtp,model}.py`, `vllm/models/qwen4_exp.py`, `vllm/v1/spec_decode/eagle.py`)을 **읽기 전용 Docker cp**로 찾되, 파일 누락은 이름/경로가 다를 수 있다는 뜻으로 취급한다. 발견된 소스는 SHA/선별 AST 메서드만 요약하며, 원문·모델 데이터 출력 또는 실제 draft head modification 없음. 이 triage로 65,536 축소 로더/ID remapping의 정확한 이식 범위를 다음 단계에서 결정한다.
+- `scripts/p2-functional-bundle-dgx.sh --check`: 새 소스 단위시험과 전체 preflight만, **Docker 접근 없음**.
+- `scripts/p2-functional-bundle-dgx.sh --stage`: 같은 preflight·회귀시험 뒤 기존 원본 **read-only `docker inspect`+`docker cp`**와 private source stage를 한 번에 실행. Docker build/run/exec/stop/start, API, GPU 불허.
+
+```bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-functional-bundle-dgx.sh --stage
+```
+
+**주의:** P2 sampler witness의 선택 scalar↔API 대응은 실제 **MTP OFF·Prefix OFF·직렬 단일 요청 후보**에서만 진단. 원본 MTP2 활성 실행에서 해당 Sampler tap이 곧바로 활성화된다고 주장 금지. API 수치 비교와 raw logits 원인은 GPU 실관측 전 OPEN. 해당 `/tmp` Stage는 새 분리된 GPU 운영 정비창 승인이 아니며, P1 builder의 이전 PLE pin을 재작성하지 않는다. 이번 신규 소스/테스트는 DGX_NOT_RUN / GitHub CI_NOT_RUN.

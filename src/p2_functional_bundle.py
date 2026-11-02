@@ -1,0 +1,226 @@
+"""P2 isolated candidate: real BF16 PLE source + pinned sampler numeric witness.
+
+A single candidate-only two-COPY Dockerfile is staged for later *separately
+approved* image build/GPU testing. This command does not build an image, run a
+container, load weights, touch the running service, issue HTTP or use CUDA.
+Also fingerprints installed MTP-related Python ABI source without executing it.
+"""
+from __future__ import annotations
+
+import argparse
+import ast
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+from src import p1_legacy_service_window as legacy
+from src import p1_numeric_source_trace as trace
+from src import p1_preview_qsa_exact_topk as qsa
+from src import p2_numeric_sampler_witness as witness
+
+PLE_REPO = Path("src/vllm_ple_mmap.py")
+PLE_DEST = trace.PACKAGE_ROOT + "vllm_ple_mmap.py"
+SAMPLER_DEST = trace.PACKAGE_ROOT + trace.SOURCES["sampler"]
+# Explicit fixed candidates; missing entries do NOT certify an absence of MTP.
+MTP_SOURCE_CANDIDATES = (
+    "vllm/models/qwen3_8_flash_next/nvidia/mtp.py",
+    "vllm/models/qwen3_8_flash_next/nvidia/model.py",
+    "vllm/models/qwen4_exp.py",
+    "vllm/v1/spec_decode/eagle.py",
+)
+MAX_PLE_BYTES = 150_000
+
+
+class Blocked(RuntimeError):
+    """Print only static failure category, not model or Docker stderr."""
+
+
+def checked_ple(root: Path) -> bytes:
+    path = root / PLE_REPO
+    if path.is_symlink() or not path.is_file():
+        raise Blocked("PLE_REPOSITORY_FILE_MISSING_OR_SYMLINK")
+    if not 0 < path.stat().st_size <= MAX_PLE_BYTES:
+        raise Blocked("PLE_REPOSITORY_SIZE_INVALID")
+    data = path.read_bytes()
+    try:
+        source = data.decode("utf-8")
+        tree = ast.parse(source)
+    except (UnicodeError, SyntaxError):
+        raise Blocked("PLE_REPOSITORY_AST_INVALID") from None
+    classes = {n.name: n for n in tree.body if isinstance(n, ast.ClassDef)}
+    functions = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+    embedding = classes.get("_MmapNgramEmbedding")
+    methods = {n.name for n in embedding.body if isinstance(n, ast.FunctionDef)} if embedding else set()
+    if (not {"MmapPleTable", "_MmapNgramEmbedding"}.issubset(classes)
+            or not {"_ple_unique_h2d_lookup", "apply"}.issubset(functions)
+            or "forward" not in methods
+            or source.count('VLLM_PLE_UNIQUE_H2D') < 2):
+        raise Blocked("PLE_UNIQUE_H2D_SOURCE_ABI_MISSING")
+    return data
+
+
+def dockerfile() -> str:
+    """Two source-only copies; no RUN, no model modifications, all defaults OFF."""
+    return (
+        "FROM " + legacy.IMAGE_TAG + "\n"
+        "COPY --chown=0:0 --chmod=0644 sampler.py " + SAMPLER_DEST + "\n"
+        "COPY --chown=0:0 --chmod=0644 vllm_ple_mmap.py " + PLE_DEST + "\n"
+        "ENV VLLM_P2_NUMERIC_WITNESS=0 VLLM_PLE_UNIQUE_H2D=0\n"
+    )
+
+
+def inspect_local_base_image() -> None:
+    """Require Docker FROM tag to map to the exact protected original digest."""
+    if legacy.IMAGE_ID != trace.ORIGINAL_IMAGE:
+        raise Blocked("ORIGINAL_POLICY_IMAGE_DRIFT")
+    try:
+        info = legacy.inspect("image", legacy.IMAGE_TAG)
+    except (legacy.Blocked, OSError, ValueError, TypeError, KeyError):
+        raise Blocked("ORIGINAL_IMAGE_INSPECTION_FAILED") from None
+    if not isinstance(info, dict) or info.get("Id") != trace.ORIGINAL_IMAGE:
+        raise Blocked("ORIGINAL_FROM_TAG_IMAGE_ID_DRIFT")
+
+
+def mtp_source_summary(data: bytes) -> dict:
+    """Only hash/classes/method names, never dump installed source or checkpoint."""
+    if not 0 < len(data) <= trace.MAX_SOURCE_BYTES:
+        raise Blocked("MTP_ABI_SOURCE_TOO_LARGE")
+    try:
+        tree = ast.parse(data.decode("utf-8"))
+    except (SyntaxError, UnicodeError):
+        raise Blocked("MTP_ABI_AST_INVALID") from None
+    classes = [n for n in tree.body if isinstance(n, ast.ClassDef)]
+    selected = []
+    for cls in classes:
+        if ("mtp" not in cls.name.lower() and
+                "draft" not in cls.name.lower() and
+                "qwen3_8" not in cls.name.lower()):
+            continue
+        names = sorted(n.name for n in cls.body
+                       if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                       and n.name in ("forward", "compute_logits", "load_weights",
+                                     "_make_draft_vllm_config", "__init__"))
+        selected.append({"class": cls.name, "methods": names})
+    return {
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "class_signatures": selected[:24],
+        "class_matches_truncated": len(selected) > 24,
+        "source_only_not_runtime_abi_pass": True,
+    }
+
+
+def _read_mtp_source(path: str) -> bytes | None:
+    """Read one allowlisted file via docker cp; never exec or inspect model."""
+    if path not in MTP_SOURCE_CANDIDATES:
+        raise Blocked("MTP_SOURCE_NOT_ALLOWLISTED")
+    try:
+        cp = subprocess.run(
+            ["docker", "cp", legacy.NAME + ":" + trace.PACKAGE_ROOT + path, "-"],
+            capture_output=True, check=False, timeout=25,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("MTP_SOURCE_DOCKER_CP_UNAVAILABLE") from None
+    if cp.returncode != 0:
+        return None  # Not proven absent; paths can differ across Preview builds.
+    try:
+        return trace.extract_python_tar(cp.stdout)
+    except trace.Blocked:
+        raise Blocked("MTP_SOURCE_ARCHIVE_INVALID") from None
+
+
+def read_mtp_abi() -> dict:
+    result = {}
+    for path in MTP_SOURCE_CANDIDATES:
+        data = _read_mtp_source(path)
+        result[path] = (
+            {"status": "NOT_FOUND_OR_UNREADABLE_NOT_CERTIFIED"} if data is None
+            else {"status": "READ_ONLY_SOURCE_FOUND", **mtp_source_summary(data)}
+        )
+    return {
+        "status": "MTP_DRAFT_ABI_SOURCE_TRIAGE_ONLY",
+        "sources": result,
+        "draft_head_slicing_implemented": False,
+        "draft_token_selection_proven": False,
+        "loader_acceptance_runtime_verified": False,
+    }
+
+
+def prepare(root: Path, *, probe=read_mtp_abi) -> dict:
+    """Read original once and generate a brand-new private candidate stage."""
+    before = trace.original_identity()
+    try:
+        inspect_local_base_image()
+        original = trace._run_docker_cp(trace.SOURCES["sampler"])
+        patched = witness.transform(original)
+        ple = checked_ple(root)
+        mtp = probe()
+    finally:
+        if trace.original_identity() != before:
+            raise Blocked("ORIGINAL_ID_IMAGE_OR_STARTED_AT_CHANGED") from None
+
+    folder = Path(tempfile.mkdtemp(prefix="p2-functional-bundle-", dir="/tmp"))
+    try:
+        folder.chmod(0o700)
+        for filename, data in (
+            ("sampler.py", patched),
+            ("vllm_ple_mmap.py", ple),
+            ("Dockerfile", dockerfile().encode("utf-8")),
+        ):
+            target = folder / filename
+            with target.open("xb") as stream:
+                stream.write(data)
+            target.chmod(0o600)
+    except BaseException:
+        shutil.rmtree(folder)
+        raise
+    return {
+        "status": "P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT",
+        "stage_directory": str(folder),
+        "parent_image_pinned": True,
+        "original_container_unchanged": True,
+        "sampler_source_sha256": witness.SOURCE_SHA256,
+        "sampler_candidate_sha256": hashlib.sha256(patched).hexdigest(),
+        "ple_candidate_sha256": hashlib.sha256(ple).hexdigest(),
+        "numeric_witness_default_off": True,
+        "ple_unique_h2d_default_off": True,
+        "candidate_build_or_gpu_or_api_executed": False,
+        "mtp": mtp,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--expected-head", required=True)
+    mode = p.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--stage", action="store_true")
+    p.add_argument("--confirm-original-id")
+    args = p.parse_args(argv)
+    try:
+        qsa.preflight(args.expected_head)
+        if args.check:
+            ple = checked_ple(qsa.ROOT)
+            print(json.dumps({
+                "status": "P2_BUNDLE_SOURCE_READY_NO_DOCKER",
+                "ple_sha256": hashlib.sha256(ple).hexdigest(),
+                "head": args.expected_head,
+                "candidate_gpu_pass": False,
+                "numeric_root_cause_resolved": False,
+            }, sort_keys=True))
+            return 0
+        if args.confirm_original_id != trace.ORIGINAL_ID:
+            raise Blocked("EXACT_ORIGINAL_CONTAINER_ID_REQUIRED")
+        print(json.dumps(prepare(qsa.ROOT), sort_keys=True))
+        return 0
+    except (Blocked, witness.Blocked, trace.Blocked, legacy.Blocked, qsa.Blocked,
+            OSError, ValueError, TypeError, KeyError):
+        print("P2_FUNCTIONAL_BUNDLE_BLOCKED", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
