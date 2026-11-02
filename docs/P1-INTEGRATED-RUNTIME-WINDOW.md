@@ -1,5 +1,16 @@
 # P1 integrated image: guarded GPU-window lifecycle
 
+## 2026-11-02 P1 단일 통합 정비창 종료 영수증 (현재 상태)
+
+기존 `src.p1_integrated_window --minimal-functional` 경로는 사용자 승인된 DGX 정비창 **1회 실행 완료(exit 0)**. tested HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`, 기존 이미지 `sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d`. Tool 왕복, PLE opt-in CPU 단계 계측, Prefix HIT+MTP2+선택 SHA 12/12 각각 **범위 한정 PASS**. 최종 상태 `P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE`, **출시 차단 유지**.
+
+출시 strict `1e-4` 미해결, `full_state_reuse_verified=false`; 이미지 배포·원본 덮어쓰기/재실행 없음. 실행 후 exact original ID/이미지/running 및 port8000 `/health`, `/v1/models`, 후보 부재 확인 모두 PASS. 따라서 **현재 `start.sh`, `--launch`, `--restore`, stop 명령을 추가로 실행할 이유 없음**. 복구 실패 시에만 독립 소유권 검증 후 안전 절차 검토; 사용자 신규 승인 전 정비창 재개 금지.
+
+지금의 증거·제약: [종료 결과 장부](BLAZUX-PHASE6-RESULTS.md) / [현재 P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md). 아래 10월 31일의 'READ-ONLY NEXT STEP', 'FUTURE GPU SERVICE WINDOW'는 당시 절차 예시이며 지금 수행할 항목이 아니다.
+
+### 이하: 2026-10-31 구축 시점 런처/복구 참고 절차 (역사 기록)
+
+
 Exact integrated P1 image built by operator on DGX (2026-10-31):
 kjlee-qwen38-p1-integrated:bf80867dc5be
 sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d

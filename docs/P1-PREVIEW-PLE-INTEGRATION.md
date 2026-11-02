@@ -1,5 +1,16 @@
 # P1 integrated Preview image — BF16 PLE mmap and opt-in phase stats
 
+## 2026-11-02 PLE 단계별 계측 실제 확인 완료 (현재 최신)
+
+후보 계측은 pinned integrated Docker 이미지를 **재빌드하지 않고**, 소유권 검증된 중지 상태의 격리 컨테이너 writable layer에만 opt-in으로 삽입한 뒤 실행했다. tested HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`, DGX `ple_phase_stats_observed=true`, gather calls=1, forward_calls=1, rows=131072. Forward 16.106ms, Dedup 4.266ms, CPU gather worker 누적 21.772ms, Wait 1.026ms, Stage 3.143ms, device-copy **호출** 0.824ms.
+
+**P1 기능:** BF16 실모델 CPU phase 계측 출력 PASS. 병렬 `gather_work_s`와 inclusive Forward는 합산 불가; `device_copy_call_s`는 CUDA DMA 완료시간이 아니며 `gpu_dma_verified=false`. 실제 H2D/GPU 완료·NVMe 물리 bytes 및 최적화는 P2에 남긴다. 동일 이미지에서 기본 `VLLM_PLE_PHASE_STATS=0` 유지, 원본 서비스 변경 없음. 자세한 증거는 [P1 통합 GPU 영수증](P1-INTEGRATED-EVIDENCE-20261031.md)과 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md)를 따른다.
+
+아래 CPU-only 이미지 빌드 당시의 `NOT_VERIFIED` 및 'GPU work before' 구절은 **2026-10-31 시점 기록**이며 현행 상태를 나타내지 않는다. 현재 기능 결과가 운영 출시 승인으로 바뀌는 것은 아니다.
+
+### 이하: 이미지 생성 당시 구현/시험 기록 (역사 기록)
+
+
 Objective: keep Orcarouter BF16 PLE and MTP2 while integrating existing
 Blazux P1 Prefix-cache, QSA exact top-k experiment, Preview-native
 Tool/Responses patches, and an instrumentable PLE mmap module.

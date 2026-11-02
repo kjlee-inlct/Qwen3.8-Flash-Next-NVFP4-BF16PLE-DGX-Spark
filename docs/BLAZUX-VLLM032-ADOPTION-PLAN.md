@@ -1,6 +1,17 @@
 # blazux vLLM 0.32 도입 검토 및 실증 계획서
 
-> **2026-10-31 최신 Track A/P1 상태 교정 (과거 '운영 적용 0/미실행'은 작성 당시 기록):** 실측 통합 P1 Docker 후보 `sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d`가 승인된 단일 DGX 정비창에서 실제 BF16 PLE + MTP2 + Prefix ON + Exact QSA로 기동, Prefix HIT `[0,6400,6400,6400]`, accepted draft +400, Responses API PASS, 원본 동일 ID/HTTP 복구 PASS. 그러나 Tool result roundtrip 미검증, strict `1e-4` 수치 FAIL, full GDN/PLE reuse/PLE GPU phase stats 미검증 → **P1 미완료 및 운영 배포 미적용**. 원본 Prefix OFF/MTP2/stock QSA도 4회 동일 요청 all-pairs logprob abs drift `0.00036634469870477915`로 FAIL (DGX source HEAD `c9eaccbca557a5157c4134f963bcfdf3c1d57bb1`). 현재 우선 작업은 A 원본 대비 **QSA-only B CPU 이미지 후보** (`c3d31b7f3ab30d91e3562acb87555df19385c1db`, DGX_NOT_RUN), 다음 GPU window는 **별도 승인**. 영구 결과/상세 수치는 [활성 핸드오프](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), [Phase6 ledger](BLAZUX-PHASE6-RESULTS.md), [QSA-only 문서](P1-QSA-ONLY-NUMERIC-ISOLATION.md) 참조. vLLM 0.32 Track B/P2/P3 승격 금지. 아래 10월 28~29일 'latest' 문구는 역사적 시점 기록.
+## 2026-11-02 P1 최소 기능 완료 및 P2 Track B 착수 전 상태
+
+사용자 DGX 실측 소스 HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`: Tool 강제 함수 호출→결과→최종응답 PASS, BF16 PLE 실제 phase sample calls=1/forward_calls=1/131072 rows, Prefix HIT `[0,6400,6400,6400]`, MTP accepted +400, 선택 상태 SHA 12/12 match. Source 327/327·targeted CPU 20/20, 원본 동일-ID·이미지·HTTP 복구 PASS. 따라서 **P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS (합의된 최소 실경로)**.
+
+**P1의 운영 출시 승인은 별개:** `P1_RELEASE_BLOCKED=TRUE`, `P1_FINAL_PASS=FALSE`, `DEPLOYED=FALSE`, `strict_numeric_release_pass=false`, `full_state_reuse_verified=false`. 전역 first-token strict logprob `1e-4` 수치 비재현성 원인 분석, 심화 GDN/PLE physical state/copy 검증 및 H2D 성능은 P2 이관 범위지만 기능 PASS를 출시 PASS로 바꾸지 않는다. **P2 MTP reduced draft vocab / PLE Gather / 별도 vLLM 0.32 Track B와 P3 YaRN500K/FP8은 아직 착수되지 않았고 자동 진행 승인도 없다.**
+
+기존 2026-10-31 'Tool 왕복 미검증', 'PLE GPU stats 미검증', '다음 QSA 후보'는 당시 유효했던 역사 기록이며 현재 해야 할 지시가 아니다. [현행 P1 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), [결과 장부](BLAZUX-PHASE6-RESULTS.md)를 현재 정본으로 사용한다.
+
+### 이하: 기존 vLLM 0.32 도입 계획 및 과거 실험 기록 (역사 기록)
+
+
+> **2026-10-31 당시 Track A/P1 상태 교정 (과거 '운영 적용 0/미실행'은 작성 당시 기록):** 실측 통합 P1 Docker 후보 `sha256:1a8b53fc06faaab809f3691c6e69cc9268327277ae46e108f3d9549f01a8271d`가 승인된 단일 DGX 정비창에서 실제 BF16 PLE + MTP2 + Prefix ON + Exact QSA로 기동, Prefix HIT `[0,6400,6400,6400]`, accepted draft +400, Responses API PASS, 원본 동일 ID/HTTP 복구 PASS. 그러나 Tool result roundtrip 미검증, strict `1e-4` 수치 FAIL, full GDN/PLE reuse/PLE GPU phase stats 미검증 → **P1 미완료 및 운영 배포 미적용**. 원본 Prefix OFF/MTP2/stock QSA도 4회 동일 요청 all-pairs logprob abs drift `0.00036634469870477915`로 FAIL (DGX source HEAD `c9eaccbca557a5157c4134f963bcfdf3c1d57bb1`). 현재 우선 작업은 A 원본 대비 **QSA-only B CPU 이미지 후보** (`c3d31b7f3ab30d91e3562acb87555df19385c1db`, DGX_NOT_RUN), 다음 GPU window는 **별도 승인**. 영구 결과/상세 수치는 [활성 핸드오프](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), [Phase6 ledger](BLAZUX-PHASE6-RESULTS.md), [QSA-only 문서](P1-QSA-ONLY-NUMERIC-ISOLATION.md) 참조. vLLM 0.32 Track B/P2/P3 승격 금지. 아래 10월 28~29일 'latest' 문구는 역사적 시점 기록.
 
 
 > **2026-10-29 upstream 최신 HEAD 비교:** [blazux `7e63dbe` ↔ Orcarouter BF16 PLE/MTP 현재 구현 및 P1–P3 상태](BLAZUX-UPSTREAM-COMPARISON-20261029.md). 이 비교는 기존 `8bb7a717` 고정점의 *역사적 분석*을 대체하지 않으며 신규 패치/GPU/HTTP/v0.32 포팅 승인이 아니다. 최신 DGX CPU 기능 SHA `29e78cdc`와 해당 비교 직전 docs-only SHA `73727212`를 분리한다. Prefix-cache 실제 ABI는 계속 `BLOCKED`, PLE 계측 및 Tool/Responses는 **CPU_VERIFIED**, 신규 기능 운영 적용 0건이다. 아래의 과거 Phase별 설명은 당일 계획/영수증으로 보존한다.

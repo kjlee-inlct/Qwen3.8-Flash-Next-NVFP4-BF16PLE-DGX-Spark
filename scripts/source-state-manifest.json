@@ -181,7 +181,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "blob_sha": "d06ff3491a86d62cd38dda2c15268b3fadfc884b"
+      "blob_sha": "b4ea8cfe59e253952f81d6e9f938a315e7a026b4"
     },
     {
       "path": "benchmarks/common.py",
@@ -431,7 +431,7 @@
     {
       "path": "docs/BLAZUX-VLLM032-ADOPTION-PLAN.md",
       "mode": "100644",
-      "blob_sha": "06c19ba1d59ada6daab497a4a9865b6f98dedaa6"
+      "blob_sha": "7f31f9fbce54e4f7f2f75755fd587d284c40fe56"
     },
     {
       "path": "docs/COMPATIBILITY.md",
@@ -451,17 +451,17 @@
     {
       "path": "docs/P1-INTEGRATED-EVIDENCE-20261031.md",
       "mode": "100644",
-      "blob_sha": "2167588069aed242bead1491e0e3af2832095692"
+      "blob_sha": "89e70f3dc1efd3b74d4e0c5324323ed92bdfadc7"
     },
     {
       "path": "docs/P1-INTEGRATED-RUNTIME-WINDOW.md",
       "mode": "100644",
-      "blob_sha": "6e4d49451024a56c23cd68dba7a13368da1dcb3b"
+      "blob_sha": "53a4021629a88481c7030695ca56a5852ca036ff"
     },
     {
       "path": "docs/P1-INTEGRATED-WINDOW-ORCHESTRATION.md",
       "mode": "100644",
-      "blob_sha": "e1e1b116629268341c61da752acf008a78fec246"
+      "blob_sha": "6932b9452d5bd525b4ca79292e5ffcd529bc8561"
     },
     {
       "path": "docs/P1-ORIGINAL-NUMERIC-BASELINE.md",
@@ -481,12 +481,12 @@
     {
       "path": "docs/P1-PREFIX-RELEASE-DEPLOYMENT-20261030.md",
       "mode": "100644",
-      "blob_sha": "e8ec1dfe7202ab3df91fecc8567442db68cf983c"
+      "blob_sha": "32cdfa6aa7f919e02568755d8b3ce2b460a76c8a"
     },
     {
       "path": "docs/P1-PREVIEW-PLE-INTEGRATION.md",
       "mode": "100644",
-      "blob_sha": "b1179ed67f6865f5220594712a6b734ba8c03d11"
+      "blob_sha": "fc10b84b6b06a1436099504de468295c533dc3ff"
     },
     {
       "path": "docs/P1-PREVIEW-QSA-EXACT-TOPK.md",

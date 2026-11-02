@@ -1,5 +1,14 @@
 # P1 Prefix ON deployable image — feature branch, 2026-10-30
 
+## 2026-11-02 P1 기능 검증 종료 / release image 운영 적용은 BLOCKED
+
+사용자 DGX tested HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`의 **별도 통합 후보**에서 Prefix HIT `[0,6400,6400,6400]`, MTP accepted +400, token IDs 동일, 선택 state SHA 12/12 일치, 원본 동일-ID/HTTP 복구를 확인했다. 따라서 **P1 최소 기능 범위는 BOUNDED_PASS**이나, 이 문서의 독립된 **두 파일짜리 Prefix release image 자체를 운영 배포하거나 strict 출시 승인한 것은 아님**.
+
+`P1_RELEASE_BLOCKED=TRUE`, `P1_FINAL_PASS=FALSE`, `DEPLOYED=FALSE`, `strict_numeric_release_pass=false`, `full_state_reuse_verified=false`. 기존 `1e-4` 수치 실패가 남아 있고 전체 GDN/PLE state/copy 실행 증거도 아님. 아래 `--build`/`--launch`/`--restore`는 역사적 구축·복구 참고용이며 **지금 자동으로 실행할 다음 단계가 아니다**. 사용자 별도 승인 없이는 이미지 교체·GPU·서비스 stop/start 금지. 자세한 결과는 [P1 실증 장부](BLAZUX-PHASE6-RESULTS.md) 확인.
+
+### 이하: 2026-10-30 빌드/검증 시점의 절차 기록 (역사 기록)
+
+
 ## Scope: build the feature, not more synthetic validation
 
 The P1 Preview Prefix-cache fixes are already proven to cause real cache HITs

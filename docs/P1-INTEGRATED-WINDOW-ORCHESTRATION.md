@@ -1,5 +1,16 @@
 # P1 integrated GPU window orchestrator (2026-10-31 executed once; next window unapproved)
 
+## 2026-11-02 최소 기능 GPU window 실행 완료 (현재 최신)
+
+실제 DGX tested HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`의 **`--minimal-functional`** 경로로 단 한 번의 승인된 정비창을 수행. CPU 20/20 PASS, 실제 Tool result roundtrip PASS, PLE phase stats 수집 PASS, Prefix HIT `[0,6400,6400,6400]`/MTP accepted +400/선택 state SHA 12/12 match. `functional_evidence_complete=true`, window exit0. 원본 SAME-ID running·original-image unchanged·candidate removed·HTTP health/model 확인 PASS.
+
+**기능 PASS와 출시 PASS는 다름:** `P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS`, `P1_RELEASE_BLOCKED=TRUE`, `P1_FINAL_PASS=FALSE`, `strict_numeric_release_pass=false`, `full_state_reuse_verified=false`. 기존 full/strict 절차와 이 최소 창의 실행 범위는 달랐으며, **이 창에서는 과거 Responses/No-HIT/strict numeric 재시험을 생략**했다. 단일 정비창 승인은 사용 완료. `--minimal-functional`이라고 해도 새 승인 없이는 재실행 불가.
+
+복구 안전장치(정확 ID, 후보 소유권, `finally` 복구)와 10월 31일 이력은 그대로 보존한다. [상세 기능 증거](P1-INTEGRATED-EVIDENCE-20261031.md) 및 [영구 결과 장부](BLAZUX-PHASE6-RESULTS.md) 우선.
+
+### 이하: 2026-10-31 초안·실행 당시 내역 (역사 기록)
+
+
 User DGX at feature HEAD 920444f1a6f85931ffc34ff1dcd25f73674a579e
 verified Source Manifest 298/298, targeted API+runtime 16/16 unit PASS,
 and integrated read-only preflight on the same original service ID.

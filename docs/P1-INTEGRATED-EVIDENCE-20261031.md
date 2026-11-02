@@ -1,5 +1,22 @@
 # P1 integrated candidate DGX evidence — 2026-10-31
 
+## 2026-11-02 통합 기능 최종 DGX 영수증 (아래 10-31 실험보다 최신)
+
+**실제 실행 소스** `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`; Source Manifest **327/327 PASS**, 최소 통합 런타임·정비창 CPU **10/10 + 10/10 PASS**, read-only functional preflight PASS. 승인된 단일 격리 GPU 창은 종료 코드 **0**, `P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE`, `functional_evidence_complete=true`, `primary_error=null`.
+
+| P1 최소 기능 | 사용자 DGX 실측 | 범위 |
+| --- | --- | --- |
+| Tool/Responses | `tool_full_roundtrip=PASS`: forced named tool call ID/arguments → tool result → final answer. 기존 Responses nonstream/stream PASS 재사용 | Tool 왕복 PASS; 재시험 없음 |
+| BF16 PLE phase stats | `ple_phase_stats_observed=true`, `calls=1`, `forward_calls=1`, `rows=131072`; CPU phase 값 수집 | DMA 완료시간/실 GPU kernel 시간은 미측정 (`gpu_dma_verified=false`) |
+| Prefix ON + MTP2 | HIT `[0,6400,6400,6400]`, draft accepted +400, token IDs 동일, Cold→HIT 2·3·4의 선택 상태 각각 4/4 SHA 일치, 총 12/12, mismatch0 | `bounded_state_match=true`, `full_state_reuse_verified=false` |
+
+**출시 판단은 독립:** `P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS` (합의된 최소 검증 범위만), `P1_RELEASE_BLOCKED=TRUE`, `P1_FINAL_PASS=FALSE`, `DEPLOYED=FALSE`, `strict_numeric_release_pass=false`. 원본 Prefix OFF/No-MTP/first-token 및 Prefix ON에서 이전 strict logprob `1e-4` 초과 실측이 있어 출시 Gate는 여전히 미통과. 이 기능 창에서 strict no-HIT/numeric 재시험은 생략했으므로 기능 PASS가 숫자 Gate PASS는 아니다. 전 계층 실제 state/copy provenance와 CUDA H2D 완료 측정도 입증하지 않았다.
+
+**운영 원복:** 후보 삭제, 원본 정확한 same-ID running·image unchanged·port 8000 `/health`·`/v1/models` PASS. 기존 통합 이미지는 그대로 사용했고 후보의 독립 writable layer에만 관측 코드를 복사했다. 실제 영수증과 이관 경계는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md), [현재 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 우선한다. 승인된 단일 창은 소진됐다. 이후 새 정비창을 자동 실행하지 않는다.
+
+### 이하: 2026-10-31 당시의 준비 및 이전 GPU 실행 기록 (역사 기록)
+
+
 Observed on DGX, feature branch HEAD 0ac95dbbccbeec2e261979886e120190608e20a8.
 User-provided exact source/test/preflight log, no runtime inference.
 

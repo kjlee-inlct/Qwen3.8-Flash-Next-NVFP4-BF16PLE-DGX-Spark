@@ -1,6 +1,17 @@
 # Qwen3.8-Flash-Next BF16 PLE recipe for DGX Spark
 
-> **P1 진행 상태 (2026-10-29, 기능 브랜치):** 마지막 사용자 DGX-tested SHA `c342e033c6e601f374520eefb6a9d0e9277b54ef`에서 Prefix-cache ON 격리 GPU 후보가 **9,492-token cold+3 repeat 중 HIT 6,400 tokens ×3**, 비어 있지 않은 텍스트·3 token IDs 일치 및 기존 서비스 동일-ID/HTTP 복구까지 확인됐다. Strict token logprob max diff **0.003320594** > `1e-4`, 실제 Mamba physical state mapping 및 full P1 correctness는 **미완료**. 원본 port 8000 운영 Prefix-cache는 계속 OFF이고 후보 패치를 운영 서비스/이미지에 적용하지 않았다. 새 세션은 [영구 운영규칙](docs/SESSION-HANDOFF-PROMPT.md) → [P1 활성 인수인계](docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) → [GPU 실측 결과](docs/BLAZUX-PHASE6-RESULTS.md) → [안전한 stop/restore 절차](docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md) 순서로 확인한다. 기존 서비스는 마지막 시험 종료 시 복구됐으므로 `running`이면 **재시작하지 않는다**. 최신 feature HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`의 logprob drift 추가 계측은 DGX 미실행이다.
+## P1 종료 상태 — 2026-11-02 (현재 정본)
+
+**P1의 세 기능은 합의된 최소 GPU 실경로에서 검증 완료(BOUNDED_PASS), 운영 출시는 차단 유지(BLOCKED)**. 사용자 DGX에서 실행한 소스 HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`: Source 327/327, CPU 20/20, 단일 통합 GPU 창 exit 0; Tool Calling의 강제 함수 호출→결과→최종 응답 PASS, BF16 PLE phase stats `calls=1`, `forward_calls=1`, `rows=131072`, Prefix HIT `[0,6400,6400,6400]`, MTP accepted +400, 선택 상태 SHA 12/12 일치. 원본 동일 컨테이너 ID·이미지·HTTP 복구, 후보 제거 PASS.
+
+**독립 출시 차단:** `P1_RELEASE_BLOCKED=TRUE`, `P1_FINAL_PASS=FALSE`, `DEPLOYED=FALSE`, `full_state_reuse_verified=false`. 기존 per-token logprob strict `1e-4` 실패는 미해결이고 이번 기능 창에서 숫자 Gate를 재시험하지 않았다. 선택 상태 SHA 일치는 전체 GDN/PLE 계층·물리 복사 정합성의 증명이 아니다. 공통 수치 비재현성의 원인 분석·심화 상태/성능 검증은 P2로 분리됐지만 **P2 착수나 출시 승인 자체는 아직 없다**.
+
+현재 작업 확인 순서: [P1 최종 실측 영수증](docs/BLAZUX-PHASE6-RESULTS.md) → [현재 P1 종료 및 P2 이관](docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) → [영구 운영/인수인계 규칙](docs/SESSION-HANDOFF-PROMPT.md). 이전 날짜의 'P1 진행 중', 'GPU NOT_RUN', '다음 정비창' 문장은 작성 당시 기록이며 지금 재실행할 지시가 아니다. 새로운 GPU/원본 중지, PR/merge/main, P2/P3 실행은 별도 승인 필요.
+
+---
+
+
+> **역사 기록 — 2026-10-29 당시 P1 진행 상태 (현재 지침 아님):** 마지막 사용자 DGX-tested SHA `c342e033c6e601f374520eefb6a9d0e9277b54ef`에서 Prefix-cache ON 격리 GPU 후보가 **9,492-token cold+3 repeat 중 HIT 6,400 tokens ×3**, 비어 있지 않은 텍스트·3 token IDs 일치 및 기존 서비스 동일-ID/HTTP 복구까지 확인됐다. Strict token logprob max diff **0.003320594** > `1e-4`, 실제 Mamba physical state mapping 및 full P1 correctness는 **미완료**. 원본 port 8000 운영 Prefix-cache는 계속 OFF이고 후보 패치를 운영 서비스/이미지에 적용하지 않았다. 새 세션은 [영구 운영규칙](docs/SESSION-HANDOFF-PROMPT.md) → [P1 활성 인수인계](docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md) → [GPU 실측 결과](docs/BLAZUX-PHASE6-RESULTS.md) → [안전한 stop/restore 절차](docs/P1-PREFIX-LIVE-SERVICE-WINDOW-20261029.md) 순서로 확인한다. 기존 서비스는 마지막 시험 종료 시 복구됐으므로 `running`이면 **재시작하지 않는다**. 최신 feature HEAD `05ee525e19553f46b0b5634f839e58d96ba1357a`의 logprob drift 추가 계측은 DGX 미실행이다.
 
 
 A recipe to run NVFP4 Qwen3.8-Flash-Next with its full-precision BF16 PLE memory-mapped from NVMe on a single NVIDIA DGX Spark (GB10).
