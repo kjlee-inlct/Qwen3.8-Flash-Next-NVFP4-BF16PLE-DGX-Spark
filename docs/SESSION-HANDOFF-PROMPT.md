@@ -1,5 +1,12 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-02 영구 Workspace 정리 규칙 — 보존 우선/새 Phase checkout 증식 중단
+
+- DGX `~/Workspace/llm` 아래에 단계별 복수 checkout이 누적되었으므로, P2 이후 개발은 가능하면 **기존 `blazux-phase6-gates` Fork checkout에서 Git pull** 방식으로 수행한다. 단계가 바뀌었다는 이유만으로 `blazux-phaseN-*` 디렉터리를 새로 생성하지 않는다.
+- 운영 원본과 연결될 수 있는 `yslab-qwen38-bf16ple-dgx-spark`, `qwen38-orca-uncensored`, 벤치 증거 `bench-results-staging`, Docker bind/volume/HF cache/weights/pinned Stage는 승인 없이 이동·삭제·압축·교체하지 않는다. 과거 Phase 1~5 checkout 및 llama-benchy 관련 폴더도 **Git 변경·미추적 파일·worktree·Docker mount·다른 프로세스와 스크립트 참조 여부 확인 전** 임의 정리 금지. `git reset --hard` / `git clean -fd` / `rm -rf` 금지.
+- Read-only 실행 진입점: `bash scripts/p2-workspace-inventory.sh`. 실제 DGX에서는 **Git pull 후** 실행. 보고서의 `REVIEW_FOR_ARCHIVE`는 자동 이동/삭제 승인이 아닌 잠정 목록으로만 사용한다. [폴더 정리 Runbook](P2-WORKSPACE-CLEANUP-RUNBOOK.md)을 참고한다. 실제 이동은 evidence·백업·경로 영향 확인 및 별도 승인 후 스크립트 제공.
+
+
 ## 2026-11-02 영구 DGX 작업 위임 — Git pull 기반 실행
 
 사용자의 DGX 실제 작업은 **GitHub에 실행 가능한 코드·테스트·스크립트와 문서를 먼저 완성/커밋하여, DGX의 개인 Fork checkout에서 `git pull --ff-only` 후 정해진 스크립트만 실행**할 수 있도록 제공한다. 사용자가 임의 코드 조각을 수동으로 합성·수정할 필요가 없어야 한다. 명령은 브랜치·작업 경로·실행 모드·예상 상태·실패·증거 회수를 포함하며, 작업이 필요할 때마다 해당 기능의 runbook/스크립트를 업데이트한다. 코드 반영과 실제 DGX 실행·시험 판정은 SHA별로 별도 관리한다.
