@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 340,
+  "tracked_file_count": 347,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,7 +510,12 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "016eeefe8d9da2cf278199099d0293849ebf3242",
+      "blob_sha": "e64c4fe31f92cbe1852ac9f39b85ad06cbe383ed",
+      "mode": "100644"
+    },
+    {
+      "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
+      "blob_sha": "ceb263bcfcf6ffc9569da60e70bb63ca0d06d1a7",
       "mode": "100644"
     },
     {
@@ -812,6 +817,11 @@
       "path": "scripts/p1-prefix-stage.sh",
       "mode": "100755",
       "blob_sha": "9665323b0179864f3a4a4084b36833de53d4460c"
+    },
+    {
+      "path": "scripts/p2-batch-dgx.sh",
+      "blob_sha": "d0a08c4f817e3ca0bbec122b26c9f8ab87c6f316",
+      "mode": "100755"
     },
     {
       "path": "scripts/p2-numeric-dgx.sh",
@@ -1169,6 +1179,11 @@
       "blob_sha": "bc9b016fcc365c94a46c93efb6aef3fc03120ef5"
     },
     {
+      "path": "src/p2_mtp_draft_vocab.py",
+      "blob_sha": "5cafe3d376018339c0961c1a4f3a1f19219a1750",
+      "mode": "100644"
+    },
+    {
       "path": "src/p2_numeric_boundary.py",
       "mode": "100644",
       "blob_sha": "317c0f4a66a6c7ddf8c6e91e7170f098bb85aa47"
@@ -1177,6 +1192,11 @@
       "path": "src/p2_numeric_dgx_prepare.py",
       "mode": "100644",
       "blob_sha": "dcd223e038a82e1957da8bc53eb9cc37bb27b990"
+    },
+    {
+      "path": "src/p2_numeric_report.py",
+      "blob_sha": "9789708d002a515a97a9e2e876fa4ab3618c6cda",
+      "mode": "100644"
     },
     {
       "path": "src/p2_numeric_sampler_witness.py",
@@ -1440,8 +1460,8 @@
     },
     {
       "path": "src/vllm_ple_mmap.py",
-      "mode": "100644",
-      "blob_sha": "71c23b83e6e1ddda7d3871f90a18d20a2fb0b8c5"
+      "blob_sha": "3fcc4245d2fd185977c2b1c36e3260d374b6e957",
+      "mode": "100644"
     },
     {
       "path": "tests/fixtures/phase6_a3b_synthetic.json",
@@ -1779,6 +1799,11 @@
       "blob_sha": "4ef4d47d5199c546d4c9c4f8c8c2b1837f50a0aa"
     },
     {
+      "path": "tests/test_p2_mtp_draft_vocab.py",
+      "blob_sha": "872e9632df2ffcb426445b03b7384b86a83e8bb4",
+      "mode": "100644"
+    },
+    {
       "path": "tests/test_p2_numeric_boundary.py",
       "mode": "100644",
       "blob_sha": "545c4af217c7aca6a571e57c32213adfcacfd9ed"
@@ -1789,9 +1814,19 @@
       "blob_sha": "d35ae0ae83dae6c84865fee3106f36c2608900d3"
     },
     {
+      "path": "tests/test_p2_numeric_report.py",
+      "blob_sha": "7505c9f4414a1a99915df147f069fe97aca8c623",
+      "mode": "100644"
+    },
+    {
       "path": "tests/test_p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "8181bb6cb16ce7ef5912c4f388d3f02b4cc7cf5a"
+    },
+    {
+      "path": "tests/test_p2_ple_unique_h2d.py",
+      "blob_sha": "17fc3fd6c5a74acf547af78d378be483e15e9792",
+      "mode": "100644"
     },
     {
       "path": "tests/test_p2_workspace_inventory.py",
