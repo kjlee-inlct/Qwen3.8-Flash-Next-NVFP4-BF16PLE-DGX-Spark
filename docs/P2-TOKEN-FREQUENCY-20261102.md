@@ -1,3 +1,22 @@
+## 2026-11-02 P2 빠른 통합 CPU 오프라인 기능 — 호스트 tokenizers 부재 직접 우회 (비설치)
+
+- **사용자 DGX HEAD `8a96f1277dfb8ad3ac6f571dc6847c33c1d9e123`**: `--probe` Source preflight PASS, targeted **20/20 PASS**, 이후 **`P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE`**. 실패 원인은 호스트 Python에 `tokenizers` 패키지가 **설치되지 않은 것**으로 실측 확정; 원본/레시피 tokenizer SHA mismatch가 아님. 기존 Source Audit `d26b854` exact match 유지.
+- 신규 **실기능 우선 통합 스크립트** `scripts/p2-offline-bundle-dgx.sh --execute --probe|--count`: 이미 존재하는 동일 고정 원본 이미지의 **분리된 CPU-only `runc` 일회용 컨테이너 하나**에서 단위시험 **20(Token Frequency)+10(Vocab Artifact)+7(MTP Head)=37건**, 실제 tokenizer/config CPU encoder probe를 한 번에 실행. 호스트 pip/apt 설치 없음, 컨테이너 안에서 의존성 자동 설치 없음. 패키지가 기존 이미지에도 없다면 **차단**하며 성공을 주장하지 않는다.
+- 보호: exact 원본 실행 ID·image·StartedAt 전후 동일성, MemAvailable 8GiB/4GiB, 2CPU/2GiB, network=none, no GPU, `--pull=never`, rootfs/repo/tokenizer/config/선택 corpus read-only, 호스트 non-root UID, source clean/Manifest PASS. 단순 `--check`와 다르게 **사용자가 `--execute`로 명시 실행해야 Docker run이 발생**. original Docker exec/stop/restart/weights/cache/API/모델 로드 금지.
+- 입력이 실제 허가된 `--text DOMAIN ABS_PATH` 또는 `--corpus DOMAIN ABS_PATH`로 제공된 경우에만 `--execute --count`를 선택: **동일 CPU run에서** 정확한 Orcarouter tokenizer로 로컬 빈도 `P2_TOKEN_COUNTS_V1` 생성 → 기존 `src.p2_mtp_vocab_artifact.build` 65,536 ID NumPy 후보/receipt 생성 → 개인 `/tmp/p2-offline-bundle-*/` 보존. 실제 코퍼스 없이 가상/합성 빈도를 운영용으로 생성하지 않음. Target/active runtime head/acceptance/strict numeric/GPU 품질 및 출시 **NOT_VERIFIED**.
+- 새 스크립트는 GitHub source 기능이며 **DGX_NOT_RUN / CI_NOT_RUN**. 실제 결과는 exact 실행 HEAD와 출력으로만 승격한다. 테스트 성공 37/37은 실제 토크나이저 인코딩 PASS와 구분하여 보고한다.
+
+```bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-offline-bundle-dgx.sh --execute --probe
+# 사용권이 명확한 실제 자료가 있을 때만 (아래 경로는 설명용):
+bash scripts/p2-offline-bundle-dgx.sh --execute --count \
+  --text technical /actual/authorized/report.md \
+  --text code /actual/authorized/example.py \
+  --corpus ko /actual/authorized/ko.jsonl
+```
+
 ## 2026-11-02 신규 사용자 DGX `--probe` 실측 차단 및 오류 분류 보강
 
 - **실제 DGX 실행 SHA `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`**: `git pull --ff-only` up-to-date, Source preflight PASS, 집중 synthetic **16/16 PASS**, SKIP 0. 실제 토크나이저 준비 절차에서 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED` (exit2) 반환. **실제 토크나이저 CPU 인코딩 PASS 아님**. 이 오류만으로 tokenizers package/metadata/config/encoding 중 원인 분류 불가.

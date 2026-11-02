@@ -1,3 +1,9 @@
+## 2026-11-02 P2 Token Frequency 실제 환경 원인 확정 → 한 번의 격리 CPU 묶음으로 진행
+
+- **사용자 DGX HEAD `8a96f1277dfb8ad3ac6f571dc6847c33c1d9e123`:** Source preflight PASS, targeted **20/20 PASS / SKIP0**, real CPU tokenizer `--probe`는 `TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE`. 운영 토크나이저/모델 버그가 아닌 **호스트 Python 의존성 결여**에 의해 실제 인코딩 시험이 차단됐음. 원본/recipe exact byte SHA 이전 감사 유지.
+- P2를 한 턴/한 번의 DGX 실행으로 진전시키기 위해 [오프라인 기능 정본](P2-TOKEN-FREQUENCY-20261102.md)에 새로운 `scripts/p2-offline-bundle-dgx.sh --execute --probe` 추가: 기존 pin 원본 이미지 기반 별도 runc CPU-only 격리 실행, 관련 targeted **37 시험 + 실제 tokenizer/config probe**. 사용자가 실제 허가 corpus를 제공한 경우에는 `--execute --count`로 같은 실행에 Token ID counts 및 private 65,536 candidate .npy/receipts까지 생성. Docker run은 `--execute`에만 허용되며 GPU/API/원본 컨테이너/이미지 변경 일절 없음. 새 코드 DGX_NOT_RUN / CI_NOT_RUN.
+- Numeric strict 1e-4, Native MTP2 acceptance, GDN/PLE physical state, PLE GPU H2D 및 Track B는 미완료. 새 GPU 정비창/운영 변경/CI 호출/배포 금지 유지. 후보 CPU assets 생성만으로 P2 release 완료 판정 금지.
+
 ## 2026-11-02 실제 DGX `--probe` 소스 회귀 16/16 PASS, 실제 CPU 토크나이저 BLOCKED
 
 - **실측 SHA `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`:** Source Preflight PASS, `tests.test_p2_token_frequency` **16/16 PASS / SKIP0**, 하지만 `--probe`의 실제 토크나이저 검증은 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED`로 중지. 원인은 기존 CLI가 안전 분류 이유를 출력하지 않았으므로 **미확정**. Tokenizer 원본 SHA 감사 PASS는 이전 `d26b854` 근거로 유지; 인코딩 및 설치된 패키지 미검증.
