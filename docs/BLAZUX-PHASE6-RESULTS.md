@@ -1,13 +1,13 @@
 ## 2026-11-02 사용자 제공 DGX P2 tokenizer source audit 실측
 
 - 사용자 실행 **d26b854c16c155917da7af722fb06d4090b5db0c**: scripts/p2-tokenizer-source-audit-dgx.sh --audit Source Preflight PASS, unittest 6/6 PASS, Orcarouter snapshot/recipe copy **P2_RECIPE_ORCAROUTER_TOKENIZER_EXACT_MATCH_SOURCE_ONLY**. SHA256 **06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523**, model vocab 248044, added 33, declared 248077, marked special 21, max id 248076, Head rows 248320. active_container_mount_proven=false, tokenizer_config_specials_verified=false, actual_domain_token_counts_available=false. **GPU/API/deployment NOT_RUN**.
-- 이후 실제 기능 방향: [오프라인 corpus Token Frequency](P2-TOKEN-FREQUENCY-20261102.md). 신규 코드 LOCAL synthetic 10/10, DGX/CI NOT_RUN, 허가된 실제 코퍼스 미제공, 65,536 ID asset 및 runtime GPU 검증 미진행.
+- 이후 실제 기능 방향: [오프라인 corpus Token Frequency](P2-TOKEN-FREQUENCY-20261102.md). 신규 코드 LOCAL synthetic 11/11, DGX/CI NOT_RUN, 허가된 실제 코퍼스 미제공, 65,536 ID asset 및 runtime GPU 검증 미진행.
 
 # Phase 6 evidence ledger
 
 ## 2026-11-02 P2 Draft Vocab 자산 신규 DGX 시험 및 토크나이저 후보
 
-- 사용자 HEAD `d2c45cc4c41e10ec14e567a992e62fc566aaa257`에서 preflight PASS, 신규 NumPy asset source-only 시험 **10/10 PASS**. 실 `--build /path/to/actual-counts.json /path/to/exact-local-tokenizer.json`은 placeholder 경로 사용으로 `P2_DRAFT_VOCAB_ARTIFACT_BLOCKED`; 세부 범주는 출력되지 않으므로 직접 파일 접근 실패만 확정할 수 없음. 실제 `.npy` 없음.
+- 사용자 HEAD `d2c45cc4c41e10ec14e567a992e62fc566aaa257`에서 preflight PASS, 신규 NumPy asset source-only 시험 **11/11 PASS**. 실 `--build /path/to/actual-counts.json /path/to/exact-local-tokenizer.json`은 placeholder 경로 사용으로 `P2_DRAFT_VOCAB_ARTIFACT_BLOCKED`; 세부 범주는 출력되지 않으므로 직접 파일 접근 실패만 확정할 수 없음. 실제 `.npy` 없음.
 - 사용자 `find`에서 `orca-uncensored-bf16-mtp/ee5b6b553f1226d2/tokenizer.json` 레시피 뷰와 `models--orcarouter--Qwen3.8-Flash-Next-Uncensored-NVFP4/snapshots/3a3b63161c0745390e5270179af42e46efc70799/tokenizer.json` 발견. 새로운 SHA 비교 감사 코드는 GitHub 작업으로 추가하되 DGX 실행 증거는 아직 없음.
 
 ## 2026-11-02 P2 3-COPY 통합 후보 source stage (사용자 DGX 증거)
@@ -32,7 +32,7 @@
 
 ### A. P1 기능별 검증 기록 — 합의된 bounded 범위 완료
 
-- **Source/CPU:** Source Manifest **327/327 PASS**, integrated runtime 단위시험 **10/10**, integrated window 단위시험 **10/10** (총 **20/20 PASS**), read-only functional preflight PASS.
+- **Source/CPU:** Source Manifest **327/327 PASS**, integrated runtime 단위시험 **11/11**, integrated window 단위시험 **11/11** (총 **20/20 PASS**), read-only functional preflight PASS.
 - **Tool Calling/Responses:** 강제 named function tool-call ID·JSON arguments 검증 → 동일 대화에 tool result 전달 → 최종 text 응답, **tool_full_roundtrip=PASS**. Responses nonstream/stream은 기존 실서버 PASS 영수증 재사용(이번 정비창에서 반복 미실행).
 - **BF16 PLE opt-in phase stats:** **ple_phase_stats_observed=true**, 실제 gather **calls=1**, **forward_calls=1**, **rows=131072**. forward_s=0.016106178984045982, dedup_s=0.004265901050530374, gather_work_s=0.021771896979771554, wait_s=0.0010262555442750454, stage_s=0.003143151057884097, device_copy_call_s=0.0008235869463533163. gather_work_s는 병렬 worker 시간 합계이며 forward와 합산 불가. device_copy_call_s는 호스트 호출시간, GPU H2D 완료시간 아님(**gpu_dma_verified=false**).
 - **Prefix-cache + MTP2:** 실제 cache hit delta **[0.0, 6400.0, 6400.0, 6400.0]**, accepted MTP draft token **+400.0**, 동일 Token ID. Cold와 2·3·4번째 HIT 각각 selected state SHA **4/4 match**, 총 **12/12 match**, **0 mismatch**, all_hit_requests_have_comparable_samples=true. **bounded_state_match=true**, **full_state_reuse_verified=false**. 선택된 state 바이트 동일성만 실측했으며 전체 GDN/PLE layer·restore-copy 실행과 시간의 완전한 증명이 아니다.
@@ -323,13 +323,13 @@
 ## 2026-10-30 Actual Preview state copy code audit — CPU ONLY, no GPU executed
 
 - Source supplied as p1-closure-abi.MOxSlTwv.log; installed image mamba_utils.py SHA256 25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3. Worker pre/post kernels and _copy_mamba_state_block inspected. SD/DS conv and temporal paths use different byte ranges and bias-based source selection, and require source-before vs destination-after evidence.
-- Added synthetic CPU-only copy-range planner/comparator (10 tests), entire image Mamba-utils SHA guard and optional _memcpy_u64_tiled helper source inventory (2 tests), and expanded closure-prep Stage source log. Targeted CPU expected 71 + 10 + 2 = 83, DGX/CI NOT_RUN.
+- Added synthetic CPU-only copy-range planner/comparator (11 tests), entire image Mamba-utils SHA guard and optional _memcpy_u64_tiled helper source inventory (2 tests), and expanded closure-prep Stage source log. Targeted CPU expected 71 + 10 + 2 = 83, DGX/CI NOT_RUN.
 - No real GDN/PLE full state hash, cache-specific reuse provenance, strict numeric resolution or candidate hook installation. No service stop, Stage mutation, GPU model startup or PR/merge. Existing P1 remains BLOCKED pending live GPU content comparison and strict numerical gate.
 - See docs/P1-PREFIX-BLAZUX-UPSTREAM-COMPARISON-20261029.md.
 
 ## 2026-10-29 최신 DGX CPU-only P1 closure prep 71/71 PASS — 실 검사 소스 SHA 고정
 
-- **사용자 DGX 제출 로그:** exact feature HEAD `c6aa0a84546aa54111aa58051e09a62afb8aa626`. `scripts/p1-prefix-closure-prep.sh --expected-head <SHA> --show-source` 1회 CPU-only 실행: GPU-window mocks **31/31**, live observer **14/14**, reuse-contract **14/14**, Mamba-utils probe **10/10**, closure safety **2/2** → **71/71 PASS**. 테스트 출력 중 `P1_PREFIX_GPU_BLOCKED_CANDIDATE_COPY_FAILED`, `ORIGINAL_CHAT_ORACLE_CHAT_EMPTY_FINAL_CONTENT` 등은 **의도된 mock 반례**로 실제 GPU 실행 실패 증거가 아님.
+- **사용자 DGX 제출 로그:** exact feature HEAD `c6aa0a84546aa54111aa58051e09a62afb8aa626`. `scripts/p1-prefix-closure-prep.sh --expected-head <SHA> --show-source` 1회 CPU-only 실행: GPU-window mocks **31/31**, live observer **14/14**, reuse-contract **14/14**, Mamba-utils probe **11/11**, closure safety **2/2** → **71/71 PASS**. 테스트 출력 중 `P1_PREFIX_GPU_BLOCKED_CANDIDATE_COPY_FAILED`, `ORIGINAL_CHAT_ORACLE_CHAT_EMPTY_FINAL_CONTENT` 등은 **의도된 mock 반례**로 실제 GPU 실행 실패 증거가 아님.
 - Source Manifest **272/272 PASS**, Stage SHA·read-only preflight **PASS**, `original_state=running`, `gpu_model_loaded=false`; 현 DGX 윈도는 **GPU 후보 기동/원본 stop-start 하지 않음**. 이번 테스트 자체에서는 port8000 HTTP 및 동일 Docker ID 사후 복구 probe를 다시 하지 않았음.
 - 설치 운영 이미지의 실제 `vllm/v1/worker/mamba_utils.py` 원문 SHA256 **`25254d005f42b64dd55d15a5c646018f5599d971c23e7ca395eb5acaf4f41ed3`**. 실제 Context 4 methods / fused kernels 3 ABI PASS: `initialize_from_forward_context 791-841`, `_populate_metadata 843-957`, `run_fused_precopy 1018-1061`, `run_fused_postprocess_align 1063-1116`, `_copy_mamba_state_block 123-252`, `precopy_mamba_align_fused_kernel 438-519`, `postprocess_mamba_fused_kernel 256-388`.
 - AST source hints: `state_tensor_source_forward_context_referenced=true`, `state_base_address_metadata_referenced=true`, `state_block_stride_metadata_referenced=true`, `block_table_pointer_metadata_referenced=true`, `copy_kernel_token_bias_referenced=true`, `copy_kernel_conv_width_referenced=true`. 세 runtime fields는 **`real_live_state_hash_captured=false`, `copy_execution_verified=false`, `state_content_reuse_verified=false`**. 기존 `physical_mapping_and_reuse_verified=false`, strict logprob `1e-4` 유지.
@@ -347,7 +347,7 @@
 
 ## 2026-10-29 P1 GPU 통합 시험 — 실제 Mamba/Scheduler/MTP 관측 및 원본 복구 (검증 소스 `14075d6a413d002d6c8c97f78b175a7f40d015eb`)
 
-- **실제 DGX-tested checkout:** `feature/blazux-phase6-runtime-gates` SHA `14075d6a413d002d6c8c97f78b175a7f40d015eb`. 사용자 로그: GPU window CPU 회귀 **24/24 PASS**, live observer **10/10 PASS**, Source Manifest **265/265 PASS**; pinned Stage SHA 및 설치 vLLM root read-only preflight PASS. 기존 운영 컨테이너 시험 전 Running.
+- **실제 DGX-tested checkout:** `feature/blazux-phase6-runtime-gates` SHA `14075d6a413d002d6c8c97f78b175a7f40d015eb`. 사용자 로그: GPU window CPU 회귀 **24/24 PASS**, live observer **11/11 PASS**, Source Manifest **265/265 PASS**; pinned Stage SHA 및 설치 vLLM root read-only preflight PASS. 기존 운영 컨테이너 시험 전 Running.
 - **실제 승인된 정비창:** 기존 Chat API probe `PASS_ORIGINAL_CHAT_PROTOCOL` (nonempty, token IDs, logprob), 별도 정지 후보에 pinned 두 패치 + observer readback SHA PASS, 단일 후보 GPU HTTP READY. 원본은 분리 stop/start 절차로 시험 후 동일 ID와 `127.0.0.1:8000/health`, `/v1/models` 재검사까지 **`P1_PREFIX_ORIGINAL_SAME_ID_HTTP_RESTORED` / `P1_ORIGINAL_SAME_ID_RESTORED_HTTP_PASS`**, 후보 없음. 실패 원인은 복구가 아니라 strict numerical oracle; **전체 window exit 2**.
 - **Cold + HIT 반복 3회:** 동일 thinking-disabled 프롬프트 9,503 tokens, 4개 응답 모두 **150 output token IDs** 및 텍스트 동일, finish reason 동일, logprob 보유. `vllm:prefix_cache_queries_total` delta **[9503,9503,9503,9503]**, `vllm:prefix_cache_hits_total` delta **[0,6400,6400,6400]** → 실제 HIT 3회 확인. Cold→Repeat 최대 token logprob 절대차 각각 **[0.00015949434600770473, 0.00007229420589283109, 0.00006376591045409441]**; Repeat→Repeat 연속 차이 **[0.00023178855190053582, 0.00010897923493757844]**. strict `0.0001` 초과이므로 `INCONCLUSIVE_LOGPROB_DIFF_EXCEEDS_STRICT_GATE`. 출력 ID의 동등성과 수치 정합성은 별개. 이전 3-token run `c342e033...` (max 0.00332059)보다 작은 수치지만 **입력/출력 길이가 달라 직접 개선 효과나 캐시 원인을 확정할 수 없음**; repeat 간에도 drift가 있으므로 캐시 특이 원인으로 단정 금지.
 - **MTP 실제 수락 관측:** 설정 `num_speculative_tokens=2`, `vllm:spec_decode_num_accepted_tokens_total` 요청창 delta **400** → 실제 speculative accept 존재. Acceptance 비율/성능 증가 또는 전 토큰 무오류는 별도 미증명.

@@ -117,6 +117,17 @@ class TokenFrequencyTests(unittest.TestCase):
             self.assertFalse(r['gpu_api_model_executed'])
             self.assertNotIn('abba', (folder/'receipt.json').read_text())
 
+    def test_encode_error_is_classified_without_echoing_corpus(self):
+        class BrokenTokenizer:
+            def encode(self, text: str, *, add_special_tokens: bool):
+                raise RuntimeError("sensitive input should not leak")
+
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            p = Path(td) / "corpus.jsonl"
+            p.write_text('{"text":"sensitive input"}\\n'.replace("\\n", "\n"))
+            with self.assertRaisesRegex(freq.Blocked, "^TOKENIZER_ENCODING_FAILED$"):
+                freq.count_records([("ko", p)], BrokenTokenizer(), {0, 1})
+
     def test_wrong_source_sha_refuses_creation(self):
         t, c = fixture()
         with tempfile.TemporaryDirectory(dir="/tmp") as td:

@@ -11,7 +11,7 @@
 - 실제 사용자 감사에서 확인된 SHA256에 고정. 같은 레시피 뷰의 tokenizer_config.json 내 special token 이름과 tokenizer.json 선언 ID를 대조한다. 누락/충돌/미선언/잘못된 JSON/초과 크기/중복 corpus/symlink는 차단. 해당 config 파일이 없으면 실제 --count는 BLOCKED.
 - 임의 임베딩 토크나이저, 사전 토큰화한 테스트 ID, 누락된 248320 head padding ID를 **실제 빈도**로 쓰지 않는다.
 - 새 개인 /tmp/p2-token-counts-*/counts.json 및 receipt.json만 0600 모드로 생성(디렉터리 0700). counts.json은 기존 P2_TOKEN_COUNTS_V1 schema: schema, tokenizer_sha256, token_counts, special_token_ids. Receipt는 corpus SHA256/레코드 수/ID 집계/Tokenizer config SHA를 기록. 원문 텍스트와 실제 로컬 corpus 경로를 파일에 기록하지 않는다. 출처/이용권/대표성은 자동 인증되지 않는다.
-- --check는 stdlib 합성시험 10건과 기존 Source Manifest 검사. --count는 명시적으로 제공한 파일에 대한 CPU tokenization을 추가 수행하며 토크나이저 패키지가 없다면 자동 설치하지 않고 차단. Docker, GPU, 네트워크, 운영 모델, 추론 HTTP, weights/cache 원본 변경 없음.
+- --check는 stdlib 합성시험 11건과 기존 Source Manifest 검사. --count는 명시적으로 제공한 파일에 대한 CPU tokenization을 추가 수행하며 토크나이저 패키지가 없다면 자동 설치하지 않고 차단. Docker, GPU, 네트워크, 운영 모델, 추론 HTTP, weights/cache 원본 변경 없음.
 
 ## DGX 실행 명령
 
@@ -44,4 +44,4 @@ REAL_RESULT는 실제 출력값으로 대체하며 가상 경로를 실행하지
 
 ## 상태 및 차단
 
-실제 토크나이저 source identity: DGX VERIFIED, tokenizer_config/실제 token counts: DGX NOT_RUN, 새 코드: GitHub SOURCE_ONLY / local stdlib synthetic 10/10 / DGX NOT_RUN / CI_NOT_RUN. 실제 65,536 ID mapping, 런타임 Draft Head, Native MTP2 acceptance, GPU H2D 성능, strict numeric 1e-4, GDN/PLE full-state, P2 배포는 계속 별도 검증/승인 전 BLOCKED.
+실제 토크나이저 source identity: DGX VERIFIED, tokenizer_config/실제 token counts: DGX NOT_RUN, 새 코드: GitHub SOURCE_ONLY / local stdlib synthetic 11/11 / DGX NOT_RUN / CI_NOT_RUN. 실제 65,536 ID mapping, 런타임 Draft Head, Native MTP2 acceptance, GPU H2D 성능, strict numeric 1e-4, GDN/PLE full-state, P2 배포는 계속 별도 검증/승인 전 BLOCKED.

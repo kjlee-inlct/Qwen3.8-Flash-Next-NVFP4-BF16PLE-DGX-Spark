@@ -20,7 +20,7 @@ from typing import Any
 
 from src.p2_mtp_vocab_artifact import (
     Blocked, FULL_VOCAB_SIZE, MAX_COUNT, MAX_TOKENIZER_BYTES,
-    _json_object, _read_plain_file,
+    _json_object, _read_plain_file, parse_inputs,
 )
 
 TOKENIZER_AUDITED_SHA256 = "06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523"
@@ -151,7 +151,10 @@ def count_records(corpora: list[tuple[str, Path]], tokenizer: Any,
                 record = _json_object(raw, label="CORPUS_RECORD")
                 if set(record) != {"text"} or not isinstance(record["text"], str) or not record["text"]:
                     raise Blocked("CORPUS_TEXT_FIELD_REQUIRED")
-                ids = tokenizer.encode(record["text"], add_special_tokens=False).ids
+                try:
+                    ids = tokenizer.encode(record["text"], add_special_tokens=False).ids
+                except Exception:
+                    raise Blocked("TOKENIZER_ENCODING_FAILED") from None
                 if not isinstance(ids, list) or not ids:
                     raise Blocked("TOKENIZER_EMPTY_OUTPUT")
                 for tid in ids:
@@ -193,7 +196,10 @@ def count(corpora: list[tuple[str, Path]], tokenizer_path: Path,
         except ImportError:
             raise Blocked("TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE") from None
         tokenizer_factory = Tokenizer.from_file
-    tokenizer = tokenizer_factory(str(tokenizer_path))
+    try:
+        tokenizer = tokenizer_factory(str(tokenizer_path))
+    except Exception:
+        raise Blocked("TOKENIZER_LOADING_FAILED") from None
     totals, corp_receipts = count_records(corpora, tokenizer, declared_ids)
     payload = {"schema": "P2_TOKEN_COUNTS_V1", "tokenizer_sha256": digest,
                "token_counts": {str(k): totals[k] for k in sorted(totals)},
@@ -201,6 +207,8 @@ def count(corpora: list[tuple[str, Path]], tokenizer_path: Path,
     data = (json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
     if len(data) > 8 * 1024 * 1024:
         raise Blocked("COUNTS_ARTIFACT_TOO_LARGE")
+    # Validate the actual legacy .npy-builder input contract before writing.
+    parse_inputs(data, tokenizer_raw)
     result = {"status": "P2_OFFLINE_ACTUAL_CORPUS_TOKEN_COUNTS_CREATED_NOT_DEPLOYED",
               "schema": "P2_TOKEN_COUNT_RECEIPT_V1",
               "tokenizer_sha256": digest,
