@@ -1,5 +1,12 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 실제 DGX 참조 감사 결과 (최신)
+
+- Git HEAD `3dccb50e6f9528fea8a7b4cd799b2e2fdcfe3d09`, 실제 DGX CPU suite **15/15 PASS**; Docker mount inventory AVAILABLE, `--references` scoped scan **1,119개 파일 COMPLETE**. Phase 1~5 문자열 참조 수는 각각 **9·10·7·9·19** (Phase5 초과 히트 생략). **폴더 이동/삭제 0**.
+- GitHub에서 확인한 phase2/3/4/5 및 phase5-mamba Shell의 매치 문자열은 독립 checkout의 **브랜치 이름 지정**이며, 작업 디렉터리는 스크립트 상대경로 기반이다. 따라서 이 매치는 실제 외부 디렉터리 의존성을 단독 입증하지 못한다. 역사적 문서·테스트 fixture의 Phase 명칭도 구분 필요. 별도 외부 프로세스·cron/systemd·절대 경로 동작은 확인되지 않았으므로 보관 후보 확정/실행은 아직 BLOCKED.
+- 상세 증거와 제한 및 다음 안전 절차: [P2-WORKSPACE-CLEANUP-RUNBOOK.md](P2-WORKSPACE-CLEANUP-RUNBOOK.md). **신규 GPU/운영/숫자 수정 없음**, P2 numeric root cause OPEN, strict 1e-4 및 P1 release BLOCKED 유지.
+
+
 ## 2026-11-02 DGX Workspace 15개 폴더 실측과 참조 감사
 
 - 실제 DGX source HEAD `384eaa12e30b1dfd4605050fc11be3f7f79540e4`에서 `p2-workspace-inventory.sh`: docker=AVAILABLE, 보호 5/추가 확인 5/Phase1~5 보관 검토 후보 5, 이동·삭제 0. `open-webui` Docker bind overlap, spark-stack/spark-vllm-docker/stack 변경·미추적 파일 확인.
