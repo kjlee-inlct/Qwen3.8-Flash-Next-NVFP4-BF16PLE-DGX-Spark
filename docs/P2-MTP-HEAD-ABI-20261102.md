@@ -49,3 +49,24 @@ bash scripts/p2-mtp-head-dgx.sh --execute
 4. 새 정비창 승인 후 MTP2 acceptance, 일치 token, strict `1e-4`, GPU H2D·TTFT/TPS, 전계층 state/copy를 분리해 순차 검증한다. 기존 40/40 CPU PASS나 새 7/7 CPU PASS로 배포 승인하지 않는다.
 
 **판정: `P2_REDUCED_DRAFT_CPU_IMPLEMENTED / NATIVE_MTP_HEAD_NOT_BOUND / P2_NUMERIC_ROOT_CAUSE_OPEN / RELEASE_BLOCKED`.**
+
+
+## 2026-11-02 DGX 7/7 실제 통과 이후: reduced Draft MTP compute_logits 후보 코드
+
+**실측**: HEAD `9e3d9e656ec0fc5825cf75a8791e4c4df4b024d4`에서 source preflight, host 4/4, MTP pinned ABI AST 6/6, CPU-only Docker **7/7 PASS SKIP0**, `ORIGINAL_UNCHANGED_NO_GPU_API`. 설치 MTP class `Qwen3_8FlashNextMTP`, `compute_logits(self, hidden_states, spec_step_idx)`, 직접 `self.lm_head`, `self.logits_processor` 참조가 AST로 확인. 실제 head aliasing/quant/layout/GPU 미확인.
+
+### 새 candidate-only 실제 compute_logits override
+
+- `src/p2_mtp_candidate_overlay.py`는 설치 `mtp.py` SHA `d1ee05d4...`와 실제 `compute_logits` AST SHA `83eb59ba...`를 모두 강제하고, 수정한 소스가 유효한 AST인지 확인한다. **원본 이미지를 수정하지 않고, 기본 OFF** 인 상태의 새 코드만 붙인다.
+- `VLLM_P2_DRAFT_VOCAB=/candidate-private/ids.npy` + `VLLM_P2_DRAFT_VOCAB_SHA256=<lowercase file SHA256>` opt-in이 둘 다 지정됐을 때만 후보의 `Qwen3_8FlashNextMTP.compute_logits` 경로를 대체한다. `.npy`는 regular file/non-symlink, size limit, exact 65536, 정렬·중복·범위, 0..255 byte IDs, SHA256 검증. Pickle/임의 코드는 거부한다.
+- 실제 `self.lm_head.weight`가 GPU BF16 `[248320,H]`이고 LogitsProcessor 원본 vocab=248320인지 검사; 맞으면 원본 weight를 **수정하지 않고** 65536 행의 독립 head slice를 materialize한다. Draft hidden에 BF16 linear를 계산하고, 248320-wide tensor를 `-inf`로 채운 뒤 해당 full token IDs 위치에 scatter. 출력은 기존 full-width shape이지만 기존 LogitsProcessor와 완전한 수치적 동등성은 별도 GPU/실모델 검증 대상이다. 기존 MTP2 acceptance·rejection 소스는 건드리지 않음.
+- `src/p2_mtp_vocab_selection.py`는 sanitized token counts/special/added/byte IDs에 기반한 deterministic selection CPU helper. 최적의 실제 ID 집합, 한국어 coverage, 언어별 acceptance는 **여전히 미측정**이며 `.npy` 산출물은 제공되지 않았음.
+- `src/p2_functional_bundle.py`의 `--stage-mtp`는 종전 Numeric Sampler/PLE 2-COPY 후보 소스에 **MTP source 추가(3-COPY)**. `scripts/p2-functional-bundle-dgx.sh --stage-mtp`로 한 번에 source-only preflight/새 stdlib 시험 후 private Stage 생성. **모델/GPU/빌드/API 실행 안 함**, 원본 ID/image/StartedAt 전후 검증. 기존 `--stage` 옵션의 2-COPY 의미 불변.
+
+```bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-functional-bundle-dgx.sh --stage-mtp
+```
+
+**검증 경계**: 이번 source-only 후보의 실제 CUDA Graph/warmup/lazy init, GPU logits shape/numeric, candidate vLLM speculative rejection correctness, 실제 MT​P 65,536 vocab token coverage, sampled target strict logprob `1e-4` 및 TTFT/TPS는 **NOT_RUN / BLOCKED**. 새로운 코드를 기존 P1 builder pin과 섞지 말 것. P1 release 차단/strict numeric failure 불변.

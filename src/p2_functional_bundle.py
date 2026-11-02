@@ -21,6 +21,7 @@ from src import p1_legacy_service_window as legacy
 from src import p1_numeric_source_trace as trace
 from src import p1_preview_qsa_exact_topk as qsa
 from src import p2_numeric_sampler_witness as witness
+from src import p2_mtp_candidate_overlay as mtp_overlay
 
 PLE_REPO = Path("src/vllm_ple_mmap.py")
 PLE_DEST = trace.PACKAGE_ROOT + "vllm_ple_mmap.py"
@@ -63,13 +64,18 @@ def checked_ple(root: Path) -> bytes:
     return data
 
 
-def dockerfile() -> str:
-    """Two source-only copies; no RUN, no model modifications, all defaults OFF."""
+def dockerfile(*, include_mtp: bool = False) -> str:
+    """Candidate-only source copies; no RUN or model changes. Defaults OFF."""
     return (
         "FROM " + legacy.IMAGE_TAG + "\n"
         "COPY --chown=0:0 --chmod=0644 sampler.py " + SAMPLER_DEST + "\n"
         "COPY --chown=0:0 --chmod=0644 vllm_ple_mmap.py " + PLE_DEST + "\n"
-        "ENV VLLM_P2_NUMERIC_WITNESS=0 VLLM_PLE_UNIQUE_H2D=0\n"
+        + (("COPY --chown=0:0 --chmod=0644 mtp.py "
+             + trace.PACKAGE_ROOT + mtp_overlay.SOURCE_FILE + "\n")
+           if include_mtp else "")
+        + "ENV VLLM_P2_NUMERIC_WITNESS=0 VLLM_PLE_UNIQUE_H2D=0"
+        + (" VLLM_P2_DRAFT_VOCAB= VLLM_P2_DRAFT_VOCAB_SHA256="
+           if include_mtp else "") + "\n"
     )
 
 
@@ -149,14 +155,21 @@ def read_mtp_abi() -> dict:
     }
 
 
-def prepare(root: Path, *, probe=read_mtp_abi) -> dict:
-    """Read original once and generate a brand-new private candidate stage."""
+def prepare(root: Path, *, probe=read_mtp_abi,
+            include_mtp: bool = False) -> dict:
+    """Stage original-sourced, SHA-checked candidate overlays in private /tmp."""
     before = trace.original_identity()
     try:
         inspect_local_base_image()
         original = trace._run_docker_cp(trace.SOURCES["sampler"])
         patched = witness.transform(original)
         ple = checked_ple(root)
+        mtp_patched = None
+        if include_mtp:
+            mtp_raw = _read_mtp_source(mtp_overlay.SOURCE_FILE)
+            if mtp_raw is None:
+                raise Blocked("PINNED_MTP_SOURCE_MISSING")
+            mtp_patched = mtp_overlay.transform(mtp_raw)
         mtp = probe()
     finally:
         if trace.original_identity() != before:
@@ -165,11 +178,16 @@ def prepare(root: Path, *, probe=read_mtp_abi) -> dict:
     folder = Path(tempfile.mkdtemp(prefix="p2-functional-bundle-", dir="/tmp"))
     try:
         folder.chmod(0o700)
-        for filename, data in (
+        payloads = [
             ("sampler.py", patched),
             ("vllm_ple_mmap.py", ple),
-            ("Dockerfile", dockerfile().encode("utf-8")),
-        ):
+        ]
+        if include_mtp:
+            assert mtp_patched is not None
+            payloads.append(("mtp.py", mtp_patched))
+        payloads.append(("Dockerfile",
+                         dockerfile(include_mtp=include_mtp).encode("utf-8")))
+        for filename, data in payloads:
             target = folder / filename
             with target.open("xb") as stream:
                 stream.write(data)
@@ -178,7 +196,9 @@ def prepare(root: Path, *, probe=read_mtp_abi) -> dict:
         shutil.rmtree(folder)
         raise
     return {
-        "status": "P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT",
+        "status": ("P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT"
+                   if include_mtp else
+                   "P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT"),
         "stage_directory": str(folder),
         "parent_image_pinned": True,
         "original_container_unchanged": True,
@@ -188,6 +208,11 @@ def prepare(root: Path, *, probe=read_mtp_abi) -> dict:
         "numeric_witness_default_off": True,
         "ple_unique_h2d_default_off": True,
         "candidate_build_or_gpu_or_api_executed": False,
+        "mtp_reduced_vocab_source_included": include_mtp,
+        "mtp_reduced_vocab_default_off": True,
+        "mtp_candidate_patch_sha256": (
+            hashlib.sha256(mtp_patched).hexdigest() if mtp_patched is not None
+            else None),
         "mtp": mtp,
     }
 
@@ -198,6 +223,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = p.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--stage", action="store_true")
+    mode.add_argument("--stage-mtp", action="store_true")
     p.add_argument("--confirm-original-id")
     args = p.parse_args(argv)
     try:
@@ -214,9 +240,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.confirm_original_id != trace.ORIGINAL_ID:
             raise Blocked("EXACT_ORIGINAL_CONTAINER_ID_REQUIRED")
-        print(json.dumps(prepare(qsa.ROOT), sort_keys=True))
+        print(json.dumps(prepare(qsa.ROOT, include_mtp=args.stage_mtp), sort_keys=True))
         return 0
-    except (Blocked, witness.Blocked, trace.Blocked, legacy.Blocked, qsa.Blocked,
+    except (Blocked, witness.Blocked, mtp_overlay.Blocked, trace.Blocked, legacy.Blocked, qsa.Blocked,
             OSError, ValueError, TypeError, KeyError):
         print("P2_FUNCTIONAL_BUNDLE_BLOCKED", file=sys.stderr)
         return 2

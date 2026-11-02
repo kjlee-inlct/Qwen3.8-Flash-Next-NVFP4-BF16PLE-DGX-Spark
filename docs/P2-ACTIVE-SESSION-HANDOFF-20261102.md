@@ -1,5 +1,14 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 DGX MTP BF16 CPU 7/7 PASS → 실제 Preview 축소 Draft logits 후보 구현
+
+- **사용자 DGX 확정 `9e3d9e656ec0fc5825cf75a8791e4c4df4b024d4`**: Source preflight PASS, host import/UID 4/4 PASS, pinned ABI AST 6/6 PASS, installed SHA 3/3 exact, 1회성 runc CPU `P2_MTP_HEAD_CPU_7_OF_7_PASS_NO_SKIPS`, 원본 동일 ID/image/StartedAt, GPU/API NO. CPU Head BF16 selected rows, 독립 스토리지, local→full 토큰 매핑, synthetic logits equivalence 입증. 설치 MTP `self.lm_head/self.logits_processor` 참조 확인, 그러나 Head sharing/loader/rejection runtime 미검증.
+- **새 기능 코드** `src/p2_mtp_candidate_overlay.py`: 정확한 설치 MTP SHA `d1ee05d4...` 및 `compute_logits` AST SHA `83eb59ba...`에 고정한 **후보 전용 default-OFF** source transform. 비활성 시 기존 `compute_logits` 그대로. opt-in `VLLM_P2_DRAFT_VOCAB` 및 별도 **required SHA256**가 모두 설정돼야 시작; 기존 full BF16 `self.lm_head`의 65536행을 독립 Tensor로 복사, reduced GEMV 결과를 전체 248320 logits에 scatter, 나머지 ID는 `-inf`. Target Head·31 MTP tensors·rejection/proposer 소스는 변경하지 않는다. Runtime GPU/torch.compile/Graph·확률정합성은 아직 NOT_RUN.
+- **단일 통합 후보** `src/p2_functional_bundle.py`와 `scripts/p2-functional-bundle-dgx.sh --stage-mtp`: 이전 성공한 Numeric Sampler witness·BF16 PLE source Stage에 **정확히 세 번째 MTP patched source만 추가**. 별도 개인 /tmp Stage, 고정 이미지 FROM, 3 COPY, 3 opt-in flags default OFF, SHA/원본 신원 검사. Docker build/run/exec/stop/start/GPU/API 모두 없음. `--stage`의 역사적 2-COPY 경로 그대로 보존.
+- **어휘 선정 CPU 함수** `src/p2_mtp_vocab_selection.py`: 빈도 상위→ID 순 보충, special/added/byte fallback IDs 필수 보존, 결정적 fingerprint/coverage; 실제 한국어·다국어 corpus/Tokenizer 입력 **미수령**, 진짜 65536 `.npy` 파일 **NOT_CREATED**. stage는 IDs 파일 없이 안전하게 생성하고, 실제 candidate OPT-IN 실행은 누락/잘못된 SHA/파일/구성에 대해 fail-closed.
+- **DGX 다음 한 번의 작업**: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-functional-bundle-dgx.sh --stage-mtp`. 새 소스·회귀 시험과 private Stage 작성까지만. 이 새 코드 **DGX_NOT_RUN/CI_NOT_RUN**; 다음 GPU inference/release 승인 아니며 Numeric strict `1e-4` root cause OPEN 및 P1 RELEASE_BLOCKED 유지.
+
+
 ## 2026-11-02 P2 8/8 공동 Stage 실증 + MTP Draft Head CPU 기능 신설
 
 - **DGX 실측 `78f1104b5652dcc78de701e8008e93a2b7cf9181`**: `tests.test_p2_functional_bundle` **8/8 PASS**; `P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT` 및 `P2_BUNDLE_SOURCE_COMPLETE`. 실제 private Stage `/tmp/p2-functional-bundle-x8kmxyiv` 내 정확한 Sampler SHA witness와 PLE Unique-H2D 소스 및 두-COPY Dockerfile. `candidate_build_or_gpu_or_api_executed=false`; 원본 그대로.
