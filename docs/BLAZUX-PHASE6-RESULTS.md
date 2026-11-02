@@ -1,3 +1,9 @@
+## 2026-11-03 Numeric-only source 실측 완료 및 승인된 GPU 정비창 준비
+
+- 마지막 사용자 DGX source HEAD f240c29cb1c29b5d73bbebb7e0b798b6ec816c7f. **10/10 focused tests PASS** (SKIP0) /tmp/p2-numeric-first-divergence-x_76hgqp Sampler-only source stage PASS. Original same-ID running and unchanged, model/GPU/HTTP/child image build NOT_RUN.
+- 사용자 명시 승인으로 원본 ID stop→단독 후보 GPU→owner-checked cleanup→same-ID original start/HTTP restore 단계 준비. 신규 안전 제어기, GPU wrapper, focused CPU synthetic tests 및 [정비창 Runbook](P2-NUMERIC-GPU-WINDOW-20261103.md)를 GitHub에 준비. Source/input SHA, original ID/image pins, memory/HTTP guards, witness SHA/event matching, exception finally 및 shell backup recovery. **신규 HEAD DGX/CI_NOT_RUN**, 실제 정비창/모델/수치 미실행. 원본 image/cache/weights 변조 없음.
+- P2 strict numeric 1e-4 미해결, Prefix OFF MTP OFF stock에서도 과거 실패, P1 release blocked.
+
 ## 2026-11-03 신규 P2 Numeric 최초 경계 관측용 최소 후보 — 코드 준비만
 
 - **확정된 최종 실제 DGX source receipt**는 `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`: 4-COPY 통합 후보 source-stage 29/29 PASS, stage `/tmp/p2-functional-bundle-ackw9piv`. 이번 신규 코드 SHA는 **사용자 DGX_NOT_RUN / CI_NOT_RUN**.

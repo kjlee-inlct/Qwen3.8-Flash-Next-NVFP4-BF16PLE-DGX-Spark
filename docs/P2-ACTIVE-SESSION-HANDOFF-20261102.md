@@ -1,3 +1,10 @@
+## 2026-11-03 사용자 Numeric GPU 정비창·원본 보호·복구 명시 승인
+
+- 사용자 실제 DGX HEAD f240c29cb1c29b5d73bbebb7e0b798b6ec816c7f: Sampler-only private source preparation **10/10 PASS SKIP0**, stage /tmp/p2-numeric-first-divergence-x_76hgqp, SHA sampler a62b7cd7..., Dockerfile e9a98874..., original same-ID running, no GPU/image build/HTTP.
+- **승인 범위**: 격리된 단일 후보 GPU 창. original same-ID container stop→후보 진단→owner-checked candidate 제거→original same-ID start/HTTP 복구. 원본 container/image/weights/cache 변조와 운영 cutover 금지. 안전 복구 정본: [P2 Numeric GPU Maintenance](P2-NUMERIC-GPU-WINDOW-20261103.md).
+- 신규 source-only 개발: src/p2_numeric_first_divergence_window.py, tests/test_p2_numeric_first_divergence_window.py, scripts/p2-numeric-first-divergence-gpu-window.sh. read-only preflight, networkless image-only build, execute exact original ID/image pins + stop 후 MemAvailable>=96GiB + Prefix OFF/MTP OFF/Raw logprobs Sampler witness 4x serial first token, finally+shell-trap same-ID recovery, optional --recover. **신규 HEAD DGX_NOT_RUN / CI_NOT_RUN**, GPU numeric NOT_RUN, strict 1e-4 OPEN.
+- 새 HEAD에서 우선 --preflight → --build → 승인된 --execute; 단계별 정상/실패와 복구 마커 확인. 기존 10/29/37 전체 CPU 반복, QSA/MTP A/B 반복 금지.
+
 ## 2026-11-03 P2 Numeric 단일-변수 실행후보 준비 — 4-COPY 기반 1-COPY source plan
 
 - **마지막 실제 DGX GPU 미사용 관측**: HEAD `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`, P2 4-COPY source-stage 29/29 PASS, private `/tmp/p2-functional-bundle-ackw9piv`; P1 RELEASE_BLOCKED / numeric strict 1e-4 OPEN.
