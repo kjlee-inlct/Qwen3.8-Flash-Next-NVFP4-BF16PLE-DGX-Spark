@@ -1,5 +1,12 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 CPU sandbox 파일 권한 진단 및 수정
+
+- DGX HEAD `b4a643d0cfb0d9f093858ad200845d384b5223d6`: 새 패키지 경로 host 2/2 PASS, container `P2_TEST_PACKAGE_LOCAL_VERIFIED` PASS, 그러나 `/p2/src/p1_preview_qsa_exact_topk.py` import `PermissionError [Errno 13]`. 테스트 40개는 로딩 단계에서 중지, `P2_BATCH_CPU_CONTAINER_BLOCKED`. 그 시점 container `--user=65534:65534`; 컨테이너 NumPy·Torch 설치 자체는 앞선 DGX에서 확인됐음.
+- 현재 GitHub 패치에서 Docker UID/GID를 현재 DGX 비root 사용자 `id -u/id -g`로 바꾸고 root 거부·호스트 읽기 권한 사전확인·격리 제약 불변. `tests.test_p2_runner_import_resolution`에 두 가지 host 단위시험 추가. 새 GitHub 패치 `DGX_NOT_RUN`, 40 PASS 주장 금지.
+- 실제 DGX에서 `git pull --ff-only` 후 `bash scripts/p2-batch-cpu-container.sh --execute` 한 번 수행. 다른 GPU/API/운영 실험 승인과 구별; Numeric 원인 OPEN, P1 release BLOCKED.
+
+
 ## 2026-11-02 P2 CPU container 테스트 로더 실패 수정
 
 - DGX source `51134f2ecd48b0a13496075c402f3edda255e47e`: pinned image 내 NumPy 2.2.6/PyTorch 2.13.0+cu130 존재하나 `tests.test_p2_*` import 6건 실패, **Ran 6 / FAILED(errors=6)**. 40개 테스트는 시작되지 않았으며 40 PASS가 아님. 원본/GPU/API 변화 증거 없음.

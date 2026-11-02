@@ -510,12 +510,12 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "76ce5f9f4f3bc1e322d38905abbfdba54cdf0867",
+      "blob_sha": "d5255336e926364614dc284b7e704257118dfcc3",
       "mode": "100644"
     },
     {
       "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
-      "blob_sha": "03e6a2c623eee0c8fb22d8a6227eed8aa1233198",
+      "blob_sha": "8bd50a189c5df325876e7ca9c664a9e30040cc25",
       "mode": "100644"
     },
     {
@@ -820,7 +820,7 @@
     },
     {
       "path": "scripts/p2-batch-cpu-container.sh",
-      "blob_sha": "c3cec6b18b578a5ab973dfd9082c5e39681ba144",
+      "blob_sha": "e951ab20f3215d6647338c24c601f12ce0307f90",
       "mode": "100755"
     },
     {
@@ -1840,7 +1840,7 @@
     },
     {
       "path": "tests/test_p2_runner_import_resolution.py",
-      "blob_sha": "02b047aa80c02b2effcb171334ff978730e831c9",
+      "blob_sha": "55b81b105e3e1d8ac2fe9b6892bf96915a4551d8",
       "mode": "100644"
     },
     {
