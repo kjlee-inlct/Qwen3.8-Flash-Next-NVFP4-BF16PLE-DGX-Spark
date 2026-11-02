@@ -1,3 +1,9 @@
+## 2026-11-03 P2 실제 Draft 감사 PASS → Numeric/PLE/MTP/Upstream ID 통합 후보 Stage
+
+- 사용자 DGX **`e467607219d60fae40690258f98f1de9140063b1`** 에서 새 Upstream Draft 회귀시험 **8/8 PASS**와 실제 `--stage` 성공. Blazux pinned SHA/blob/NPY 원본 정확, Orcarouter tokenizer/config SHA 및 declared 248077/special21/added33/미선언 0 모두 일치. 사본 `/tmp/p2-upstream-draft-ai00xvtw/ids.npy`, fingerprint `7c5a0a90950ac95cb38e7cc8faaa1bbcb42da082fbde20e3fc05db0ae8bfe3e1`. **No corpus, no Docker/GPU/API**. Numeric strict 1e-4/Native MTP runtime 아직 미해결.
+- 신규 통합 기능: `scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream`의 기존 pinned 원본 Docker inspect/cp(읽기 전용) + 실제 metadata audit을 하나의 source-stage 명령에서 수행. Sampler/PLE/MTP/Blazux IDs 4-COPY 개인 Dockerfile 및 receipts, **모든 opt-in default OFF**. 이전 2/3-COPY 모드와 fallback 규칙 불변. 새 코드 DGX_NOT_RUN / CI_NOT_RUN. 상세 [최신 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md).
+- 다음 실행은 `cd ~/Workspace/llm/blazux-phase6-gates && git pull --ff-only origin feature/blazux-phase6-runtime-gates && bash scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream` 한 번. 기능 연동 소스만 확인; GPU/model/runtime/numeric FIX/production PASS 아님. 다음 real-value 작업은 Numeric first-divergence 실측용 격리 후보 GPU 창(별도 명시 승인)이며 QSA variant·Corpus/37 기존 시험 반복 금지.
+
 ## 2026-11-03 사용자 목표 재정렬: Orcarouter 직접 Blazux 이식, Corpus 준비 중지
 
 - **최종 목표:** 현재 운영 Orcarouter Uncensored BF16 PLE(약 95.37 GiB)/BF16 MTP2 + NVFP4 전문가에 Blazux 최적화를 포팅, API `8000/v1`·모델 ID·서비스 원본 유지. 신규 데이터셋 구축은 최종 목표가 아님. 최신 방향/단계/차단 기준은 [P2 Orcarouter Blazux 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md).

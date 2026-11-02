@@ -1,3 +1,10 @@
+## 2026-11-03 DGX 실제 Upstream Draft 호환성 증거 및 통합 GPU 후보 Stage 진전
+
+- **사용자 DGX exact HEAD `e467607219d60fae40690258f98f1de9140063b1`:** source preflight PASS, 신규 8/8 unittest PASS, 실제 Orcarouter recipe tokenizer SHA `06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523`, config SHA `66e427c470fe580fe8c7b5725d857af23d8417e37fae62667ec698306a19987b`, declared 248077, special 21/added33 모두 upstream 65536 ID 포함, unallocated0. 원본 Blazux blob `2b94340a3ca0985a7494af369ac82536d61411de` 및 NPY SHA `6459e0fdc8df30e0c1d1f45be7c1b6bef0d68b0e73c073a82c52ea2a7f4b26d4` PASS. 실제 개인 `/tmp/p2-upstream-draft-ai00xvtw/ids.npy` 및 receipt 생성. **모델/GPU/API 미실행**, Native runtime acceptance·품질·strict numeric OPEN. 코퍼스 단계 종료.
+- 후속 개발은 기존 `src/p2_functional_bundle.py` 및 `scripts/p2-functional-bundle-dgx.sh`에 **`--stage-mtp-upstream`** 모드를 추가해, exact SHA-pin Sampler witness + BF16 PLE Unique H2D + MTP compute_logits overlay + 위 upstream draft IDs를 **개인 `/tmp/p2-functional-bundle-*/`에 4-COPY Dockerfile로 함께 Stage**한다. 사용자가 이미 확인한 실제 recipe tokenizer/config ID를 Stage 시 재감사하고 SHA를 재검증하여 mismatch면 실패. Candidate 환경변수는 전부 기본 OFF, 내장 id는 `/opt/llm/p2-orcarouter-draft-65536.npy`에만 복사 예정이며 모델 head/원본 이미지는 아직 수정하지 않는다.
+- 다음 **단일 DGX source-stage 명령**: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream`. 이번 변경은 새 targeted integration tests 및 manifest까지 GitHub 커밋하나 **신규 SHA DGX_NOT_RUN / CI_NOT_RUN**. 기존 37/37 CPU 전체 재실행, 실제 GPU 모델 빌드, 8000/v1 요청, 서버 중지 없음.
+- **P2 다음 핵심 행동은 Numeric first-divergence의 실제 후보 실측**. Stage 생성은 실행 승인이나 numeric 원인 해결이 아님. 별도 GPU 정비창 승인과 원본 서비스/자원 분리·후보 제거 계획을 갖추기 전 Candidate image build/serve 금지. Numeric witness 단계의 raw logits/hash ↔ logprobs ↔ API 연계, 이후 PLE H2D 성능과 MTP acceptance를 한 번의 통합 시험으로 묶는다.
+
 # Orcarouter 실운영 목표 기준 Blazux 적용 로드맵 — 2026-11-03
 
 ## 최종 목표 및 불변 경계

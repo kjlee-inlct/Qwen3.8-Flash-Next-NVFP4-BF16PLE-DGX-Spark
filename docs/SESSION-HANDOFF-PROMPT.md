@@ -1,3 +1,8 @@
+## 2026-11-03 P2 실측 성공 이후 기능 우선 — 새 코퍼스 및 Gate 증식 금지
+
+- 실제 DGX HEAD `e467607219d60fae40690258f98f1de9140063b1`, upstream original 65536 NPY audited against Orcarouter 248077 IDs/special21/added33/padding0, 8/8 CPU tests PASS, private `/tmp/p2-upstream-draft-ai00xvtw/ids.npy`; Docker/GPU/API NOT_RUN. 기존 token frequency 코퍼스 신규 수집은 현재 목표에서 제외한다.
+- 후속 P2는 `--stage-mtp-upstream`의 Numeric Witness/BF16 PLE/MTP/Blazux ID **4-COPY 후보 준비**, 그다음 별도 승인된 GPU 원인 분석과 A/B 통합 검증을 최우선. Source stage는 보안 경계 내에서 실행 가능하나 **운영 원본, 서버/모델/GPU/API, 이미지 빌드/배포는 별도 승인 없이 금지**. 기존 활성 DGX checkout에서 git pull + 1개 스크립트를 실행하며 37건 CPU 구시험/가상 corpus/유사 QSA 변형시험을 반복하지 않는다. 최신 [P2 인수인계](P2-ACTIVE-SESSION-HANDOFF-20261102.md)와 [Orcarouter 중심 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md)를 따른다.
+
 ## 2026-11-03 사용자 목표 및 개발 우선순위 확정
 
 - 최종 목표는 **현재 서비스 중인 Orcarouter Uncensored 모델에 Blazux qwen3.8-Flash-DGX 기술 이식**, 기존 API/model ID/운영 원본 보호. [현행 단계별 기술 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md) 기준.

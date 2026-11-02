@@ -430,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "40136cc9eda3e5f33ad9aff289c1a36d60f22cdd",
+      "blob_sha": "15de484ca98ef021f351e15f26ff2dfe950ed565",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "156d7dc0201b431faadd4a1d7043392eae00472a",
+      "blob_sha": "610e761f91d8cdeced5e9c918ec58aee6bce0970",
       "mode": "100644"
     },
     {
@@ -546,7 +546,7 @@
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
       "mode": "100644",
-      "blob_sha": "af4a7bda9e966c690e92cad40f20456e4ceda149"
+      "blob_sha": "19f09b9fcdc2ed14599ce112d5bae04f83be16b7"
     },
     {
       "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
@@ -570,7 +570,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "30c1a7032916b977bed41e9bbea457f478d95ba9",
+      "blob_sha": "b1df387dbaea0b6113b0fe28bc229796f3649555",
       "mode": "100644"
     },
     {
@@ -865,7 +865,7 @@
     },
     {
       "path": "scripts/p2-functional-bundle-dgx.sh",
-      "blob_sha": "8b53bbab041fe27c25d10da116adfadba1385b12",
+      "blob_sha": "9294c4265b50690141dc392063ad069178853895",
       "mode": "100755"
     },
     {
@@ -1255,7 +1255,7 @@
     },
     {
       "path": "src/p2_functional_bundle.py",
-      "blob_sha": "ae8afb470d7498372a3abc14be479ec4bd0e159b",
+      "blob_sha": "bb9e8213dfbf5a77a173e6fee601cbcffaf41563",
       "mode": "100644"
     },
     {
@@ -1925,7 +1925,7 @@
     },
     {
       "path": "tests/test_p2_functional_bundle.py",
-      "blob_sha": "2e367697914bb3304744fcf245db4b8db047b16e",
+      "blob_sha": "b767db8e65df619390862dd3195a8515def5b6e3",
       "mode": "100644"
     },
     {
