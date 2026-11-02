@@ -1,3 +1,9 @@
+## 2026-11-03 Numeric GPU 1차 실측 실패 + 원본 복구 PASS — 중요 인수인계
+
+- user DGX first run HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: 13/13 CPU PASS, preflight/build `UNCLASSIFIED_FAILURE`, approved execute candidate HTTP_READY and finally restore `P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`, Witness file `WITNESS_FILE_ABSENT_OR_OVERSIZE`, wrapper backup recover PASS again. **Root cause NOT_FOUND, Numeric strict 1e-4 unresolved, original same-ID HTTP restored**.
+- New source hotfix: `window.notify(status, **status)` TypeError → field rename `result_status`; worker witness first attempts `docker cp`, distinguishes archive oversize from absence, on absence only scans bounded candidate `docker logs --tail 256` for complete `P2_NUMERIC_WITNESS` prefix records without copying other logs, otherwise separate error code; new tests 20. **Only source changes, new HEAD DGX/CI_NOT_RUN**, no additional GPU run in this step.
+- Use latest Runbook `docs/P2-NUMERIC-GPU-WINDOW-20261103.md`; next operator command: git pull followed by **read-only preflight**; do not retry GPU execute until preflight/build results, resource/status and one approved window revalidated. Existing restricted original/image/port/weights and release BLOCKED rules unchanged.
+
 ## 2026-11-03 P2 사용자 GPU 정비창 승인 — SHA별 실증 및 복구 필수
 
 - 사용자 "GPU 정비창 승인과 원본 보호·복구 절차 + 계속": **Numeric 최초 divergence 용 단 한 번의 독점 GPU 창과 same-ID 원본 stop/start/HTTP 복구를 명시 승인**. 다른 GPU 실험, 원본 image/weights/PLE/cache, 운영 cutover 승인은 아님. 운영 원본 컨테이너 RM 금지, 후보 소유권 검증 후 같은 ID original restore, 실패는 명확히 BLOCKED.

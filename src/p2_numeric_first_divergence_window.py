@@ -42,6 +42,8 @@ ORIGINAL_IMAGE = trace.ORIGINAL_IMAGE
 MIN_AFTER_STOP_KIB = gpu.MIN_AFTER_STOP_KIB
 WITNESS_FILE = "/tmp/p2-numeric-witness.jsonl"
 MAX_TAR_BYTES = 65536
+MAX_LOG_BYTES = 262144
+WITNESS_LOG_TAIL = 256
 
 
 class Blocked(RuntimeError):
@@ -296,15 +298,73 @@ def restore(head: str, image_id: str, model: str) -> None:
         window.notify("P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS")
 
 
+def _parse_witness_lines(lines: list[str]) -> list[dict]:
+    """Parse only private opt-in diagnostic events, never raw model output."""
+    if not 2 <= len(lines) <= 8:
+        raise Blocked("WITNESS_EVENT_COUNT_INVALID")
+    events = []
+    for line in lines:
+        if not line.startswith("P2_NUMERIC_WITNESS ") or len(line) > 1800:
+            raise Blocked("WITNESS_EVENT_PREFIX_INVALID")
+        try:
+            event = json.loads(line[len("P2_NUMERIC_WITNESS "):])
+        except (ValueError, TypeError):
+            raise Blocked("WITNESS_EVENT_JSON_INVALID") from None
+        if not isinstance(event, dict):
+            raise Blocked("WITNESS_EVENT_SHAPE_INVALID")
+        events.append(event)
+    return events
+
+
+def _witness_from_stderr(candidate_id: str) -> list[dict]:
+    """Read bounded Docker log tail only when the worker-private file is absent.
+
+    Never print the log (which can contain generated text or model details).
+    Extract only complete prefixed events already emitted to fd=2 by the
+    pinned Sampler witness. Missing evidence remains a blocked diagnosis.
+    """
+    try:
+        cp = subprocess.run(["docker", "logs", "--tail", str(WITNESS_LOG_TAIL),
+                             candidate_id], capture_output=True, check=False,
+                            timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        raise Blocked("WITNESS_WORKER_LOG_UNAVAILABLE") from None
+    if (cp.returncode != 0 or not isinstance(cp.stdout, bytes)
+            or not isinstance(cp.stderr, bytes)):
+        raise Blocked("WITNESS_WORKER_LOG_UNAVAILABLE")
+    if len(cp.stdout) + len(cp.stderr) > MAX_LOG_BYTES:
+        raise Blocked("WITNESS_WORKER_LOG_TAIL_OVERSIZE")
+    raw = cp.stdout + b"\n" + cp.stderr
+    if b"P2_WITNESS_FILE_WRITE_FAILED" in raw:
+        raise Blocked("WITNESS_WORKER_FILE_WRITE_FAILED")
+    try:
+        # Limit accepted lines to exact witness prefix; ignore all other log
+        # messages and never place them into errors or returned diagnostics.
+        lines = [line for line in raw.decode("utf-8", errors="replace").splitlines()
+                 if line.startswith("P2_NUMERIC_WITNESS ")]
+    except (TypeError, ValueError):
+        raise Blocked("WITNESS_WORKER_LOG_INVALID") from None
+    if not lines:
+        raise Blocked("WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL")
+    return _parse_witness_lines(lines)
+
+
 def read_witness(candidate_id: str) -> list[dict]:
-    """Bounded docker cp from isolated candidate; no exec, tokens or GPU pointer."""
+    """Read candidate-private file first, then previously emitted stderr lines.
+
+    The original implementation coalesced two very different errors (docker
+    cp exit !=0 and tar oversize) and did not inspect witness fd=2 output.
+    Both paths are strictly bounded; neither runs docker exec nor prints logs.
+    """
     try:
         cp = subprocess.run(["docker", "cp", candidate_id + ":" + WITNESS_FILE, "-"],
                             capture_output=True, check=False, timeout=25)
     except (OSError, subprocess.TimeoutExpired):
         raise Blocked("WITNESS_DOCKER_CP_FAILED") from None
-    if cp.returncode != 0 or len(cp.stdout) > MAX_TAR_BYTES:
-        raise Blocked("WITNESS_FILE_ABSENT_OR_OVERSIZE")
+    if cp.returncode != 0:
+        return _witness_from_stderr(candidate_id)
+    if not isinstance(cp.stdout, bytes) or len(cp.stdout) > MAX_TAR_BYTES:
+        raise Blocked("WITNESS_ARCHIVE_OVERSIZE_OR_NONBINARY")
     try:
         with tarfile.open(fileobj=io.BytesIO(cp.stdout), mode="r:") as tf:
             all_members = tf.getmembers()
@@ -318,19 +378,10 @@ def read_witness(candidate_id: str) -> list[dict]:
                 raise Blocked("WITNESS_ENTRY_UNREADABLE")
             raw = fh.read(16_385)
         lines = raw.decode("utf-8").splitlines()
-        if not 2 <= len(lines) <= 8:
-            raise Blocked("WITNESS_EVENT_COUNT_INVALID")
-        events = []
-        for line in lines:
-            if not line.startswith("P2_NUMERIC_WITNESS ") or len(line) > 1800:
-                raise Blocked("WITNESS_EVENT_PREFIX_INVALID")
-            event = json.loads(line[len("P2_NUMERIC_WITNESS "):])
-            if not isinstance(event, dict):
-                raise Blocked("WITNESS_EVENT_SHAPE_INVALID")
-            events.append(event)
-        return events
+        return _parse_witness_lines(lines)
     except (tarfile.TarError, UnicodeError, ValueError, TypeError, KeyError):
         raise Blocked("WITNESS_ARCHIVE_OR_JSON_INVALID") from None
+
 
 
 def first_token(model: str, candidate_id: str,
@@ -451,12 +502,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.preflight:
             if args.confirm_original_id or args.confirm_original_image:
                 raise Blocked("PREFLIGHT_CONFIRM_FORBIDDEN")
-            window.notify("P2_NUMERIC_PREFLIGHT", **image_preflight(args.expected_head, args.stage))
+            receipt = image_preflight(args.expected_head, args.stage)
+            window.notify("P2_NUMERIC_PREFLIGHT", result_status=receipt["status"],
+                          **{k: v for k, v in receipt.items() if k != "status"})
             return 0
         if args.build:
             if args.confirm_original_id or args.confirm_original_image:
                 raise Blocked("IMAGE_BUILD_CONFIRM_NOT_REQUIRED")
-            window.notify("P2_NUMERIC_BUILD", **build(args.expected_head, args.stage))
+            receipt = build(args.expected_head, args.stage)
+            window.notify("P2_NUMERIC_BUILD", result_status=receipt["status"],
+                          **{k: v for k, v in receipt.items() if k != "status"})
             return 0
         signal.signal(signal.SIGTERM,
                       lambda *_: (_ for _ in ()).throw(Blocked("SIGTERM_RECOVERY_REQUESTED")))
@@ -466,7 +521,7 @@ def main(argv: list[str] | None = None) -> int:
                       first_divergence_observed=good, release_approved=False)
         return 0 if good else 2
     except BaseException as exc:
-        reason = str(exc) if isinstance(exc, Blocked) else type(exc).__name__
+        reason = str(exc) if isinstance(exc, Blocked) else "UNEXPECTED_" + type(exc).__name__.upper()
         if re.fullmatch(r"[A-Z][A-Z0-9_]{2,96}", reason) is None:
             reason = "UNCLASSIFIED_FAILURE"
         window.notify("P2_NUMERIC_WINDOW_BLOCKED_OR_INCONCLUSIVE",
