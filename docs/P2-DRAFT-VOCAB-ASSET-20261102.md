@@ -50,3 +50,9 @@ bash scripts/p2-vocab-artifact-dgx.sh --build \
 ### 다음 런타임 단계 (별도 GPU 정비창 승인 필요)
 
 생성된 ID 자산을 신규 후보 read-only mount와 SHA256 환경변수로 연결하고, 실제 65,536 Draft Head와 full 248,320 logits interface·MTP2 acceptance·strict logprob 1e-4·H2D/TTFT/TPS를 검증한다. 본 기능만으로 P2 Numeric root cause 또는 full-state reuse 문제는 해결되지 않으며 P1 RELEASE_BLOCKED 유지.
+
+## 2026-11-02 실제 Orcarouter tokenizer source 확인
+
+- 사용자 `find`에서 Orcarouter snapshot과 MTP overlay recipe view를 발견. 레시피 코드 `src/recipe/mtp.py::_copy_metadata`가 Target snapshot의 tokenizer.json을 `shutil.copyfile`로 복제하므로, **두 파일 SHA256 및 ID inventory의 일치**부터 검증한다. RadixArk/임베딩 모델 토크나이저는 실제 Draft 대상이 아님.
+- 추가 read-only `scripts/p2-tokenizer-source-audit-dgx.sh --audit`: 실제 파일을 수정하지 않고 `src/p2_tokenizer_source_audit.py`가 SHA256, model.vocab ID, added/special ID 범위를 보고한다. 신규 코드 DGX_NOT_RUN, 완료 후 SHA도 아직 미확정. 상세 [Source 감사](P2-TOKENIZER-SOURCE-AUDIT-20261102.md).
+- 이전 `--check` 사용자 10/10 PASS, 예시 경로 `--build`는 `P2_DRAFT_VOCAB_ARTIFACT_BLOCKED` (실제 토큰 빈도 JSON이 없으므로 운영용 .npy 생성 미완료). 임의 aggregate 값으로 채워 생성하지 않는다.

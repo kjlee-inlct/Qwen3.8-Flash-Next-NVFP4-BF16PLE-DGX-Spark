@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 실제 토크나이저 발견 → 바이트/특수 토큰 ID 정합성 확인
+
+- 사용자 DGX `d2c45cc4c41e10ec14e567a992e62fc566aaa257`: 실제 source preflight + `tests.test_p2_mtp_vocab_artifact` 10/10 PASS; 이어 입력 형식 예시 경로(`/path/to/...`)로 `--build` 실행해 `P2_DRAFT_VOCAB_ARTIFACT_BLOCKED`. 입증된 코드/실모델 결함 아님. 실제 `/tmp` 어휘 ID 자산은 생성되지 않음.
+- `find`로 확인된 Target 후보는 `.../recipe-views/orca-uncensored-bf16-mtp/ee5b6b553f1226d2/tokenizer.json`과 `.../hf-cache/hub/models--orcarouter--Qwen3.8-Flash-Next-Uncensored-NVFP4/snapshots/3a3b63161c0745390e5270179af42e46efc70799/tokenizer.json`. RadixArk·MiniLM 토크나이저 제외. Source `src/recipe/mtp.py::_copy_metadata`에서 Target snapshot tokenizer를 recipe view에 copyfile하는 구현 확인.
+- 신규 `src/p2_tokenizer_source_audit.py` 및 `scripts/p2-tokenizer-source-audit-dgx.sh --audit`는 두 tokenizer의 실제 SHA256/바이트 일치 및 기본/added/special token ID 목록을 **읽기 전용**으로 검증한다. HF snapshot symlink 허용, recipe view는 실제 일반파일; 값은 아직 DGX_NOT_RUN으로 미확정. 컨테이너 마운트/토큰화 결과가 아니라 SOURCE_ONLY 증거.
+- 다음 DGX 호출: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-tokenizer-source-audit-dgx.sh --audit`. 신규 회귀시험과 source preflight만. Docker/GPU/HTTP/model/파일변경/CI는 실행하지 않음. 자세한 [P2 tokenizer 감사 가이드](P2-TOKENIZER-SOURCE-AUDIT-20261102.md).
+- 이 검사가 PASS하더라도 실제 코퍼스에서 token-ID 빈도 집계가 아직 필요하고, 운영용 65,536 ID 파일은 미완료. strict Numeric 1e-4 OPEN 및 release BLOCKED 유지.
+
 ## 2026-11-02 P2 3기능 Stage 실제 19/19 PASS + ID 파일 생성기
 
 - **사용자 DGX `d6eead92956961b48b3ec711c02c18a1276dba6d`**: `git pull --ff-only` 성공, source/PLE SHA preflight PASS, `tests.test_p2_functional_bundle` + `tests.test_p2_mtp_candidate_overlay` **19/19 PASS**, `--stage-mtp` 실행으로 원본 신원 불변 확인. 개인 `/tmp/p2-functional-bundle-qzvkz12s`에 실제 Sampler/PLE/MTP 3-COPY source Stage 생성; MTP candidate SHA `c6fd9daa8b9ebc07bf12af20f4b110897b470a686d4e1fba46bae2b26d51db40`. Docker build/GPU/API 미실행, 기능 opt-in OFF, P1 release BLOCKED.

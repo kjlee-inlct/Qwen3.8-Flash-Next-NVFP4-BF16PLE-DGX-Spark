@@ -1,5 +1,10 @@
 # Phase 6 evidence ledger
 
+## 2026-11-02 P2 Draft Vocab 자산 신규 DGX 시험 및 토크나이저 후보
+
+- 사용자 HEAD `d2c45cc4c41e10ec14e567a992e62fc566aaa257`에서 preflight PASS, 신규 NumPy asset source-only 시험 **10/10 PASS**. 실 `--build /path/to/actual-counts.json /path/to/exact-local-tokenizer.json`은 placeholder 경로 사용으로 `P2_DRAFT_VOCAB_ARTIFACT_BLOCKED`; 세부 범주는 출력되지 않으므로 직접 파일 접근 실패만 확정할 수 없음. 실제 `.npy` 없음.
+- 사용자 `find`에서 `orca-uncensored-bf16-mtp/ee5b6b553f1226d2/tokenizer.json` 레시피 뷰와 `models--orcarouter--Qwen3.8-Flash-Next-Uncensored-NVFP4/snapshots/3a3b63161c0745390e5270179af42e46efc70799/tokenizer.json` 발견. 새로운 SHA 비교 감사 코드는 GitHub 작업으로 추가하되 DGX 실행 증거는 아직 없음.
+
 ## 2026-11-02 P2 3-COPY 통합 후보 source stage (사용자 DGX 증거)
 
 - **DGX HEAD `d6eead92956961b48b3ec711c02c18a1276dba6d`**, source preflight/P2 PLE SHA PASS, 신규 stdlib 19/19 PASS, `P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT`, `P2_BUNDLE_SOURCE_COMPLETE ... MODE=--stage-mtp NO_BUILD_NO_GPU_NO_API`.
