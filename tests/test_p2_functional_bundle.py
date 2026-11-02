@@ -110,6 +110,49 @@ class P2FunctionalBundleTests(unittest.TestCase):
             self.assertEqual(rc, 2)
             stage.assert_not_called()
 
+    def test_three_copy_source_recipe_is_candidate_only(self):
+        d = bundle.dockerfile(include_mtp=True)
+        self.assertEqual(d.count("FROM "), 1)
+        self.assertEqual(d.count("COPY "), 3)
+        self.assertIn("mtp.py " + bundle.trace.PACKAGE_ROOT
+                      + bundle.mtp_overlay.SOURCE_FILE, d)
+        self.assertIn("VLLM_P2_DRAFT_VOCAB= VLLM_P2_DRAFT_VOCAB_SHA256=", d)
+        self.assertNotIn("\nRUN ", d)
+
+    def test_three_source_stage_creates_private_candidate_only(self):
+        sampler = fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            real_mkdtemp = tempfile.mkdtemp
+            def mkdtemp(*, prefix, dir):
+                self.assertEqual(dir, "/tmp")
+                return real_mkdtemp(prefix=prefix, dir=tmp)
+            with patch.object(bundle.trace, "original_identity",
+                              return_value=("id", "image", "start")) as identity, \
+                 patch.object(bundle, "inspect_local_base_image"), \
+                 patch.object(bundle.trace, "_run_docker_cp",
+                              return_value=sampler), \
+                 patch.object(witness, "SOURCE_SHA256",
+                              hashlib.sha256(sampler).hexdigest()), \
+                 patch.object(bundle, "_read_mtp_source",
+                              return_value=b"class Qwen3_8FlashNextMTP: pass"), \
+                 patch.object(bundle.mtp_overlay, "transform",
+                              return_value=b"# candidate-only patched MTP"), \
+                 patch.object(bundle.tempfile, "mkdtemp", side_effect=mkdtemp):
+                r = bundle.prepare(bundle.qsa.ROOT, include_mtp=True,
+                                   probe=lambda: {"draft_head_slicing_implemented": False})
+            self.assertEqual(identity.call_count, 2)
+            self.assertTrue(r["mtp_reduced_vocab_source_included"])
+            self.assertTrue(r["mtp_reduced_vocab_default_off"])
+            self.assertFalse(r["candidate_build_or_gpu_or_api_executed"])
+            self.assertEqual(r["status"],
+                             "P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT")
+            folder = Path(r["stage_directory"])
+            self.assertEqual((folder / "mtp.py").read_bytes(),
+                             b"# candidate-only patched MTP")
+            self.assertEqual((folder / "Dockerfile").read_text().count("COPY "), 3)
+            for name in ("mtp.py", "sampler.py", "vllm_ple_mmap.py", "Dockerfile"):
+                self.assertEqual((folder / name).stat().st_mode & 0o777, 0o600)
+
     def test_check_makes_no_docker_calls(self):
         with patch.object(bundle.qsa, "preflight"), \
              patch.object(bundle.trace, "original_identity") as identity, \

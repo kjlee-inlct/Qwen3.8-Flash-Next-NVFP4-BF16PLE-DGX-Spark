@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 359,
+  "tracked_file_count": 362,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "7d9eec7f56532cf52443e237eb93e944b11a3f5c",
+      "blob_sha": "9d3709a6fa88b9cb216f97ec2204c43f47de16fa",
       "mode": "100644"
     },
     {
@@ -525,7 +525,7 @@
     },
     {
       "path": "docs/P2-MTP-HEAD-ABI-20261102.md",
-      "blob_sha": "172fcb42e8aaaea889ec5b7a90b47a322cea2f44",
+      "blob_sha": "37d8a3bc89616474efda2b698077e50b5fba46a6",
       "mode": "100644"
     },
     {
@@ -835,7 +835,7 @@
     },
     {
       "path": "scripts/p2-functional-bundle-dgx.sh",
-      "blob_sha": "c8200fb1b2aea6633b5a0a218a6371fe0c728c88",
+      "blob_sha": "8b53bbab041fe27c25d10da116adfadba1385b12",
       "mode": "100755"
     },
     {
@@ -1200,12 +1200,17 @@
     },
     {
       "path": "src/p2_functional_bundle.py",
-      "blob_sha": "92ec0246a4f5c21a50e06971f9a006744475f49d",
+      "blob_sha": "ae8afb470d7498372a3abc14be479ec4bd0e159b",
       "mode": "100644"
     },
     {
       "path": "src/p2_mtp_abi_contract.py",
       "blob_sha": "906d13c8c5949f4975522f883aac1d82edcc4271",
+      "mode": "100644"
+    },
+    {
+      "path": "src/p2_mtp_candidate_overlay.py",
+      "blob_sha": "e20538df14ef23cec899e0ea70fedf825062e44c",
       "mode": "100644"
     },
     {
@@ -1216,6 +1221,11 @@
     {
       "path": "src/p2_mtp_head_cpu.py",
       "blob_sha": "f703079b51ddf748559d4fc28a7a098e6b31f84f",
+      "mode": "100644"
+    },
+    {
+      "path": "src/p2_mtp_vocab_selection.py",
+      "blob_sha": "14fc7140d1f5d615f0ff21f4242f4c8389f129de",
       "mode": "100644"
     },
     {
@@ -1840,12 +1850,17 @@
     },
     {
       "path": "tests/test_p2_functional_bundle.py",
-      "blob_sha": "05c57a831722b37ed968ac597352665f41fc45ab",
+      "blob_sha": "2e367697914bb3304744fcf245db4b8db047b16e",
       "mode": "100644"
     },
     {
       "path": "tests/test_p2_mtp_abi_contract.py",
       "blob_sha": "a583ffe797496af177ff42316d0931475f142e47",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_mtp_candidate_overlay.py",
+      "blob_sha": "1da199c148d94c95233cd57c6f21ed2c0c587359",
       "mode": "100644"
     },
     {
