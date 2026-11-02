@@ -1,3 +1,9 @@
+## 2026-11-02 신규 사용자 DGX tokenizer 감사 PASS 및 다음 실기능
+
+- 실제 DGX source HEAD d26b854c16c155917da7af722fb06d4090b5db0c 에서 source preflight, 토크나이저 감사 **6/6 PASS**. 원본 snapshot과 recipe-view byte exact-match, SHA256 06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523, declared 248077 IDs / Head 248320 rows. 실제 운영 컨테이너 mount와 tokenizer_config specials는 별도 미확정.
+- 최신 개발 브랜치 코드 작업은 [P2 오프라인 Token Frequency](P2-TOKEN-FREQUENCY-20261102.md): 허가받은 JSONL 코퍼스의 실제 토큰화 빈도를 P2_TOKEN_COUNTS_V1으로 생성하는 오프라인 기능. DGX 새 기능 NOT_RUN; 코퍼스 없으면 --check만, 운영 .npy NOT_CREATED.
+- 기본 P2 Numeric 1e-4 OPEN, PLE H2D / GDN full state / MTP acceptance / GPU / API / 운영 배포 미검증, P1 RELEASE_BLOCKED 불변. 이전 현재 체크포인트 중 tokenizer Audit NOT_RUN은 **이 DGX 실행 이전 기록**임.
+
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
 

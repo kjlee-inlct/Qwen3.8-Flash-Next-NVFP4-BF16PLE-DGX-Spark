@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 370,
+  "tracked_file_count": 374,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -420,7 +420,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "45b2d0ac7e5b4a9613b212e2b7bf8e1764ec37af",
+      "blob_sha": "e3bfc482c6191360ee467ebeccfbbb93e397ecbf",
       "mode": "100644"
     },
     {
@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "6f34660dcfbbabd758dfa3d4f6f71b2fc3b209bf",
+      "blob_sha": "e84d10f995ef408bf8ade89e6d7c0450033f95b3",
       "mode": "100644"
     },
     {
@@ -525,13 +525,18 @@
     },
     {
       "path": "docs/P2-DRAFT-VOCAB-ASSET-20261102.md",
-      "blob_sha": "1f866a3439fabc3acad9e87d6b42cdabc7011ccd",
+      "blob_sha": "f02654fe13740eeb1f0c43c0039b0d0dbb0ba0a4",
       "mode": "100644"
     },
     {
       "path": "docs/P2-MTP-HEAD-ABI-20261102.md",
       "blob_sha": "b889e7f987f5a43f6b972481db11ad88d4823583",
       "mode": "100644"
+    },
+    {
+      "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
+      "mode": "100644",
+      "blob_sha": "a55bf22bbaeaa1dea450065ec9f2e1c8365209f1"
     },
     {
       "path": "docs/P2-TOKENIZER-SOURCE-AUDIT-20261102.md",
@@ -857,6 +862,11 @@
       "path": "scripts/p2-numeric-dgx.sh",
       "mode": "100755",
       "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
+    },
+    {
+      "path": "scripts/p2-token-frequency-dgx.sh",
+      "mode": "100755",
+      "blob_sha": "039c252a361b4cb97d187097cc7a621c6d3e9af6"
     },
     {
       "path": "scripts/p2-tokenizer-source-audit-dgx.sh",
@@ -1272,6 +1282,11 @@
       "path": "src/p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "1de010499aeb1e2afcb299724d867e22d8797320"
+    },
+    {
+      "path": "src/p2_token_frequency.py",
+      "mode": "100644",
+      "blob_sha": "3369f6d53280d8e158e9bdfb4943913ac0196f58"
     },
     {
       "path": "src/p2_tokenizer_source_audit.py",
@@ -1937,6 +1952,11 @@
       "path": "tests/test_p2_runner_import_resolution.py",
       "blob_sha": "55b81b105e3e1d8ac2fe9b6892bf96915a4551d8",
       "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_token_frequency.py",
+      "mode": "100644",
+      "blob_sha": "aaef30389a1ec4bc4a82ad3de12d9a45e788d071"
     },
     {
       "path": "tests/test_p2_tokenizer_source_audit.py",

@@ -1,3 +1,8 @@
+## 2026-11-02 사용자 제공 DGX P2 tokenizer source audit 실측
+
+- 사용자 실행 **d26b854c16c155917da7af722fb06d4090b5db0c**: scripts/p2-tokenizer-source-audit-dgx.sh --audit Source Preflight PASS, unittest 6/6 PASS, Orcarouter snapshot/recipe copy **P2_RECIPE_ORCAROUTER_TOKENIZER_EXACT_MATCH_SOURCE_ONLY**. SHA256 **06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523**, model vocab 248044, added 33, declared 248077, marked special 21, max id 248076, Head rows 248320. active_container_mount_proven=false, tokenizer_config_specials_verified=false, actual_domain_token_counts_available=false. **GPU/API/deployment NOT_RUN**.
+- 이후 실제 기능 방향: [오프라인 corpus Token Frequency](P2-TOKEN-FREQUENCY-20261102.md). 신규 코드 LOCAL synthetic 10/10, DGX/CI NOT_RUN, 허가된 실제 코퍼스 미제공, 65,536 ID asset 및 runtime GPU 검증 미진행.
+
 # Phase 6 evidence ledger
 
 ## 2026-11-02 P2 Draft Vocab 자산 신규 DGX 시험 및 토크나이저 후보

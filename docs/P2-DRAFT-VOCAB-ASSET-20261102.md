@@ -1,3 +1,8 @@
+## 실제 DGX tokenizer SHA 확정 및 새 집계 연결
+
+- 사용자 DGX에서 d26b854c16c155917da7af722fb06d4090b5db0c 기준 원본/레시피 tokenizer byte exact-match, SHA256 06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523, source-only unit 6/6 PASS. 실서비스 mount 및 tokenizer_config special 검증은 아직 아님.
+- 실제 코퍼스 집계 경로는 [P2 오프라인 Token Frequency](P2-TOKEN-FREQUENCY-20261102.md). 허가된 JSONL 자료/패키지 확인 후 결과 counts.json을 본 문서 기존 --build에 전달. 새 기능 DGX NOT_RUN, 운영용 65536 IDs NOT_CREATED.
+
 # P2 Draft Vocabulary 실제 NumPy ID 자산 — 2026-11-02
 
 ## DGX 확인된 직전 단계
