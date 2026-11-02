@@ -1,3 +1,9 @@
+## 2026-11-03 P2 사용자 GPU 정비창 승인 — SHA별 실증 및 복구 필수
+
+- 사용자 "GPU 정비창 승인과 원본 보호·복구 절차 + 계속": **Numeric 최초 divergence 용 단 한 번의 독점 GPU 창과 same-ID 원본 stop/start/HTTP 복구를 명시 승인**. 다른 GPU 실험, 원본 image/weights/PLE/cache, 운영 cutover 승인은 아님. 운영 원본 컨테이너 RM 금지, 후보 소유권 검증 후 같은 ID original restore, 실패는 명확히 BLOCKED.
+- 마지막 확정 DGX SHA f240c29cb1c29b5d73bbebb7e0b798b6ec816c7f: Sampler-only source 10/10 PASS /tmp/p2-numeric-first-divergence-x_76hgqp, no GPU. 신규 scripts/p2-numeric-first-divergence-gpu-window.sh: read-only preflight, networkless image build, approved --execute, owner-check --recover를 구분. [P2 GPU Runbook](P2-NUMERIC-GPU-WINDOW-20261103.md) 준수. 신규 GitHub HEAD DGX/CI_NOT_RUN.
+- Numeric target: Prefix OFF/MTP OFF stock PLE/QSA + Witness only; 4x one-token API logprob and selected scalar correlation, raw logits/logprobs digest. strict 1e-4 release condition unchanged. Root cause/4-COPY Blazux PLE/MTP runtime PASS로 승격 금지. main/운영 원본 수정 및 자동 서비스 전환 금지.
+
 ## 2026-11-03 P2 실측 성공 이후 기능 우선 — 새 코퍼스 및 Gate 증식 금지
 
 - 실제 DGX HEAD `e467607219d60fae40690258f98f1de9140063b1`, upstream original 65536 NPY audited against Orcarouter 248077 IDs/special21/added33/padding0, 8/8 CPU tests PASS, private `/tmp/p2-upstream-draft-ai00xvtw/ids.npy`; Docker/GPU/API NOT_RUN. 기존 token frequency 코퍼스 신규 수집은 현재 목표에서 제외한다.

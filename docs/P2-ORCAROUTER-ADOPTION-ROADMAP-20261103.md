@@ -1,3 +1,9 @@
+## P2 Numeric GPU 정비창 명시 승인 및 순차 실행 2026-11-03
+
+- 실제 DGX Sampler-only stage **10/10 PASS at f240c29c**, 개인 /tmp/p2-numeric-first-divergence-x_76hgqp. 사용자 GPU 정비창/원본 보호·복구 명시 승인. 원본 stop/start 외 weights/image/cache/PLE 변경 금지, 동일 original ID 확인.
+- 신규 GPU 실험은 [정비창 Runbook](P2-NUMERIC-GPU-WINDOW-20261103.md): read-only preflight → offline image build → original stop/MemAvailable>=96GiB → Prefix OFF MTP OFF Sampler-only witness 4 first tokens → 후보 owner cleanup → same-ID original HTTP restore. Source HEAD DGX/CI_NOT_RUN, GPU numeric NOT_RUN.
+- Numeric first-observed divergence는 physical root cause 또는 strict numeric release approval이 아님. 기존 4-COPY 통합 후보와 운영 원본에 새 단독 진단 변경 자동 반영 금지.
+
 ## 2026-11-03 다음 실제 분석 대상으로 Numeric Sampler Witness 단독 후보 선정
 
 - 직전 DGX `4c5710d...` 29/29 4-COPY stage 성공은 **통합 소스 준비 완료**만 뜻하며 실제 Numeric 1e-4 root-cause OPEN.
