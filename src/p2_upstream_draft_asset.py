@@ -20,7 +20,6 @@ import tempfile
 from src.p2_mtp_draft_vocab import DraftVocab, DraftVocabError, FULL_VOCAB_SIZE, PROPOSED_DRAFT_SIZE
 from src.p2_mtp_vocab_artifact import (
     Blocked, MAX_TOKENIZER_BYTES, _read_plain_file, _tokenizer_added_ids,
-    npy_int32,
 )
 from src.p2_token_frequency import (
     MAX_CONFIG_BYTES, TOKENIZER_AUDITED_SHA256, special_ids,
@@ -70,8 +69,10 @@ def parse_npy(data: bytes, *, expected_blob: str = UPSTREAM_GIT_BLOB_SHA) -> tup
             or any(ids[i] <= ids[i-1] for i in range(1, len(ids)))
             or ids[0] < 0 or ids[-1] >= FULL_VOCAB_SIZE):
         raise Blocked("UPSTREAM_DRAFT_IDS_INVALID")
-    if npy_int32(ids) != data:
-        raise Blocked("UPSTREAM_DRAFT_NPY_NONCANONICAL")
+    # The pinned upstream np.save header is 128 bytes; our legacy V1
+    # writer uses 80 bytes. Both are valid NumPy 1.0. Compare the pinned
+    # Git blob above and validate the payload; never require identical
+    # padding to a different serializer.
     return ids
 
 

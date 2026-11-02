@@ -4,18 +4,29 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import struct
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 
 from src import p2_upstream_draft_asset as up
-from src.p2_mtp_vocab_artifact import Blocked, npy_int32
+from src.p2_mtp_vocab_artifact import Blocked
 from tests.test_p2_token_frequency import fixture
 
 
 def gitsha(raw: bytes) -> str:
     return up.git_blob_sha256_agnostic(raw)
+
+
+def pinned_style_npy(ids: tuple[int, ...]) -> bytes:
+    """Build the upstream NumPy 1.0 128-byte header, not local 80-byte variant."""
+    header = "{'descr': '<i4', 'fortran_order': False, 'shape': (65536,), }"
+    padding = 118 - len(header) - 1
+    assert padding >= 0 and len(ids) == 65536
+    return (b"\\x93NUMPY\\x01\\x00" + struct.pack("<H", 118)
+            + (header + " " * padding + "\\n").encode("ascii")
+            + struct.pack("<65536i", *ids))
 
 
 class UpstreamDraftAssetTests(unittest.TestCase):
@@ -25,7 +36,7 @@ class UpstreamDraftAssetTests(unittest.TestCase):
         conf = root / "c.json"
         target.write_bytes(raw)
         conf.write_bytes(config)
-        data = npy_int32(tuple(range(65536)))
+        data = pinned_style_npy(tuple(range(65536)))
         asset = root / "asset.npy"
         asset.write_bytes(data)
         return asset, target, conf, data, hashlib.sha256(raw).hexdigest()
@@ -90,7 +101,7 @@ class UpstreamDraftAssetTests(unittest.TestCase):
                          expected_blob=gitsha(data), expected_tokenizer=sha)
 
     def test_numpy_header_rejects_malformed_bytes_without_evaluation(self):
-        raw = bytearray(npy_int32(tuple(range(65536))))
+        raw = bytearray(pinned_style_npy(tuple(range(65536))))
         raw[12] ^= 0x7F
         with self.assertRaises(Blocked):
             up.parse_npy(bytes(raw), expected_blob=gitsha(bytes(raw)))
