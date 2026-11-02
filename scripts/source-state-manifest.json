@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 381,
+  "tracked_file_count": 385,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -181,7 +181,7 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "blob_sha": "87f4a68008f20a76411c1c30f43e888d83e3c786"
+      "blob_sha": "3cb3be2932d666e08b6f5ce003e7ee22f2b721e8"
     },
     {
       "path": "assets/blazux/PROVENANCE.md",
@@ -430,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "b545074446f43106cee7ee30d066b829a3f546d1",
+      "blob_sha": "db949c03adc4c4a1a1e945c130c0beaec591a2d3",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "a75afb48955dae080266d4c93cbb87d81b3b06e7",
+      "blob_sha": "f1f6e04b0c255cb2b021d9c43c3132de1e135414",
       "mode": "100644"
     },
     {
@@ -544,9 +544,14 @@
       "mode": "100644"
     },
     {
+      "path": "docs/P2-NUMERIC-FIRST-DIVERGENCE-PLAN-20261103.md",
+      "mode": "100644",
+      "blob_sha": "18d34e5ef1dc48d48521577f525cfef8d1590972"
+    },
+    {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
       "mode": "100644",
-      "blob_sha": "e64bee3d9ef761aa71e73c38c572cb05bcec313a"
+      "blob_sha": "e21b24776eda3fac1f28f3536003682e5c059354"
     },
     {
       "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
@@ -877,6 +882,11 @@
       "path": "scripts/p2-numeric-dgx.sh",
       "mode": "100755",
       "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
+    },
+    {
+      "path": "scripts/p2-numeric-first-divergence-dgx.sh",
+      "mode": "100755",
+      "blob_sha": "420987085fad18892b865922752262ebd06f9219"
     },
     {
       "path": "scripts/p2-offline-bundle-dgx.sh",
@@ -1297,6 +1307,11 @@
       "path": "src/p2_numeric_dgx_prepare.py",
       "mode": "100644",
       "blob_sha": "dcd223e038a82e1957da8bc53eb9cc37bb27b990"
+    },
+    {
+      "path": "src/p2_numeric_minimal_candidate.py",
+      "mode": "100644",
+      "blob_sha": "78ee61c2cc86563ad218cdda2784b83452902093"
     },
     {
       "path": "src/p2_numeric_report.py",
@@ -1962,6 +1977,11 @@
       "path": "tests/test_p2_numeric_dgx_prepare.py",
       "mode": "100644",
       "blob_sha": "d35ae0ae83dae6c84865fee3106f36c2608900d3"
+    },
+    {
+      "path": "tests/test_p2_numeric_minimal_candidate.py",
+      "mode": "100644",
+      "blob_sha": "a0a3597e1bc22970279c30913cc092d3243c8e1b"
     },
     {
       "path": "tests/test_p2_numeric_report.py",

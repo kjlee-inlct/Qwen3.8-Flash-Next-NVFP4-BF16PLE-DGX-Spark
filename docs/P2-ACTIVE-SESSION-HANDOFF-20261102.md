@@ -1,3 +1,10 @@
+## 2026-11-03 P2 Numeric 단일-변수 실행후보 준비 — 4-COPY 기반 1-COPY source plan
+
+- **마지막 실제 DGX GPU 미사용 관측**: HEAD `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`, P2 4-COPY source-stage 29/29 PASS, private `/tmp/p2-functional-bundle-ackw9piv`; P1 RELEASE_BLOCKED / numeric strict 1e-4 OPEN.
+- 다음 기술 개발에서 `src/p2_numeric_minimal_candidate.py`, `tests/test_p2_numeric_minimal_candidate.py` (10 focused CPU tests) 및 `scripts/p2-numeric-first-divergence-dgx.sh` 신규. 실제 4-COPY stage의 5개 파일 SHA/권한 검증, 원본 source/image/StartedAt read-only 확인, 운영 Prefix OFF/MTP2 명령과 별도 미래 Numeric-only MTP OFF 계획 분리. 개인 `/tmp/p2-numeric-first-divergence-*`에 **Sampler Witness 1-COPY Dockerfile + receipt**, 모든 opt-in OFF를 생성. 기존 통합 Stage/원본 Docker/기능 설정 불변. [실행·정비창 설계 정본](P2-NUMERIC-FIRST-DIVERGENCE-PLAN-20261103.md).
+- 다음 DGX 1회 source-only: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-numeric-first-divergence-dgx.sh --prepare /tmp/p2-functional-bundle-ackw9piv`. **신규 코드 HEAD DGX_NOT_RUN/CI_NOT_RUN**. 이 단계에 GPU/HTTP/이미지 빌드/원본 stop/start/exec가 없음. 정비창 실행 권한을 일반적인 '계속'으로 추정하지 말 것.
+- Numeric First divergence 관측이 다음 출시에 실질적으로 필요한 작업. QSA/MTP A/B, corpus/전체 CPU 반복 금지, 1e-4 완화 금지. 별도 정비창 허가와 안전 복구·GPU 자원 확인 없이는 실제 모델 GPU 실행 금지.
+
 ## 2026-11-03 실제 통합 Stage PASS, 다음 단계는 별도 승인 GPU first-divergence
 
 - 실제 사용자 DGX HEAD **`4c5710d4e5b3085ec5aae1354d1b9052537af2dc`** / `scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream`: Source preflight PASS, P2 Functional Bundle + MTP Overlay + Upstream IDs **29/29 PASS skip0**, 실제 설치 Sampler SHA, BF16 PLE SHA, MTP SHA pinned verified, Orcarouter Draft ID fingerprint validated, 원본 container/image identity unchanged. Output Stage **`/tmp/p2-functional-bundle-ackw9piv`**, status `P2_NUMERIC_PLE_MTP_UPSTREAM_VOCAB_SOURCE_STAGED_NOT_BUILT`. Four input files (sampler.py, vllm_ple_mmap.py, mtp.py, draft_vocab_65536.npy) + private 4-COPY Dockerfile. 전부 기본 OFF; Docker build/run/GPU/API NONE.
