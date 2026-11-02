@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 332,
+  "tracked_file_count": 336,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -511,7 +511,12 @@
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
       "mode": "100644",
-      "blob_sha": "c05a7acf9ec1507bb8ad9a79aa5cf4015dd1f984"
+      "blob_sha": "510a9d9e21cf688bd671be3e790ac1e33c79448c"
+    },
+    {
+      "path": "docs/P2-DGX-GIT-PULL-RUNBOOK.md",
+      "mode": "100644",
+      "blob_sha": "0dc3f50da50eb773c113f8f16bfabe8de4243181"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
@@ -521,7 +526,7 @@
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
       "mode": "100644",
-      "blob_sha": "ced0edb74d4d3d5c1199ca968a8ef7804f153053"
+      "blob_sha": "099fdf72317db13b27575722f91a86aa29ab816f"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -802,6 +807,11 @@
       "path": "scripts/p1-prefix-stage.sh",
       "mode": "100755",
       "blob_sha": "9665323b0179864f3a4a4084b36833de53d4460c"
+    },
+    {
+      "path": "scripts/p2-numeric-dgx.sh",
+      "mode": "100755",
+      "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
     },
     {
       "path": "scripts/pause.sh",
@@ -1147,6 +1157,11 @@
       "path": "src/p2_numeric_boundary.py",
       "mode": "100644",
       "blob_sha": "317c0f4a66a6c7ddf8c6e91e7170f098bb85aa47"
+    },
+    {
+      "path": "src/p2_numeric_dgx_prepare.py",
+      "mode": "100644",
+      "blob_sha": "dcd223e038a82e1957da8bc53eb9cc37bb27b990"
     },
     {
       "path": "src/p2_numeric_sampler_witness.py",
@@ -1752,6 +1767,11 @@
       "path": "tests/test_p2_numeric_boundary.py",
       "mode": "100644",
       "blob_sha": "545c4af217c7aca6a571e57c32213adfcacfd9ed"
+    },
+    {
+      "path": "tests/test_p2_numeric_dgx_prepare.py",
+      "mode": "100644",
+      "blob_sha": "d35ae0ae83dae6c84865fee3106f36c2608900d3"
     },
     {
       "path": "tests/test_p2_numeric_sampler_witness.py",

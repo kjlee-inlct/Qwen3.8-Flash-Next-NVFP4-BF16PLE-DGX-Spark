@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 DGX 실행 위임 — Git pull 후 단일 실행 명령
+
+- **실행 정본:** [P2-DGX-GIT-PULL-RUNBOOK.md](P2-DGX-GIT-PULL-RUNBOOK.md). 기능 코드·소스 확인·CPU 검사·수동 DGX 절차는 GitHub에 커밋된 `bash scripts/p2-numeric-dgx.sh --check` 또는 `--stage`로 실행한다. P2 Fork checkout에서 `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 호출한다. 기존 `--strict`는 P2 브랜치를 허용하지 않으므로 개발 스크립트에서 사용하지 않는다.
+
+- `--check`: P2 전용 기존 preflight (정확 HEAD/개인 Fork/origin/clean manifest) + targeted CPU 단위시험. **원본 Docker를 조회하지 않음.** `--stage`: 동일 검사 후 원본 동일-ID·image/StartedAt 및 설치 Sampler source SHA를 read-only Docker inspect/cp로 확인하고, 새 개인 /tmp 디렉터리에 **기본 OFF** 1-COPY candidate-only witness source/Dockerfile을 생성. **Docker build/run/exec/stop/start/HTTP/GPU 전혀 수행하지 않음.** SHA/ID drift에는 exit 2.
+
+- 이 단계의 생성물은 P2 소스 준비이며 실제 원인 분석의 숫자 증거 또는 P2 numeric PASS가 아니다. 신규 DGX 실행 로그, 실제 source HEAD, CPU PASS, 신원 확인 결과를 받기 전 **DGX_NOT_RUN**으로 유지한다. 기존 마지막 DGX-tested source는 `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`, strict `1e-4`와 출시 차단 불변. GPU/API/운영 서비스 정비창은 승인하지 않는다.
+
 ## 2026-11-02 P2 후속: 선택 토큰 단위 Sampler 경계 계측 준비
 
 - **실제 P2 코드 변화:** `src/p2_numeric_sampler_witness.py`는 기존 Preview 설치본 `vllm/v1/sample/sampler.py`의 **고정 SHA256 `f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216`**과 정확한 `Sampler.forward` anchor 3개를 만족할 때만 패치를 생성하는 SOURCE-ONLY 변환이다. `Sampler.compute_logprobs(logits)` 직후 Raw logits/전체 logprobs SHA, `sampled.long()` 직후 선택 token ID SHA256과 **단일 logprob 스칼라**를 함께 수집한다. processed override·다른 모드/shape·SHA drift는 skip/block. 기본 환경 `VLLM_P2_NUMERIC_WITNESS=0`, 후보 전용 `/tmp/p2-numeric-witness.jsonl`, 최대 8 event/process. 원본/P1 pin 이미지·GPU/운영 미변경.

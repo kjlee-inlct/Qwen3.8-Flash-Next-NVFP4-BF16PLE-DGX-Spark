@@ -1,5 +1,12 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-02 영구 DGX 작업 위임 — Git pull 기반 실행
+
+사용자의 DGX 실제 작업은 **GitHub에 실행 가능한 코드·테스트·스크립트와 문서를 먼저 완성/커밋하여, DGX의 개인 Fork checkout에서 `git pull --ff-only` 후 정해진 스크립트만 실행**할 수 있도록 제공한다. 사용자가 임의 코드 조각을 수동으로 합성·수정할 필요가 없어야 한다. 명령은 브랜치·작업 경로·실행 모드·예상 상태·실패·증거 회수를 포함하며, 작업이 필요할 때마다 해당 기능의 runbook/스크립트를 업데이트한다. 코드 반영과 실제 DGX 실행·시험 판정은 SHA별로 별도 관리한다.
+
+**운영 권한은 별개:** `git pull` 및 CPU/source 준비 허용이 운영 원본 컨테이너 중지, 새 GPU 모델 로드, HTTP 추론, 벤치마크 또는 CI 사용 승인을 뜻하지 않는다. 이런 동작은 구체적인 서비스 창/복구 및 별도 사용자 승인 후에만 실행 가능한 별도 안전 모드로 제공한다. 현재 P2 numeric Git-pull 진입점은 `scripts/p2-numeric-dgx.sh --check|--stage`, 설명은 [P2 DGX 실행 정본](P2-DGX-GIT-PULL-RUNBOOK.md). **현재 단계에서는 GPU/API/운영 실행은 미수행**이다.
+
+
 ## 2026-11-02 최상위 갱신 — P1 종료 후 P2 새 대화 인수인계
 
 사용자는 P1 세 기능 최소 실경로 `BOUNDED_PASS` 및 독립 출시 `BLOCKED` 정리 후 **다음 새 대화에서 P2 진행**을 지시했다. 현재 대화의 변경은 **P2 작업 전용 인수인계/상시 문서**뿐이며 P2 구현·GPU/운영·CI는 미실행. **[P2 현재 작업 전용 정본](P2-ACTIVE-SESSION-HANDOFF-20261102.md)**을 다음 세션에서 먼저 읽어 1순위 numeric root-cause 조사부터 실제 진행한다. 이전 P1 완료/실측 자료는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 운영 규칙은 본 문서의 기존 상시 절을 참조하며 반복 복제하지 않는다.
