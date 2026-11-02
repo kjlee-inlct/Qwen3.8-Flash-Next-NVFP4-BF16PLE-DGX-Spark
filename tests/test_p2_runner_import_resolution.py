@@ -37,6 +37,28 @@ class TestPackageResolutionTests(unittest.TestCase):
             # imported fixture module uses stdlib and repository source only.
             self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_isolated_container_uses_invoking_nonroot_uid_for_private_sources(self):
+        runner = (ROOT / "scripts/p2-batch-cpu-container.sh").read_text(encoding="utf-8")
+        self.assertIn('readonly HOST_UID="$(id -u)"', runner)
+        self.assertIn('readonly HOST_GID="$(id -g)"', runner)
+        self.assertIn('10#$HOST_UID > 0 && 10#$HOST_GID > 0', runner)
+        self.assertIn('--user "$HOST_UID:$HOST_GID"', runner)
+        self.assertNotIn("--user=65534:65534", runner)
+        self.assertIn(' -r "$ROOT/src/p1_preview_qsa_exact_topk.py"', runner)
+        self.assertIn('target=/p2,readonly', runner)
+        self.assertIn("--runtime=runc --network=none --read-only", runner)
+        self.assertIn("--env NVIDIA_VISIBLE_DEVICES=void", runner)
+        self.assertNotIn("chmod 777", runner)
+        self.assertNotIn("chown -R", runner)
+
+    def test_docker_runner_requires_explicit_execute(self):
+        runner = ROOT / "scripts/p2-batch-cpu-container.sh"
+        result = subprocess.run(["bash", str(runner)], cwd=ROOT,
+                                capture_output=True, text=True, timeout=10,
+                                check=False)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("explicit --execute required", result.stderr)
+
     def test_single_offline_bundle_has_six_explicit_modules(self):
         runner = (ROOT / "scripts/p2-batch-cpu-container.sh").read_text(encoding="utf-8")
         self.assertIn("P2_TEST_PACKAGE_LOCAL_VERIFIED", runner)

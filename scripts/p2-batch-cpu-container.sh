@@ -16,7 +16,7 @@ fail() { echo "P2_BATCH_CPU_CONTAINER_BLOCKED: $*" >&2; exit 2; }
   fail "explicit --execute required; no Docker command has run"
 [[ ! -L "$ROOT" && -d "$ROOT/.git" ]] || fail "unexpected checkout"
 cd -- "$ROOT"
-for cmd in git python3 docker awk; do
+for cmd in git python3 docker awk id; do
   command -v "$cmd" >/dev/null 2>&1 || fail "missing required command"
 done
 readonly HEAD="$(git rev-parse HEAD)"
@@ -25,6 +25,18 @@ readonly HEAD="$(git rev-parse HEAD)"
 [[ "$(git rev-parse --show-toplevel)" == "$ROOT" ]] || fail "wrong repository root"
 [[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]] ||
   fail "dirty source checkout"
+# UID 65534 cannot read the 0600 repository files observed on DGX. Match the
+# invoking unprivileged checkout owner's effective Unix identity for the
+# read-only bind, without chmod/chown or weakening the sandbox.
+readonly HOST_UID="$(id -u)"
+readonly HOST_GID="$(id -g)"
+[[ "$HOST_UID" =~ ^[0-9]+$ && "$HOST_GID" =~ ^[0-9]+$ ]] ||
+  fail "host UID/GID unavailable"
+(( 10#$HOST_UID > 0 && 10#$HOST_GID > 0 )) ||
+  fail "root user/group prohibited for disposable CPU sandbox"
+[[ -r "$ROOT/src/p1_preview_qsa_exact_topk.py" &&
+   -r "$ROOT/tests/test_p2_ple_unique_h2d.py" ]] ||
+  fail "P2 source files unreadable to invoking user"
 export PYTHONDONTWRITEBYTECODE=1
 python3 -m src.p2_numeric_dgx_prepare --expected-head "$HEAD" --check ||
   fail "source-state/fork/branch/HEAD preflight failed"
@@ -52,15 +64,15 @@ local_image="$(docker image inspect --format '{{.Id}}' "$IMAGE" 2>/dev/null)" ||
 [[ "$local_image" == "$IMAGE" ]] || fail "immutable image ID mismatch"
 
 # One disposable process, no model/weights/cache/Docker socket/GPU mount.
-# CPU 2, RAM/swap 2 GiB, read-only source/root, nonroot and no network.
+# CPU 2, RAM/swap 2 GiB, read-only source/root, invoking nonroot UID/GID and no network.
 echo "P2_BATCH_ISOLATED_CPU_PREFLIGHT_PASS HEAD=$HEAD"
-echo "P2_BATCH_ISOLATED_CPU_POLICY=RUNC_NO_GPU_NO_NETWORK_2CPU_2G_READONLY"
+echo "P2_BATCH_ISOLATED_CPU_POLICY=RUNC_NO_GPU_NO_NETWORK_2CPU_2G_READONLY_HOST_NONROOT_UID"
 rc=0
 docker run --rm -i --pull=never \
   --runtime=runc --network=none --read-only \
   --cap-drop=ALL --security-opt=no-new-privileges \
   --cpus=2 --memory=2g --memory-swap=2g --pids-limit=96 \
-  --user=65534:65534 \
+  --user "$HOST_UID:$HOST_GID" \
   --tmpfs '/tmp:rw,noexec,nosuid,nodev,size=128m,mode=1777' \
   --mount "type=bind,source=$ROOT,target=/p2,readonly" \
   --workdir /p2 \
