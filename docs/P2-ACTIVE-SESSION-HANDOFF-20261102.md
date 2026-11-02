@@ -1,5 +1,14 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 numeric 첫 소스 조사 및 오프라인 코드 (신규)
+
+- GitHub 개발 브랜치 feature/p2-numeric-first-boundary-20261102; P1과 main은 보호. 첫 실수치 차이의 계산 경계는 아직 미확정이고 P1 최종 strict 및 출시 BLOCKED 유지.
+- Source: src/p1_numeric_source_trace.py 는 AST 위치만 보고하고 runtime call order는 검증하지 못함. src/p1_numeric_sampler_overlay.py의 고정된 Sampler.forward raw_logprobs 분기는 logits 입력과 compute_logprobs 결과의 두 해시를 캡처할 수 있지만, MTP2의 RejectionSampler 경로는 우회될 수 있다. 실제 2026-11-02 MTP2 rejection tap 0건은 boundary 증거가 아니다.
+- 단일 반증 가설: 동등한 첫 토큰 raw logits 바이트가 일치하더라도 Sampler.compute_logprobs 또는 후단 gather/API 과정에서 strict logprob 불일치가 발생할 수 있다. 반증 조건: 동일 요청 첫 토큰에서 raw logits 해시가 먼저 변하면 이 가설의 post-logits-only 형태는 기각. 반대로 logits/normalized logprobs 모두 일치하고 API만 변하면 후단 출력 경로에 한정. 해시 변화는 크기·인과 관계를 증명하지 않는다.
+- 최소 구현: src/p2_numeric_boundary.py 와 tests/test_p2_numeric_boundary.py 는 기존 P1 Sampler 계측 digest를 조건부로 분류하는 offline oracle. 정확한 prefix OFF, MTP OFF, 단일 활성 요청, first-row-to-API 매핑 증거가 없으면 INCONCLUSIVE로 유지. strict 1e-4 유지. 로컬 순수 Python synthetic 단위시험 8/8 PASS (DGX, CI, GPU, API NOT_RUN). 기존 모델/이미지/원본 tap 변경 없음.
+- 다음 막힘: 원본 Preview Sampler->engine logprobs->OpenAI 반환의 정확한 실행/row alignment가 현재 GitHub 소스만으로 검증되지 않음. pinned 컨테이너 source 및 승인된 단일 no-MTP 후보에 대한 계측 경계의 별도 증거 없이는 root cause FIXED나 numeric PASS 불가. 새로운 GPU 승인 자동 확장 금지.
+
+
 > **P2_NEXT_SESSION_READY / P2_CODE_NOT_STARTED.** 이 문서는 이제 종료한 P1의 이력을 다시 복제하지 않고 **다음 대화에서 수행할 P2 작업**만 설명한다. 새 대화 시작 시 GitHub 최신 HEAD·PR·CI 재조회 필수. 이번 문서/PR 변경은 P2 코드·DGX·GPU·운영 서비스 실행이 아니다.
 
 ## 우선 읽을 정본
