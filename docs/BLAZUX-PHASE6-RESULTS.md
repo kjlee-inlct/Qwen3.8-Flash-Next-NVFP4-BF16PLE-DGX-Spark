@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-11-02 P2 3-COPY 통합 후보 source stage (사용자 DGX 증거)
+
+- **DGX HEAD `d6eead92956961b48b3ec711c02c18a1276dba6d`**, source preflight/P2 PLE SHA PASS, 신규 stdlib 19/19 PASS, `P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT`, `P2_BUNDLE_SOURCE_COMPLETE ... MODE=--stage-mtp NO_BUILD_NO_GPU_NO_API`.
+- 실제 stage `/tmp/p2-functional-bundle-qzvkz12s`, MTP candidate patch SHA256 `c6fd9daa8b9ebc07bf12af20f4b110897b470a686d4e1fba46bae2b26d51db40`, Sampler patch SHA `a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4`, PLE SHA `a7aa7fe782c1b88f1f28fd3d7499201bc9370680167aab200fa1cee6aad35dc6`.
+- 원본 same-ID/image/running/StartedAt unchanged, Docker build/GPU/API NOT_RUN. Native runtime MTP2 acceptance, actual selected 65,536 draft IDs, strict logprob 1e-4, PLE GPU H2D NOT_VERIFIED.
+- 다음 GitHub 코드: 실제 aggregate counts/tokenizer 기반 private `.npy` ID 산출물 생성 및 SHA receipt, 신규 source tests. **이 다음 코드 DGX_NOT_RUN/CI_NOT_RUN**; 사용자 데이터 미제공으로 실 운영용 mapping 미생성.
+
+
 ## 2026-11-02 P2 Numeric+PLE 공동 Stage 실제 DGX 검증 및 MTP 설치 ABI 첫 증거
 
 - **USER DGX SHA `798575ed34acadb9eb83f004ce76ffc3bf2a2ac4`**: CPU-only pinned Docker 결과 **40/40 PASS, skipped=0** 및 호스트 import/UID **4/4 PASS**, 원본 same ID / image / StartedAt 불변. BF16 PLE unique-H2D 함수의 CPU byte-exact 검증 완료. 실 GPU kernel/H2D, TTFT/TPS, runtime MTP Head은 **NOT_RUN**.

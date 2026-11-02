@@ -70,3 +70,12 @@ bash scripts/p2-functional-bundle-dgx.sh --stage-mtp
 ```
 
 **검증 경계**: 이번 source-only 후보의 실제 CUDA Graph/warmup/lazy init, GPU logits shape/numeric, candidate vLLM speculative rejection correctness, 실제 MT​P 65,536 vocab token coverage, sampled target strict logprob `1e-4` 및 TTFT/TPS는 **NOT_RUN / BLOCKED**. 새로운 코드를 기존 P1 builder pin과 섞지 말 것. P1 release 차단/strict numeric failure 불변.
+
+
+## 2026-11-02 Draft ID 실제 파일 직렬화 및 source-only 검증
+
+- **사용자 제공 실제 DGX** `d6eead92956961b48b3ec711c02c18a1276dba6d`: Numeric+PLE+MTP 3-COPY candidate-only Stage **19/19 PASS**, MTP patched SHA `c6fd9daa8b9ebc07bf12af20f4b110897b470a686d4e1fba46bae2b26d51db40`, 개인 `/tmp/p2-functional-bundle-qzvkz12s`, 원본 unchanged. `candidate_build_or_gpu_or_api_executed=false`.
+- 후속 기능 `src/p2_mtp_vocab_artifact.py`는 **실제 tokenizer.json + aggregate token count**를 갖춘 경우 로컬 ID 목록을 **NumPy .npy v1 int32**로 만들고 SHA256 및 receipt 기록. 기존 opt-in `_p2dv_load_ids()`의 정렬/256-byte IDs/shape contract에 맞춤. 실제 코퍼스·Tokenizer 파일을 획득한 것은 아니며 최적 어휘 성능을 증명하지 않음.
+- 개인 `/tmp` 신규 작성만 허용; 기존 checkpoint·cache/이미지·P1 Stage 변경 금지. `scripts/p2-vocab-artifact-dgx.sh --check` 새 stdlib 회귀시험, `--build <counts> <tokenizer>`는 실제 사용자 지정 입력이 있을 때만. 상세 [자산 생성 정본](P2-DRAFT-VOCAB-ASSET-20261102.md).
+- 신규 코드 DGX_NOT_RUN / CI_NOT_RUN, strict Numeric OPEN, P1 RELEASE_BLOCKED 불변.
+
