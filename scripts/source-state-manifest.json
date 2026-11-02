@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 366,
+  "tracked_file_count": 370,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -420,7 +420,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "dddb0392c976ee22d7751ee51af43f7d64029263",
+      "blob_sha": "45b2d0ac7e5b4a9613b212e2b7bf8e1764ec37af",
       "mode": "100644"
     },
     {
@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "8eaf96a458715f48becb5f1af089e8860f941a7a",
+      "blob_sha": "bff63bd38161ad672405dcd15592a25c4e5a6266",
       "mode": "100644"
     },
     {
@@ -525,12 +525,17 @@
     },
     {
       "path": "docs/P2-DRAFT-VOCAB-ASSET-20261102.md",
-      "blob_sha": "fabe4949978f91d29ecc6d3d5c2eab60b901d7fc",
+      "blob_sha": "1f866a3439fabc3acad9e87d6b42cdabc7011ccd",
       "mode": "100644"
     },
     {
       "path": "docs/P2-MTP-HEAD-ABI-20261102.md",
       "blob_sha": "b889e7f987f5a43f6b972481db11ad88d4823583",
+      "mode": "100644"
+    },
+    {
+      "path": "docs/P2-TOKENIZER-SOURCE-AUDIT-20261102.md",
+      "blob_sha": "0cf8438a2c5955e9a266b6edad503f0d9c7e6306",
       "mode": "100644"
     },
     {
@@ -852,6 +857,11 @@
       "path": "scripts/p2-numeric-dgx.sh",
       "mode": "100755",
       "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
+    },
+    {
+      "path": "scripts/p2-tokenizer-source-audit-dgx.sh",
+      "blob_sha": "1004da668af6285410d7413bc4c4d5f6997d733f",
+      "mode": "100755"
     },
     {
       "path": "scripts/p2-vocab-artifact-dgx.sh",
@@ -1262,6 +1272,11 @@
       "path": "src/p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "1de010499aeb1e2afcb299724d867e22d8797320"
+    },
+    {
+      "path": "src/p2_tokenizer_source_audit.py",
+      "blob_sha": "7fd38a5e318e3cc1d30a98800bfa25139fd85b20",
+      "mode": "100644"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1921,6 +1936,11 @@
     {
       "path": "tests/test_p2_runner_import_resolution.py",
       "blob_sha": "55b81b105e3e1d8ac2fe9b6892bf96915a4551d8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_tokenizer_source_audit.py",
+      "blob_sha": "507bf6e3df11ce6b9e1950af90d381549fd01852",
       "mode": "100644"
     },
     {
