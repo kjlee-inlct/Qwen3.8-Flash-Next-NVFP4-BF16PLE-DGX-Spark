@@ -47,3 +47,11 @@ bash scripts/p2-workspace-inventory.sh --references
 ```
 
 `REFERENCE_AUDIT_READ_ONLY` 표시와 대상별 `references=N`을 확인한다. `COMPLETE_SCOPED_SCAN`은 *스코프 내의 정적 텍스트 검색* 완료만 뜻한다. 프로세스 cwd/열린 파일, 시스템 서비스, 외부 절대 경로, 실제 활성 런처, 무시된 캐시/대용량 파일까지 증명하지 않으므로 **참조 0건도 이동·삭제 허가가 아니다.** 실제 archive 작업은 사용자 별도 승인 및 복구계획 후 수행한다.
+
+## 2026-11-02 DGX 최신 참조 감사 실측 — 스크립트명과 폴더 경로 구분
+
+- **실측 소스 HEAD:** `3dccb50e6f9528fea8a7b4cd799b2e2fdcfe3d09` (개인 Fork P2 개발 브랜치). `git pull --ff-only` 성공. `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v tests.test_p2_workspace_inventory` **15/15 PASS (실제 DGX Python CPU)**.
+- `bash scripts/p2-workspace-inventory.sh --references`: `WORKSPACE_INVENTORY_READ_ONLY`, `docker=AVAILABLE`, `REFERENCE_AUDIT_READ_ONLY COMPLETE_SCOPED_SCAN scanned=1119`, 삭제·이동 **0회**. 15개 폴더 중 보호 5, HOLD 5, Phase1~5 REVIEW 5. 과거 Phase1~5 참조 횟수 각각 **9 / 10 / 7 / 9 / 19**. 각 hit는 경로 문자열 1회/파일 수준 카운트이며 물리 디렉터리 의존성 수가 아님.
+- **GitHub 실제 소스 검토:** `scripts/phase2-check-offline.sh`, `phase3-check-offline.sh`, `phase4-check-offline.sh`, `phase5-check-offline.sh`, `phase5-mamba-batch-check.sh`에서 해당 PhaseN 문자열은 `BRANCH="feature/blazux-phaseN-..."` 형태의 **Git 브랜치 검사**이며, `ROOT="$(cd ... dirname ... && pwd)"`로 현재 스크립트 위치를 기준으로 실행한다. 이 5개 파일의 검색 hit만으로 **기존 `~/Workspace/llm/blazux-phaseN-...` 절대 디렉터리를 필요로 한다는 것은 입증되지 않음**. 단, 각 checkout의 브랜치/부모 commit과 전체 Git 상태는 보존해야 역사적 시험 재현 가능.
+- 검색된 `tests/test_p2_workspace_inventory.py` 및 `scripts/source-state-manifest.json` 등도 **시험 fixture·Git blob 기록의 문자열**일 수 있으며, 문서상의 PhaseN 참조는 당시의 재현 절차·역사적 경로 설명일 수 있다. **실제 경로를 쓰는 스크립트와 정적 문자열은 분리 판단**해야 하며, 0건도 경로 안전성 증명이 아님. `phase5`는 추가 7건 이상 결과 생략(`EXTRA_REFERENCE_MATCHES_TRUNCATED`).
+- **현재 허용된 조치:** 결과 분류 및 보관 설계만. 실제 폴더 archive/move/delete, symlink 갱신, `git reset --hard`, `git clean -fd`, 원본 컨테이너 변경은 미실행·별도 승인 필요. 별도 이동계획은 현재 활성 P2 checkout·보호 폴더를 제외한 깨끗한 Phase1~5만 대상으로, 각 Git identity/working tree, 실행 중 프로세스 cwd/open files 및 외부 systemd/cron/절대 경로 참조 확인, 이름 충돌·백업·원복 경로를 먼저 설계한다.
