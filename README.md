@@ -1,3 +1,7 @@
+## 현재 목표 — 실운영 Orcarouter에 Blazux 최적화 이식 (2026-11-03)
+
+**[현행 Orcarouter P2/P3 적용 로드맵](docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md)** · [현재 P2 실행 인수인계](docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md). 기존 서비스의 Orcarouter BF16 PLE / MTP2, OpenAI `8000/v1` 호환성 보존이 최종 목표다. Blazux 기본 제공 `draft_vocab_65536.npy`가 있으므로 새 코퍼스를 수집할 필요 없이 원본 Git SHA를 pin한 채 Orcarouter tokenizer 호환성을 검사한다. strict numeric `1e-4` 출시 차단 유지, PLE GPU H2D/실 MTP2/0.32 포팅은 미검증. 신규 기능은 운영 자동 적용되지 않음.
+
 # Qwen3.8-Flash-Next BF16 PLE recipe for DGX Spark
 
 ## 2026-11-02 P2 새 대화 시작점

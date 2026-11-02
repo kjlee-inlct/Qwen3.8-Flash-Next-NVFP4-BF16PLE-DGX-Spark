@@ -1,3 +1,10 @@
+## 2026-11-03 P2 방향 정정 및 upstream 이미 제공된 65,536 Draft ID 확보
+
+- Blazux 적용 대상은 기존 운영 **Orcarouter BF16 PLE / 31 BF16 MTP overlay**. 이전 사용자에게 허가 corpus 수집 요구는 지금 단계에서 불필요. Upstream `blazux/qwen3.8-Flash-DGX` main SHA `b0aa8b77604139557169387b2fa8386355d8b651`의 `src/draft_vocab_65536.npy`를 **byte-exact Git blob** `2b94340a3ca0985a7494af369ac82536d61411de`로 확보. 65,536 sorted int32, 0..255 byte IDs, 33 added IDs 248044..248076 포함, 미선언 padding ID 없음 (원본 binary JS 구조 검사).
+- Fork 신규 `assets/blazux/draft_vocab_65536.npy` + attribution, stdlib 감사·private stage 도구 및 8-case 테스트, 정확한 Orcarouter tokenizer/config ID 재검증을 위한 단일 DGX 스크립트. 이 GitHub source change는 **DGX_NOT_RUN, CI_NOT_RUN, runtime/production NOT_RUN**.
+- **직전 DGX 실측** `e3a6097501a80114ae663e68c5e84c1f5114a9c7`: 37/37 no-skip, pinned disposable CPU tokenizer probe verified declared=248077, required special=21, original unchanged. 지금 신규 id asset의 actual ID compatibility/real MTP acceptance·release는 아직 검증 안됨.
+- Full roadmap: [P2 실제 Orcarouter 이식 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md). 기존 numeric 1e-4 원인 미해결, BF16 PLE H2D GPU timing, Native MTP2 acceptance, vLLM 0.32 Track B, P3 outstanding. Corpus/CPU Gate 늘리기보다 실 기능 구현을 우선.
+
 ## 2026-11-02 P2 호스트 CPU tokenizer 의존성 원인 확인과 다음 단일 묶음
 
 - **실제 사용자 DGX 실행 SHA `8a96f1277dfb8ad3ac6f571dc6847c33c1d9e123`:** `git pull --ff-only` 후 `--probe`, source preflight PASS, synthetic unittest **20/20 PASS**, 그러나 실제 인코더 단계 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE` **차단**. **원인은 호스트 Python `tokenizers` 부재**이며 실 token count나 config/encoder 성공 아님. 이전 16/16 실행과 본 20/20은 각기 독립 SHA 증거.

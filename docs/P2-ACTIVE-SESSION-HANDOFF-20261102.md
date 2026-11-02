@@ -1,3 +1,11 @@
+## 2026-11-03 사용자 목표 재정렬: Orcarouter 직접 Blazux 이식, Corpus 준비 중지
+
+- **최종 목표:** 현재 운영 Orcarouter Uncensored BF16 PLE(약 95.37 GiB)/BF16 MTP2 + NVFP4 전문가에 Blazux 최적화를 포팅, API `8000/v1`·모델 ID·서비스 원본 유지. 신규 데이터셋 구축은 최종 목표가 아님. 최신 방향/단계/차단 기준은 [P2 Orcarouter Blazux 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md).
+- **Blazux upstream GitHub 실측:** `b0aa8b77604139557169387b2fa8386355d8b651`에는 **원본 65,536 Draft ID .npy가 이미 동봉**. Git Blob `2b94340a3ca0985a7494af369ac82536d61411de` 바이트 복제, first256/added248044..248076 포함, padding 행 0. 이 신규 Fork 자산은 GPU/런타임 **아직 미연결**.
+- 신규 `src/p2_upstream_draft_asset.py`, `tests/test_p2_upstream_draft_asset.py`, `scripts/p2-upstream-draft-dgx.sh --stage` (Source preflight + 8 focused synthetic tests + 실제 Orcarouter tokenizer/config special/added/declared ID 감사 → 성공 시 개인 `/tmp` private candidate). 임의 corpus, pip, 모델/GPU/HTTP, Docker, 배포 없음. 새 코드 **DGX_NOT_RUN / CI_NOT_RUN**.
+- 사용자 DGX 직전 **실제 HEAD `e3a6097501a80114ae663e68c5e84c1f5114a9c7`:** isolated 37/37 PASS SKIP0, actual tokenizer local CPU encoder PASS, declared 248077, config special 21, 원본 변경 없음. 신규 자산 호환 검증 PASS로 소급 금지.
+- DGX 다음에 한 번만: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-upstream-draft-dgx.sh --stage`. PASS 시에도 Native BF16 MTP Runtime/acceptance/strict 1e-4/H2D/serving NOT_VERIFIED. Numeric 첫 비재현성 위치가 P2 다음 핵심 과제이며 37건 재시험 및 추가 corpus 수집 금지.
+
 ## 2026-11-02 P2 Token Frequency 실제 환경 원인 확정 → 한 번의 격리 CPU 묶음으로 진행
 
 - **사용자 DGX HEAD `8a96f1277dfb8ad3ac6f571dc6847c33c1d9e123`:** Source preflight PASS, targeted **20/20 PASS / SKIP0**, real CPU tokenizer `--probe`는 `TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE`. 운영 토크나이저/모델 버그가 아닌 **호스트 Python 의존성 결여**에 의해 실제 인코딩 시험이 차단됐음. 원본/recipe exact byte SHA 이전 감사 유지.
