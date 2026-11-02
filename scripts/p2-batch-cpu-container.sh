@@ -28,6 +28,9 @@ readonly HEAD="$(git rev-parse HEAD)"
 export PYTHONDONTWRITEBYTECODE=1
 python3 -m src.p2_numeric_dgx_prepare --expected-head "$HEAD" --check ||
   fail "source-state/fork/branch/HEAD preflight failed"
+# Stdlib-only local import-collision regression before disposable Docker use.
+python3 -m unittest -v tests.test_p2_runner_import_resolution ||
+  fail "repository test package resolution regression failed"
 
 available_kib() {
   awk '$1=="MemAvailable:" && $3=="kB" {print $2}' /proc/meminfo
@@ -76,8 +79,19 @@ docker run --rm -i --pull=never \
   --entrypoint python3 "$IMAGE" -B - <<'PYCODE' || rc=$?
 import sys
 import unittest
+from pathlib import Path
+import tests as repo_tests
 import numpy as np
 import torch
+
+# The vLLM image may contain an unrelated installed "tests" package. Its
+# ordinary package can overshadow a namespace-only /p2/tests directory.
+# Refuse to execute the wrong suite or report 40/40 from another distribution.
+expected_tests = Path("/p2/tests/__init__.py")
+actual_tests = getattr(repo_tests, "__file__", None)
+if actual_tests is None or Path(actual_tests).resolve(strict=True) != expected_tests.resolve(strict=True):
+    raise SystemExit("P2_TEST_PACKAGE_ORIGIN_MISMATCH")
+print("P2_TEST_PACKAGE_LOCAL_VERIFIED")
 
 if torch.cuda.is_available():
     raise SystemExit("P2_CPU_ONLY_BLOCKED_CUDA_AVAILABLE")

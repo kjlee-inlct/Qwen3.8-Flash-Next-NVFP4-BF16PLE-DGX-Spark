@@ -41,3 +41,10 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m src.p2_numeric_report --input /path/to/appr
 - DGX에서: `cd ~/Workspace/llm/blazux-phase6-gates` → `git pull --ff-only origin feature/blazux-phase6-runtime-gates` → `bash scripts/p2-batch-cpu-container.sh --execute`. 이 새 스크립트 자체는 **DGX_NOT_RUN/CI_NOT_RUN**. 컨테이너가 Python 의존성을 갖추지 못했거나 Torch CUDA가 가시적이면 FAIL-CLOSED.
 - 실제 GPU H2D/cuda graph/TTFT/TPS, MTP real head/acceptance, numeric first-divergence **미검증**. strict 1e-4 / P1_RELEASE_BLOCKED 유지.
 
+
+## 2026-11-02 DGX 첫 Docker CPU 시도 실패 — 테스트 패키지 충돌 수정
+
+- **DGX 실측 실행 HEAD** `51134f2ecd48b0a13496075c402f3edda255e47e`. Source preflight PASS, pinned image 내 NumPy **2.2.6**, PyTorch **2.13.0+cu130** 확인. 하지만 6개 모듈 모두 `ModuleNotFoundError: No module named 'tests.test_p2_...'`로 `_FailedTest`, 총 **Ran 6 tests / FAILED(errors=6)**. 실 40개 기능 시험 **NOT_RUN**, PLE correctness 미판정. 사후 원본 불변 검사는 스크립트 실행 경로상 실패 차단 전에 정상 수행되었으나 로그에는 원본 신원 값 출력 없음. GPU/API 사용 없음.
+- **원인:** 저장소의 `tests/`는 `__init__.py`가 없는 namespace directory였고, 고정 vLLM 이미지에서 다른 distribution의 regular `tests` 패키지가 모듈 이름을 가로채는 import-resolution 충돌. `tests.test_p2_numeric_dgx_prepare` 내부에서도 `from tests.test_p2_numeric_sampler_witness import fixture`를 사용하므로 단순 loader 이름 변경은 불완전.
+- **코드 수정:** `tests/__init__.py`로 저장소 내부 `tests`를 regular package로 만들고, 1회성 Docker runner에서 import된 `tests.__file__`이 정확히 `/p2/tests/__init__.py`인지 확인. 잘못된 패키지면 `P2_TEST_PACKAGE_ORIGIN_MISMATCH`로 차단, 정상이면 `P2_TEST_PACKAGE_LOCAL_VERIFIED`. 독립적인 site-packages collision 회귀시험을 별도로 추가. 기존 40-case 선택 목록과 0 SKIP 원칙, Docker ID/StartedAt와 resource boundary는 유지.
+- 다음 DGX는 개발 브랜치 `git pull --ff-only` 후 `bash scripts/p2-batch-cpu-container.sh --execute` **한 번**으로 확인. 이 수정 이후 Docker **DGX_NOT_RUN**, CI_NOT_RUN. 실제 기능/수치/GPU 출시는 이전처럼 BLOCKED.

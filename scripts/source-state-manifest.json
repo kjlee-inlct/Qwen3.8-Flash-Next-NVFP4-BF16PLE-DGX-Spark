@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 348,
+  "tracked_file_count": 350,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,12 +510,12 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "4e29597ee11c5f1af0cda7f7e58d0d747bde5c1d",
+      "blob_sha": "76ce5f9f4f3bc1e322d38905abbfdba54cdf0867",
       "mode": "100644"
     },
     {
       "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
-      "blob_sha": "8284998a9c3f618046e5263448596848baf2e0af",
+      "blob_sha": "03e6a2c623eee0c8fb22d8a6227eed8aa1233198",
       "mode": "100644"
     },
     {
@@ -820,7 +820,7 @@
     },
     {
       "path": "scripts/p2-batch-cpu-container.sh",
-      "blob_sha": "c68d740e4ea0a5101436bc6400326cd06ddedc62",
+      "blob_sha": "c3cec6b18b578a5ab973dfd9082c5e39681ba144",
       "mode": "100755"
     },
     {
@@ -1469,6 +1469,11 @@
       "mode": "100644"
     },
     {
+      "path": "tests/__init__.py",
+      "blob_sha": "89da0311e6e518c5a6a08772da6335f213357bc9",
+      "mode": "100644"
+    },
+    {
       "path": "tests/fixtures/phase6_a3b_synthetic.json",
       "mode": "100644",
       "blob_sha": "50877ef523621f90aee35f7fc08fb8fd8e377e64"
@@ -1831,6 +1836,11 @@
     {
       "path": "tests/test_p2_ple_unique_h2d.py",
       "blob_sha": "17fc3fd6c5a74acf547af78d378be483e15e9792",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_runner_import_resolution.py",
+      "blob_sha": "02b047aa80c02b2effcb171334ff978730e831c9",
       "mode": "100644"
     },
     {
