@@ -1,3 +1,9 @@
+## 2026-11-03 다음 실제 분석 대상으로 Numeric Sampler Witness 단독 후보 선정
+
+- 직전 DGX `4c5710d...` 29/29 4-COPY stage 성공은 **통합 소스 준비 완료**만 뜻하며 실제 Numeric 1e-4 root-cause OPEN.
+- 새 `p2-numeric-first-divergence-dgx.sh --prepare /tmp/p2-functional-bundle-ackw9piv`는 이미 검증된 통합 Stage를 재사용하면서 **only Sampler Witness를 기존 pinned image 위에 COPY할 수 있는 최소/단일변수 candidate source를 별도 private `/tmp`에 구성**한다. 전체 PLE/MTP/새 Draft ID 성능 최적화를 포함하지 않으므로 정확도 원인 조사의 독립 변수 추가를 방지한다. 새 소스 GitHub/CI/DGX 실측은 구분한다. 상세 [Numeric first-divergence 기술 계획](P2-NUMERIC-FIRST-DIVERGENCE-PLAN-20261103.md).
+- 해당 source-only 기능에는 image build/launch, GPU, 모델, inference, HTTP, 원본 Docker stop/start가 없다. 별도 정비창 허가 이전에는 GPU ready로 표기하지 않음.
+
 ## 실증 체크포인트 2026-11-03 — 통합 후보 조립 완료, 런타임 미검증
 
 - 실제 Orcarouter DGX `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`: source preflight / 29 focused CPU tests PASS; actual pinned Sampler/PLE/MTP source SHA + Blazux IDs verified, `/tmp/p2-functional-bundle-ackw9piv`에 4-COPY candidate Dockerfile staged. **No build, no GPU, no HTTP/API, no model mutation.**

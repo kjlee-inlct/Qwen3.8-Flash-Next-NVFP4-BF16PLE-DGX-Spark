@@ -1,3 +1,9 @@
+## 2026-11-03 신규 P2 Numeric 최초 경계 관측용 최소 후보 — 코드 준비만
+
+- **확정된 최종 실제 DGX source receipt**는 `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`: 4-COPY 통합 후보 source-stage 29/29 PASS, stage `/tmp/p2-functional-bundle-ackw9piv`. 이번 신규 코드 SHA는 **사용자 DGX_NOT_RUN / CI_NOT_RUN**.
+- `src/p2_numeric_minimal_candidate.py`: 기존 pinned 4개 파일+Dockerfile 해시 검사 후, only-Sampler pinned `a62b7cd7...` 진단 1-COPY Dockerfile + private receipt 생성, 원본 exact Docker ID/Image/StartedAt 및 Prefix OFF/MTP2 CLI read-only 확인. `tests/test_p2_numeric_minimal_candidate.py` 집중 synthetic 10개, source-only wrapper 추가. 실제 이미지 build, 서비스 변경, GPU inference/API call **NOT_RUN**, MTP2/BF16 PLE 실성능 미검증.
+- 최초 strict 1e-4 비재현성 위치를 확인할 미래 GPU 정비창은 별도 명시적 운영 중단·복구 승인과 자원 증거가 필요. 지금은 CPU-only 단일 원인 후보 소스 준비가 한계. [실행 계획](P2-NUMERIC-FIRST-DIVERGENCE-PLAN-20261103.md).
+
 ## 2026-11-03 DGX 실제 P2 4-COPY 통합 후보 소스 Stage 성공 (신규 Source HEAD `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`)
 
 - 사용자 실제 DGX에서 `git pull --ff-only` fast-forward e467607→4c5710d, `bash scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream` 실행: preflight `P2_BUNDLE_SOURCE_READY_NO_DOCKER`, **3개 targeted module 전체 29 tests / 0 skip / OK**. 최종 `P2_BUNDLE_SOURCE_COMPLETE ... NO_BUILD_NO_GPU_NO_API`.
