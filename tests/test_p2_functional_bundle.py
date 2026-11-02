@@ -153,6 +153,64 @@ class P2FunctionalBundleTests(unittest.TestCase):
             for name in ("mtp.py", "sampler.py", "vllm_ple_mmap.py", "Dockerfile"):
                 self.assertEqual((folder / name).stat().st_mode & 0o777, 0o600)
 
+    def test_four_copy_upstream_recipe_is_inert_and_candidate_only(self):
+        d = bundle.dockerfile(include_mtp=True, include_upstream_draft=True)
+        self.assertEqual(d.count("COPY "), 4)
+        self.assertIn("draft_vocab_65536.npy " + bundle.UPSTREAM_DRAFT_DEST, d)
+        self.assertIn("VLLM_P2_DRAFT_VOCAB= VLLM_P2_DRAFT_VOCAB_SHA256=", d)
+        self.assertNotIn("\nRUN ", d)
+        with self.assertRaisesRegex(bundle.Blocked, "REQUIRES_MTP"):
+            bundle.dockerfile(include_upstream_draft=True)
+        with self.assertRaisesRegex(bundle.Blocked, "REQUIRES_MTP"):
+            bundle.prepare(bundle.qsa.ROOT, include_upstream_draft=True)
+
+    def test_integrated_four_copy_stages_exact_audited_upstream_ids(self):
+        # The actual upstream binary is already pinned in the repository.
+        sampler = fixture()
+        asset = bundle.qsa.ROOT / bundle.upstream_draft.ASSET_RELATIVE
+        content = asset.read_bytes()
+        hash_value = hashlib.sha256(content).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            actual_mkdtemp = tempfile.mkdtemp
+            def mkdtemp(*, prefix, dir):
+                self.assertEqual(dir, "/tmp")
+                return actual_mkdtemp(prefix=prefix, dir=tmp)
+            with patch.object(bundle.trace, "original_identity",
+                              return_value=("id", "image", "start")) as identity, \
+                 patch.object(bundle, "inspect_local_base_image"), \
+                 patch.object(bundle.trace, "_run_docker_cp",
+                              return_value=sampler), \
+                 patch.object(witness, "SOURCE_SHA256",
+                              hashlib.sha256(sampler).hexdigest()), \
+                 patch.object(bundle, "_read_mtp_source",
+                              return_value=b"class Qwen3_8FlashNextMTP: pass"), \
+                 patch.object(bundle.mtp_overlay, "transform",
+                              return_value=b"# candidate-only patched MTP"), \
+                 patch.object(bundle.upstream_draft, "audit", return_value={
+                     "upstream_npy_sha256": hash_value,
+                     "draft_mapping_fingerprint": "a" * 64,
+                 }) as audited, \
+                 patch.object(bundle.tempfile, "mkdtemp", side_effect=mkdtemp):
+                result = bundle.prepare(
+                    bundle.qsa.ROOT, include_mtp=True,
+                    include_upstream_draft=True,
+                    probe=lambda: {"status": "PINNED_ABI_ONLY"})
+            self.assertEqual(identity.call_count, 2)
+            audited.assert_called_once()
+            self.assertEqual(audited.call_args.args[0], asset)
+            root = Path(result["stage_directory"])
+            self.assertEqual(root.stat().st_mode & 0o777, 0o700)
+            self.assertEqual((root / "draft_vocab_65536.npy").read_bytes(), content)
+            self.assertEqual((root / "draft_vocab_65536.npy").stat().st_mode & 0o777, 0o600)
+            self.assertEqual((root / "Dockerfile").read_text().count("COPY "), 4)
+            self.assertTrue(result["upstream_draft_asset_included"])
+            self.assertTrue(result["upstream_draft_orcarouter_metadata_verified"])
+            self.assertEqual(result["upstream_draft_asset_sha256"], hash_value)
+            self.assertFalse(result["upstream_draft_opt_in_performed"])
+            self.assertFalse(result["candidate_build_or_gpu_or_api_executed"])
+            self.assertEqual(result["status"],
+                             "P2_NUMERIC_PLE_MTP_UPSTREAM_VOCAB_SOURCE_STAGED_NOT_BUILT")
+
     def test_check_makes_no_docker_calls(self):
         with patch.object(bundle.qsa, "preflight"), \
              patch.object(bundle.trace, "original_identity") as identity, \

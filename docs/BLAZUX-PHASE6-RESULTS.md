@@ -1,3 +1,8 @@
+## 2026-11-03 DGX 실제 Orcarouter ↔ Blazux Draft ID 호환성 성공, 다음 4-COPY 후보 소스
+
+- 운영자가 실제 실행한 SHA **`e467607219d60fae40690258f98f1de9140063b1`**: Source Preflight PASS, 신규 8/8 CPU tests PASS, Blazux upstream `draft_vocab_65536.npy` 원본 blob SHA 및 raw NPY SHA PASS, Orcarouter tokenizer SHA `06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523`, config SHA `66e427c470fe580fe8c7b5725d857af23d8417e37fae62667ec698306a19987b`, declared 248077/selected 65536/mandatory specials 21/added33/padding selected0, fingerprint `7c5a0a90950ac95cb38e7cc8faaa1bbcb42da082fbde20e3fc05db0ae8bfe3e1`. 개인 `/tmp/p2-upstream-draft-ai00xvtw/ids.npy` 0600. **Source/CPU asset PASS, Native MTP/GPU NOT_RUN**.
+- 후속 개발 변경은 기존 Numeric/PLE/MTP 후보 `--stage-mtp`에 pinned Blazux IDs를 추가하는 `--stage-mtp-upstream` 4-COPY 소스 Stage. **신규 코드 GitHub ONLY / DGX_NOT_RUN / CI_NOT_RUN**. 원본/운영 GPU/API 및 파일 불변, 1e-4 root cause OPEN, 전 계층 상태 / BF16 H2D DMA / MTP acceptance 미확인. 코퍼스 수집 불필요.
+
 ## 2026-11-03 P2 방향 정정 및 upstream 이미 제공된 65,536 Draft ID 확보
 
 - Blazux 적용 대상은 기존 운영 **Orcarouter BF16 PLE / 31 BF16 MTP overlay**. 이전 사용자에게 허가 corpus 수집 요구는 지금 단계에서 불필요. Upstream `blazux/qwen3.8-Flash-DGX` main SHA `b0aa8b77604139557169387b2fa8386355d8b651`의 `src/draft_vocab_65536.npy`를 **byte-exact Git blob** `2b94340a3ca0985a7494af369ac82536d61411de`로 확보. 65,536 sorted int32, 0..255 byte IDs, 33 added IDs 248044..248076 포함, 미선언 padding ID 없음 (원본 binary JS 구조 검사).

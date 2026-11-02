@@ -22,10 +22,13 @@ from src import p1_numeric_source_trace as trace
 from src import p1_preview_qsa_exact_topk as qsa
 from src import p2_numeric_sampler_witness as witness
 from src import p2_mtp_candidate_overlay as mtp_overlay
+from src import p2_upstream_draft_asset as upstream_draft
 
 PLE_REPO = Path("src/vllm_ple_mmap.py")
 PLE_DEST = trace.PACKAGE_ROOT + "vllm_ple_mmap.py"
 SAMPLER_DEST = trace.PACKAGE_ROOT + trace.SOURCES["sampler"]
+# Candidate-only baked-in ID map; opt-in runtime env remains empty by default.
+UPSTREAM_DRAFT_DEST = "/opt/llm/p2-orcarouter-draft-65536.npy"
 # Explicit fixed candidates; missing entries do NOT certify an absence of MTP.
 MTP_SOURCE_CANDIDATES = (
     "vllm/models/qwen3_8_flash_next/nvidia/mtp.py",
@@ -64,8 +67,11 @@ def checked_ple(root: Path) -> bytes:
     return data
 
 
-def dockerfile(*, include_mtp: bool = False) -> str:
-    """Candidate-only source copies; no RUN or model changes. Defaults OFF."""
+def dockerfile(*, include_mtp: bool = False,
+               include_upstream_draft: bool = False) -> str:
+    """Candidate-only source copies. A pinned map is inert until opt-in."""
+    if include_upstream_draft and not include_mtp:
+        raise Blocked("UPSTREAM_DRAFT_REQUIRES_MTP")
     return (
         "FROM " + legacy.IMAGE_TAG + "\n"
         "COPY --chown=0:0 --chmod=0644 sampler.py " + SAMPLER_DEST + "\n"
@@ -73,6 +79,8 @@ def dockerfile(*, include_mtp: bool = False) -> str:
         + (("COPY --chown=0:0 --chmod=0644 mtp.py "
              + trace.PACKAGE_ROOT + mtp_overlay.SOURCE_FILE + "\n")
            if include_mtp else "")
+        + (("COPY --chown=0:0 --chmod=0644 draft_vocab_65536.npy "
+             + UPSTREAM_DRAFT_DEST + "\n") if include_upstream_draft else "")
         + "ENV VLLM_P2_NUMERIC_WITNESS=0 VLLM_PLE_UNIQUE_H2D=0"
         + (" VLLM_P2_DRAFT_VOCAB= VLLM_P2_DRAFT_VOCAB_SHA256="
            if include_mtp else "") + "\n"
@@ -156,14 +164,31 @@ def read_mtp_abi() -> dict:
 
 
 def prepare(root: Path, *, probe=read_mtp_abi,
-            include_mtp: bool = False) -> dict:
-    """Stage original-sourced, SHA-checked candidate overlays in private /tmp."""
+            include_mtp: bool = False,
+            include_upstream_draft: bool = False) -> dict:
+    """Stage pinned numeric/PLE/MTP and optional Blazux IDs in private /tmp."""
+    if include_upstream_draft and not include_mtp:
+        raise Blocked("UPSTREAM_DRAFT_REQUIRES_MTP")
     before = trace.original_identity()
     try:
         inspect_local_base_image()
         original = trace._run_docker_cp(trace.SOURCES["sampler"])
         patched = witness.transform(original)
         ple = checked_ple(root)
+        upstream_receipt = None
+        upstream_raw = None
+        if include_upstream_draft:
+            # No local corpus: pinned upstream data must fit the actual
+            # Orcarouter recipe tokenizer AND config. Never infer IDs.
+            asset = root / upstream_draft.ASSET_RELATIVE
+            recipe = Path.home() / upstream_draft.RECIPE_RELATIVE
+            upstream_receipt = upstream_draft.audit(
+                asset, recipe / "tokenizer.json",
+                recipe / "tokenizer_config.json")
+            upstream_raw = asset.read_bytes()
+            if (hashlib.sha256(upstream_raw).hexdigest() !=
+                    upstream_receipt["upstream_npy_sha256"]):
+                raise Blocked("UPSTREAM_DRAFT_CHANGED_AFTER_VALIDATION")
         mtp_patched = None
         if include_mtp:
             mtp_raw = _read_mtp_source(mtp_overlay.SOURCE_FILE)
@@ -185,8 +210,12 @@ def prepare(root: Path, *, probe=read_mtp_abi,
         if include_mtp:
             assert mtp_patched is not None
             payloads.append(("mtp.py", mtp_patched))
+        if include_upstream_draft:
+            assert upstream_raw is not None
+            payloads.append(("draft_vocab_65536.npy", upstream_raw))
         payloads.append(("Dockerfile",
-                         dockerfile(include_mtp=include_mtp).encode("utf-8")))
+                         dockerfile(include_mtp=include_mtp,
+                                    include_upstream_draft=include_upstream_draft).encode("utf-8")))
         for filename, data in payloads:
             target = folder / filename
             with target.open("xb") as stream:
@@ -196,7 +225,9 @@ def prepare(root: Path, *, probe=read_mtp_abi,
         shutil.rmtree(folder)
         raise
     return {
-        "status": ("P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT"
+        "status": ("P2_NUMERIC_PLE_MTP_UPSTREAM_VOCAB_SOURCE_STAGED_NOT_BUILT"
+                   if include_upstream_draft else
+                   "P2_NUMERIC_PLE_MTP_CANDIDATE_SOURCE_STAGED_NOT_BUILT"
                    if include_mtp else
                    "P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT"),
         "stage_directory": str(folder),
@@ -210,6 +241,17 @@ def prepare(root: Path, *, probe=read_mtp_abi,
         "candidate_build_or_gpu_or_api_executed": False,
         "mtp_reduced_vocab_source_included": include_mtp,
         "mtp_reduced_vocab_default_off": True,
+        "upstream_draft_asset_included": include_upstream_draft,
+        "upstream_draft_asset_sha256": (
+            upstream_receipt["upstream_npy_sha256"]
+            if upstream_receipt is not None else None),
+        "upstream_draft_orcarouter_metadata_verified": upstream_receipt is not None,
+        "upstream_draft_mapping_fingerprint": (
+            upstream_receipt["draft_mapping_fingerprint"]
+            if upstream_receipt is not None else None),
+        "upstream_draft_candidate_path": (
+            UPSTREAM_DRAFT_DEST if include_upstream_draft else None),
+        "upstream_draft_opt_in_performed": False,
         "mtp_candidate_patch_sha256": (
             hashlib.sha256(mtp_patched).hexdigest() if mtp_patched is not None
             else None),
@@ -224,6 +266,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--stage", action="store_true")
     mode.add_argument("--stage-mtp", action="store_true")
+    mode.add_argument("--stage-mtp-upstream", action="store_true")
     p.add_argument("--confirm-original-id")
     args = p.parse_args(argv)
     try:
@@ -240,9 +283,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.confirm_original_id != trace.ORIGINAL_ID:
             raise Blocked("EXACT_ORIGINAL_CONTAINER_ID_REQUIRED")
-        print(json.dumps(prepare(qsa.ROOT, include_mtp=args.stage_mtp), sort_keys=True))
+        print(json.dumps(prepare(
+            qsa.ROOT,
+            include_mtp=args.stage_mtp or args.stage_mtp_upstream,
+            include_upstream_draft=args.stage_mtp_upstream,
+        ), sort_keys=True))
         return 0
-    except (Blocked, witness.Blocked, mtp_overlay.Blocked, trace.Blocked, legacy.Blocked, qsa.Blocked,
+    except (Blocked, upstream_draft.Blocked, witness.Blocked, mtp_overlay.Blocked,
+            trace.Blocked, legacy.Blocked, qsa.Blocked,
             OSError, ValueError, TypeError, KeyError):
         print("P2_FUNCTIONAL_BUNDLE_BLOCKED", file=sys.stderr)
         return 2
