@@ -1,15 +1,17 @@
-"""Offline first-token numeric-boundary triage for an isolated, no-MTP candidate.
+"""Offline first-token numeric-boundary triage for an isolated no-MTP candidate.
 
-Consumes only existing P1 Sampler.forward boundary digests and aligned API
-logprobs. It NEVER starts a model or inspects Docker. Digests alone cannot
-establish data provenance: explicit row-to-API verification is required.
+Cannot determine a physical root cause from digests; no model, GPU, HTTP or
+Docker operation is performed here. For new evidence, prefer classify_witness,
+which cross-checks each sampler-selected token and scalar against the API.
 """
 from __future__ import annotations
 
+import hashlib
 import math
 import re
 
 STRICT_ABS = 1e-4
+WITNESS_API_ABS = 1e-6  # matching provenance only; never a release tolerance
 HEX_SHA = re.compile(r"[0-9a-f]{64}\Z")
 
 
@@ -41,7 +43,7 @@ def _valid_event(e: dict) -> bool:
         and e.get("status") == "BOUNDARY_CAPTURED"
         and e.get("logprobs_mode") == "raw_logprobs"
         and e.get("sampler_raw_logprobs_not_overridden") is True
-        and e.get("shape") == [1, 248320]  # model vocab pinned to this P2 task
+        and e.get("shape") == [1, 248320]
         and e.get("logits_dtype") in ("torch.float16", "torch.bfloat16", "torch.float32")
         and e.get("logprobs_dtype") in ("torch.float16", "torch.bfloat16", "torch.float32")
         and all(isinstance(e.get(k), str) and HEX_SHA.fullmatch(e[k])
@@ -54,11 +56,7 @@ def classify(runs: list[dict], events: list[dict], *,
              mtp_off_verified: bool = False,
              single_active_request_verified: bool = False,
              row_api_alignment_verified: bool = False) -> dict:
-    """Localize earliest *observed* differing boundary, not physical cause.
-
-    One event per first-token-only API request. The alignment flag must come
-    from independent runtime provenance, NEVER inferred from SHA equality.
-    """
+    """Localize first *observed* differing tensor, not the physical cause."""
     delta, api_error = _api_first_token(runs)
     result = {
         "strict_abs_tolerance": STRICT_ABS,
@@ -94,3 +92,50 @@ def classify(runs: list[dict], events: list[dict], *,
     else:
         result["first_observed_difference"] = "POST_SAMPLER_OR_API"
     return result
+
+
+def classify_witness(runs: list[dict], events: list[dict], *,
+                     prefix_off_verified: bool = False,
+                     mtp_off_verified: bool = False,
+                     single_active_request_verified: bool = False) -> dict:
+    """Correlate per-request single-row Sampler witness to API sampled token.
+
+    A matching token-ID digest + selected scalar + ordered single-event stream
+    narrows the row mapping. It is not independent evidence of runtime
+    single-request isolation; that remains an explicit precondition.
+    """
+    report = classify(runs, events)  # fail-closed initial format/API checks
+    if report["first_observed_difference"] != "INCONCLUSIVE" and not report.get("reason"):
+        raise AssertionError("legacy classifier unexpectedly trusted unverified witness")
+    if not (prefix_off_verified and mtp_off_verified and single_active_request_verified):
+        report["reason"] = "RUNTIME_ISOLATION_UNVERIFIED"
+        return report
+    if report.get("reason") not in ("ROW_TO_API_PROVENANCE_UNVERIFIED",):
+        return report
+    pids = set()
+    for i, (run, event) in enumerate(zip(runs, events), 1):
+        if (event.get("witness_kind") != "P2_SAMPLER_SELECTED_TOKEN"
+                or type(event.get("sequence")) is not int or event["sequence"] != i
+                or type(event.get("worker_pid")) is not int or event["worker_pid"] <= 0):
+            report["reason"] = "WITNESS_SEQUENCE_OR_ORIGIN_INVALID"
+            return report
+        pids.add(event["worker_pid"])
+        expected = hashlib.sha256(str(run["token_ids"][0]).encode()).hexdigest()
+        if event.get("selected_token_id_sha256") != expected:
+            report["reason"] = "WITNESS_TOKEN_ID_NOT_ALIGNED"
+            return report
+        value = event.get("selected_token_logprob")
+        if type(value) not in (int, float) or not math.isfinite(value):
+            report["reason"] = "WITNESS_SELECTED_LOGPROB_INVALID"
+            return report
+        if abs(float(value) - float(run["logprobs"][0])) > WITNESS_API_ABS:
+            report["reason"] = "WITNESS_TO_API_SCALAR_MISMATCH"
+            return report
+    if len(pids) != 1:
+        report["reason"] = "WITNESS_WORKER_CHANGED"
+        return report
+    return classify(
+        runs, events,
+        prefix_off_verified=True, mtp_off_verified=True,
+        single_active_request_verified=True, row_api_alignment_verified=True,
+    )
