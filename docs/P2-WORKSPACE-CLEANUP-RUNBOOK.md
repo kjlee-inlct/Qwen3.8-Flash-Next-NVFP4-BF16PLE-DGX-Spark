@@ -30,3 +30,20 @@ bash scripts/p2-workspace-inventory.sh --json
 ## 2026-11-02 기존 P2 실행 영수증
 
 사용자 DGX 로그에서 P2 개발 통합 `3e4492c73ce95f8129e99b1f21f4a67252e8891f`로 fast-forward 완료, `scripts/p2-numeric-dgx.sh --check`/`--stage` 두 모드 모두 P2 CPU unittest **24/24 PASS**. 설치된 Sampler 원본 SHA256 `f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216` 확인, 패치 SHA256 `a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4`, 개인 stage `/tmp/p2-numeric-witness-_w30fuax`. 원본 컨테이너 ID/이미지·시작 시각 불변 검사 성공. **이미지 build, GPU, API 미실행**. Numeric root cause OPEN, strict tolerance `1e-4` 출시 차단 불변. 이후 repo HEAD가 달라져도 이 영수증의 tested HEAD는 바뀌지 않는다.
+
+
+## 2026-11-02 실제 DGX inventory 실측 및 추가 참조 확인
+
+- **DGX-tested source HEAD:** `384eaa12e30b1dfd4605050fc11be3f7f79540e4`. `git pull --ff-only` 성공, `bash scripts/p2-workspace-inventory.sh` 출력 `WORKSPACE_INVENTORY_READ_ONLY` / `docker=AVAILABLE` / `NO_FILES_MOVED_OR_DELETED`.
+- **15개 폴더:** 보호 5개(bench-results-staging, blazux-phase6-gates, open-webui, qwen38-orca-uncensored, yslab-qwen38-bf16ple-dgx-spark), 추가 확인 5개(llama-benchy, llama-benchy-runner, spark-stack, spark-vllm-docker, stack), 잠정 보관 후보 5개(blazux-phase1~phase5). `open-webui` Docker bind overlap 확인; spark-stack/spark-vllm-docker/stack에는 로컬 변경 또는 미추적 파일 존재.
+- 기존 분류기의 PhaseN 이름 기반 보관 후보 판정은 Git 상태 UNKNOWN/비 Git 폴더에도 부정확하게 적용될 수 있으므로, **Git 확정 상태 없이는 HOLD_REFERENCE**로 판정하도록 보강.
+- 신규 `--references` 옵션은 활성 checkout과 일부 별도 프로젝트의 Python/Shell/설정/문서 소스에서 Phase1~5 폴더 이름의 **경로 참조 여부만** 제한된 크기/파일 수 내에서 읽기 전용으로 검사. 실제 파일 내용·환경 비밀은 출력하지 않으며 문서상 언급과 스크립트 참조를 구분한다.
+
+```bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-workspace-inventory.sh --references
+# 선택적 구조화 출력: bash scripts/p2-workspace-inventory.sh --references --json
+```
+
+`REFERENCE_AUDIT_READ_ONLY` 표시와 대상별 `references=N`을 확인한다. `COMPLETE_SCOPED_SCAN`은 *스코프 내의 정적 텍스트 검색* 완료만 뜻한다. 프로세스 cwd/열린 파일, 시스템 서비스, 외부 절대 경로, 실제 활성 런처, 무시된 캐시/대용량 파일까지 증명하지 않으므로 **참조 0건도 이동·삭제 허가가 아니다.** 실제 archive 작업은 사용자 별도 승인 및 복구계획 후 수행한다.

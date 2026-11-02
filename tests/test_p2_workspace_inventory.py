@@ -87,5 +87,69 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('git", "clean', code)
 
 
+    def test_phase_without_valid_git_is_not_archive_candidate(self):
+        self.mkdir("blazux-phase1-source-compare")
+        with patch.object(mod, "git_metadata", return_value={
+                "git_repo": False, "branch": None, "tracked_change": "UNKNOWN",
+                "untracked_change": "UNKNOWN", "linked_worktree": False,
+                "additional_worktrees": "UNKNOWN", "origin_is_expected_fork": None}):
+            entry = mod.inventory(self.root, "AVAILABLE", [])["entries"][0]
+        self.assertEqual(entry["classification"], "HOLD_REFERENCE")
+        self.assertEqual(entry["reason"], "OLD_PHASE_NOT_GIT_VERIFIED")
+
+    def test_phase_git_unknown_status_does_not_pass(self):
+        self.mkdir("blazux-phase2-offline-fixtures")
+        with patch.object(mod, "git_metadata", return_value={
+                "git_repo": True, "branch": "x", "tracked_change": "UNKNOWN",
+                "untracked_change": False, "linked_worktree": False,
+                "additional_worktrees": False, "origin_is_expected_fork": True}):
+            entry = mod.inventory(self.root, "AVAILABLE", [])["entries"][0]
+        self.assertEqual(entry["classification"], "HOLD_REFERENCE")
+        self.assertEqual(entry["reason"], "OLD_PHASE_GIT_STATUS_UNKNOWN")
+
+    def test_reference_audit_counts_scripts_and_docs(self):
+        self.mkdir("blazux-phase3-ple-duplicate-shard-guard")
+        root = self.mkdir("blazux-phase6-gates")
+        (root / "worker.py").write_text("path='blazux-phase3-ple-duplicate-shard-guard'", encoding="utf-8")
+        (root / "notes.md").write_text("blazux-phase3-ple-duplicate-shard-guard", encoding="utf-8")
+        entries = [{"name": "blazux-phase3-ple-duplicate-shard-guard"}]
+        audit = mod.reference_audit(self.root, entries)
+        self.assertEqual(audit["status"], "COMPLETE_SCOPED_SCAN")
+        detail = audit["targets"][entries[0]["name"]]
+        self.assertEqual(detail["total_matches"], 2)
+        self.assertEqual({v["kind"] for v in detail["matches"]},
+                         {"DOCUMENT_REFERENCE", "SCRIPT_OR_CONFIG_REFERENCE"})
+        self.assertTrue(audit["no_cross_reference_found_is_not_safe_to_move"])
+
+    def test_reference_scan_does_not_follow_link(self):
+        self.mkdir("blazux-phase4-ple-cpu-bundle")
+        app = self.mkdir("blazux-phase6-gates")
+        outside = self.mkdir("outside")
+        (outside / "reference.py").write_text("blazux-phase4-ple-cpu-bundle")
+        (app / "link.py").symlink_to(outside / "reference.py")
+        audit = mod.reference_audit(self.root, [{"name": "blazux-phase4-ple-cpu-bundle"}])
+        self.assertEqual(audit["targets"]["blazux-phase4-ple-cpu-bundle"]["total_matches"], 0)
+        self.assertEqual(audit["symlinks_skipped"], 1)
+
+    def test_reference_scan_budget_is_reported_partial(self):
+        self.mkdir("blazux-phase5-correctness-mtp-offline")
+        app = self.mkdir("blazux-phase6-gates")
+        (app / "a.py").write_text("nothing")
+        (app / "b.py").write_text("blazux-phase5-correctness-mtp-offline")
+        with patch.object(mod, "MAX_REFERENCE_FILES", 1):
+            audit = mod.reference_audit(self.root, [{"name": "blazux-phase5-correctness-mtp-offline"}])
+        self.assertEqual(audit["status"], "PARTIAL_SCOPED_SCAN")
+        self.assertEqual(audit["files_scanned"], 1)
+
+    def test_reference_scan_large_files_are_not_claimed_complete(self):
+        self.mkdir("blazux-phase1-source-compare")
+        app = self.mkdir("blazux-phase6-gates")
+        (app / "huge.py").write_text("x" * 100)
+        with patch.object(mod, "MAX_REFERENCE_BYTES", 10):
+            audit = mod.reference_audit(self.root, [{"name": "blazux-phase1-source-compare"}])
+        self.assertEqual(audit["status"], "PARTIAL_SCOPED_SCAN")
+        self.assertEqual(audit["large_files_skipped"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()
