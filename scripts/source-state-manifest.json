@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 347,
+  "tracked_file_count": 348,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,12 +510,12 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "e64c4fe31f92cbe1852ac9f39b85ad06cbe383ed",
+      "blob_sha": "4e29597ee11c5f1af0cda7f7e58d0d747bde5c1d",
       "mode": "100644"
     },
     {
       "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
-      "blob_sha": "ceb263bcfcf6ffc9569da60e70bb63ca0d06d1a7",
+      "blob_sha": "8284998a9c3f618046e5263448596848baf2e0af",
       "mode": "100644"
     },
     {
@@ -817,6 +817,11 @@
       "path": "scripts/p1-prefix-stage.sh",
       "mode": "100755",
       "blob_sha": "9665323b0179864f3a4a4084b36833de53d4460c"
+    },
+    {
+      "path": "scripts/p2-batch-cpu-container.sh",
+      "blob_sha": "c68d740e4ea0a5101436bc6400326cd06ddedc62",
+      "mode": "100755"
     },
     {
       "path": "scripts/p2-batch-dgx.sh",

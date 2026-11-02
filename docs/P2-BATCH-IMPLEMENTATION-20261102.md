@@ -32,3 +32,12 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m src.p2_numeric_report --input /path/to/appr
 - **vLLM v0.32 Track B / GDN/PLE full-state reuse:** 별도 소스/ABI/검증 미착수 유지. 이 묶음에 억지로 승격하지 않는다.
 
 **상태:** `P2_BATCH_SOURCE_IMPLEMENTED / DGX_NOT_RUN / GPU_NOT_RUN / P2_NUMERIC_ROOT_CAUSE_OPEN / P1_RELEASE_BLOCKED`. SHA·시험 증거가 들어오기 전 PASS 승격 금지.
+
+## 2026-11-02 실제 DGX P2 묶음 결과 및 1회성 CPU 컨테이너 검증
+
+- **DGX-tested exact source HEAD** `c648d885c9e26d1c25ad40d8cf16449f94593f72`: `scripts/p2-batch-dgx.sh` `P2_SOURCE_PREFLIGHT_PASS_NO_DOCKER_OR_GPU`, `P2_BATCH_SOURCE_AST_PASS`, targeted unittest `Ran 40 tests`, `OK (skipped=4)`. 36개 PASS / **PLE Torch+NumPy 필요한 4개 SKIP**. PLE CPU correctness NOT_VERIFIED (SKIP은 PASS가 아님).
+- 이전에는 고정 이미지 기반 `scripts/ple-phase-stats-cpu-container.sh` 등에서 독립 `runc` CPU 전용 일회성 Docker를 사용한 선례가 있음. 호스트에 `numpy`/`torch`를 설치하거나 운영 원본 `docker exec`하지 않는다.
+- 신규 `scripts/p2-batch-cpu-container.sh --execute`: 기존 원본 고정 **container full ID / image digest / running / StartedAt** 사전·사후 검사, 기존 로컬 고정 이미지 ID, MemAvailable 8 GiB 전제/4 GiB 종료 하한, 정확한 개인 Fork/브랜치/HEAD/Source Manifest 검사. **Docker run 1회**: `--rm -i --pull=never --runtime=runc --network=none --read-only --cpus=2 --memory=2g --memory-swap=2g --pids-limit=96 --user=65534:65534`, GPU 노출 없음, repo read-only bind, 128 MiB 임시 tmpfs, 패키지/모델/weights/HF cache/호스트 데이터/네트워크 접근 불필요. 정확한 기존 P2 6개 unittest 모듈 **40 tests / skipped=0**만 PASS로 인정. Docker run은 **오직 DGX 사용자가 `--execute` 명시 실행한 경우**에만 발생.
+- DGX에서: `cd ~/Workspace/llm/blazux-phase6-gates` → `git pull --ff-only origin feature/blazux-phase6-runtime-gates` → `bash scripts/p2-batch-cpu-container.sh --execute`. 이 새 스크립트 자체는 **DGX_NOT_RUN/CI_NOT_RUN**. 컨테이너가 Python 의존성을 갖추지 못했거나 Torch CUDA가 가시적이면 FAIL-CLOSED.
+- 실제 GPU H2D/cuda graph/TTFT/TPS, MTP real head/acceptance, numeric first-divergence **미검증**. strict 1e-4 / P1_RELEASE_BLOCKED 유지.
+
