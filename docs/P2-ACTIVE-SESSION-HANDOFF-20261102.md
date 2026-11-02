@@ -1,5 +1,15 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 Numeric / MTP / PLE 묶음 구현 (현재 과제)
+
+- 사용자 요청에 따라 비핵심 활동 중단. **실제 기능 코드·CPU 시험·DGX 단일 명령**을 하나의 PR로 묶어 진행. [P2 묶음 세부사항](P2-BATCH-IMPLEMENTATION-20261102.md).
+- **PLE 구현**: `src/vllm_ple_mmap.py` BF16 전용 `VLLM_PLE_UNIQUE_H2D=1` opt-in은 고유 행만 H2D 후 device `index_select`로 원래 N행 순서를 복원. 빈 행 처리 포함. 기본값 OFF / FP8 무영향. P1 pinned builder SHA는 유지하여 이전 이미지를 자동 재빌드하지 않음. 실제 GPU H2D 완료 및 TTFT/TPS는 미측정.
+- **MTP CPU 계약**: `src/p2_mtp_draft_vocab.py`의 65,536/248,320 index mapping, special token 및 Head shape 검증. 실제 Head 로더/weight slicing/rejection acceptance와 연결은 설치된 Preview ABI 확인 전 미완료.
+- **Numeric offline**: `src/p2_numeric_report.py`가 1-token witness와 API 값의 대응 판정, strict `1e-4` 불변. GPU sample/원인 수정 OPEN.
+- **DGX** `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-batch-dgx.sh` 1회로 preflight+targeted numeric/MTP/PLE CPU tests+AST/쉘을 묶음 실행. NumPy/Torch 미설치 시 PLE 시험은 skipped(미검증). **새 GitHub HEAD는 아직 DGX_NOT_RUN, Docker/GPU/API/CI NOT_RUN**.
+- P1 FUNCTIONAL BOUNDED_PASS, RELEASE_BLOCKED, full state reuse 미입증, P2 NUMERIC ROOT_CAUSE_OPEN 그대로. 새 P2 candidate image/run을 자동 시작하지 않음.
+
+
 ## 2026-11-02 실제 DGX 참조 감사 결과 (최신)
 
 - Git HEAD `3dccb50e6f9528fea8a7b4cd799b2e2fdcfe3d09`, 실제 DGX CPU suite **15/15 PASS**; Docker mount inventory AVAILABLE, `--references` scoped scan **1,119개 파일 COMPLETE**. Phase 1~5 문자열 참조 수는 각각 **9·10·7·9·19** (Phase5 초과 히트 생략). **폴더 이동/삭제 0**.

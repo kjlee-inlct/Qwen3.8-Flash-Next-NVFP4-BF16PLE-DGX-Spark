@@ -33,6 +33,7 @@ Knobs (env):
   VLLM_PLE_FAST_GATHER=0    1 = opt in to decode-sized inline CPU gather (default OFF)
   VLLM_PLE_FAST_GATHER_ROWS=512  max rows in opt-in inline path (not applied when OFF)
   VLLM_PLE_PHASE_STATS=0    opt-in CPU phases + legacy gather counters (no GPU/I-O stats)
+  VLLM_PLE_UNIQUE_H2D=0     BF16 only: transfer unique rows, GPU inverse (opt-in)
   VLLM_PLE_MMAP_PREWARM=0    1 = stream the whole table once at load to fill the
                              page cache with whatever memory is free. Keep this
                              at 0 for a 95.37 GiB BF16 table on a 128 GB system.
@@ -162,6 +163,10 @@ class MmapPleTable:
         )
         # Off by default. Scoped per-table, never global Prometheus counters.
         self.phase_stats_enabled = _env_flag("VLLM_PLE_PHASE_STATS")
+        # P2 BF16-only opt-in. Always disabled on stock/off and FP8 paths.
+        self.unique_h2d_enabled = (
+            _env_flag("VLLM_PLE_UNIQUE_H2D") and self.torch_dtype == torch.bfloat16
+        )
         self._stats_lock = threading.Lock() if self.phase_stats_enabled else None
         self._stats = (
             {
@@ -426,6 +431,38 @@ def _open_ple_table(
     )
 
 
+def _ple_unique_h2d_lookup(
+    table: MmapPleTable, ids_np: np.ndarray, ids: torch.Tensor, embedding_dim: int,
+) -> torch.Tensor:
+    """P2 BF16 opt-in: copy U unique rows to device, restore N rows on device.
+
+    Pure functional gather; never reorders the output token rows or mutates
+    cached page-backed table data. Caller must keep this outside CUDA graphs.
+    H2D+GPU index_select performance and graph safety require live verification.
+    """
+    unique, inverse = np.unique(
+        np.ascontiguousarray(ids_np, dtype=np.int64).reshape(-1),
+        return_inverse=True,
+    )
+    if unique.size == 0:
+        # Empty uint8 arrays can have a zero final stride, which makes
+        # Tensor.view(bfloat16) invalid even though the output is empty.
+        return torch.empty((*ids.shape, embedding_dim), dtype=table.torch_dtype,
+                           device=ids.device)
+    rows = table.gather(unique)  # existing well-tested CPU mmap gather
+    unique_device = torch.from_numpy(rows).view(table.torch_dtype).to(
+        ids.device, non_blocking=True,
+    )
+    # The inverse index must reside on the output device; its H2D cost must be
+    # included when benchmarking; N*8 bytes can outweigh savings for tiny rows.
+    restore = torch.from_numpy(inverse).to(
+        device=ids.device, dtype=torch.long, non_blocking=True,
+    )
+    return unique_device.index_select(0, restore).reshape(
+        *ids.shape, embedding_dim,
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Placeholder that stands in for VocabParallelEmbedding
 # --------------------------------------------------------------------------- #
@@ -457,6 +494,8 @@ class _MmapNgramEmbedding(nn.Module):
         if not table.phase_stats_enabled:
             # Preserve the exact existing OFF path: no time sampling or lock.
             ids_np = ids.detach().to("cpu", non_blocking=False).numpy().reshape(-1)
+            if table.unique_h2d_enabled:
+                return _ple_unique_h2d_lookup(table, ids_np, ids, self.embedding_dim)
             rows = table.gather(ids_np)  # uint8 [N, row_bytes], fresh & writable
             out = torch.from_numpy(rows).view(table.torch_dtype)
             out = out.to(ids.device, non_blocking=True)
@@ -470,6 +509,11 @@ class _MmapNgramEmbedding(nn.Module):
             t = time.perf_counter()
             ids_np = ids.detach().to("cpu", non_blocking=False).numpy().reshape(-1)
             phases["ids_to_host_s"] += time.perf_counter() - t
+            if table.unique_h2d_enabled:
+                # Opt-in path is measured by inclusive forward_s, not the
+                # legacy per-phase device_copy_call_s, which excludes inverse
+                # transfer/index_select and would misrepresent completed H2D.
+                return _ple_unique_h2d_lookup(table, ids_np, ids, self.embedding_dim)
             rows = table.gather(ids_np)
             t = time.perf_counter()
             out = torch.from_numpy(rows).view(table.torch_dtype)
