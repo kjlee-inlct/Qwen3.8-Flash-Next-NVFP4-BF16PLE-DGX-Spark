@@ -336,9 +336,27 @@ def main(argv: list[str] | None = None) -> int:
                                    args.tokenizer_config, args.output_parent,
                                    text_files=plain), sort_keys=True))
         return 0
-    except (Blocked, OSError, ValueError, TypeError, KeyError,
-            OverflowError, MemoryError):
-        print("P2_OFFLINE_TOKEN_COUNTS_BLOCKED", file=sys.stderr)
+    except Blocked as exc:
+        # Never echo tokenizer names, corpus content, paths or exception details.
+        # Our own error codes are uppercase ASCII; fail closed for anything else.
+        raw = str(exc)
+        reason = (raw if re.fullmatch(r"[A-Z][A-Z0-9_]{2,95}", raw)
+                  else "UNCLASSIFIED_BLOCKED")
+        print(f"P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON={reason}",
+              file=sys.stderr)
+        return 2
+    except FileNotFoundError:
+        print("P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=INPUT_FILE_MISSING",
+              file=sys.stderr)
+        return 2
+    except PermissionError:
+        print("P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=INPUT_PERMISSION_DENIED",
+              file=sys.stderr)
+        return 2
+    except (OSError, ValueError, TypeError, KeyError, OverflowError,
+            MemoryError):
+        print("P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=UNCLASSIFIED_RUNTIME_FAILURE",
+              file=sys.stderr)
         return 2
 
 

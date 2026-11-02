@@ -1,3 +1,9 @@
+## 2026-11-02 실제 DGX `--probe` 소스 회귀 16/16 PASS, 실제 CPU 토크나이저 BLOCKED
+
+- **실측 SHA `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`:** Source Preflight PASS, `tests.test_p2_token_frequency` **16/16 PASS / SKIP0**, 하지만 `--probe`의 실제 토크나이저 검증은 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED`로 중지. 원인은 기존 CLI가 안전 분류 이유를 출력하지 않았으므로 **미확정**. Tokenizer 원본 SHA 감사 PASS는 이전 `d26b854` 근거로 유지; 인코딩 및 설치된 패키지 미검증.
+- 다음 GitHub 변경은 새 Gate 없이 CLI의 fail-closed 예외 분류만 개선 (`REASON=STATIC_CODE`), 원문/경로를 출력하지 않는 합성시험 4건 추가(총 20건). 정확한 DGX 실행 결과는 **NOT_RUN**, CI NOT_RUN. 자세한 단계: [P2 Token Frequency](P2-TOKEN-FREQUENCY-20261102.md).
+- DGX 다음 명령: `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-token-frequency-dgx.sh --probe`. 차단 사유를 받고 진짜 원인만 해결. 실 corpus/operational IDs 65536/GPU/native MTP/strict numeric 1e-4/배포 BLOCKED 불변.
+
 ## 2026-11-02 사용자 DGX P2 Token Frequency CPU 11/11 PASS
 
 - 사용자 실측 HEAD a95256de940abd046d40e84e047749f92acb7054: scripts/p2-token-frequency-dgx.sh --check, source preflight PASS, 11/11 PASS, SKIP0, NO_DOCKER_NO_GPU_NO_API. tokenizer 실제 encoding 및 corpus count는 수행 안함.

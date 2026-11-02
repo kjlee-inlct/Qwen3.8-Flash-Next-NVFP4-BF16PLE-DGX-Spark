@@ -1,3 +1,8 @@
+## 2026-11-02 사용자 DGX P2 tokenizer CPU probe 실패 영수증
+
+- 사용자 제공 **실측 HEAD `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`**: Git up to date, Source preflight PASS, `tests.test_p2_token_frequency` **16/16 PASS, skipped 0**. 이어 실제 `scripts/p2-token-frequency-dgx.sh --probe`의 인코더/metadata 검증 단계에서 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED` (exit 2). 당시 CLI는 reason을 숨김. 따라서 **차단 원인 미확정, 실제 tokenizer CPU encode NOT_VERIFIED**.
+- 후속 GitHub 기능은 failure 분류(민감 정보 미노출) 및 4개 synthetic 테스트; 신규 코드 DGX_NOT_RUN/CI_NOT_RUN. 기존 original vs recipe tokenizer byte SHA PASS 증거는 유지. 운영 코퍼스 Token ID counts/.npy/GPU/API/Numeric release PASS 증거 없음.
+
 ## 2026-11-02 사용자 제공 DGX P2 오프라인 토큰 빈도 코드 실제 CPU 검증
 
 - 실제 DGX HEAD a95256de940abd046d40e84e047749f92acb7054: Git pull 정상, P2_SOURCE_PREFLIGHT_PASS_NO_DOCKER_OR_GPU, targeted unittest 11/11 OK (0 SKIP), P2_TOKEN_FREQUENCY_SOURCE_COMPLETE MODE=--check NO_DOCKER_NO_GPU_NO_API.
