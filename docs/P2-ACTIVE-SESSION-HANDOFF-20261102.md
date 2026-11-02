@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 실제 DGX CPU 40/40 PASS 및 Numeric+PLE 후보 소스 통합
+
+- **사용자 제공 실제 DGX 영수증**: 통합 소스 `798575ed34acadb9eb83f004ce76ffc3bf2a2ac4`; Git pull fast-forward, Source preflight PASS, 호스트 import/UID 회귀시험 **4/4 PASS**. 기존 고정 이미지의 단일 disposable CPU `runc --network=none --read-only`에서 NumPy **2.2.6**, Torch **2.13.0+cu130**, P2 기능 시험 **40/40 PASS (SKIP 0)**, `P2_BATCH_ISOLATED_CPU_40_OF_40_PASS_NO_SKIPS`, `P2_BATCH_DGX_CPU_COMPLETE_HEAD=798575e... ORIGINAL_UNCHANGED_NO_GPU_API`. CPU PLE byte-exact 확인; GPU/실서버 결과 아님. 기존 두 실패 원인 테스트 package 충돌·UID 접근 거부는 해결.
+- **다음 기능 변경**: `src/p2_functional_bundle.py`와 `scripts/p2-functional-bundle-dgx.sh`를 통해 pinned installed Sampler SHA 고정 numeric witness + 최신 BF16 PLE unique-only H2D 모듈을 동일한 **후보 전용 두-COPY Dockerfile**로 결합. 두 환경 변수 OFF; **Stage 생성만 가능, Docker build/run/GPU/API/원본 변경 없음**. 4개 MTP 관련 installed-source 경로의 SHA/클래스·로더 메서드만 읽기 전용 조회, 누락 경로는 NOT_CERTIFIED. Token ID 65,536/248,320 계약 CPU PASS는 유지하지만 Draft Head tensor slicing/loader/rejection runtime 연결은 아직 BLOCKED.
+- **DGX 단일 후속 호출**: `cd ~/Workspace/llm/blazux-phase6-gates` → `git pull --ff-only origin feature/blazux-phase6-runtime-gates` → `bash scripts/p2-functional-bundle-dgx.sh --stage`. 새로운 8개 소스 회귀시험과 source/manifest guard 후 `docker inspect` 및 `docker cp` 읽기 전용 접근, private /tmp에 Sampler/PLE/Dockerfile 작성. 최종 태그 `P2_BUNDLE_SOURCE_COMPLETE ... NO_BUILD_NO_GPU_NO_API`. 이 새 기능 코드는 **DGX_NOT_RUN/CI_NOT_RUN**이며 CPU 40/40 결과를 새 코드 SHA로 소급하지 않음.
+- **공통 출시 차단 불변**: strict `1e-4` numeric root cause OPEN, full-state 재사용 미입증, P1 RELEASE_BLOCKED, P2 실제 GPU/H2D·MTP Draft Head 미검증, vLLM 0.32 Track B 및 P3 별도 대기. [P2 묶음 Runbook](P2-BATCH-IMPLEMENTATION-20261102.md).
+
+
 ## 2026-11-02 P2 CPU sandbox 파일 권한 진단 및 수정
 
 - DGX HEAD `b4a643d0cfb0d9f093858ad200845d384b5223d6`: 새 패키지 경로 host 2/2 PASS, container `P2_TEST_PACKAGE_LOCAL_VERIFIED` PASS, 그러나 `/p2/src/p1_preview_qsa_exact_topk.py` import `PermissionError [Errno 13]`. 테스트 40개는 로딩 단계에서 중지, `P2_BATCH_CPU_CONTAINER_BLOCKED`. 그 시점 container `--user=65534:65534`; 컨테이너 NumPy·Torch 설치 자체는 앞선 DGX에서 확인됐음.
