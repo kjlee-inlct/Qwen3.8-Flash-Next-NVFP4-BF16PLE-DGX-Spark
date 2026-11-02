@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 353,
+  "tracked_file_count": 359,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -420,8 +420,8 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "mode": "100644",
-      "blob_sha": "0ed9fb1bae6c903d586fe9edbac1029ad1a0a44c"
+      "blob_sha": "14a8736570fa4919e22215dcf02df6398125406b",
+      "mode": "100644"
     },
     {
       "path": "docs/BLAZUX-UPSTREAM-COMPARISON-20261029.md",
@@ -510,18 +510,23 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "aabad1a042c69aed46b42ab8e6691263ea59f3cb",
+      "blob_sha": "7d9eec7f56532cf52443e237eb93e944b11a3f5c",
       "mode": "100644"
     },
     {
       "path": "docs/P2-BATCH-IMPLEMENTATION-20261102.md",
-      "blob_sha": "ee82056b67fc5f864a88e53246d0b781bce6aab9",
+      "blob_sha": "ae3a2db31cb3a92fd5609f7d85dcd29a2137e3b5",
       "mode": "100644"
     },
     {
       "path": "docs/P2-DGX-GIT-PULL-RUNBOOK.md",
       "mode": "100644",
       "blob_sha": "0dc3f50da50eb773c113f8f16bfabe8de4243181"
+    },
+    {
+      "path": "docs/P2-MTP-HEAD-ABI-20261102.md",
+      "blob_sha": "172fcb42e8aaaea889ec5b7a90b47a322cea2f44",
+      "mode": "100644"
     },
     {
       "path": "docs/P2-WORKSPACE-CLEANUP-RUNBOOK.md",
@@ -831,6 +836,11 @@
     {
       "path": "scripts/p2-functional-bundle-dgx.sh",
       "blob_sha": "c8200fb1b2aea6633b5a0a218a6371fe0c728c88",
+      "mode": "100755"
+    },
+    {
+      "path": "scripts/p2-mtp-head-dgx.sh",
+      "blob_sha": "2040a5583e5d1033821ec5ffade3d82f791e38a9",
       "mode": "100755"
     },
     {
@@ -1194,8 +1204,18 @@
       "mode": "100644"
     },
     {
+      "path": "src/p2_mtp_abi_contract.py",
+      "blob_sha": "906d13c8c5949f4975522f883aac1d82edcc4271",
+      "mode": "100644"
+    },
+    {
       "path": "src/p2_mtp_draft_vocab.py",
       "blob_sha": "5cafe3d376018339c0961c1a4f3a1f19219a1750",
+      "mode": "100644"
+    },
+    {
+      "path": "src/p2_mtp_head_cpu.py",
+      "blob_sha": "f703079b51ddf748559d4fc28a7a098e6b31f84f",
       "mode": "100644"
     },
     {
@@ -1824,8 +1844,18 @@
       "mode": "100644"
     },
     {
+      "path": "tests/test_p2_mtp_abi_contract.py",
+      "blob_sha": "a583ffe797496af177ff42316d0931475f142e47",
+      "mode": "100644"
+    },
+    {
       "path": "tests/test_p2_mtp_draft_vocab.py",
       "blob_sha": "872e9632df2ffcb426445b03b7384b86a83e8bb4",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_mtp_head_cpu.py",
+      "blob_sha": "185c93001911f87e66e7e33315e47158f10e4472",
       "mode": "100644"
     },
     {

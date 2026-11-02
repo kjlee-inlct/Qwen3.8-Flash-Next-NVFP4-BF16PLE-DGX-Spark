@@ -1,5 +1,14 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 8/8 공동 Stage 실증 + MTP Draft Head CPU 기능 신설
+
+- **DGX 실측 `78f1104b5652dcc78de701e8008e93a2b7cf9181`**: `tests.test_p2_functional_bundle` **8/8 PASS**; `P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT` 및 `P2_BUNDLE_SOURCE_COMPLETE`. 실제 private Stage `/tmp/p2-functional-bundle-x8kmxyiv` 내 정확한 Sampler SHA witness와 PLE Unique-H2D 소스 및 두-COPY Dockerfile. `candidate_build_or_gpu_or_api_executed=false`; 원본 그대로.
+- **확정된 Preview 소스 SHA**: MTP `mtp.py` **`d1ee05d4...`**, target `model.py` **`e74a0bf9...`**, speculative `eagle.py` **`b2b1f7d1...`**; `Qwen3_8FlashNextMultiTokenPredictor` 및 `Qwen3_8FlashNextMTP`의 `__init__/forward/load_weights`와 후자의 `compute_logits` 확인. `qwen4_exp.py` 누락은 기능 부재 증거 아님. Header/target sharing/acceptance는 아직 OPEN.
+- **이번 신규 기능** `src/p2_mtp_head_cpu.py`: BF16 Draft Head 고유 행의 **독립 CPU tensor copy**, `248320→65536` 사전 검증, Draft local ID→full tokenizer ID CPU remap, full Head 선택 logits vs reduced logits CPU oracle. **실 Head/loader/rejection 통합·실모델 변경 없음**. `src/p2_mtp_abi_contract.py`는 사용자가 실측한 위 3개 SHA를 exact PIN으로 강제하고 AST 속성·메서드 surface만 기록. AST 일치는 runtime ABI PASS가 아니다.
+- **DGX 일괄 명령** `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 `bash scripts/p2-mtp-head-dgx.sh --execute`. 호스트 stdlib ABI 6건, 고정 설치 소스 read-only inspect/cp, pinned 1회성 CPU Docker에서 **새 MTP Head 7건만** 검증 (기존 40건 재실행 안 함). 원본 컨테이너/이미지/시작시각/모델/GPU/API 불변. **새 코드 DGX_NOT_RUN/CI_NOT_RUN**. 상세 [MTP Head 정본](P2-MTP-HEAD-ABI-20261102.md).
+- 전체 출시 기준 strict `1e-4` 그대로 FAIL/OPEN, P1 RELEASE_BLOCKED, P2 GPU 후보 NOT_RUN. 허가 없이 build/실서버/계측 OFF→ON 금지.
+
+
 ## 2026-11-02 P2 실제 DGX CPU 40/40 PASS 및 Numeric+PLE 후보 소스 통합
 
 - **사용자 제공 실제 DGX 영수증**: 통합 소스 `798575ed34acadb9eb83f004ce76ffc3bf2a2ac4`; Git pull fast-forward, Source preflight PASS, 호스트 import/UID 회귀시험 **4/4 PASS**. 기존 고정 이미지의 단일 disposable CPU `runc --network=none --read-only`에서 NumPy **2.2.6**, Torch **2.13.0+cu130**, P2 기능 시험 **40/40 PASS (SKIP 0)**, `P2_BATCH_ISOLATED_CPU_40_OF_40_PASS_NO_SKIPS`, `P2_BATCH_DGX_CPU_COMPLETE_HEAD=798575e... ORIGINAL_UNCHANGED_NO_GPU_API`. CPU PLE byte-exact 확인; GPU/실서버 결과 아님. 기존 두 실패 원인 테스트 package 충돌·UID 접근 거부는 해결.

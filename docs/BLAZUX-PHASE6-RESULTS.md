@@ -1,5 +1,13 @@
 # Phase 6 evidence ledger
 
+## 2026-11-02 P2 Numeric+PLE 공동 Stage 실제 DGX 검증 및 MTP 설치 ABI 첫 증거
+
+- **USER DGX SHA `798575ed34acadb9eb83f004ce76ffc3bf2a2ac4`**: CPU-only pinned Docker 결과 **40/40 PASS, skipped=0** 및 호스트 import/UID **4/4 PASS**, 원본 same ID / image / StartedAt 불변. BF16 PLE unique-H2D 함수의 CPU byte-exact 검증 완료. 실 GPU kernel/H2D, TTFT/TPS, runtime MTP Head은 **NOT_RUN**.
+- **USER DGX SHA `78f1104b5652dcc78de701e8008e93a2b7cf9181`**: 공동 source-only `tests.test_p2_functional_bundle` **8/8 PASS**, private source stage `/tmp/p2-functional-bundle-x8kmxyiv`, status `P2_NUMERIC_PLE_CANDIDATE_SOURCE_STAGED_NOT_BUILT`. Sampler pinned original sha `f95805b2...`; Sampler patched sha `a62b7cd7...`; PLE staged sha `a7aa7fe7...`. **image/GPU/API never run**.
+- Source-only pinned Preview MTP actual classes: `Qwen3_8FlashNextMultiTokenPredictor` (`__init__,forward,load_weights`), `Qwen3_8FlashNextMTP` (`__init__,compute_logits,forward,load_weights`). Actual SHA: `mtp.py=d1ee05d4ec35360a9a801f7ef5271e8e4cda458a9c754058899441fa1e7bd0d6`, `model.py=e74a0bf92ed73306ed28366543b00255b23ac7ec3f705b600ff0c8874442f0c6`, `eagle.py=b2b1f7d15117b43108be368756d9c6e9334d9415a070e46178e18bb7c6476378`. `qwen4_exp.py` absent/unreadable (NOT_CERTIFIED). Source-only AST cannot prove Draft Head sharing, loader weight layout, acceptance mapping.
+- Following GitHub code adds independent BF16 row copy / CPU draft token-ID remap and exact pinned source AST audit; **not yet DGX-tested**. Numeric root cause OPEN, P1 RELEASE_BLOCKED and strict `1e-4` release failure unchanged.
+
+
 ## 2026-11-02 P1 단일 GPU 정비창 최종 기능 증거 — 최소 범위 PASS
 
 **DGX 실측 소스 HEAD: 50fc65b65d10b36804c65e8a48d06d9bf3abecfe.** 이 영수증은 사용자가 제공한 실제 DGX stdout에서 확인됐고, 후속 문서-only 커밋 자체는 GPU/CI 실행이 아니다.

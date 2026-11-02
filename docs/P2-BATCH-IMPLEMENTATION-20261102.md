@@ -75,3 +75,11 @@ bash scripts/p2-functional-bundle-dgx.sh --stage
 ```
 
 **주의:** P2 sampler witness의 선택 scalar↔API 대응은 실제 **MTP OFF·Prefix OFF·직렬 단일 요청 후보**에서만 진단. 원본 MTP2 활성 실행에서 해당 Sampler tap이 곧바로 활성화된다고 주장 금지. API 수치 비교와 raw logits 원인은 GPU 실관측 전 OPEN. 해당 `/tmp` Stage는 새 분리된 GPU 운영 정비창 승인이 아니며, P1 builder의 이전 PLE pin을 재작성하지 않는다. 이번 신규 소스/테스트는 DGX_NOT_RUN / GitHub CI_NOT_RUN.
+
+## 2026-11-02 P2 MTP Head 다음 기능 작업
+
+- DGX 공동 Numeric+PLE source stage **8/8 PASS**, pinned original unchanged, Docker **NOT_BUILT/GPU NOT_RUN**. 실제 Preview MTP/target/speculative source 3개 SHA 확인 (정확한 SHA/AST 계약 [별도 정본](P2-MTP-HEAD-ABI-20261102.md)).
+- `src/p2_mtp_head_cpu.py`는 독립 BF16 Head 행 선택, 기존 65,536 ↔ 248,320 계약의 local→full ID CPU Tensor 변환, synthetic full-head 선택 logits 등가성을 제공한다. **actual MTP Draft Head weight 적용·loader/rejection integration은 미완료**.
+- 설치 ABI 조사 `src/p2_mtp_abi_contract.py`는 정확한 SHA 3종 drift와 MTP 필수 2 class/method surface fail-closed. 출력은 함수·속성·SHA만; MTP actual loaded tensor or head ownership은 증명하지 않음. `qwen4_exp.py` missing is NOT_CERTIFIED.
+- `scripts/p2-mtp-head-dgx.sh --execute`: Fork/branch/manifest and host stdlib audit, original ID/image/running/StartedAt, read-only installed code, 1회성 기존 immutable CPU runc image에서 신규 BF16 MTP 7/7 skip0. 고장난 경우 fail-closed. 기존 Numeric/PLE CPU 40/40 재실행하지 않음. 새 기능/CPU 결과는 DGX_NOT_RUN/CI_NOT_RUN.
+
