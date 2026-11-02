@@ -1,5 +1,29 @@
 # Phase 6 evidence ledger
 
+## 2026-11-02 P1 단일 GPU 정비창 최종 기능 증거 — 최소 범위 PASS
+
+**DGX 실측 소스 HEAD: 50fc65b65d10b36804c65e8a48d06d9bf3abecfe.** 이 영수증은 사용자가 제공한 실제 DGX stdout에서 확인됐고, 후속 문서-only 커밋 자체는 GPU/CI 실행이 아니다.
+
+### A. P1 기능별 검증 기록 — 합의된 bounded 범위 완료
+
+- **Source/CPU:** Source Manifest **327/327 PASS**, integrated runtime 단위시험 **10/10**, integrated window 단위시험 **10/10** (총 **20/20 PASS**), read-only functional preflight PASS.
+- **Tool Calling/Responses:** 강제 named function tool-call ID·JSON arguments 검증 → 동일 대화에 tool result 전달 → 최종 text 응답, **tool_full_roundtrip=PASS**. Responses nonstream/stream은 기존 실서버 PASS 영수증 재사용(이번 정비창에서 반복 미실행).
+- **BF16 PLE opt-in phase stats:** **ple_phase_stats_observed=true**, 실제 gather **calls=1**, **forward_calls=1**, **rows=131072**. forward_s=0.016106178984045982, dedup_s=0.004265901050530374, gather_work_s=0.021771896979771554, wait_s=0.0010262555442750454, stage_s=0.003143151057884097, device_copy_call_s=0.0008235869463533163. gather_work_s는 병렬 worker 시간 합계이며 forward와 합산 불가. device_copy_call_s는 호스트 호출시간, GPU H2D 완료시간 아님(**gpu_dma_verified=false**).
+- **Prefix-cache + MTP2:** 실제 cache hit delta **[0.0, 6400.0, 6400.0, 6400.0]**, accepted MTP draft token **+400.0**, 동일 Token ID. Cold와 2·3·4번째 HIT 각각 selected state SHA **4/4 match**, 총 **12/12 match**, **0 mismatch**, all_hit_requests_have_comparable_samples=true. **bounded_state_match=true**, **full_state_reuse_verified=false**. 선택된 state 바이트 동일성만 실측했으며 전체 GDN/PLE layer·restore-copy 실행과 시간의 완전한 증명이 아니다.
+- **합산 상태:** functional_evidence_complete=true, **P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE**, P1_FUNCTIONAL_WINDOW_EXIT_CODE=0, primary_error=null. 보고용 **P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS** (합의된 최소 기능 실경로의 검증 완료, 새 코드 Gate 아님).
+- **원본 복구:** 정확한 원본 ID **3fc5a3d5be1d52595602287acd87895220219bad050484251ac0408a163ffc45**, 이미지 **sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a** 동일, original same-ID running PASS, candidate removed PASS, port8000 /health 및 /v1/models HTTP + 모델 PASS. 원본 이미지·Stage·모델 불변, 기존 통합 이미지 사용.
+
+### B. P1 출시 차단 조건 — 독립 관리, 해제되지 않음
+
+- **P1_RELEASE_BLOCKED=TRUE, P1_FINAL_PASS=FALSE, DEPLOYED=FALSE, strict_numeric_release_pass=false**.
+- 기존 per-token logprob 절대오차 **strict 1e-4**는 불변이며, 이전 원본 Prefix OFF / No-MTP / first-token과 Prefix ON Cold/HIT에서 이미 초과 측정됨. 이번 최소 기능 창은 strict all-pairs 및 no-HIT control 판정을 **의도적으로 재실행하지 않았으므로** 기능 PASS가 strict numeric PASS를 뜻하지 않음.
+- **P2_NUMERIC_STABILITY_OPEN=TRUE**: raw logits vs log-softmax/API 최초 비재현성 위치 및 원인 해결은 P2의 독립 과제. H2D 실제 DMA 시간과 전 계층 physical state/copy timing 심화 감사도 P2 책임이나, 최소 샘플 증거를 전체 정확성으로 오인하여 운영 승인하면 안 됨. **full_state_reuse_verified=false** 유지.
+- 별도 출시/배포 결정 없음. 현재 정비창 승인은 이미 사용 완료됨. 새로운 GPU 원본 중지/CI/PR/merge/main/P2/P3 자동 실행 금지. 기존 검증 Tool/PLE/HIT/MTP/selected SHA와 QSA/No-MTP 비교 불필요 반복 금지.
+- 아래 2026-11-02 단계 재분류 당시의 P1_FUNCTIONAL_VERIFIED=NOT_YET 및 실서버 NOT_RUN 문장은 **이번 GPU 실행 전의 역사 기록**이며 본 영수증을 덮어쓰지 않는다.
+
+---
+
+
 ## 2026-11-02 DGX 운영자 실측 및 사용자 승인 단계 재분류
 
 - 마지막 DGX 실측 소스 HEAD: **07cad147bceda365f698bd93c11faef7842039a4** (feature/blazux-phase6-runtime-gates). Source 327/327, numeric window CPU 13/13, rejection stage CPU 8/8, preflight PASS.

@@ -1,5 +1,28 @@
 # P1 — 현재 진행 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 현행 P1 상태 확정 — 최소 기능 PASS / 출시 BLOCKED
+
+**최신 DGX 실측 소스 HEAD: 50fc65b65d10b36804c65e8a48d06d9bf3abecfe**. 사용자 승인 단일 GPU 정비창 1회가 정상 완료됐으며 출처는 운영자 실행 stdout이다. 아래의 동 날짜 이전 계획, NOT_YET 및 다음 창 요청은 이 영수증보다 이전 시점의 내용이다. 상세 수치: [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md) 최신 A/B 절.
+
+### P1 최소 기능 검증 — 완료 (bounded scope)
+
+| P1 기능 | 확보된 실경로 증거 | 판정 |
+| --- | --- | --- |
+| Tool Calling/Responses | forced tool call → result → final answer 왕복 PASS; Responses nonstream/stream 기존 PASS 재사용 | PASS |
+| BF16 PLE mmap phase stats | 실제 CPU-side phase sample, calls=1, forward_calls=1, rows=131072 | PASS (GPU DMA 완료시간 미측정) |
+| Prefix-cache/MTP2 | HIT [0,6400,6400,6400], accepted +400, Token IDs 동일, 선택 Cold/HIT 상태 SHA 12/12 match | PASS_BOUNDED (전체 state/copy proof 아님) |
+
+Source 327/327 PASS, targeted CPU 20/20 PASS, functional preflight PASS. **functional_evidence_complete=true**, **P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE**, window exit **0**. 보고용 **P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS**, 최소 기능 범위를 넘어선 결과는 주장하지 않는다. 원본 exact-ID running, 이미지 불변, 후보 제거, /health·/v1/models PASS.
+
+### P1 출시 차단 — 유지 (독립 판정)
+
+**P1_RELEASE_BLOCKED=TRUE**, **P1_FINAL_PASS=FALSE**, **DEPLOYED=FALSE**, strict_numeric_release_pass=false, full_state_reuse_verified=false. 기존 **strict logprob 1e-4** FAIL은 그대로다. 이번 정비창은 숫자 strict 판정을 반복하지 않았고, 전 계층 GDN/PLE physical restore/copy 전부를 검증하지도 않았다. 전역 수치 안정성 최초 원인은 **P2_NUMERIC_STABILITY_OPEN=TRUE**로 분리하되 출시 Gate는 완화하지 않는다. 심화 state/copy 및 H2D DMA/성능도 P2 검토 대상이다. 운영 적용은 새 승인 없이는 불가.
+
+**다음 진행 범위:** P1 세 기능의 합의된 최소 실경로 시험을 다시 수행하지 않는다. P2 수치 안정성 또는 출시 차단 해소 작업은 별도 범위와 승인 후 진행. 현재 GPU 정비창은 이미 종료됐고, 후속 문서-only 커밋에 GPU/CI 실행 증거 없음. 이전 2026-11-02 진행 계획의 미완료 시험 지시는 역사 자료로 보존한다.
+
+---
+
+
 ## 2026-11-02 현행 P1 완료 계획 — 기능 검증과 전역 수치 안정성 분리
 
 **사용자가 단계별 범위 변경을 승인했다.** P1은 PLE 단계별 계측, Prefix-cache 정확성, Tool Calling/Responses의 **기능별 최소 구현/실동작 검증**에 집중한다. Prefix OFF·MTP OFF·단일 토큰에서도 발생한 공통 strict logprob 비재현성 원인 분석과 최소 안전 범위를 넘어선 full-layer physical copy/timing 감사를 P2로 이관한다. 원래 P2 세 기능·P3 두 기능은 불변. **strict abs 1e-4는 출시 Gate에서 계속 필수이며 미달 상태를 PASS로 재분류하지 않는다.**

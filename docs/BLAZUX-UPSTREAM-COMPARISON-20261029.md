@@ -1,5 +1,14 @@
 # blazux 최신 원본과 Orcarouter BF16 PLE/MTP 구현 비교 (2026-10-29)
 
+## 2026-11-02 실제 DGX 기능 완료 판정(범위 한정) 및 독립 출시 차단
+
+원래 P1 3개 / P2 3개 / P3 2개 기능 목록은 바꾸지 않는다. **실측 소스 HEAD 50fc65b65d10b36804c65e8a48d06d9bf3abecfe**: Tool call/result/final 왕복 PASS, BF16 PLE 계측 calls=1·forward_calls=1·131072 rows, Prefix HIT [0,6400,6400,6400]·MTP accepted +400·동일 Token ID·선택 상태 SHA 12/12 일치. Source 327/327 및 targeted CPU 20/20 PASS, 원본 동일 ID/HTTP 복구 PASS. **P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS**로 P1의 합의된 최소 기능 실경로는 검증 완료.
+
+**출시는 별개:** P1_RELEASE_BLOCKED=TRUE, P1_FINAL_PASS=FALSE, DEPLOYED=FALSE, strict_numeric_release_pass=false, full_state_reuse_verified=false. strict 1e-4 오차 한도 기존 FAIL과 전 계층 실제 state/copy proof 미완료는 유지. 전역 수치 안정성 최초 원인은 P2_NUMERIC_STABILITY_OPEN. H2D DMA/심화 physical audit도 P2에서 다루지만 이를 근거로 전체 안전성 PASS 주장 금지. 이전 동일 날짜 표의 기능별 '미완료'는 실행 전 계획. 상세 영수증은 [결과 장부](BLAZUX-PHASE6-RESULTS.md)에 기록. 다음 실행 승인 없음.
+
+---
+
+
 ## 2026-11-02 사용자 승인 단계 범위 재분류 — 아래 기존 8개 목표 표보다 최신
 
 기능 숫자와 소유 단계는 **P1 세 개, P2 세 개, P3 두 개 그대로 유지**한다. 기능 구현 여부와 독립 strict 출시 기준을 분리하며, [활성 P1 계획](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)의 최신 실증을 우선한다.

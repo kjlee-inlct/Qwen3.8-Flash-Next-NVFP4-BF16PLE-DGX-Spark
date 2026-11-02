@@ -1,5 +1,18 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-02 최신 확정 — P1 기능 PASS(한정), 출시 BLOCKED(독립)
+
+기존 2026-11-02의 기능 계획보다 최신인 **실제 DGX 운영자 영수증**이다. 실행된 소스 HEAD는 **50fc65b65d10b36804c65e8a48d06d9bf3abecfe**, Source 327/327, targeted CPU 20/20, 단일 GPU functional window exit0. 원본 동일 ID·동일 이미지 running/HTTP, 후보 삭제 모두 PASS. 자세한 증거는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md) 최신 두 판정 항목과 [활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 확인한다.
+
+**기능 검증(완료·범위 한정):** P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS, functional_evidence_complete=true, P1_FUNCTIONAL_BOUNDED_EVIDENCE_PASS_NOT_RELEASE. Tool forced named call/result/final 왕복 PASS; 실제 PLE calls=1/forward_calls=1/rows131072 및 CPU phase 값 수집; Prefix HIT [0,6400,6400,6400], MTP accepted +400, 동일 Token IDs, 선택 상태 SHA 12/12 일치(mismatch0). 기존 Responses stream/nonstream PASS는 재사용했다. 전체 GDN/PLE state restore/provenance 및 GPU DMA 완료 검증을 했다는 뜻이 아니다.
+
+**출시 차단(변경 없음):** P1_RELEASE_BLOCKED=TRUE, P1_FINAL_PASS=FALSE, DEPLOYED=FALSE, strict_numeric_release_pass=false, full_state_reuse_verified=false. 기존 strict absolute logprob tolerance 1e-4 미통과와 출시에 필요한 전체 상태 안전성 공백은 해소되지 않았으며 이번 기능 창에서 strict 숫자 검사를 수행하지 않았다. P2_NUMERIC_STABILITY_OPEN=TRUE로 공통 수치 비재현성 원인 분석과 심화 물리/성능 검증을 분리, 기존 출시 Gate는 불변.
+
+**다음 작업 주의:** 완료된 세 기능의 동일 실험 반복 불필요. 원본/Stage/이미지/weights/cache 불변, 정비창 승인 소진, 새 GPU/원본 중지/PR/merge/main/CI/자동 P2/P3 착수 금지. 아래 과거 동일 날짜 NOT_YET와 '다음 정비창'은 이전 시점의 기록이다. 이후 이 문서-only GitHub 커밋 SHA와 DGX 실측 소스 SHA를 명확히 구별한다.
+
+---
+
+
 ## 2026-11-02 사용자 승인 — P1 기능 종료와 P2/P3 이관 구분
 
 **이 절은 이후의 옛 현행 작업 계획보다 우선한다.** 기존 기능 목록(P1 세 가지, P2 세 가지, P3 두 가지)을 변경하지 않고, 과도하게 묶여 있던 검증 범위를 재분류한다. 정확한 최신 상황은 [활성 P1 계획](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md), 기존 증거는 [결과 장부](BLAZUX-PHASE6-RESULTS.md)를 참고한다.
