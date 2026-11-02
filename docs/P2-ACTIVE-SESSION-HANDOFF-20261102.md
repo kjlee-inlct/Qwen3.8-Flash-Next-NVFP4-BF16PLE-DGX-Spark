@@ -1,5 +1,12 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 CPU container 테스트 로더 실패 수정
+
+- DGX source `51134f2ecd48b0a13496075c402f3edda255e47e`: pinned image 내 NumPy 2.2.6/PyTorch 2.13.0+cu130 존재하나 `tests.test_p2_*` import 6건 실패, **Ran 6 / FAILED(errors=6)**. 40개 테스트는 시작되지 않았으며 40 PASS가 아님. 원본/GPU/API 변화 증거 없음.
+- 저장소 `tests/__init__.py` 부재와 이미지 내부의 타 `tests` 패키지 충돌이 원인. `tests/__init__.py` 추가 및 단일 Docker runner에서 `tests.__file__ == /p2/tests/__init__.py` 검사, 서드파티 패키지 섀도잉 회귀시험 추가. 새 코드 DGX 미실행. `git pull --ff-only` 후 `bash scripts/p2-batch-cpu-container.sh --execute` 재시도 시 40개/skip0 아니면 차단.
+- 수치 원인 OPEN, MTP 실제 head 연동 미완료, PLE GPU/실제 H2D 성능 미확인, P1 release BLOCKED. 상세 [P2 묶음 정본](P2-BATCH-IMPLEMENTATION-20261102.md).
+
+
 ## 2026-11-02 DGX P2 batch CPU 40개 중 4 SKIP — Docker 일회성 시험
 
 - **실 DGX 소스** `c648d885c9e26d1c25ad40d8cf16449f94593f72`, AST PASS / `40 tests OK (skipped=4)` (**36 PASS, PLE 4 SKIP**). 호스트 NumPy/PyTorch 미설치, PLE CPU byte-exact까지는 확인되지 않았음.
