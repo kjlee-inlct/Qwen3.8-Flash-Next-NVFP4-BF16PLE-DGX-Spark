@@ -1,3 +1,8 @@
+## 2026-11-02 P2 호스트 CPU tokenizer 의존성 원인 확인과 다음 단일 묶음
+
+- **실제 사용자 DGX 실행 SHA `8a96f1277dfb8ad3ac6f571dc6847c33c1d9e123`:** `git pull --ff-only` 후 `--probe`, source preflight PASS, synthetic unittest **20/20 PASS**, 그러나 실제 인코더 단계 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE` **차단**. **원인은 호스트 Python `tokenizers` 부재**이며 실 token count나 config/encoder 성공 아님. 이전 16/16 실행과 본 20/20은 각기 독립 SHA 증거.
+- 새 기능 `scripts/p2-offline-bundle-dgx.sh`: 허가된 기존 immutable CPU-only image에서 37 targeted tests + exact pinned tokenizer/config probe + (권한 확인된 corpus가 있을 때만) counts V1/private 65536 IDs 동시 생성. 신규 코드 GitHub SOURCE_IMPLEMENTED / DGX_NOT_RUN / CI_NOT_RUN. 원본 런타임/GPU/API/서비스 변경 없음. 1e-4 numeric, Native MTP acceptance, P2 release BLOCKED 불변.
+
 ## 2026-11-02 사용자 DGX P2 tokenizer CPU probe 실패 영수증
 
 - 사용자 제공 **실측 HEAD `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`**: Git up to date, Source preflight PASS, `tests.test_p2_token_frequency` **16/16 PASS, skipped 0**. 이어 실제 `scripts/p2-token-frequency-dgx.sh --probe`의 인코더/metadata 검증 단계에서 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED` (exit 2). 당시 CLI는 reason을 숨김. 따라서 **차단 원인 미확정, 실제 tokenizer CPU encode NOT_VERIFIED**.
