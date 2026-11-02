@@ -1,3 +1,9 @@
+## 2026-11-03 사용자 목표 및 개발 우선순위 확정
+
+- 최종 목표는 **현재 서비스 중인 Orcarouter Uncensored 모델에 Blazux qwen3.8-Flash-DGX 기술 이식**, 기존 API/model ID/운영 원본 보호. [현행 단계별 기술 로드맵](P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md) 기준.
+- P1 3항목 bounded functional PASS만 인정, strict numeric 1e-4 전역 출시는 BLOCKED. P2는 숫자 최초 오차 지점 식별, BF16 PLE Gather 성능, 옵션 MTP reduced Draft, vLLM 0.32 Track B. P3 YaRN500K/Hybrid FP8 후속. 기존 "코퍼스 필수" 경로는 잘못된 우선순위였음.
+- Upstream 원본 제공 `draft_vocab_65536.npy`를 별도 Apache-2.0 attribution으로 정확한 SHA/byte 고정하여 검사한다. **새 코퍼스 수집은 지금 하지 않는다**; 정확한 Orcarouter metadata와 사전 제공 65,536 token compatibility를 source-only로 확인하고 GPU acceptance를 별도 승인으로 분리. 정본 증거는 [P2 Active Handoff](P2-ACTIVE-SESSION-HANDOFF-20261102.md) 및 [Phase6 Results](BLAZUX-PHASE6-RESULTS.md). 사용자 DGX 코드는 항상 GitHub commit 후 `git pull --ff-only` 단일 실행, 운영 Docker/GPU/API/main 변경 별도 승인.
+
 # SESSION-HANDOFF-PROMPT.md
 
 ## 2026-11-02 영구 Workspace 정리 규칙 — 보존 우선/새 Phase checkout 증식 중단

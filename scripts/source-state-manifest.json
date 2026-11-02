@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 375,
+  "tracked_file_count": 381,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -181,7 +181,17 @@
     {
       "path": "README.md",
       "mode": "100644",
-      "blob_sha": "3bb31e939aab9dd621e60dd004c21cca13459fa5"
+      "blob_sha": "87f4a68008f20a76411c1c30f43e888d83e3c786"
+    },
+    {
+      "path": "assets/blazux/PROVENANCE.md",
+      "mode": "100644",
+      "blob_sha": "e9f027eb29f0c5f4d6fe3336b37cad1957fddd25"
+    },
+    {
+      "path": "assets/blazux/draft_vocab_65536.npy",
+      "mode": "100644",
+      "blob_sha": "2b94340a3ca0985a7494af369ac82536d61411de"
     },
     {
       "path": "benchmarks/common.py",
@@ -420,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "32f2095dd45ebd52283030b8e4635c5ceab35f67",
+      "blob_sha": "40136cc9eda3e5f33ad9aff289c1a36d60f22cdd",
       "mode": "100644"
     },
     {
@@ -510,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "f3e4800fc768e81c6287545f7058db60b490643e",
+      "blob_sha": "156d7dc0201b431faadd4a1d7043392eae00472a",
       "mode": "100644"
     },
     {
@@ -534,6 +544,11 @@
       "mode": "100644"
     },
     {
+      "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
+      "mode": "100644",
+      "blob_sha": "af4a7bda9e966c690e92cad40f20456e4ceda149"
+    },
+    {
       "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
       "mode": "100644",
       "blob_sha": "8f61c6b9d65106253cb947f28f77045ba75d2dab"
@@ -555,7 +570,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "b22e229bf6eeb767df05e1f9a4d77bb829d9e351",
+      "blob_sha": "30c1a7032916b977bed41e9bbea457f478d95ba9",
       "mode": "100644"
     },
     {
@@ -877,6 +892,11 @@
       "path": "scripts/p2-tokenizer-source-audit-dgx.sh",
       "blob_sha": "1004da668af6285410d7413bc4c4d5f6997d733f",
       "mode": "100755"
+    },
+    {
+      "path": "scripts/p2-upstream-draft-dgx.sh",
+      "mode": "100755",
+      "blob_sha": "84832be1e31f57f56b2fb536077a920aac8840e5"
     },
     {
       "path": "scripts/p2-vocab-artifact-dgx.sh",
@@ -1297,6 +1317,11 @@
       "path": "src/p2_tokenizer_source_audit.py",
       "blob_sha": "7fd38a5e318e3cc1d30a98800bfa25139fd85b20",
       "mode": "100644"
+    },
+    {
+      "path": "src/p2_upstream_draft_asset.py",
+      "mode": "100644",
+      "blob_sha": "ee41439b0faead41bd302a7a96f14fbe9a4e0ba9"
     },
     {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
@@ -1967,6 +1992,11 @@
       "path": "tests/test_p2_tokenizer_source_audit.py",
       "blob_sha": "507bf6e3df11ce6b9e1950af90d381549fd01852",
       "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_upstream_draft_asset.py",
+      "mode": "100644",
+      "blob_sha": "de64940eb3ec5588357e35e000ddf85880348853"
     },
     {
       "path": "tests/test_p2_workspace_inventory.py",
