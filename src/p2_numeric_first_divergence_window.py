@@ -153,11 +153,16 @@ def verify_minimal_stage(stage: Path) -> dict:
 
 
 def image_preflight(head: str, stage: Path) -> dict:
-    verify_minimal_stage(stage)
-    minimal.read_only_original_guard()
-    absent_candidates()
-    receipt, original, base, _ = original_running()
-    mtp_off.args_for(head, original, base, receipt)
+    before = trace.original_identity()
+    try:
+        verify_minimal_stage(stage)
+        minimal.read_only_original_guard()
+        absent_candidates()
+        receipt, original, base, _ = original_running()
+        mtp_off.args_for(head, original, base, receipt)
+    finally:
+        if trace.original_identity() != before:
+            raise Blocked("ORIGINAL_START_TIME_CHANGED_DURING_PREFLIGHT")
     return {"status": "P2_NUMERIC_WINDOW_PREFLIGHT_READ_ONLY",
             "stage_verified": True, "original_running": True,
             "other_candidates_absent": True, "gpu_not_executed": True,
@@ -167,6 +172,7 @@ def image_preflight(head: str, stage: Path) -> dict:
 def build(head: str, stage: Path) -> dict:
     """An image build only: pinned parent, --network=none; no GPU nor outage."""
     image_preflight(head, stage)
+    original_before_build = trace.original_identity()
     try:
         old = release._inspect_image(tag(head))
     except (OSError, ValueError):
@@ -183,6 +189,8 @@ def build(head: str, stage: Path) -> dict:
     verify_image(head)
     original_running()
     absent_candidates()
+    if trace.original_identity() != original_before_build:
+        raise Blocked("ORIGINAL_START_TIME_CHANGED_DURING_IMAGE_BUILD")
     return {"status": "P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU",
             "image": tag(head), "same_id_original_running": True,
             "model_executed": False, "numeric_root_cause_fixed": False}

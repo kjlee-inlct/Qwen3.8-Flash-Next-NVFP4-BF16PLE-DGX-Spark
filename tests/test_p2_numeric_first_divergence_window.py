@@ -67,7 +67,8 @@ class NumericWindowTests(unittest.TestCase):
                     w.verify_minimal_stage(folder)
 
     def test_preflight_does_not_modify_or_build(self):
-        with patch.object(w, "verify_minimal_stage") as stage, \
+        with patch.object(w.trace, "original_identity", return_value=("id","image","start")), \
+             patch.object(w, "verify_minimal_stage") as stage, \
              patch.object(w.minimal, "read_only_original_guard") as guard, \
              patch.object(w, "absent_candidates") as absent, \
              patch.object(w, "original_running", return_value=({}, {"Config":{"Cmd":["stock"]}}, {}, "running")), \
@@ -78,6 +79,18 @@ class NumericWindowTests(unittest.TestCase):
         run.assert_not_called()
         self.assertFalse(info["gpu_not_executed"] is False)
         self.assertFalse(info["service_outage_performed"])
+
+    def test_preflight_started_at_drift_blocks(self):
+        with patch.object(w.trace, "original_identity",
+                          side_effect=[("id","image","before"), ("id","image","after")]), \
+             patch.object(w, "verify_minimal_stage"), \
+             patch.object(w.minimal, "read_only_original_guard"), \
+             patch.object(w, "absent_candidates"), \
+             patch.object(w, "original_running",
+                          return_value=({}, {"Config":{"Cmd":["stock"]}}, {}, "running")), \
+             patch.object(w.mtp_off, "args_for", return_value=([], "model")):
+            with self.assertRaisesRegex(w.Blocked, "START_TIME_CHANGED"):
+                w.image_preflight("a"*40, Path("/tmp/mock"))
 
     def test_candidate_runtime_adds_only_sampler_flag_and_raw_logprobs(self):
         head="a"*40
