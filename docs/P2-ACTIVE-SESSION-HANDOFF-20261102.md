@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 후속: 선택 토큰 단위 Sampler 경계 계측 준비
+
+- **실제 P2 코드 변화:** `src/p2_numeric_sampler_witness.py`는 기존 Preview 설치본 `vllm/v1/sample/sampler.py`의 **고정 SHA256 `f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216`**과 정확한 `Sampler.forward` anchor 3개를 만족할 때만 패치를 생성하는 SOURCE-ONLY 변환이다. `Sampler.compute_logprobs(logits)` 직후 Raw logits/전체 logprobs SHA, `sampled.long()` 직후 선택 token ID SHA256과 **단일 logprob 스칼라**를 함께 수집한다. processed override·다른 모드/shape·SHA drift는 skip/block. 기본 환경 `VLLM_P2_NUMERIC_WITNESS=0`, 후보 전용 `/tmp/p2-numeric-witness.jsonl`, 최대 8 event/process. 원본/P1 pin 이미지·GPU/운영 미변경.
+- `src/p2_numeric_boundary.py::classify_witness()`는 동일 Token ID 해시, 선택 logprob와 API 첫 토큰 logprob의 **1e-6 이내 값 대응**, 이벤트 순서·worker PID, **별도로 검증된 Prefix OFF/MTP OFF/직렬 단일 활성 요청**이 모두 충족될 때만 Raw logits → log_softmax/pre-gather → post-Sampler/API **최초 관측 텐서 차이**를 분류한다. `1e-6`은 오직 witness↔API 대응 확인용이며 **strict release `1e-4`를 대체하지 않는다**. 값 불일치/계측 누락/ABI drift는 FAIL-CLOSED, root_cause_fixed=false.
+- **소스 근거의 한계:** 공개 vLLM v0.11.1 Sampler에서는 `logits.log_softmax(dim=-1, dtype=torch.float32)`와 `gather_logprobs()`의 `logprobs.gather(-1, token_ids)`가 확인되나, 커스텀 설치 Preview의 전체 Sampler/Engine/API 호출 순서와 활성 경로는 미입증. 후보에서 pinned SHA/anchor와 실제 활성 row→API 관계를 확인해야 함. 텐서 SHA 변화는 선택 토큰 logprob 변화의 인과 크기를 단독 증명하지 못함.
+- **검증 범위:** 별도 Python stdlib synthetic targeted unittest **17/17 PASS**, py_compile PASS. 4개 GitHub 코드/테스트 Blob SHA는 로컬 시험 파일의 Git blob SHA와 일치하게 생성. **DGX/CI/GPU/HTTP NOT_RUN**. P1 BOUNDED_PASS, RELEASE_BLOCKED, `full_state_reuse_verified=false` 유지.
+- **남은 차단:** 정확한 설치 Source/ABI 확인 후 **별도 사용자 승인 하에서만** 격리 MTP-OFF 후보 첫 토큰 직렬 요청의 소량 경계 관측. GPU 동기화 계측은 실행 타이밍을 바꿀 수 있으므로 비계측 운영 경로의 결정성 입증 아님. 원인 수정 및 strict 실측 미완료. 원본 stop/HTTP inference/CI 무승인 실행 금지.
+
 ## 2026-11-02 P2 numeric 첫 소스 조사 및 오프라인 코드 (신규)
 
 - GitHub 개발 브랜치 feature/p2-numeric-first-boundary-20261102; P1과 main은 보호. 첫 실수치 차이의 계산 경계는 아직 미확정이고 P1 최종 strict 및 출시 BLOCKED 유지.
