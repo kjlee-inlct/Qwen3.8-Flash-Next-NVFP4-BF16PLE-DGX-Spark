@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from unittest.mock import patch
 
 from src import p2_token_frequency as freq
@@ -230,6 +232,63 @@ class TokenFrequencyTests(unittest.TestCase):
             self.assertEqual(written["special_token_ids"], [3, 4])
             self.assertEqual(result["inputs"][0]["format"], "text")
             self.assertFalse(result["corpus_rights_and_representativeness_verified"])
+
+
+    def test_probe_blocker_reports_safe_reason_code_without_paths(self):
+        buffer = io.StringIO()
+        args = ["--tokenizer-json", "/not/a/real/private/model/path",
+                "--tokenizer-config", "/not/a/real/private/config/path", "--probe"]
+        with patch.object(freq, "probe", side_effect=freq.Blocked(
+                "TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE")):
+            with redirect_stderr(buffer):
+                rc = freq.main(args)
+        self.assertEqual(rc, 2)
+        self.assertEqual(buffer.getvalue().strip(),
+                         "P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON="
+                         "TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE")
+        self.assertNotIn("/not/a/real", buffer.getvalue())
+
+    def test_probe_blocker_redacts_unexpected_reason_content(self):
+        secret = "sensitive/text from the tokenizer config"
+        buffer = io.StringIO()
+        with patch.object(freq, "probe", side_effect=freq.Blocked(secret)):
+            with redirect_stderr(buffer):
+                rc = freq.main(["--tokenizer-json", "/private/sensitive",
+                                "--tokenizer-config", "/private/confidential",
+                                "--probe"])
+        self.assertEqual(rc, 2)
+        self.assertIn("REASON=UNCLASSIFIED_BLOCKED", buffer.getvalue())
+        self.assertNotIn(secret, buffer.getvalue())
+        self.assertNotIn("/private", buffer.getvalue())
+
+    def test_probe_os_error_is_classified_without_exception_details(self):
+        buffer = io.StringIO()
+        with patch.object(freq, "probe", side_effect=PermissionError(
+                "secret source path cannot be opened")):
+            with redirect_stderr(buffer):
+                rc = freq.main(["--tokenizer-json", "/secret/one",
+                                "--tokenizer-config", "/secret/two", "--probe"])
+        self.assertEqual(rc, 2)
+        self.assertEqual(buffer.getvalue().strip(),
+                         "P2_OFFLINE_TOKEN_COUNTS_BLOCKED "
+                         "REASON=INPUT_PERMISSION_DENIED")
+
+    def test_real_file_missing_config_yields_actionable_safe_reason(self):
+        tokenizer_raw, _ = fixture()
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            file = Path(td) / "tokenizer.json"
+            file.write_bytes(tokenizer_raw)
+            buffer = io.StringIO()
+            with patch.object(freq, "TOKENIZER_AUDITED_SHA256",
+                              hashlib.sha256(tokenizer_raw).hexdigest()):
+                with redirect_stderr(buffer):
+                    rc = freq.main(["--tokenizer-json", str(file),
+                                    "--tokenizer-config",
+                                    str(Path(td) / "missing_config.json"), "--probe"])
+            self.assertEqual(rc, 2)
+            self.assertIn("REASON=TOKENIZER_CONFIG_FILE_REQUIRED_NO_SYMLINK",
+                          buffer.getvalue())
+            self.assertNotIn(td, buffer.getvalue())
 
 
 if __name__ == '__main__':

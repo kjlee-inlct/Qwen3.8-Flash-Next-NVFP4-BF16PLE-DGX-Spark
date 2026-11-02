@@ -1,3 +1,17 @@
+## 2026-11-02 신규 사용자 DGX `--probe` 실측 차단 및 오류 분류 보강
+
+- **실제 DGX 실행 SHA `ac850ccdb3b0f891fef1924cc8a0e84c18b1f846`**: `git pull --ff-only` up-to-date, Source preflight PASS, 집중 synthetic **16/16 PASS**, SKIP 0. 실제 토크나이저 준비 절차에서 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED` (exit2) 반환. **실제 토크나이저 CPU 인코딩 PASS 아님**. 이 오류만으로 tokenizers package/metadata/config/encoding 중 원인 분류 불가.
+- 이번 GitHub 변경은 동일 `--probe` 커맨드가 기존 fail-closed 상태를 유지하면서 `P2_OFFLINE_TOKEN_COUNTS_BLOCKED REASON=<STATIC_CODE>` 형태의 **분류된 사유만** 출력하도록 개선한다. 예: `TOKENIZER_CONFIG_FILE_REQUIRED_NO_SYMLINK`, `TOKENIZERS_PACKAGE_NOT_INSTALLED_OFFLINE`, `TOKENIZER_CONFIG_DECODER_MISMATCH`, `TOKENIZER_LOADING_FAILED`, `TOKENIZER_PROBE_ENCODING_FAILED`. 민감한 원문/파일 경로/예외 메시지를 출력하지 않으며, 미등록 사유는 `UNCLASSIFIED_BLOCKED`, I/O 실패는 정적 분류.
+- 검증용 synthetic 4건을 더해 targeted 20개. **새 GitHub 변경 SHA의 실제 DGX 테스트/CI는 아직 NOT_RUN**. 이전 16/16 성공을 새 코드를 실행한 결과로 소급하지 않음.
+
+```bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-token-frequency-dgx.sh --probe
+```
+
+실제 출력 `REASON` 값을 받은 다음 해당 원인만 좁혀 해결한다. 패키지 임의 설치/운영 Docker 접근/모델 GPU/API 실행은 금지. 코퍼스는 사용자에게 허가된 실제 파일이 준비될 때만 `--count` 가능하며, 현재 `ids.npy` 운영 자산은 미생성.
+
 # P2 오프라인 토큰 ID 빈도 집계 — 2026-11-02
 
 ## 2026-11-02 사용자 DGX 신규 집계 CPU 검증 및 후속 기능
