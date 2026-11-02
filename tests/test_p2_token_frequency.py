@@ -153,5 +153,84 @@ class TokenFrequencyTests(unittest.TestCase):
                     freq.count([], root/'missing', root/'missing', Path('/usr'))
 
 
+    def test_plain_text_file_is_one_document_including_line_breaks(self):
+        class CaptureTokenizer:
+            def __init__(self):
+                self.texts = []
+            def encode(self, text: str, *, add_special_tokens: bool):
+                self.texts.append(text)
+                return type("Encoding", (), {"ids": [0, 1, 0]})()
+
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            p = Path(td) / "approved.md"
+            p.write_text("a\nb\n", encoding="utf-8")
+            engine = CaptureTokenizer()
+            counts, records = freq.count_records([], engine, {0, 1},
+                                                   text_files=[("technical", p)])
+            self.assertEqual(engine.texts, ["a\nb\n"])
+            self.assertEqual(counts, {0: 2, 1: 1})
+            self.assertEqual(records[0]["format"], "text")
+            self.assertEqual((records[0]["records"], records[0]["tokens"]), (1, 3))
+
+    def test_plain_text_invalid_utf8_oversized_and_symlink_blocked(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            p = Path(td) / "approved.txt"
+            p.write_bytes(b"\xff\xfe")
+            with self.assertRaisesRegex(freq.Blocked, "INVALID_UTF8"):
+                freq.count_records([], FakeTokenizer(), {0, 1},
+                                   text_files=[("en", p)])
+            p.write_text("a" * (freq.MAX_LINE_BYTES + 1))
+            with self.assertRaisesRegex(freq.Blocked, "TOO_LARGE"):
+                freq.count_records([], FakeTokenizer(), {0, 1},
+                                   text_files=[("en", p)])
+            p.write_text("aba")
+            alias = Path(td) / "alias.txt"
+            alias.symlink_to(p)
+            with self.assertRaisesRegex(freq.Blocked, "SYMLINK"):
+                freq.count_records([], FakeTokenizer(), {0, 1},
+                                   text_files=[("en", alias)])
+
+    def test_mixed_text_and_jsonl_rejects_duplicate_file(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            p = Path(td) / "corpus.jsonl"
+            p.write_text('{"text":"a"}\n')
+            with self.assertRaisesRegex(freq.Blocked, "DUPLICATE_PATH"):
+                freq.count_records([("ko", p)], FakeTokenizer(), {0, 1},
+                                   text_files=[("code", p)])
+
+    def test_probe_exact_source_and_fixed_cpu_encoding(self):
+        t, c = fixture()
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            root = Path(td)
+            (root / "tokenizer.json").write_bytes(t)
+            (root / "tokenizer_config.json").write_bytes(c)
+            with patch.object(freq, "TOKENIZER_AUDITED_SHA256", hashlib.sha256(t).hexdigest()):
+                r = freq.probe(root / "tokenizer.json", root / "tokenizer_config.json",
+                               tokenizer_factory=lambda _: FakeTokenizer())
+            self.assertEqual(r["declared_ids"], 5)
+            self.assertGreater(r["synthetic_probe_token_count"], 0)
+            self.assertFalse(r["actual_corpus_counted"])
+            self.assertFalse(list(root.glob("p2-token-counts-*")))
+
+    def test_count_plain_text_artifact_uses_same_builder_contract(self):
+        t, c = fixture()
+        with tempfile.TemporaryDirectory(dir="/tmp") as td:
+            root = Path(td)
+            tp, cp, txt = root / "tokenizer.json", root / "tokenizer_config.json", root / "source.py"
+            tp.write_bytes(t)
+            cp.write_bytes(c)
+            txt.write_text("aba\n")
+            with patch.object(freq.os, "geteuid", return_value=1000), \
+                 patch.object(freq, "TOKENIZER_AUDITED_SHA256", hashlib.sha256(t).hexdigest()):
+                result = freq.count([], tp, cp, root,
+                                    tokenizer_factory=lambda _: FakeTokenizer(),
+                                    text_files=[("code", txt)])
+            written = json.loads(Path(result["counts_file"]).read_text())
+            self.assertEqual(written["token_counts"], {"0": 2, "1": 2})
+            self.assertEqual(written["special_token_ids"], [3, 4])
+            self.assertEqual(result["inputs"][0]["format"], "text")
+            self.assertFalse(result["corpus_rights_and_representativeness_verified"])
+
+
 if __name__ == '__main__':
     unittest.main()

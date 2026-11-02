@@ -1,3 +1,7 @@
+## 2026-11-02 사용자 제공 DGX P2 오프라인 토큰 빈도 코드 실제 CPU 검증
+
+- 실제 DGX HEAD a95256de940abd046d40e84e047749f92acb7054: Git pull 정상, P2_SOURCE_PREFLIGHT_PASS_NO_DOCKER_OR_GPU, targeted unittest 11/11 OK (0 SKIP), P2_TOKEN_FREQUENCY_SOURCE_COMPLETE MODE=--check NO_DOCKER_NO_GPU_NO_API.
+- GPU/API/model/tokenizer real encoder/corpus frequency/native MTP 및 운영 배포 NOT_RUN. 후속 CPU tokenizer probe + explicitly selected plain text 기능은 docs/P2-TOKEN-FREQUENCY-20261102.md 를 참고. 해당 신규 GitHub 변경은 DGX_NOT_RUN/CI_NOT_RUN.
 ## 2026-11-02 사용자 제공 DGX P2 tokenizer source audit 실측
 
 - 사용자 실행 **d26b854c16c155917da7af722fb06d4090b5db0c**: scripts/p2-tokenizer-source-audit-dgx.sh --audit Source Preflight PASS, unittest 6/6 PASS, Orcarouter snapshot/recipe copy **P2_RECIPE_ORCAROUTER_TOKENIZER_EXACT_MATCH_SOURCE_ONLY**. SHA256 **06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523**, model vocab 248044, added 33, declared 248077, marked special 21, max id 248076, Head rows 248320. active_container_mount_proven=false, tokenizer_config_specials_verified=false, actual_domain_token_counts_available=false. **GPU/API/deployment NOT_RUN**.

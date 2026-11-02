@@ -1,3 +1,8 @@
+## 2026-11-02 사용자 DGX P2 Token Frequency CPU 11/11 PASS
+
+- 사용자 실측 HEAD a95256de940abd046d40e84e047749f92acb7054: scripts/p2-token-frequency-dgx.sh --check, source preflight PASS, 11/11 PASS, SKIP0, NO_DOCKER_NO_GPU_NO_API. tokenizer 실제 encoding 및 corpus count는 수행 안함.
+- 후속 기능은 docs/P2-TOKEN-FREQUENCY-20261102.md: CPU tokenizer --probe 및 explicit UTF-8 --text 입력. 변경 이후 16개 targeted synthetic test 대상으로 확장, 신규 SHA는 DGX_NOT_RUN/CI_NOT_RUN.
+- 무단 corpus 수집, 운영 ids.npy 생성, GPU/API/원본 변경 금지. Numeric 1e-4, PLE/GDN 상태, native MTP acceptance, 출시 차단 불변.
 ## 2026-11-02 신규 사용자 DGX tokenizer 감사 PASS 및 다음 실기능
 
 - 실제 DGX source HEAD d26b854c16c155917da7af722fb06d4090b5db0c 에서 source preflight, 토크나이저 감사 **6/6 PASS**. 원본 snapshot과 recipe-view byte exact-match, SHA256 06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523, declared 248077 IDs / Head 248320 rows. 실제 운영 컨테이너 mount와 tokenizer_config specials는 별도 미확정.
