@@ -1,3 +1,10 @@
+## 2026-11-03 최신 GPU 정비창 실측: 원본 same-ID HTTP 복구, Numeric Witness 수집 실패
+
+- 사용자 실제 DGX HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: `--preflight` 13/13 focused unittest PASS 후 `P2_NUMERIC_WINDOW_BLOCKED_OR_INCONCLUSIVE reason=UNCLASSIFIED_FAILURE`, `--build` 동일 실패. GPU `--execute` 시 `P2_NUMERIC_WINDOW_EXCLUSIVE_STOP_PENDING` → `P2_NUMERIC_CANDIDATE_HTTP_READY` → **`P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`**. 단, Numeric 측정 `WITNESS_FILE_ABSENT_OR_OVERSIZE`로 실패, shell trap의 추가 `--recover`에서도 같은 원본 복구 PASS. **엄격 1e-4 Numeric first-divergence INCONCLUSIVE, 원본 복구 마커 확인**, 재실행 무단 반복 금지.
+- **정확한 Source 원인 검토**: `main()` preflight/build 모두 `window.notify("...", **{"status": ...})` 호출 → `notify(status, **facts)`의 `status` 중복 전달 **TypeError**. 이미지 빌드 자체 여부는 build 마커 없이 확정하면 안 되지만 후속 후보 GPU HTTP READY로 이미지 존재/실행을 확인. 이 출력 충돌을 `result_status` 필드로 분리, 미예상 Python 오류는 `UNEXPECTED_<TYPE>` 정적 코드 출력.
+- Witness source는 Sampler 조건부 계측이 `/tmp/p2-numeric-witness.jsonl`에 0600 기록하고 fd=2에 동일 `P2_NUMERIC_WITNESS` JSON을 기록하도록 설계. 이전 `WITNESS_FILE_ABSENT_OR_OVERSIZE`는 `docker cp` returncode != 0과 oversize를 **하나로 합친 코드라 원인 불확정**. 새 `read_witness`는 archive oversize는 별도 block, 파일 누락 시만 후보 컨테이너 `docker logs --tail 256`를 상한 256KiB로 제한하여 **완전한 Witness prefix 이벤트만** 파싱, 일반 로그/프롬프트/토큰 원문 출력 금지. 파일/로그 모두 없으면 reason `WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL`, 누락/로그 실패/worker write failure 분리. 로그 우회 증거도 동일 순서·API·PID 검증 전에는 pass 불가.
+- 신규 `tests/test_p2_numeric_first_divergence_window.py` 20개 synthetic tests, 기존 실제 DGX 13/13 PASS는 과거 SHA만. 이번 수정은 **GitHub_SOURCE_ONLY / DGX_NOT_RUN / CI_NOT_RUN**. 다음은 **read-only --preflight만** 사용자 DGX로 확인 → build 결과 확인; 실제 두 번째 GPU 독점 정비창은 별도 진행 시점과 복구 상태를 확인하고 난 뒤 실행. [현행 GPU runbook](P2-NUMERIC-GPU-WINDOW-20261103.md) 참조.
+
 ## 2026-11-03 사용자 Numeric GPU 정비창·원본 보호·복구 명시 승인
 
 - 사용자 실제 DGX HEAD f240c29cb1c29b5d73bbebb7e0b798b6ec816c7f: Sampler-only private source preparation **10/10 PASS SKIP0**, stage /tmp/p2-numeric-first-divergence-x_76hgqp, SHA sampler a62b7cd7..., Dockerfile e9a98874..., original same-ID running, no GPU/image build/HTTP.

@@ -1,3 +1,9 @@
+## 2026-11-03 사용자 GPU Numeric 첫 시도: 원본 복구 성공, Witness 증거 수집 실패
+
+- DGX checked-out HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`. focused safety unit tests **13/13 PASS**, read-only preflight와 networkless build 모두 `UNCLASSIFIED_FAILURE` 반환, 후속 exclusive `--execute`에서 후보 `P2_NUMERIC_CANDIDATE_HTTP_READY`까지 확인. Sampler Witness collection `WITNESS_FILE_ABSENT_OR_OVERSIZE` 발생하여 Numeric report 부재. 원본 HTTP same-ID 복구 마커 `P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`가 Python finally와 shell recovery에서 각각 1회, **총 2회 확인**. 모델 실행/복구만 증명됐고 Numeric strict 1e-4 원인 미해결, release BLOCKED.
+- source 검토에서 preflight/build `window.notify`와 `**status` 중복 TypeError 확정. 새 코드에서 `result_status`로 수정 및 미예상 exception static category. Witness source는 파일과 fd=2에 이벤트를 쓰도록 설계됐지만 `docker cp` 실패/size 초과 중 무엇인지 과거 결합 error로 확인 불가. 새 후보-only 제한적 docker logs fallback / 별도 오류코드 / test 20건 추가, 로그 텍스트·raw 토큰 유출 금지.
+- **신규 수정 HEAD는 DGX/CI_NOT_RUN**, 새 GPU 측정도 미실행. 운영 원본, 현재 서비스, GPU를 더 변경하지 않으며 이전 13 PASS를 신규 SHA로 이전하지 않는다.
+
 ## 2026-11-03 Numeric-only source 실측 완료 및 승인된 GPU 정비창 준비
 
 - 마지막 사용자 DGX source HEAD f240c29cb1c29b5d73bbebb7e0b798b6ec816c7f. **10/10 focused tests PASS** (SKIP0) /tmp/p2-numeric-first-divergence-x_76hgqp Sampler-only source stage PASS. Original same-ID running and unchanged, model/GPU/HTTP/child image build NOT_RUN.

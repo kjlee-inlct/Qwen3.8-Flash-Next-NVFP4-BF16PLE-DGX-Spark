@@ -1,3 +1,10 @@
+## 2026-11-03 실제 1차 GPU 정비창 결과 및 수정
+
+- DGX HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: 13/13 focused CPU PASS. `--preflight`·`--build` 모두 `UNCLASSIFIED_FAILURE`, 그러나 `--execute`는 원본 stop→후보 HTTP_READY→원본 same-ID HTTP_PASS 복구 성공. 진단 증거 파일에서 `WITNESS_FILE_ABSENT_OR_OVERSIZE` 발생. wrapper fail EXIT trap도 복구 PASS 재확인. **Numeric 분석 inconclusive, 원본 복구 PASS, P1/P2 출시 차단 유지**.
+- 소스 고장 1: `notify(status, **facts)`에 key=`status` 중복 전달하여 Python TypeError. preflight/build 반환 상태는 `result_status` 이름으로 분리했으며 관련 테스트 추가.
+- 소스 고장 2: Witness는 sampler.py에서 내부 `/tmp/p2-numeric-witness.jsonl`과 worker stderr 양쪽에 제한 JSON을 쓰도록 구현되어 있음. 이전 오류 코드는 `docker cp` 실패와 tar 과대 크기를 합쳐 실제 원인을 판별할 수 없었음. 수정본은 파일이 없을 때만 `docker logs --tail 256`의 전체 256KiB 한계 안에서 `P2_NUMERIC_WITNESS` prefix 라인만 수집. 모델 로그/텍스트는 출력하지 않음. Witness가 하나도 없다면 오류를 분명히 보고 **strict 1e-4 판정하지 않는다**. Docker exec/GPU side effects 없음.
+- 사용자 다음 실행은 신규 GitHub 변경 pull 후 **`--preflight`만 먼저**, 그 후 `--build`가 exit 0과 반환 JSON을 내는지 확인한다. 1차 GPU 창은 이미 소비됐으므로 무조건 재실행하지 말고 자원/운영 복구 상태와 새 창을 별도 확인. `--execute` 성공 가능성은 새 preflight/build 및 실제 Witness 이벤트 수신이 확보되기 전에는 보장되지 않음. 신규 SHA DGX_NOT_RUN/CI_NOT_RUN.
+
 # P2 Numeric FIRST-divergence DGX 독점 GPU 정비창 (2026-11-03)
 
 ## 승인과 보호 범위

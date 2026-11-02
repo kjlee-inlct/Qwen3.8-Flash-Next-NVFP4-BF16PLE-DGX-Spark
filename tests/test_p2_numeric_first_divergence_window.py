@@ -166,6 +166,98 @@ class NumericWindowTests(unittest.TestCase):
         self.assertNotIn("token_ids",json.dumps(result))
         self.assertFalse(result["release_approved"])
 
+    def test_preflight_and_build_status_are_not_duplicate_arguments(self):
+        import io as _io
+        from contextlib import redirect_stdout
+        with patch.object(w.os, "chdir"), \
+             patch.object(w.qsa, "preflight"), \
+             patch.object(w, "image_preflight", return_value={
+                 "status": "P2_NUMERIC_WINDOW_PREFLIGHT_READ_ONLY",
+                 "original_running": True,
+             }), \
+             patch.object(w, "build", return_value={
+                 "status": "P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU",
+                 "same_id_original_running": True,
+             }):
+            output = _io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(w.main([
+                    "--expected-head", "a"*40, "--preflight",
+                    "--stage", "/tmp/p2-numeric-first-divergence-mock"
+                ]), 0)
+                self.assertEqual(w.main([
+                    "--expected-head", "a"*40, "--build",
+                    "--stage", "/tmp/p2-numeric-first-divergence-mock"
+                ]), 0)
+        records = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertEqual([x["stage"] for x in records],
+                         ["P2_NUMERIC_PREFLIGHT", "P2_NUMERIC_BUILD"])
+        self.assertEqual(records[0]["result_status"],
+                         "P2_NUMERIC_WINDOW_PREFLIGHT_READ_ONLY")
+        self.assertEqual(records[1]["result_status"],
+                         "P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU")
+
+    @staticmethod
+    def _fake_record(i):
+        return "P2_NUMERIC_WITNESS " + json.dumps({
+            "sequence": i, "worker_pid": 123,
+            "status": "BOUNDARY_CAPTURED"
+        }) + "\n"
+
+    def test_witness_private_file_missing_uses_bounded_stderr_backup(self):
+        lines = (self._fake_record(1) + self._fake_record(2)).encode("utf-8")
+        with patch.object(w.subprocess, "run", side_effect=[
+            Mock(returncode=1, stdout=b"", stderr=b"no such file"),
+            Mock(returncode=0, stdout=b"unrelated model logs\n", stderr=lines),
+        ]) as calls:
+            events = w.read_witness("a"*64)
+        self.assertEqual([x["sequence"] for x in events], [1, 2])
+        self.assertEqual(calls.call_count, 2)
+        self.assertEqual(calls.call_args_list[1].args[0][:4],
+                         ["docker", "logs", "--tail", "256"])
+
+    def test_witness_missing_file_and_no_stderr_events_reports_bounded_gap(self):
+        with patch.object(w.subprocess, "run", side_effect=[
+            Mock(returncode=1, stdout=b"", stderr=b"no such file"),
+            Mock(returncode=0, stdout=b"", stderr=b"some log without witness"),
+        ]):
+            with self.assertRaisesRegex(w.Blocked,
+                                        "WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL"):
+                w.read_witness("a"*64)
+
+    def test_witness_log_file_write_error_is_distinct(self):
+        with patch.object(w.subprocess, "run", side_effect=[
+            Mock(returncode=1, stdout=b"", stderr=b"no such file"),
+            Mock(returncode=0, stdout=b"", stderr=b"RuntimeError: P2_WITNESS_FILE_WRITE_FAILED"),
+        ]):
+            with self.assertRaisesRegex(w.Blocked,
+                                        "WITNESS_WORKER_FILE_WRITE_FAILED"):
+                w.read_witness("a"*64)
+
+    def test_witness_oversize_file_blocks_without_fallback(self):
+        with patch.object(w.subprocess, "run", return_value=Mock(
+             returncode=0, stdout=b"X" * (w.MAX_TAR_BYTES + 1), stderr=b"")) as calls:
+            with self.assertRaisesRegex(w.Blocked,
+                                        "WITNESS_ARCHIVE_OVERSIZE_OR_NONBINARY"):
+                w.read_witness("a"*64)
+        calls.assert_called_once()
+
+    def test_witness_log_tail_is_strictly_bounded(self):
+        with patch.object(w.subprocess, "run", side_effect=[
+            Mock(returncode=1, stdout=b"", stderr=b"no such file"),
+            Mock(returncode=0, stdout=b"", stderr=b"x" * (w.MAX_LOG_BYTES + 1)),
+        ]):
+            with self.assertRaisesRegex(w.Blocked, "WITNESS_WORKER_LOG_TAIL_OVERSIZE"):
+                w.read_witness("a"*64)
+
+    def test_witness_missing_file_and_unavailable_logs_distinguished(self):
+        with patch.object(w.subprocess, "run", side_effect=[
+            Mock(returncode=1, stdout=b"", stderr=b"no such file"),
+            Mock(returncode=1, stdout=b"", stderr=b"dockerd unavailable"),
+        ]):
+            with self.assertRaisesRegex(w.Blocked, "WITNESS_WORKER_LOG_UNAVAILABLE"):
+                w.read_witness("a"*64)
+
     def test_witness_parser_rejects_oversize_and_bad_event_count(self):
         entry=b"P2_NUMERIC_WITNESS "+json.dumps({"sequence":1}).encode()+b"\n"
         buf=io.BytesIO()
