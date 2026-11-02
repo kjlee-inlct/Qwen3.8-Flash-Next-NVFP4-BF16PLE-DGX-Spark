@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 328,
+  "tracked_file_count": 330,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -511,7 +511,7 @@
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
       "mode": "100644",
-      "blob_sha": "31a24f0dae051ab64e4a036a4dc98f0201bcc330"
+      "blob_sha": "e046f982302f03cc75db5816c18a0fb99d32522e"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
@@ -1144,6 +1144,11 @@
       "blob_sha": "bc9b016fcc365c94a46c93efb6aef3fc03120ef5"
     },
     {
+      "path": "src/p2_numeric_boundary.py",
+      "mode": "100644",
+      "blob_sha": "8d92a2e318aae3bd90d1c175ba5145969d96e8f5"
+    },
+    {
       "path": "src/patch_parallel_lm_head_linear_attrs.py",
       "mode": "100644",
       "blob_sha": "df371083cffed02835f3a5066ad5071d89bb1a21"
@@ -1737,6 +1742,11 @@
       "path": "tests/test_p1_qsa_window_bundle.py",
       "mode": "100644",
       "blob_sha": "4ef4d47d5199c546d4c9c4f8c8c2b1837f50a0aa"
+    },
+    {
+      "path": "tests/test_p2_numeric_boundary.py",
+      "mode": "100644",
+      "blob_sha": "e19096e5d5aea07ecf51d26d90c069cb9b5972b2"
     },
     {
       "path": "tests/test_publication_audit.py",
