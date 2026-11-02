@@ -1,5 +1,12 @@
 # Qwen3.8-Flash-Next BF16 PLE recipe for DGX Spark
 
+## 2026-11-02 P2 새 대화 시작점
+
+**[P2 활성 작업 전용 인수인계](docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md)** → [상시 운영·GitHub 권한](docs/SESSION-HANDOFF-PROMPT.md) → [P1 완료 및 출시 차단 근거](docs/BLAZUX-PHASE6-RESULTS.md). P1의 최소 기능 검증은 `BOUNDED_PASS`, 출시 `BLOCKED`. **P2는 다음 대화에서** 전역 numeric strict 1e-4 원인 조사부터 시작하며 현재 문서 변경 자체가 P2 구현·GPU/CI/운영 승인이나 실행을 의미하지 않는다. 연결된 GitHub 도구의 PR/검토/개발 브랜치 병합 권한은 P2에 적용하지만 `main`·운영/GPU는 별도 승인이다.
+
+---
+
+
 ## P1 종료 상태 — 2026-11-02 (현재 정본)
 
 **P1의 세 기능은 합의된 최소 GPU 실경로에서 검증 완료(BOUNDED_PASS), 운영 출시는 차단 유지(BLOCKED)**. 사용자 DGX에서 실행한 소스 HEAD `50fc65b65d10b36804c65e8a48d06d9bf3abecfe`: Source 327/327, CPU 20/20, 단일 통합 GPU 창 exit 0; Tool Calling의 강제 함수 호출→결과→최종 응답 PASS, BF16 PLE phase stats `calls=1`, `forward_calls=1`, `rows=131072`, Prefix HIT `[0,6400,6400,6400]`, MTP accepted +400, 선택 상태 SHA 12/12 일치. 원본 동일 컨테이너 ID·이미지·HTTP 복구, 후보 제거 PASS.

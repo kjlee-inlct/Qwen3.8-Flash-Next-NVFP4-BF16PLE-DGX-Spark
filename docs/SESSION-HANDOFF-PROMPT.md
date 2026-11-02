@@ -1,5 +1,16 @@
 # SESSION-HANDOFF-PROMPT.md
 
+## 2026-11-02 최상위 갱신 — P1 종료 후 P2 새 대화 인수인계
+
+사용자는 P1 세 기능 최소 실경로 `BOUNDED_PASS` 및 독립 출시 `BLOCKED` 정리 후 **다음 새 대화에서 P2 진행**을 지시했다. 현재 대화의 변경은 **P2 작업 전용 인수인계/상시 문서**뿐이며 P2 구현·GPU/운영·CI는 미실행. **[P2 현재 작업 전용 정본](P2-ACTIVE-SESSION-HANDOFF-20261102.md)**을 다음 세션에서 먼저 읽어 1순위 numeric root-cause 조사부터 실제 진행한다. 이전 P1 완료/실측 자료는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md), 운영 규칙은 본 문서의 기존 상시 절을 참조하며 반복 복제하지 않는다.
+
+**새 사용자 위임에 따른 GitHub 권한 범위:** P2 새 대화에서는 연결된 GitHub 도구로 필요한 코드·문서·테스트·스크립트 직접 생성/수정, commit, PR 생성, diff/리뷰·CI 현황 확인, **지정된 P2 개발 통합 브랜치 대상으로 merge까지** 직접 수행할 수 있다. 과거 P1 정비창의 PR/merge 금지 문구를 P2 GitHub 작업에 자동 확대하지 않는다. 다만 **`main` 반입·운영 배포·원본 변경·GPU/HTTP/벤치·별도 자원 소모 CI 실행은 별도 사용자 승인** 필요. 검증·리뷰 없이는 CI PASS/official approval을 주장하지 않는다. 정확한 target/HEAD 확인, 기존 보호 브랜치 및 DGX 원본 불변 조건은 그대로다.
+
+P2 첫 기술 과제는 **원본 Prefix OFF / No-MTP / 첫 토큰에서도 발생한 strict abs logprob `1e-4` 비재현성의 최초 계산 경로 특정**이다. 이후 원래 P2 3기능(MTP reduced draft vocab, PLE Gather, 별도 vLLM v0.32 Track B), 전 계층 상태 복사 심화 감사도 P2 정본 범위에서 관리한다. P3 YaRN500K/Hybrid FP8 자동 시작 금지. 이 문서 변경으로 strict 출시 Gate를 PASS로 승격하지 않는다.
+
+---
+
+
 ## 2026-11-02 최신 확정 — P1 기능 PASS(한정), 출시 BLOCKED(독립)
 
 기존 2026-11-02의 기능 계획보다 최신인 **실제 DGX 운영자 영수증**이다. 실행된 소스 HEAD는 **50fc65b65d10b36804c65e8a48d06d9bf3abecfe**, Source 327/327, targeted CPU 20/20, 단일 GPU functional window exit0. 원본 동일 ID·동일 이미지 running/HTTP, 후보 삭제 모두 PASS. 자세한 증거는 [Phase6 결과 장부](BLAZUX-PHASE6-RESULTS.md) 최신 두 판정 항목과 [활성 인수인계](PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md)를 확인한다.
