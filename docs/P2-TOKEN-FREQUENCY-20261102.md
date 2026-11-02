@@ -1,5 +1,20 @@
 # P2 오프라인 토큰 ID 빈도 집계 — 2026-11-02
 
+## 2026-11-02 사용자 DGX 신규 집계 CPU 검증 및 후속 기능
+
+- 실제 실행 HEAD a95256de940abd046d40e84e047749f92acb7054: git pull fast-forward 후 scripts/p2-token-frequency-dgx.sh --check, Source preflight PASS, targeted 11/11 PASS (SKIP 0), NO_DOCKER_NO_GPU_NO_API. 이전 신규 기능 DGX_NOT_RUN 표기는 이 결과보다 앞선 역사 기록.
+- 해당 실행은 실제 tokenizers 패키지, tokenizer_config, 실제 corpus를 읽지 않았다. 실제 Token ID 빈도와 운영 65,536 IDs 미생성.
+- 후속 GitHub 기능: --probe 읽기 전용 고정 토크나이저 CPU 인코딩으로 실행환경 준비 확인. --text DOMAIN PATH 명시 입력으로 UTF-8 원문 파일 전체를 단일 문서로 토큰화. JSONL --corpus와 병용 가능. 자동 디렉터리 검색/자료 수집/원문 저장 없음.
+- 단일 plain-text 입력은 2MiB 제한. 초과 파일은 토큰 경계 보존을 위해 자동 분할하지 않고 차단. CPU probe는 실제 운영 컨테이너 mount 증명이나 representative corpus 품질 증명이 아니다.
+- 신규 synthetic tests 5건을 더해 16건 대상. 해당 후속 SHA는 DGX_NOT_RUN / CI_NOT_RUN. 실제 데이터 없으면 --probe까지 실행하고 --count는 생략.
+
+~~~bash
+cd ~/Workspace/llm/blazux-phase6-gates
+git pull --ff-only origin feature/blazux-phase6-runtime-gates
+bash scripts/p2-token-frequency-dgx.sh --probe
+# 실제 사용권이 확인된 입력 파일이 있을 때에만 다음 예시 경로를 대체하여 실행
+bash scripts/p2-token-frequency-dgx.sh --count --text technical /actual/authorized/report.md --text code /actual/authorized/code.py
+~~~
 ## 실제 DGX 선행 검사 증거
 
 사용자 DGX HEAD d26b854c16c155917da7af722fb06d4090b5db0c에서 tokenizer source preflight PASS, 합성시험 6/6 PASS, Orcarouter 원본 snapshot/레시피 뷰 exact byte match 확인. 실제 tokenizer SHA256: 06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523. 기본 vocab ID 248044, added IDs 33, marked specials 21, distinct declared IDs 248077 (최대 248076), Target Head 248320 rows. 미선언 243개 행을 실제 token ID로 간주하지 않는다. 이 영수증은 기존 DGX 실행 HEAD의 결과이며 새 기능의 DGX 실행 증거가 아니다.
