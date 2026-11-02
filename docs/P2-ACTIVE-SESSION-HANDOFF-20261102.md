@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 사용자 DGX P2 실기 receipt 및 Workspace 정리 현안
+
+- **실제 사용자 DGX 실행:** `~/Workspace/llm/blazux-phase6-gates`, personal Fork origin, `feature/blazux-phase6-runtime-gates`, `git pull --ff-only` fast-forward `50fc65b..3e4492c` 완료. **DGX-tested source HEAD `3e4492c73ce95f8129e99b1f21f4a67252e8891f`.** `bash scripts/p2-numeric-dgx.sh --check`와 `--stage` 두 모드 각각 targeted CPU unit tests **24/24 PASS**, source preflight PASS.
+- **read-only 실기 stage PASS:** 설치 Preview Sampler SHA256 `f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216`, patched SHA256 `a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4`, stage `/tmp/p2-numeric-witness-_w30fuax`, 원본 동일 ID/StartedAt/이미지 식별 및 env default OFF. **Build/GPU/API NOT_RUN.** Numeric root cause OPEN, strict `1e-4` 및 P1 RELEASE_BLOCKED 변함없음.
+- 사용자 `~/Workspace/llm`에 예전 `blazux-phase1-*`~`phase5-*`, bench-results, llama-benchy 2종, qwen38-orca-uncensored, YSLAB 운영 관련 폴더 존재. 현재 목록만으로 어떤 디렉터리도 삭제/이동 안전성 입증 못함. [Read-only workspace inventory](P2-WORKSPACE-CLEANUP-RUNBOOK.md) `bash scripts/p2-workspace-inventory.sh`를 DGX Git pull로 실행하도록 제공. **단계별 신규 checkout 증식 중단**, 운영 원본/마운트/모델/결과 보호, 정리는 별도 증거·승인 필요.
+- 이 문서 변경 시 GitHub 새로운 SHA는 **코드가 DGX-tested 되었다는 뜻이 아니며**, 위 영수증은 `3e4492c`로 고정.
+
+
 ## 2026-11-02 P2 DGX 실행 위임 — Git pull 후 단일 실행 명령
 
 - **실행 정본:** [P2-DGX-GIT-PULL-RUNBOOK.md](P2-DGX-GIT-PULL-RUNBOOK.md). 기능 코드·소스 확인·CPU 검사·수동 DGX 절차는 GitHub에 커밋된 `bash scripts/p2-numeric-dgx.sh --check` 또는 `--stage`로 실행한다. P2 Fork checkout에서 `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 후 호출한다. 기존 `--strict`는 P2 브랜치를 허용하지 않으므로 개발 스크립트에서 사용하지 않는다.

@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 336,
+  "tracked_file_count": 340,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -510,13 +510,18 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "mode": "100644",
-      "blob_sha": "510a9d9e21cf688bd671be3e790ac1e33c79448c"
+      "blob_sha": "edd8b095aed3702fbd405922edc09901d632d50c",
+      "mode": "100644"
     },
     {
       "path": "docs/P2-DGX-GIT-PULL-RUNBOOK.md",
       "mode": "100644",
       "blob_sha": "0dc3f50da50eb773c113f8f16bfabe8de4243181"
+    },
+    {
+      "path": "docs/P2-WORKSPACE-CLEANUP-RUNBOOK.md",
+      "blob_sha": "9d62adb76963ce1ddcbc9dda4e9547e3c94b9faf",
+      "mode": "100644"
     },
     {
       "path": "docs/PHASE6-ACTIVE-SESSION-HANDOFF-20261028.md",
@@ -525,8 +530,8 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "mode": "100644",
-      "blob_sha": "099fdf72317db13b27575722f91a86aa29ab816f"
+      "blob_sha": "b22e229bf6eeb767df05e1f9a4d77bb829d9e351",
+      "mode": "100644"
     },
     {
       "path": "docs/SWE-BENCH-PILOT.md",
@@ -812,6 +817,16 @@
       "path": "scripts/p2-numeric-dgx.sh",
       "mode": "100755",
       "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
+    },
+    {
+      "path": "scripts/p2-workspace-inventory.py",
+      "blob_sha": "bc016ca617e810b2de50fe0251c2314a3183b264",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/p2-workspace-inventory.sh",
+      "blob_sha": "d18c10a54b561989d30aa4e0074659a2d0290437",
+      "mode": "100755"
     },
     {
       "path": "scripts/pause.sh",
@@ -1777,6 +1792,11 @@
       "path": "tests/test_p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "8181bb6cb16ce7ef5912c4f388d3f02b4cc7cf5a"
+    },
+    {
+      "path": "tests/test_p2_workspace_inventory.py",
+      "blob_sha": "38852082cee23893c3c24eb593ff6597855e8e8d",
+      "mode": "100644"
     },
     {
       "path": "tests/test_publication_audit.py",
