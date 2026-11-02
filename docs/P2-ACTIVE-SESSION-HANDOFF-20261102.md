@@ -9,7 +9,7 @@
 - 다음 막힘: 원본 Preview Sampler->engine logprobs->OpenAI 반환의 정확한 실행/row alignment가 현재 GitHub 소스만으로 검증되지 않음. pinned 컨테이너 source 및 승인된 단일 no-MTP 후보에 대한 계측 경계의 별도 증거 없이는 root cause FIXED나 numeric PASS 불가. 새로운 GPU 승인 자동 확장 금지.
 
 
-> **P2_NEXT_SESSION_READY / P2_CODE_NOT_STARTED.** 이 문서는 이제 종료한 P1의 이력을 다시 복제하지 않고 **다음 대화에서 수행할 P2 작업**만 설명한다. 새 대화 시작 시 GitHub 최신 HEAD·PR·CI 재조회 필수. 이번 문서/PR 변경은 P2 코드·DGX·GPU·운영 서비스 실행이 아니다.
+> **P2_NUMERIC_OFFLINE_STARTED / ROOT_CAUSE_OPEN / GPU_NOT_RUN.** P1 이력은 정본을 참조한다. 위 P2 첫 소스 조사와 CPU-only 분류기는 실행했으나 설치된 Preview runtime의 첫 오차 위치, 수치 수정 및 운영 검증은 아직 미완료. 이후 세션은 GitHub HEAD·PR·CI를 새로 조회하고 P2 활성 작업만 진행한다.
 
 ## 우선 읽을 정본
 

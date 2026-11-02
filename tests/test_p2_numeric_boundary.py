@@ -1,5 +1,4 @@
 """CPU-only contract tests; never import CUDA, torch or call production API."""
-import copy
 import unittest
 
 from src.p2_numeric_boundary import classify, STRICT_ABS

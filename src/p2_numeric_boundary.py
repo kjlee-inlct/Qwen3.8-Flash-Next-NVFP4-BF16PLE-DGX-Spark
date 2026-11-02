@@ -13,10 +13,6 @@ STRICT_ABS = 1e-4
 HEX_SHA = re.compile(r"[0-9a-f]{64}\Z")
 
 
-class InvalidEvidence(ValueError):
-    pass
-
-
 def _api_first_token(runs: list[dict]) -> tuple[float | None, str | None]:
     if len(runs) < 2:
         return None, "REQUEST_COUNT_INSUFFICIENT"
