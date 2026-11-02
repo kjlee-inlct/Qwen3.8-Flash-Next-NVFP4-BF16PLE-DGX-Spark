@@ -24,8 +24,8 @@ def pinned_style_npy(ids: tuple[int, ...]) -> bytes:
     header = "{'descr': '<i4', 'fortran_order': False, 'shape': (65536,), }"
     padding = 118 - len(header) - 1
     assert padding >= 0 and len(ids) == 65536
-    return (b"\\x93NUMPY\\x01\\x00" + struct.pack("<H", 118)
-            + (header + " " * padding + "\\n").encode("ascii")
+    return (b"\x93NUMPY\x01\x00" + struct.pack("<H", 118)
+            + (header + " " * padding + "\n").encode("ascii")
             + struct.pack("<65536i", *ids))
 
 

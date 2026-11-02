@@ -1996,7 +1996,7 @@
     {
       "path": "tests/test_p2_upstream_draft_asset.py",
       "mode": "100644",
-      "blob_sha": "0f98ac91f6ee8910682b255f7bbbfaa46d475a98"
+      "blob_sha": "3950c753f62d6b9776cf225b311c28182aafda88"
     },
     {
       "path": "tests/test_p2_workspace_inventory.py",
