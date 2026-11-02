@@ -1,5 +1,13 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 P2 3기능 Stage 실제 19/19 PASS + ID 파일 생성기
+
+- **사용자 DGX `d6eead92956961b48b3ec711c02c18a1276dba6d`**: `git pull --ff-only` 성공, source/PLE SHA preflight PASS, `tests.test_p2_functional_bundle` + `tests.test_p2_mtp_candidate_overlay` **19/19 PASS**, `--stage-mtp` 실행으로 원본 신원 불변 확인. 개인 `/tmp/p2-functional-bundle-qzvkz12s`에 실제 Sampler/PLE/MTP 3-COPY source Stage 생성; MTP candidate SHA `c6fd9daa8b9ebc07bf12af20f4b110897b470a686d4e1fba46bae2b26d51db40`. Docker build/GPU/API 미실행, 기능 opt-in OFF, P1 release BLOCKED.
+- **이번 신규 코드** `src/p2_mtp_vocab_artifact.py`: 실제 pre-tokenized aggregate token-count JSON과 동일 로컬 tokenizer.json의 SHA 일치 검증, added/special/0..255 ID 보존, deterministic 65536개 int32 ID 선택, **NumPy v1.0 .npy**와 SHA/fingerprint/coverage receipt를 새 `/tmp/p2-draft-vocab-*/` 디렉터리에만 안전 생성. 데이터 없으면 파일 생성 불가; 현재 **실제 코퍼스 미제공, 운영용 어휘 .npy NOT_CREATED**. 문서 [P2 자산 가이드](P2-DRAFT-VOCAB-ASSET-20261102.md). 신규 코드 DGX_NOT_RUN/CI_NOT_RUN.
+- **단일 명령** `git pull --ff-only origin feature/blazux-phase6-runtime-gates` 이후 `bash scripts/p2-vocab-artifact-dgx.sh --check`. 실제 집계 counts/tokenizer 파일이 준비된 경우만 `--build /path/counts.json /path/tokenizer.json`. Docker/GPU/API/모델 가중치/운영 서비스 미변경.
+- Numeric 최초 strict `1e-4` 문제와 full-state physical reuse 미해결, MTP 실제 CPU logits ABI만 검증. 실제 native GPU MTP2 acceptance/PLE H2D, logits 병합 동등성은 별도 승인 필요.
+
+
 ## 2026-11-02 DGX MTP BF16 CPU 7/7 PASS → 실제 Preview 축소 Draft logits 후보 구현
 
 - **사용자 DGX 확정 `9e3d9e656ec0fc5825cf75a8791e4c4df4b024d4`**: Source preflight PASS, host import/UID 4/4 PASS, pinned ABI AST 6/6 PASS, installed SHA 3/3 exact, 1회성 runc CPU `P2_MTP_HEAD_CPU_7_OF_7_PASS_NO_SKIPS`, 원본 동일 ID/image/StartedAt, GPU/API NO. CPU Head BF16 selected rows, 독립 스토리지, local→full 토큰 매핑, synthetic logits equivalence 입증. 설치 MTP `self.lm_head/self.logits_processor` 참조 확인, 그러나 Head sharing/loader/rejection runtime 미검증.

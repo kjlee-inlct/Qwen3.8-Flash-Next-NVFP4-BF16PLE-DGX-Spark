@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 362,
+  "tracked_file_count": 366,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -420,7 +420,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "14a8736570fa4919e22215dcf02df6398125406b",
+      "blob_sha": "dddb0392c976ee22d7751ee51af43f7d64029263",
       "mode": "100644"
     },
     {
@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "9d3709a6fa88b9cb216f97ec2204c43f47de16fa",
+      "blob_sha": "8eaf96a458715f48becb5f1af089e8860f941a7a",
       "mode": "100644"
     },
     {
@@ -524,8 +524,13 @@
       "blob_sha": "0dc3f50da50eb773c113f8f16bfabe8de4243181"
     },
     {
+      "path": "docs/P2-DRAFT-VOCAB-ASSET-20261102.md",
+      "blob_sha": "fabe4949978f91d29ecc6d3d5c2eab60b901d7fc",
+      "mode": "100644"
+    },
+    {
       "path": "docs/P2-MTP-HEAD-ABI-20261102.md",
-      "blob_sha": "37d8a3bc89616474efda2b698077e50b5fba46a6",
+      "blob_sha": "b889e7f987f5a43f6b972481db11ad88d4823583",
       "mode": "100644"
     },
     {
@@ -847,6 +852,11 @@
       "path": "scripts/p2-numeric-dgx.sh",
       "mode": "100755",
       "blob_sha": "317a0867ed979642d0fb5fe8dcef5c9955038d47"
+    },
+    {
+      "path": "scripts/p2-vocab-artifact-dgx.sh",
+      "blob_sha": "7e8c3314e9506124e136fc6910ac0a13e91fa44a",
+      "mode": "100755"
     },
     {
       "path": "scripts/p2-workspace-inventory.py",
@@ -1221,6 +1231,11 @@
     {
       "path": "src/p2_mtp_head_cpu.py",
       "blob_sha": "f703079b51ddf748559d4fc28a7a098e6b31f84f",
+      "mode": "100644"
+    },
+    {
+      "path": "src/p2_mtp_vocab_artifact.py",
+      "blob_sha": "a48708badd751879acea1c06adefe6ca2f1a9a3a",
       "mode": "100644"
     },
     {
@@ -1871,6 +1886,11 @@
     {
       "path": "tests/test_p2_mtp_head_cpu.py",
       "blob_sha": "185c93001911f87e66e7e33315e47158f10e4472",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/test_p2_mtp_vocab_artifact.py",
+      "blob_sha": "5b8da396165374a98dc24ed3351f3d254e8ec1f3",
       "mode": "100644"
     },
     {
