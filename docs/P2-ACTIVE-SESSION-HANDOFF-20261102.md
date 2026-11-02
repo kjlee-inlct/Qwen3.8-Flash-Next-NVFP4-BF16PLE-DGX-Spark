@@ -1,3 +1,10 @@
+## 2026-11-03 실제 통합 Stage PASS, 다음 단계는 별도 승인 GPU first-divergence
+
+- 실제 사용자 DGX HEAD **`4c5710d4e5b3085ec5aae1354d1b9052537af2dc`** / `scripts/p2-functional-bundle-dgx.sh --stage-mtp-upstream`: Source preflight PASS, P2 Functional Bundle + MTP Overlay + Upstream IDs **29/29 PASS skip0**, 실제 설치 Sampler SHA, BF16 PLE SHA, MTP SHA pinned verified, Orcarouter Draft ID fingerprint validated, 원본 container/image identity unchanged. Output Stage **`/tmp/p2-functional-bundle-ackw9piv`**, status `P2_NUMERIC_PLE_MTP_UPSTREAM_VOCAB_SOURCE_STAGED_NOT_BUILT`. Four input files (sampler.py, vllm_ple_mmap.py, mtp.py, draft_vocab_65536.npy) + private 4-COPY Dockerfile. 전부 기본 OFF; Docker build/run/GPU/API NONE.
+- **원래 P2 Numerics strict 1e-4 OPEN**. QSA Exact Top-K-only의 strict FAIL 및 원본 Prefix OFF/MTP OFF의 strict FAIL은 2026-10/11 실제 측정에서 이미 확인. 단순 A/B 재실험 중단; 새로운 정보가 나올 실제 isolated Sampler Witness (raw logits hash→raw logprobs hash→selected scalar and first-token API) 경계 실측이 다음 기술 작업. Sampler witness는 CPU source stage만 완료했고 raw model data 또는 GPU numeric root-cause 관측 안됨.
+- 사용자 승인 범위는 현재 GitHub 코드/문서/PR merge 및 source-only CPU/read-only inspect/cp까지. DGX에서 이미 실행 중인 대형 BF16 PLE 운영 서비스와 별도 full GPU 모델은 자원 경합 위험이 있으므로 명시적 GPU 정비창/단독 후보/원본 서비스 영향·restore approval, resource feasibility·candidate lifecycle·rollback 준비 전 build/run/start/stop/HTTP inference 금지. 후보만 별도 준비됐다고 종료/출시 PASS로 쓰지 않는다.
+- 다음 단계: 먼저 실제 GPU 후보를 **검증 가능한 한 번의 Numeric first-divergence 실험**으로 설계하고 운영 원본을 명시적으로 보호한다. GPU 없이 사전 정비창 계획과 코드 검토는 허용. 새 full 37/40/29 CPU batch 또는 실제 corpus 수집 반복하지 않는다. 이번 docs-only HEAD는 **DGX_NOT_RUN/CI_NOT_RUN**.
+
 ## 2026-11-03 P2 실제 Draft 감사 PASS → Numeric/PLE/MTP/Upstream ID 통합 후보 Stage
 
 - 사용자 DGX **`e467607219d60fae40690258f98f1de9140063b1`** 에서 새 Upstream Draft 회귀시험 **8/8 PASS**와 실제 `--stage` 성공. Blazux pinned SHA/blob/NPY 원본 정확, Orcarouter tokenizer/config SHA 및 declared 248077/special21/added33/미선언 0 모두 일치. 사본 `/tmp/p2-upstream-draft-ai00xvtw/ids.npy`, fingerprint `7c5a0a90950ac95cb38e7cc8faaa1bbcb42da082fbde20e3fc05db0ae8bfe3e1`. **No corpus, no Docker/GPU/API**. Numeric strict 1e-4/Native MTP runtime 아직 미해결.

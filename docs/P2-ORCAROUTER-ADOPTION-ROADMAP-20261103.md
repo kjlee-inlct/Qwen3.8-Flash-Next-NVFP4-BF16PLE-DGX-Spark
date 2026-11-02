@@ -1,3 +1,10 @@
+## 실증 체크포인트 2026-11-03 — 통합 후보 조립 완료, 런타임 미검증
+
+- 실제 Orcarouter DGX `4c5710d4e5b3085ec5aae1354d1b9052537af2dc`: source preflight / 29 focused CPU tests PASS; actual pinned Sampler/PLE/MTP source SHA + Blazux IDs verified, `/tmp/p2-functional-bundle-ackw9piv`에 4-COPY candidate Dockerfile staged. **No build, no GPU, no HTTP/API, no model mutation.**
+- P2 진행은 여기서 **소스/자산 준비 단계를 종료**한다. 다음 핵심 블로커는 `1e-4` strict numeric 첫 불일치 구간 관측. Prefix OFF·MTP OFF 원본에서도 발생했고 QSA-only로 해결되지 않음. 동일한 stock/QSA/MTP A/B를 증거 없이 반복 금지.
+- 실제 GPU 실험은 **별도 명시 승인** 전까지 수행 불가. DGX 통합 메모리에서 운영 BF16 PLE 모델이 사용 중이므로, 새로운 GPU full model 동시 로드는 기본적으로 위험하다. 정비창 계획에서 resource footprint, isolated candidate port/namespace, original unchanged/recovery, timeout, abort, no raw model/prompt logging을 먼저 정한다. 수치 원인 수정 / 출시 승인 / operational deployment 모두 미완료.
+- 29/29은 DGX-tested **old source SHA**에서만 유효. 본 기록 문서 커밋의 SHA는 테스트 없이 변경되어 PASS로 소급 금지.
+
 ## 2026-11-03 DGX 실제 Upstream Draft 호환성 증거 및 통합 GPU 후보 Stage 진전
 
 - **사용자 DGX exact HEAD `e467607219d60fae40690258f98f1de9140063b1`:** source preflight PASS, 신규 8/8 unittest PASS, 실제 Orcarouter recipe tokenizer SHA `06b9509352d2af50381ab2247e083b80d32d5c0aba91c272ca9ff729b6a0e523`, config SHA `66e427c470fe580fe8c7b5725d857af23d8417e37fae62667ec698306a19987b`, declared 248077, special 21/added33 모두 upstream 65536 ID 포함, unallocated0. 원본 Blazux blob `2b94340a3ca0985a7494af369ac82536d61411de` 및 NPY SHA `6459e0fdc8df30e0c1d1f45be7c1b6bef0d68b0e73c073a82c52ea2a7f4b26d4` PASS. 실제 개인 `/tmp/p2-upstream-draft-ai00xvtw/ids.npy` 및 receipt 생성. **모델/GPU/API 미실행**, Native runtime acceptance·품질·strict numeric OPEN. 코퍼스 단계 종료.
