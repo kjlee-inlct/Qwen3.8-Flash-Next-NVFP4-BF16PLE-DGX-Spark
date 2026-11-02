@@ -1,5 +1,12 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 DGX P2 batch CPU 40개 중 4 SKIP — Docker 일회성 시험
+
+- **실 DGX 소스** `c648d885c9e26d1c25ad40d8cf16449f94593f72`, AST PASS / `40 tests OK (skipped=4)` (**36 PASS, PLE 4 SKIP**). 호스트 NumPy/PyTorch 미설치, PLE CPU byte-exact까지는 확인되지 않았음.
+- 신규 `scripts/p2-batch-cpu-container.sh --execute`를 기존 원본 이미지 digest의 **1회성 CPU-only runc (2CPU/2GiB, read-only repo, network=none, GPU void)**로 준비. 원본 컨테이너 ID/StartedAt/이미지 전후 확인, 명시적 실행 플래그, 모든 40건 PASS/skip0 필수. `git pull --ff-only` 후 **한 번 실행**. 운영·모델·가중치·GPU/API 부하 없음. 이 신규 스크립트 DGX_NOT_RUN, 이전 36 PASS+4 SKIP을 40 PASS로 승격하지 않음.
+- P2 실제 기능 code 및 의의는 [P2-BATCH-IMPLEMENTATION-20261102.md](P2-BATCH-IMPLEMENTATION-20261102.md). Numeric root cause OPEN, PLE GPU NOT_RUN, reduced MTP 실제 Head ABI/acceptance 미확인, 출시 차단 불변.
+
+
 ## 2026-11-02 P2 Numeric / MTP / PLE 묶음 구현 (현재 과제)
 
 - 사용자 요청에 따라 비핵심 활동 중단. **실제 기능 코드·CPU 시험·DGX 단일 명령**을 하나의 PR로 묶어 진행. [P2 묶음 세부사항](P2-BATCH-IMPLEMENTATION-20261102.md).
