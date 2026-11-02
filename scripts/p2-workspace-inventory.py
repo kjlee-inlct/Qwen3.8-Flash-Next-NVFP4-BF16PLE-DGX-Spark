@@ -22,6 +22,22 @@ PROTECTED = {
 }
 PAST_PHASE = re.compile(r"blazux-phase[1-5]-[a-zA-Z0-9_-]+\Z")
 MAX_CONTAINERS = 128
+MAX_REFERENCE_FILES = 5000
+MAX_REFERENCE_BYTES = 512 * 1024
+MAX_REFERENCE_HITS = 12
+REFERENCE_SOURCE_DIRS = (
+    "blazux-phase6-gates", "llama-benchy", "llama-benchy-runner",
+    "spark-stack", "spark-vllm-docker", "stack",
+)
+REFERENCE_SUFFIXES = {
+    ".py", ".sh", ".md", ".txt", ".json", ".yaml", ".yml",
+    ".toml", ".service", ".conf", ".ini", ".cfg",
+}
+REFERENCE_SKIP_DIRS = {
+    ".git", ".venv", "venv", "node_modules", "__pycache__", ".cache",
+    "hf-cache", "models", "weights", "datasets", "data", "build",
+    "dist", "results", ".next", "target",
+}
 
 
 def call(argv: list[str], *, timeout: int = 10) -> tuple[bool, str]:
@@ -140,7 +156,14 @@ def inventory(root: Path, docker_status: str, mounts: list[Path]) -> dict[str, A
         elif git["tracked_change"] is True or git["untracked_change"] is True:
             decision, reason = "HOLD_REFERENCE", "LOCAL_CHANGES_OR_UNTRACKED"
         elif PAST_PHASE.fullmatch(path.name):
-            decision, reason = "REVIEW_FOR_ARCHIVE", "OLD_PHASE_CHECKOUT_NOT_PROVEN_UNUSED"
+            if not git["git_repo"]:
+                decision, reason = "HOLD_REFERENCE", "OLD_PHASE_NOT_GIT_VERIFIED"
+            elif (git["tracked_change"] is not False
+                  or git["untracked_change"] is not False
+                  or git["additional_worktrees"] is not False):
+                decision, reason = "HOLD_REFERENCE", "OLD_PHASE_GIT_STATUS_UNKNOWN"
+            else:
+                decision, reason = "REVIEW_FOR_ARCHIVE", "OLD_PHASE_CHECKOUT_NOT_PROVEN_UNUSED"
         else:
             decision, reason = "HOLD_REFERENCE", "UNCLASSIFIED_POSSIBLE_DEPENDENCY"
         if docker_status != "AVAILABLE" and decision == "REVIEW_FOR_ARCHIVE":
@@ -159,14 +182,102 @@ def inventory(root: Path, docker_status: str, mounts: list[Path]) -> dict[str, A
     }
 
 
+
+def reference_audit(root: Path, entries: list[dict[str, Any]]) -> dict[str, Any]:
+    """Best-effort bounded scan of code/config/docs outside old Phase checkouts.
+
+    Explicitly excludes model/cache/evidence/protected runtime data. Even
+    COMPLETE means only the scoped files were searched, not every dependency.
+    Never treats a missing reference as authorization to move a directory.
+    """
+    targets = {
+        item["name"]: {"matches": [], "total_matches": 0, "truncated": False}
+        for item in entries if PAST_PHASE.fullmatch(item["name"])
+    }
+    scanned = 0
+    skipped_large = 0
+    skipped_links = 0
+    incomplete = False
+    audited = []
+    for dirname in REFERENCE_SOURCE_DIRS:
+        source = root / dirname
+        if not source.exists():
+            continue
+        if source.is_symlink() or not source.is_dir():
+            incomplete = True
+            continue
+        audited.append(dirname)
+        for parent, dirnames, filenames in os.walk(source, followlinks=False):
+            parent_path = Path(parent)
+            remaining = []
+            for item in dirnames:
+                subdir = parent_path / item
+                if (item in REFERENCE_SKIP_DIRS or
+                        item.startswith(".") or subdir.is_symlink()):
+                    continue
+                remaining.append(item)
+            dirnames[:] = remaining
+            for name in filenames:
+                file = parent_path / name
+                if name.startswith(".") or file.suffix.lower() not in REFERENCE_SUFFIXES:
+                    continue
+                if file.is_symlink():
+                    skipped_links += 1
+                    continue
+                if scanned >= MAX_REFERENCE_FILES:
+                    incomplete = True
+                    break
+                try:
+                    stat = file.stat()
+                    if not file.is_file():
+                        continue
+                    if stat.st_size > MAX_REFERENCE_BYTES:
+                        skipped_large += 1
+                        incomplete = True
+                        continue
+                    data = file.read_bytes()
+                except (OSError, PermissionError, ValueError):
+                    incomplete = True
+                    continue
+                scanned += 1
+                if b"\x00" in data:
+                    continue
+                rel = str(file.relative_to(root))
+                kind = ("DOCUMENT_REFERENCE" if file.suffix.lower() in
+                        (".md", ".txt") else "SCRIPT_OR_CONFIG_REFERENCE")
+                for target, details in targets.items():
+                    if target.encode("utf-8") in data:
+                        details["total_matches"] += 1
+                        if len(details["matches"]) < MAX_REFERENCE_HITS:
+                            details["matches"].append({"file": rel, "kind": kind})
+                        else:
+                            details["truncated"] = True
+            if incomplete and scanned >= MAX_REFERENCE_FILES:
+                break
+        if scanned >= MAX_REFERENCE_FILES:
+            break
+    return {
+        "status": "PARTIAL_SCOPED_SCAN" if incomplete else "COMPLETE_SCOPED_SCAN",
+        "searched_directories": audited,
+        "files_scanned": scanned,
+        "large_files_skipped": skipped_large,
+        "symlinks_skipped": skipped_links,
+        "targets": targets,
+        "no_cross_reference_found_is_not_safe_to_move": True,
+        "model_cache_and_external_service_paths_not_scanned": True,
+    }
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", type=Path, default=Path.home() / "Workspace" / "llm")
     p.add_argument("--json", action="store_true", help="JSON report to stdout; no file created")
+    p.add_argument("--references", action="store_true", help="Scan bounded code/config/docs for old Phase path references")
     args = p.parse_args(argv)
     try:
         status, mounts = docker_mount_sources()
         report = inventory(args.root.expanduser(), status, mounts)
+        if args.references:
+            report["reference_audit"] = reference_audit(args.root.expanduser(), report["entries"])
     except (ValueError, OSError, PermissionError):
         print("WORKSPACE_INVENTORY_BLOCKED", file=__import__("sys").stderr)
         return 2
@@ -177,6 +288,16 @@ def main(argv: list[str] | None = None) -> int:
               + " docker=" + report["docker_inventory"])
         for entry in report["entries"]:
             print("  {name:36} {classification:21} {reason}".format(**entry))
+        if args.references:
+            audit = report["reference_audit"]
+            print(f"REFERENCE_AUDIT_READ_ONLY {audit['status']} scanned={audit['files_scanned']}")
+            for target, detail in audit["targets"].items():
+                print(f"  {target}: references={detail['total_matches']}")
+                for hit in detail["matches"]:
+                    print("    " + hit["kind"] + " " + hit["file"])
+                if detail["truncated"]:
+                    print("    EXTRA_REFERENCE_MATCHES_TRUNCATED")
+            print("SCOPED_SCAN_ONLY: OTHER_SERVICES_AND_EXTERNAL_PATHS_UNVERIFIED")
         print("NO_FILES_MOVED_OR_DELETED. REVIEW_FOR_ARCHIVE_NEEDS_APPROVAL.")
     return 0
 

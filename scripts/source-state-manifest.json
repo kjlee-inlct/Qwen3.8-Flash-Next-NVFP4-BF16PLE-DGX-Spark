@@ -510,7 +510,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "edd8b095aed3702fbd405922edc09901d632d50c",
+      "blob_sha": "10902f2bfa7a956c2924af27027b43d222708783",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-WORKSPACE-CLEANUP-RUNBOOK.md",
-      "blob_sha": "9d62adb76963ce1ddcbc9dda4e9547e3c94b9faf",
+      "blob_sha": "d8efc129cb2c8dcc14593072c6fef15506c4009c",
       "mode": "100644"
     },
     {
@@ -820,7 +820,7 @@
     },
     {
       "path": "scripts/p2-workspace-inventory.py",
-      "blob_sha": "bc016ca617e810b2de50fe0251c2314a3183b264",
+      "blob_sha": "74852fbcfb64eb87146aed3510c0a1798cf8342f",
       "mode": "100644"
     },
     {
@@ -1795,7 +1795,7 @@
     },
     {
       "path": "tests/test_p2_workspace_inventory.py",
-      "blob_sha": "38852082cee23893c3c24eb593ff6597855e8e8d",
+      "blob_sha": "77c4ad5442b2f6bc2e98bded7cd2101ce54dfb50",
       "mode": "100644"
     },
     {

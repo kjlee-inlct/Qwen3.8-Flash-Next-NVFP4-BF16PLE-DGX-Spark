@@ -1,5 +1,12 @@
 # P2 — 새 대화 작업 인수인계 (2026-11-02)
 
+## 2026-11-02 DGX Workspace 15개 폴더 실측과 참조 감사
+
+- 실제 DGX source HEAD `384eaa12e30b1dfd4605050fc11be3f7f79540e4`에서 `p2-workspace-inventory.sh`: docker=AVAILABLE, 보호 5/추가 확인 5/Phase1~5 보관 검토 후보 5, 이동·삭제 0. `open-webui` Docker bind overlap, spark-stack/spark-vllm-docker/stack 변경·미추적 파일 확인.
+- Phase1~5는 **미사용으로 입증된 것이 아님**. 기존 Git 검사 실패시 REVIEW 표기 가능성을 fail-closed로 수정하고, 경로 문자열을 제한적으로 확인하는 `--references` 도입. DGX에서 개발 브랜치 `git pull --ff-only` 후 `bash scripts/p2-workspace-inventory.sh --references`; 자세한 정본은 [Workspace Runbook](P2-WORKSPACE-CLEANUP-RUNBOOK.md).
+- 신규 reference audit는 **DGX_NOT_RUN**, 기존 numeric DGX `3e4492c` CPU 24/24·source stage PASS와 구별. P2 numeric root cause OPEN, strict `1e-4` 출시 차단 불변. 아카이브 이동·삭제·운영/GPU/HTTP 미실행.
+
+
 ## 2026-11-02 사용자 DGX P2 실기 receipt 및 Workspace 정리 현안
 
 - **실제 사용자 DGX 실행:** `~/Workspace/llm/blazux-phase6-gates`, personal Fork origin, `feature/blazux-phase6-runtime-gates`, `git pull --ff-only` fast-forward `50fc65b..3e4492c` 완료. **DGX-tested source HEAD `3e4492c73ce95f8129e99b1f21f4a67252e8891f`.** `bash scripts/p2-numeric-dgx.sh --check`와 `--stage` 두 모드 각각 targeted CPU unit tests **24/24 PASS**, source preflight PASS.
