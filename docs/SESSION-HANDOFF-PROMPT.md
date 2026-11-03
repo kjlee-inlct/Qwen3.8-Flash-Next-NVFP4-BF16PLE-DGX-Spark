@@ -1,3 +1,9 @@
+## 2026-11-03 Blazux upstream ↔ Orcarouter 최신 비교에 따른 P2/P3 재편 제안
+
+- 사용자 요청: P1→P2 이관 사례처럼 P2도 P3로 일부 이관 가능. upstream blazux/qwen3.8-Flash-DGX main b0aa8b77604139557169387b2fa8386355d8b651 vs current feature/blazux-phase6-runtime-gates fa46304b0b3edd031be3da45d5aca7c646e08ede의 실제 code/docs/validation을 비교한 **새 제안 정본** [docs/P2-P3-SCOPE-REALIGNMENT-20261103.md](P2-P3-SCOPE-REALIGNMENT-20261103.md) 작성. 사용자 범위 승인 전 기존 8기능 기준과 release gate를 자동 변경하지 않는다.
+- 권장 P2는 Preview Orcarouter P1 기능 통합 후보(실증 필요), PLE unique-only H2D opt-in 성능/정확성 가치 검증(실익 없으면 OFF/P3), API/Tool/Prefix/MTP2 동작 및 original same-ID 복구. P3는 vLLM 0.32 Track B, MTP reduced 65,536, YaRN500K, Hybrid FP8, 선택 DFlash2 및 Numeric 1e-4 first-divergence 깊은 분석. 기존 원본 자체 strict FAIL과 P1_RELEASE_BLOCKED/DEPLOYED=FALSE는 유지: 심층 분석 이관 ≠ release criterion waiver. 코퍼스/추가 metadata gate만 반복하는 전달 방식 금지.
+- upstream base 공식 vLLM 0.32/NVIDIA NVFP4/FP8 PLE/hybrid와 Orcarouter Preview/BF16 PLE 약 95.37GiB/BF16 MTP2 overlay는 GPU/image/ABI/계측 독립. upstream 성능 수치를 내부 실측으로 오인 금지. P2/P3 재편 문서 반영은 source-only docs commit, DGX GPU/API/모델/운영 Docker/CI 미실행, 사용자 별도 승인 없는 3차 GPU 창 없음. **기존 main, 원본 ID/image/weights/cache, OpenAI 8000/v1/model ID 유지.**
+
 ## 2026-11-03 DGX static audit result: source PASS / runtime UNKNOWN
 
 - User actual DGX HEAD 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb: focused tests.test_p2_numeric_witness_readonly_audit 7/7 PASS; audit JSON status P2_NUMERIC_WITNESS_STATIC_GATES_VERIFIED_RUNTIME_UNKNOWN; running original installed sampler.py SHA256 f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216, 1-COPY private stage sampler SHA256 a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4. Exact SHA pinned transform byte match PASS, AST capture line 92 / emit line 115. Original same ID running unchanged, GPU/API/Docker service mutation NONE. Live root cause still unknown; release strict 1e-4 BLOCKED.
