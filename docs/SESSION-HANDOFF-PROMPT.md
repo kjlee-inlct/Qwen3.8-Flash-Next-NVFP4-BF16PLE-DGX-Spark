@@ -1,3 +1,9 @@
+## 2026-11-03 P2 static witness audit test fixture correction (source safety unchanged)
+
+- User DGX HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0: read-only audit wrapper stopped in focused unittest (5/6 PASS, one ERROR SAMPLER_STAGE_UNSAFE), before real audit. Test had mocked Path.read_bytes at a nonexistent /tmp/sampler.py; Path.is_file() false, correct protection triggered. StartedAt drift test also falsely passed by finally exception masking nonexistent file.
+- Permanent fix is test-only: create real private temporary sampler.py, assert audit_source called before drift, confirm read-only successful case without Docker mutation and symlink rejection. Focused 7 tests authored in GitHub, new SHA DGX_NOT_RUN CI_NOT_RUN. Audit source and model/original unchanged.
+- Next DGX action: pull merged SHA, rerun only scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp; require 7 PASS then static verified JSON. Do not infer 3rd maintenance approval. strict 1e-4 numeric root cause still not located, release BLOCKED.
+
 ## 2026-11-03 2차 Numeric GPU 실측 결과/원본 복구/후속 정적 감사
 
 - Actual DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d: 21/21 CPU tests PASS, preflight PASS, source-only candidate image build 8087bf38ea59 PASS, approved exclusive GPU candidate HTTP_READY, same-ID original HTTP recovery PASS twice, Numeric WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. 따라서 Numeric 최초 오차 미측정, strict 1e-4 unresolved, release BLOCKED.

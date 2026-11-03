@@ -1,3 +1,9 @@
+## 2026-11-03 DGX static audit attempt blocked by invalid unit fixture (not model)
+
+- User DGX pulled HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0; script read-only audit ran unittest 6 cases, 5 OK and 1 ERROR. test_no_exec_build_stop_gpu_or_http_in_audit raised SAMPLER_STAGE_UNSAFE because fake stage path lacked a real sampler.py. Python audit CLI never ran due shell set -e. No original-service changes, GPU or Docker mutation occurred.
+- Fix preserves audit fail-closed policy: create real temporary sampler.py source under a private /tmp directory, then assert read-only original docker cp mock and actual parser path. Fix StartedAt test false-positive as well (finally previously masked missing-file error), add symlink test. 7 focused tests authored; new SHA DGX/CI_NOT_RUN. No changes to src/p2_numeric_witness_readonly_audit.py, no weakening of file/symlink safety.
+- Next: git pull --ff-only feature/blazux-phase6-runtime-gates and run only scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp. Confirm all 7 PASS plus static audit JSON. Numeric Witness root cause unknown, strict 1e-4 release BLOCKED, third GPU window not approved.
+
 ## 2026-11-03 2차 GPU 실측 완료, Numeric Witness 무증거 → read-only 감사
 
 - DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d, focused 21/21 CPU PASS, preflight PASS, networkless image build image 8087bf38ea59 PASS, candidate HTTP_READY PASS, original same-ID HTTP restoration PASS twice. Numeric error WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. Root cause unknown, no first-token logits/logprobs witness SHA received.

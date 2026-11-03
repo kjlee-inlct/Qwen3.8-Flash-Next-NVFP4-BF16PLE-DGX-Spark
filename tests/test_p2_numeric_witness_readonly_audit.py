@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -47,33 +48,73 @@ class WitnessStaticAuditTests(unittest.TestCase):
                 audit.audit_source(raw,staged+b"\n# modified")
 
     def test_original_container_started_at_drift_rejected(self):
-        raw,staged=self.reference()
-        with patch.object(audit.trace, "original_identity",
-                          side_effect=[("id","img","t1"),("id","img","t2")]), \
-             patch.object(audit.window,"verify_minimal_stage"), \
-             patch.object(audit.trace,"_run_docker_cp",return_value=raw), \
-             patch.object(audit, "audit_source",return_value={"status":"STATIC"}), \
-             patch.object(Path, "read_bytes",return_value=staged):
-            with self.assertRaisesRegex(audit.AuditBlocked,"STARTED_AT_DRIFT"):
-                audit.read_only_audit(Path("/tmp/p2-numeric-first-divergence-test"))
+        raw, staged = self.reference()
+        # Create a real regular file: otherwise a missing fixture could raise
+        # SAMPLER_STAGE_UNSAFE before the finally drift guard and still PASS.
+        with tempfile.TemporaryDirectory(
+                prefix="p2-numeric-first-divergence-unit-", dir="/tmp") as temp:
+            source = Path(temp) / "sampler.py"
+            source.write_bytes(staged)
+            source.chmod(0o600)
+            with patch.object(audit.trace, "original_identity",
+                              side_effect=[("id", "img", "t1"),
+                                           ("id", "img", "t2")]) as identity, \
+                 patch.object(audit.window, "verify_minimal_stage") as verify, \
+                 patch.object(audit.trace, "_run_docker_cp", return_value=raw) as read, \
+                 patch.object(audit, "audit_source",
+                              return_value={"status": "STATIC"}) as parsed:
+                with self.assertRaisesRegex(
+                        audit.AuditBlocked, "STARTED_AT_DRIFT"):
+                    audit.read_only_audit(Path(temp))
+            self.assertEqual(identity.call_count, 2)
+            verify.assert_called_once_with(Path(temp))
+            read.assert_called_once_with(audit.trace.SOURCES["sampler"])
+            parsed.assert_called_once_with(raw, staged)
 
     def test_no_exec_build_stop_gpu_or_http_in_audit(self):
-        raw,staged=self.reference()
-        with patch.object(audit.trace, "original_identity",
-                          return_value=("id","img","stable")) as identity, \
-             patch.object(audit.window,"verify_minimal_stage") as verify, \
-             patch.object(audit.trace,"_run_docker_cp",return_value=raw) as read, \
-             patch.object(Path, "read_bytes",return_value=staged), \
-             patch.object(witness,"SOURCE_SHA256",hashlib.sha256(raw).hexdigest()), \
-             patch.object(audit.window.release,"_run") as docker_run:
-            result=audit.read_only_audit(Path("/tmp/p2-numeric-first-divergence-test"))
-        self.assertTrue(result["original_same_id_running_verified"])
-        self.assertTrue(result["stage_read_only_verified"])
-        self.assertFalse(result["service_stop_or_restart_performed"])
-        identity.assert_called()
-        verify.assert_called_once()
-        read.assert_called_once_with(audit.trace.SOURCES["sampler"])
-        docker_run.assert_not_called()
+        raw, staged = self.reference()
+        with tempfile.TemporaryDirectory(
+                prefix="p2-numeric-first-divergence-unit-", dir="/tmp") as temp:
+            source = Path(temp) / "sampler.py"
+            source.write_bytes(staged)
+            source.chmod(0o600)
+            with patch.object(audit.trace, "original_identity",
+                              return_value=("id", "img", "stable")) as identity, \
+                 patch.object(audit.window, "verify_minimal_stage") as verify, \
+                 patch.object(audit.trace, "_run_docker_cp",
+                              return_value=raw) as read, \
+                 patch.object(witness, "SOURCE_SHA256",
+                              hashlib.sha256(raw).hexdigest()), \
+                 patch.object(audit.window.release, "_run") as docker_run:
+                result = audit.read_only_audit(Path(temp))
+            self.assertTrue(result["original_same_id_running_verified"])
+            self.assertTrue(result["stage_read_only_verified"])
+            self.assertTrue(result["exact_original_pinned_transform_matches_stage"])
+            self.assertFalse(result["service_stop_or_restart_performed"])
+            self.assertEqual(identity.call_count, 2)
+            verify.assert_called_once_with(Path(temp))
+            read.assert_called_once_with(audit.trace.SOURCES["sampler"])
+            docker_run.assert_not_called()
+
+    def test_symlinked_sampler_source_rejected(self):
+        raw, staged = self.reference()
+        with tempfile.TemporaryDirectory(
+                prefix="p2-numeric-first-divergence-unit-", dir="/tmp") as temp:
+            folder = Path(temp)
+            other = folder / "other.py"
+            other.write_bytes(staged)
+            (folder / "sampler.py").symlink_to(other)
+            with patch.object(audit.trace, "original_identity",
+                              return_value=("id", "img", "stable")) as identity, \
+                 patch.object(audit.window, "verify_minimal_stage") as verify, \
+                 patch.object(audit.trace, "_run_docker_cp",
+                              return_value=raw) as read:
+                with self.assertRaisesRegex(audit.AuditBlocked,
+                                            "SAMPLER_STAGE_UNSAFE"):
+                    audit.read_only_audit(folder)
+            self.assertEqual(identity.call_count, 2)
+            verify.assert_called_once_with(folder)
+            read.assert_called_once_with(audit.trace.SOURCES["sampler"])
 
     def test_cli_static_success_and_static_block_not_invoke_gpu(self):
         from contextlib import redirect_stdout, redirect_stderr

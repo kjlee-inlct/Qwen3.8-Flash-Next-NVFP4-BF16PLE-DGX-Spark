@@ -430,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "61b23597a432d63eac3688e82a1332659a5aa6a0",
+      "blob_sha": "2f2eacc92abdf524e6b353d90f4c2301489c4646",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "9ac7ff600aae62c4a9cf06101a42678e482779cc",
+      "blob_sha": "f79de664ec3504b524a7f5c675a68254d169a360",
       "mode": "100644"
     },
     {
@@ -551,7 +551,7 @@
     {
       "path": "docs/P2-NUMERIC-GPU-WINDOW-20261103.md",
       "mode": "100644",
-      "blob_sha": "6f7dcfee181ec03b31dfcd32072be7a50ff9724f"
+      "blob_sha": "fa35505318bc63231452e588e923e1d7efdcb2a4"
     },
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
@@ -580,7 +580,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "7d36cfb0660b08f6e70db4c975a13a8ee2f64b68",
+      "blob_sha": "5a9a4a334f942dda291ce50d340c645ca72e07f6",
       "mode": "100644"
     },
     {
@@ -2026,7 +2026,7 @@
     {
       "path": "tests/test_p2_numeric_witness_readonly_audit.py",
       "mode": "100644",
-      "blob_sha": "757cd2e6282feb4bfcdeee57b15e81652c3f0356"
+      "blob_sha": "0c268eeb503098b04406c149d470251962a25a1f"
     },
     {
       "path": "tests/test_p2_ple_unique_h2d.py",
