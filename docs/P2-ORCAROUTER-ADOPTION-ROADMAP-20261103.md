@@ -1,3 +1,9 @@
+## 2026-11-03 Numeric witness provenance and Orcarouter adoption status
+
+- DGX source-only safety: 7/7 focused tests PASS at HEAD 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb; original Preview Sampler SHA pinned; private 1-COPY patched Sampler SHA exact transform MATCH; original same-ID running untouched.
+- Approved two GPU maintenance windows ended with same-ID HTTP restore and candidate HTTP_READY, but missing first-divergence witness. Most recent reason WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. Static PASS only source integrity; runtime path and numerical cause unresolved. Blazux adoption into orcarouters remains the P2 goal; benchmark and cutover cannot treat numeric root fixed.
+- New no-GPU original Sampler.forward AST site map narrows next diagnostic guard site without exposing token/source content. Tests 10 authored, actual DGX verification pending. No third GPU approval inferred. Continue separately permissible CPU-only P2 functional work without delaying on unproven numeric conclusion; keep protected original service / API endpoint / model assets unchanged.
+
 ## P2 Numeric GPU 정비창 명시 승인 및 순차 실행 2026-11-03
 
 - 실제 DGX Sampler-only stage **10/10 PASS at f240c29c**, 개인 /tmp/p2-numeric-first-divergence-x_76hgqp. 사용자 GPU 정비창/원본 보호·복구 명시 승인. 원본 stop/start 외 weights/image/cache/PLE 변경 금지, 동일 original ID 확인.
