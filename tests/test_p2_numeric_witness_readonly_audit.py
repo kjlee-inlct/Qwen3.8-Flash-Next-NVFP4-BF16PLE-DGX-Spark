@@ -36,6 +36,44 @@ class WitnessStaticAuditTests(unittest.TestCase):
                       report["static_suppression_conditions"])
         self.assertNotIn("token_ids",json.dumps(report))
 
+    def test_original_forward_site_map_locates_processed_logprobs_condition(self):
+        result = audit.original_forward_flow(fixture())
+        self.assertFalse(result["runtime_branches_observed"])
+        self.assertFalse(result["runtime_assignment_values_observed"])
+        self.assertFalse(result["sites_truncated"])
+        sites = result["sites"]
+        self.assertTrue(any(
+            item["kind"] == "assignment"
+            and "processed_logprobs" in item["targets"]
+            for item in sites))
+        self.assertTrue(any(
+            item["kind"] == "conditional"
+            and "processed_logprobs" in item["referenced_names"]
+            for item in sites))
+        self.assertTrue(any(
+            item["kind"] == "assignment"
+            and "num_logprobs" in item["targets"] for item in sites))
+        self.assertTrue(all(
+            isinstance(item["line"], int) and item["line"] > 0
+            for item in sites))
+        self.assertNotIn("self.sample(", json.dumps(result))
+        self.assertNotIn("logits[", json.dumps(result))
+
+    def test_original_forward_ambiguous_source_rejected(self):
+        source = fixture()
+        doubled = source + b"\n" + source
+        with self.assertRaisesRegex(audit.AuditBlocked,
+                                    "SAMPLER_FORWARD_AMBIGUOUS"):
+            audit.original_forward_flow(doubled)
+
+    def test_original_forward_syntax_and_size_fail_closed(self):
+        with self.assertRaisesRegex(audit.AuditBlocked,
+                                    "SAMPLER_FORWARD_SOURCE_AST_INVALID"):
+            audit.original_forward_flow(b"class Sampler:\n  def forward(:\n")
+        with self.assertRaisesRegex(audit.AuditBlocked,
+                                    "SAMPLER_FORWARD_SOURCE_SIZE_INVALID"):
+            audit.original_forward_flow(b"#" * (audit.MAX_STAGE_SOURCE + 1))
+
     def test_unpinned_original_rejected(self):
         raw,staged=self.reference()
         with self.assertRaisesRegex(audit.AuditBlocked,"ORIGINAL_SAMPLER_SOURCE_SHA_DRIFT"):

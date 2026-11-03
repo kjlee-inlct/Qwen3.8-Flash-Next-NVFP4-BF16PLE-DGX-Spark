@@ -430,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "2f2eacc92abdf524e6b353d90f4c2301489c4646",
+      "blob_sha": "7384a516e4a93ca5ac179e962d3b159fb4fb5be8",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "f79de664ec3504b524a7f5c675a68254d169a360",
+      "blob_sha": "e619d5606741182bdef14f357250d52c6fab3a7a",
       "mode": "100644"
     },
     {
@@ -551,12 +551,12 @@
     {
       "path": "docs/P2-NUMERIC-GPU-WINDOW-20261103.md",
       "mode": "100644",
-      "blob_sha": "fa35505318bc63231452e588e923e1d7efdcb2a4"
+      "blob_sha": "5b82560642259e78c3c03ca6163f189bbc232c79"
     },
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
       "mode": "100644",
-      "blob_sha": "651b2a3a47b5559dafe2222cba6d7a4ef0286aba"
+      "blob_sha": "bd26d88143baa2405f6cf6dd2aa67a5045fe319b"
     },
     {
       "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
@@ -580,7 +580,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "5a9a4a334f942dda291ce50d340c645ca72e07f6",
+      "blob_sha": "10ab3e661500a3b506f17a97b7c54270a66649ff",
       "mode": "100644"
     },
     {
@@ -1346,7 +1346,7 @@
     {
       "path": "src/p2_numeric_witness_readonly_audit.py",
       "mode": "100644",
-      "blob_sha": "8c7afd53e4f46ec2efb80487db6bbf100b90da99"
+      "blob_sha": "1ab675d769efa5e819ec2295b8257c3a3aa39b6b"
     },
     {
       "path": "src/p2_token_frequency.py",
@@ -2026,7 +2026,7 @@
     {
       "path": "tests/test_p2_numeric_witness_readonly_audit.py",
       "mode": "100644",
-      "blob_sha": "0c268eeb503098b04406c149d470251962a25a1f"
+      "blob_sha": "17a5c38cf1e117fbfb169c29c8c568d0849956f0"
     },
     {
       "path": "tests/test_p2_ple_unique_h2d.py",

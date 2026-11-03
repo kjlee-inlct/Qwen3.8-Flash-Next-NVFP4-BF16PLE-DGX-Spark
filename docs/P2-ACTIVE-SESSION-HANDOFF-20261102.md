@@ -1,3 +1,9 @@
+## 2026-11-03 Sampler audit succeeded, next control-flow static map
+
+- Latest user DGX SHA 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb: read-only unit tests 7/7 PASS, original Sampler SHA f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216 and private patched sampler SHA a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4 exact transform match PASS; injection capture at 92, emit at 115. Original same-ID running and unmodified; no GPU, model HTTP, Docker stop/start, candidate changes.
+- Success covers source provenance only. Runtime witness absence after two previous GPU windows remains UNKNOWN among worker import, env propagation, raw mode/max_num_logprobs, shape, processed_logprobs, and file/log routing. Do not claim static source proof establishes runtime root cause.
+- Next source-only extension of src/p2_numeric_witness_readonly_audit.py: original_forward_flow uses authenticated original Sampler AST to identify forward's relevant variable assignment/guard site lines and restricted AST node types, bounded to 48 sites, runtime flags FALSE. Add 3 tests => 10 focused tests authored (new GitHub SHA DGX_NOT_RUN/CI_NOT_RUN). Operator after merge: git pull and execute existing scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp. No third GPU window allowed by prior authorization, strict 1e-4 root cause unresolved, release BLOCKED.
+
 ## 2026-11-03 DGX static audit attempt blocked by invalid unit fixture (not model)
 
 - User DGX pulled HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0; script read-only audit ran unittest 6 cases, 5 OK and 1 ERROR. test_no_exec_build_stop_gpu_or_http_in_audit raised SAMPLER_STAGE_UNSAFE because fake stage path lacked a real sampler.py. Python audit CLI never ran due shell set -e. No original-service changes, GPU or Docker mutation occurred.

@@ -25,6 +25,63 @@ class AuditBlocked(RuntimeError):
 MAX_STAGE_SOURCE = 2_000_000
 
 
+
+def original_forward_flow(raw: bytes) -> dict:
+    """Read-only AST-only map of the exact original Sampler.forward's guard sites.
+
+    The only output is variable/AST-node types and source line numbers; not
+    executable statements, user prompts, token contents, logits, or tensors.
+    The site map does not reveal which branch actually ran on a GPU.
+    """
+    if not 0 < len(raw) <= MAX_STAGE_SOURCE:
+        raise AuditBlocked("SAMPLER_FORWARD_SOURCE_SIZE_INVALID")
+    try:
+        tree = ast.parse(raw.decode("utf-8"))
+    except (UnicodeError, SyntaxError):
+        raise AuditBlocked("SAMPLER_FORWARD_SOURCE_AST_INVALID") from None
+    interested = {"num_logprobs", "raw_logprobs", "processed_logprobs",
+                  "logprobs_mode"}
+    functions = [
+        n for n in ast.walk(tree)
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and n.name == "forward"
+        and any(isinstance(a, ast.Attribute) and a.attr == "max_num_logprobs"
+                for a in ast.walk(n))
+    ]
+    if len(functions) != 1:
+        raise AuditBlocked("SAMPLER_FORWARD_AMBIGUOUS")
+    fn = functions[0]
+
+    def names(node: ast.AST) -> list[str]:
+        return sorted({x.id for x in ast.walk(node)
+                       if isinstance(x, ast.Name) and x.id in interested})
+
+    sites = []
+    for node in ast.walk(fn):
+        if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            target_names = sorted({name for target in targets
+                                   for name in names(target)})
+            if target_names:
+                sites.append({"line": node.lineno, "kind": "assignment",
+                              "targets": target_names,
+                              "rhs_ast_type": type(node.value).__name__})
+        elif isinstance(node, (ast.If, ast.While)):
+            target_names = names(node.test)
+            if target_names:
+                sites.append({"line": node.lineno, "kind": "conditional",
+                              "referenced_names": target_names,
+                              "test_ast_type": type(node.test).__name__})
+    sites.sort(key=lambda entry: (entry["line"], entry["kind"]))
+    return {
+        "site_count": len(sites),
+        "sites": sites[:48],
+        "sites_truncated": len(sites) > 48,
+        "runtime_assignment_values_observed": False,
+        "runtime_branches_observed": False,
+        "runtime_worker_process_observed": False,
+    }
+
 def audit_source(raw: bytes, staged: bytes) -> dict:
     """Verify full installed original Sampler SHA, patch bytes and guard paths."""
     if hashlib.sha256(raw).hexdigest() != witness.SOURCE_SHA256:
@@ -76,6 +133,7 @@ def audit_source(raw: bytes, staged: bytes) -> dict:
         "witness_enable_default_off": True,
         "capture_call_line": capture_calls[0].lineno,
         "emit_call_line": emit_calls[0].lineno,
+        "original_sampler_forward_flow": original_forward_flow(raw),
         "runtime_env_candidate_worker_verified": False,
         "runtime_sampler_import_verified": False,
         "runtime_raw_logprobs_branch_verified": False,

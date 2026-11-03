@@ -1,3 +1,13 @@
+## 2026-11-03 Sampler source provenance verified — follow-up static forward flow map
+
+- User DGX SHA 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb: 7/7 focused test PASS and actual read-only audit P2_NUMERIC_WITNESS_STATIC_GATES_VERIFIED_RUNTIME_UNKNOWN. Original Sampler SHA f95805b2c6d06218c724826aa5f881a606e8d0a534a566aee7c85948520dd216; pinned transformed stage SHA a62b7cd7f7eb637fdee7d8dd1e51b1bc47c3931bb1174f4f22280db28ccaead4; exact bytes match. Capture injection line 92 / emit line 115. Original same-ID RUNNING, NO_GPU_NO_MODEL_HTTP_NO_DOCKER_MUTATION.
+- Remaining unknowns: worker import and env, raw_logprobs mode/max_num_logprobs, logits/selected shape, processed_logprobs is None and worker file/stderr. Prior second GPU WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL does not prove never emitted. No further maintenance authorization implicit.
+- Add original_forward_flow AST-only audit using the same running-original docker cp: find exact one Sampler.forward with max_num_logprobs, capture sanitized assignment and if/while condition source lines for named variables, no code statements/source snippets/user content/tokens/logits. Bounded to 48 sites; runtime evidence flags all false. Focused tests increased from 7 to 10 authored (new SHA DGX/CI_NOT_RUN). Run only:
+    cd ~/Workspace/llm/blazux-phase6-gates
+    git pull --ff-only origin feature/blazux-phase6-runtime-gates
+    bash scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp
+- If static analysis blocks on changed source graph, stop: do not weaken source protection and do not launch GPU. If it passes, use listed conditions to design candidate-only skip-event instrumentation for a SEPARATELY APPROVED future GPU window. Numeric strict 1e-4 remains INCONCLUSIVE/release BLOCKED.
+
 ## 2026-11-03 Follow-up read-only audit first DGX attempt and synthetic fixture repair
 
 - Actual user DGX audit at HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0: unittest result 5/6 PASS, 1 ERROR SAMPLER_STAGE_UNSAFE in test_no_exec_build_stop_gpu_or_http_in_audit. Script exited before real read-only audit CLI (set -e). This does not signal source drift or bad original container.
