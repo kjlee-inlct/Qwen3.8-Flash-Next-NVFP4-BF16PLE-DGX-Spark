@@ -1,3 +1,5 @@
+> **2026-11-03 우선순위 변경 (확정된 새 개발 방향):** 이 문서는 기존 **Preview-first** 접근에 맞춰 작성된 P2/P3 범위 재편 **역사적 제안서**다. 사용자는 이후 **Blazux-first: upstream vLLM0.32 기반에 Orcarouter를 이식하는 빠른 호환성 판정**으로 방향 전환을 승인했다. 새 최우선 정본 [BLAZUX-FIRST-ORCAROUTER-DECISION-20261103.md](BLAZUX-FIRST-ORCAROUTER-DECISION-20261103.md)와 [NEXT-SESSION-BLAZUX-FIRST-PROMPT.md](NEXT-SESSION-BLAZUX-FIRST-PROMPT.md)를 따른다. 특히 이 문서의 “vLLM0.32 Track B를 일괄 P3로 연기” 권고는 현재 주력 P2 호환성 결정에 **적용하지 않는다**. 기존 실측·출시 Gate·P3 고급 옵션 기록은 그대로 유효하며 GPU/서비스 중단 승인은 별도다.
+
 # Orcarouter용 Blazux 도입 P2/P3 재편안 (2026-11-03)
 
 > **상태: 제안 / 기존 배포 Gate 변경 승인 아님.** 사용자 문제제기: P1에서 P2로 넘긴 미완료 항목처럼, P2 미완료 항목도 P3로 분리할 수 있다. 최종 목표는 Blazux 레시피 전체 복제가 아니라 **현재 DGX Spark Orcarouter Uncensored에 유효한 기능 적용**이다. 이 문서는 기능 범위/작업 순서를 재설계한 것이며 GPU 창, 운영 cutover, 기존 strict 출시 Gate 변경을 승인하지 않는다.

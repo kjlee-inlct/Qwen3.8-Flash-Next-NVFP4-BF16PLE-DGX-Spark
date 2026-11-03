@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 393,
+  "tracked_file_count": 395,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -234,6 +234,11 @@
       "blob_sha": "abdda8a293e411218c866dd012c6478ec504ff66"
     },
     {
+      "path": "docs/BLAZUX-FIRST-ORCAROUTER-DECISION-20261103.md",
+      "mode": "100644",
+      "blob_sha": "1c0d0fe5b60299e86da879ff58a2f21a3f8e7599"
+    },
+    {
       "path": "docs/BLAZUX-PHASE1-DGX-READONLY-VERIFY-20261027.md",
       "mode": "100644",
       "blob_sha": "48f63639a9066dcc3cd1438f93c84e58ecf6a662"
@@ -454,6 +459,11 @@
       "blob_sha": "203a5cf1de74f91af11db2d036e0473197607775"
     },
     {
+      "path": "docs/NEXT-SESSION-BLAZUX-FIRST-PROMPT.md",
+      "mode": "100644",
+      "blob_sha": "28e146727ff12cec0b766f036d85170e8ac4dae5"
+    },
+    {
       "path": "docs/P1-CANDIDATE-STATE-SNAPSHOT-20261030.md",
       "mode": "100644",
       "blob_sha": "9458d213bbf29db1a3f642b34a6369ae1e07b984"
@@ -556,11 +566,11 @@
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
       "mode": "100644",
-      "blob_sha": "06cb2cb41cdd995b9f4f935ba324d59e39a2a05f"
+      "blob_sha": "d626b0694625f01b8913696f57f823978bf91f4b"
     },
     {
       "path": "docs/P2-P3-SCOPE-REALIGNMENT-20261103.md",
-      "blob_sha": "14e5d172d87fc4ce0b85ffa3f4558858700c354f",
+      "blob_sha": "c83027b9241ba7d8b47a64a4135ac054f114d340",
       "mode": "100644"
     },
     {
@@ -585,7 +595,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "1a8ff8a23e1921193f13840f44afe109dd35bf1a",
+      "blob_sha": "9531f5d21853244deeeaef00ff4dce18c84b0ae3",
       "mode": "100644"
     },
     {

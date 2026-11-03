@@ -1,3 +1,11 @@
+# 2026-11-03 최신 최우선 인수인계 — **Blazux-first Orcarouter 적용으로 전환 승인**
+
+사용자가 기존 Preview에 Blazux를 기능별 역포팅하던 방식에서 **upstream Blazux vLLM 0.32 기반으로 Orcarouter Uncensored를 이식하는 방식**을 먼저 검증하도록 개발 방향 전환을 승인했다. 다음 대화는 **[Blazux-first 결정/GO-NO-GO 정본](BLAZUX-FIRST-ORCAROUTER-DECISION-20261103.md)**과 **[새 대화 전용 실행 프롬프트](NEXT-SESSION-BLAZUX-FIRST-PROMPT.md)**를 먼저 읽고, 바로 upstream baseline의 Orcarouter Loader/BF16 PLE/MTP ABI 비교와 최소 adapter 구현을 진행한다.
+
+**단순 정적 감사/Legacy Numeric Witness 작업 재개 금지**. 종전 아래 문서의 '다음 실행' 지시는 역사의 기록이며 새 전략보다 우선하지 않는다. P1 기능 bounded PASS, strict 1e-4 release BLOCKED, 원본 컨테이너 동일 ID/이미지/캐시 및 8000/v1 API 보호, GPU 정비창 별도 승인 원칙은 유지된다. Blazux upstream BF16 PLE dtype 지원 존재는 확인됐지만 Orcarouter loader/weight/ABI 호환성은 미확인이다. 다음 대화에서는 작은 PR·문서·Gate 반복을 피하고 실제 후보 변경을 한 번에 묶는다. 이번 변경은 **문서/전략 인수인계만**이며 DGX/CI/GPU 실행이나 출시 승인이 아니다.
+
+---
+
 ## 2026-11-03 Blazux upstream ↔ Orcarouter 최신 비교에 따른 P2/P3 재편 제안
 
 - 사용자 요청: P1→P2 이관 사례처럼 P2도 P3로 일부 이관 가능. upstream blazux/qwen3.8-Flash-DGX main b0aa8b77604139557169387b2fa8386355d8b651 vs current feature/blazux-phase6-runtime-gates fa46304b0b3edd031be3da45d5aca7c646e08ede의 실제 code/docs/validation을 비교한 **새 제안 정본** [docs/P2-P3-SCOPE-REALIGNMENT-20261103.md](P2-P3-SCOPE-REALIGNMENT-20261103.md) 작성. 사용자 범위 승인 전 기존 8기능 기준과 release gate를 자동 변경하지 않는다.

@@ -1,3 +1,7 @@
+## 2026-11-03 **Blazux-first 새 주력 경로 승인 — 이 문서는 Preview Track A 역사 기록**
+
+사용자가 기존 Orcarouter Preview에 Blazux를 기능별 역포팅한 방식 대신, **Blazux upstream vLLM0.32를 직접 기준으로 Orcarouter Uncensored BF16 PLE/MTP를 이식하는 접근을 우선 검증**하도록 승인했다. 이후 작업의 최우선 정본은 [Blazux-first 결정/호환성 판정](BLAZUX-FIRST-ORCAROUTER-DECISION-20261103.md)과 [새 대화 프롬프트](NEXT-SESSION-BLAZUX-FIRST-PROMPT.md). 아래의 이전 4-COPY 통합 실험, Sampler static audit 및 P2/P3 Preview-only 우선순위는 역사 기록으로 보존하지만 새 대화의 최초 작업이 아니다. 기존 Preview 경로는 fallback. 사용자 승인에 운영 GPU/서비스 중단이나 strict 1e-4 출시 Gate 면제는 포함되지 않았다.
+
 ## 2026-11-03 P2/P3 범위 재편 권고안 — 제안, 기존 릴리즈 규칙 유지
 
 - 사용자가 P1→P2와 마찬가지로 P2→P3 미완료 항목 이관 가능성을 제기함. 실제 upstream main SHA b0aa8b77604139557169387b2fa8386355d8b651, 현재 Orcarouter feature HEAD fa46304b0b3edd031be3da45d5aca7c646e08ede의 README/source/docs/기존 기능 검증 결과를 비교하고, [P2/P3 기능 우선순위 재편안](P2-P3-SCOPE-REALIGNMENT-20261103.md)을 신설함.
