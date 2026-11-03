@@ -1,3 +1,9 @@
+## 2026-11-03 approved 2nd exclusive Numeric GPU window / final report output fix
+
+- Actual DGX SHA 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 tests PASS, read-only preflight PASS, candidate networkless --build PASS image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original same-ID running and not changed. Operator approved 2nd GPU window with temporary original outage.
+- Pre-execute code review caught guaranteed successful-result loss: execute() used window.notify("P2_NUMERIC_DIAGNOSIS", **result), duplicate status argument -> TypeError after restoration. Fix uses result_status and full mocked execute/restore/diagnostic JSON regression, focused 21 total tests authored; new GitHub SHA DGX/CI_NOT_RUN.
+- Next DGX work: pull current merged dev HEAD, run focused read-only --preflight and networkless --build for new head-specific image tag, verify both PASS and original SAME-ID running, then approved exclusive --execute with pinned original container ID/Image only. Watch P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS; missing witness remains unproven strict 1e-4, release BLOCKED. Do not rm original, patch weights/cache, alter main, or run parallel GPU models.
+
 ## 2026-11-03 Numeric GPU 1차 실측 실패 + 원본 복구 PASS — 중요 인수인계
 
 - user DGX first run HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: 13/13 CPU PASS, preflight/build `UNCLASSIFIED_FAILURE`, approved execute candidate HTTP_READY and finally restore `P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`, Witness file `WITNESS_FILE_ABSENT_OR_OVERSIZE`, wrapper backup recover PASS again. **Root cause NOT_FOUND, Numeric strict 1e-4 unresolved, original same-ID HTTP restored**.

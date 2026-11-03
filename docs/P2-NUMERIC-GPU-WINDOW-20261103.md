@@ -1,3 +1,10 @@
+## 2026-11-03 Second approved Numeric GPU window — prevent successful diagnosis output loss
+
+- Operator actual DGX HEAD 497056ea265825fb2e96d31fe7ba3b16fe417919: read-only preflight 20/20 PASS and offline image build PASS. Returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU, candidate tag kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original running.
+- Second exclusive GPU window and temporary original-service downtime explicitly approved. Before execution, final diagnosis was found to call window.notify("P2_NUMERIC_DIAGNOSIS", **result) with result["status"], a guaranteed duplicate-key TypeError after successful measurement/restore. Fixed by result_status field and added full mocked run through restore+diagnosis JSON output test; focused 21 authored tests, new HEAD DGX/CI_NOT_RUN.
+- Exact run order: git pull --ff-only origin feature/blazux-phase6-runtime-gates; bash scripts/p2-numeric-first-divergence-gpu-window.sh --preflight /tmp/p2-numeric-first-divergence-x_76hgqp; bash scripts/p2-numeric-first-divergence-gpu-window.sh --build /tmp/p2-numeric-first-divergence-x_76hgqp; verify both PASS and same original running; then approved --execute /tmp/p2-numeric-first-divergence-x_76hgqp 3fc5a3d5be1d52595602287acd87895220219bad050484251ac0408a163ffc45 sha256:b0984c4b724b6f8c0745acb654994e1bd3a6c50b75c2c76078f1bfd6b395f39a.
+- New HEAD requires image rebuilt under new tag even if source Dockerfile unchanged. Execution produces candidate HTTP_READY, original SAME_ID_HTTP_PASS and diagnostic result_status/analysis separately. If missing witness, INCONCLUSIVE and do not repeat automatically; strict numeric release remains BLOCKED. Recover only owner-checked candidate and preserve original same-ID/container/image/weights. Maintain other published protections.
+
 ## 2026-11-03 실제 1차 GPU 정비창 결과 및 수정
 
 - DGX HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: 13/13 focused CPU PASS. `--preflight`·`--build` 모두 `UNCLASSIFIED_FAILURE`, 그러나 `--execute`는 원본 stop→후보 HTTP_READY→원본 same-ID HTTP_PASS 복구 성공. 진단 증거 파일에서 `WITNESS_FILE_ABSENT_OR_OVERSIZE` 발생. wrapper fail EXIT trap도 복구 PASS 재확인. **Numeric 분석 inconclusive, 원본 복구 PASS, P1/P2 출시 차단 유지**.

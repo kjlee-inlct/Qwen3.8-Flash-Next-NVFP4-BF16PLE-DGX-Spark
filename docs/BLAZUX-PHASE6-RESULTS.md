@@ -1,3 +1,9 @@
+## 2026-11-03 Numeric 2차 GPU 정비창 승인과 결과 출력 안전 수정
+
+- DGX actual HEAD 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 tests PASS, read-only preflight PASS; networkless --build returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU, image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original same-ID running, GPU/model NOT_RUN.
+- User explicitly approved second exclusive GPU window and temporary original-service stop. Before live run, code review revealed final success path execute() calls window.notify("P2_NUMERIC_DIAGNOSIS", **result) where result also has status, causing duplicate-key TypeError and losing the measurement after restoration. Fix reports result_status separately; add a full mocked execute/restore/final-report regression test (21 focused tests authored on new HEAD, DGX_NOT_RUN/CI_NOT_RUN).
+- Candidate image tag includes HEAD prefix: new merged HEAD requires fresh read-only preflight and offline --build even though Sampler-only Dockerfile is unchanged. No original image/weights/cache/PLE mutations. First GPU attempt had HTTP candidate READY and original same-ID HTTP restore, but witness evidence missing. New witness log fallback remains GPU-unverified. Strict numeric 1e-4 gate remains BLOCKED.
+
 ## 2026-11-03 사용자 GPU Numeric 첫 시도: 원본 복구 성공, Witness 증거 수집 실패
 
 - DGX checked-out HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`. focused safety unit tests **13/13 PASS**, read-only preflight와 networkless build 모두 `UNCLASSIFIED_FAILURE` 반환, 후속 exclusive `--execute`에서 후보 `P2_NUMERIC_CANDIDATE_HTTP_READY`까지 확인. Sampler Witness collection `WITNESS_FILE_ABSENT_OR_OVERSIZE` 발생하여 Numeric report 부재. 원본 HTTP same-ID 복구 마커 `P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`가 Python finally와 shell recovery에서 각각 1회, **총 2회 확인**. 모델 실행/복구만 증명됐고 Numeric strict 1e-4 원인 미해결, release BLOCKED.

@@ -460,7 +460,8 @@ def execute(head: str, stage: Path, original_id: str,
         restore(head, image_id, model)
     assert result is not None
     result["original_same_id_http_restored"] = True
-    window.notify("P2_NUMERIC_DIAGNOSIS", **result)
+    window.notify("P2_NUMERIC_DIAGNOSIS", result_status=result["status"],
+                  **{key: value for key, value in result.items() if key != "status"})
     return result, bool(result["analysis"]["provenance_verified"])
 
 
