@@ -1,3 +1,11 @@
+## 2026-11-03 P2 Numeric 2차 독점 GPU 실측: 원본 복구 PASS, Sampler Witness 수집 실패
+
+- 실제 DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d. Focused 21/21 PASS, read-only preflight PASS, image build PASS: kjlee-qwen38-p2-numeric-first-divergence:8087bf38ea59.
+- 승인된 GPU --execute: EXCLUSIVE_STOP_PENDING → CANDIDATE_HTTP_READY → CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS. 하지만 진단 WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL, shell fallback original same-ID/HTTP PASS 재확인. strict 1e-4 Numeric INCONCLUSIVE, release BLOCKED.
+- 오류는 후보 개인 Witness 파일 docker cp 실패 후 최근 256줄/최대 256KiB의 후보 log tail에 P2_NUMERIC_WITNESS 이벤트가 없었다는 뜻. 실제 모든 Worker 로그를 검사했거나 이벤트가 절대 생성되지 않았다는 증거는 아님. 소유권 검증 제거된 후보는 사후 접근 불가.
+- Sampler 소스 계측 조건: Worker opt-in env, num_logprobs non-None, logprobs_mode raw_logprobs, logits/logprobs single row shape, sampled single row, processed_logprobs None. 어느 조건의 실패인지 실증되지 않음.
+- 새 read-only Sampler audit: src/p2_numeric_witness_readonly_audit.py, tests/test_p2_numeric_witness_readonly_audit.py (6 synthetic tests), scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp. 기존 실행 중 원본에서 Sampler Python만 docker cp로 읽고 pinned SHA, patched stage byte-match 및 AST gate 확인, 원본 StartedAt 불변 검사. 원본 변경/GPU/HTTP/Docker exec/start/stop/build 없음. 새 GitHub HEAD DGX_NOT_RUN CI_NOT_RUN. 다음은 감사만, 임의 3차 GPU 정비창 실행 금지.
+
 ## 2026-11-03 Numeric 2차 GPU 정비창 승인과 결과 출력 안전 수정
 
 - DGX actual HEAD 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 tests PASS, read-only preflight PASS; networkless --build returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU, image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original same-ID running, GPU/model NOT_RUN.

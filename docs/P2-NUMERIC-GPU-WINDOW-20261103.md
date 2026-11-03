@@ -1,3 +1,14 @@
+## 2026-11-03 2차 GPU 창 결과와 읽기 전용 Sampler 감사 절차
+
+- 사용자 DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d: 21/21 CPU focused PASS, read-only preflight PASS, 1-COPY image build PASS 8087bf38ea59, exclusive GPU candidate HTTP_READY PASS, original SAME_ID_HTTP_PASS 두 번 확인. Numeric status BLOCKED WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. Numeric 최초 차이 판별 실패, strict 1e-4 release BLOCKED.
+- docker cp candidate private witness file 실패했고 후보 Docker 최근 256줄/256KiB 제한 내 complete P2_NUMERIC_WITNESS 이벤트 없음. 이는 전체 기록을 전부 검사했거나 Worker가 호출되지 않았다는 증거가 아님. 후보는 소유권 검증 후 삭제돼 사후 분석 대상 없음.
+- 현 Witness patch의 capture/emit는 Worker env=1, raw_logprobs, num_logprobs non-None, 1-row logits/logprobs/sampled, processed_logprobs None을 요구. 원인이 이 조건 중 하나라고 확정하지 않는다.
+- 다음 실행은 NO_GPU_NO_MODEL_HTTP_NO_DOCKER_MUTATION 정적 감사만 진행:
+    cd ~/Workspace/llm/blazux-phase6-gates
+    git pull --ff-only origin feature/blazux-phase6-runtime-gates
+    bash scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp
+- 이 툴은 focused synthetic 6 tests + original running identity guard, installed Sampler docker cp source SHA, stage exact source transform byte match, AST guard line number를 읽기 전용 검증. source static PASS가 실제 Worker import/runtime branch 증거는 아님. 그 결과로 candidate-only bounded skip-reason probe를 설계한 뒤 3차 정비창이 필요하면 별도 확인. 원본 변경·GPU 재실험 불가.
+
 ## 2026-11-03 Second approved Numeric GPU window — prevent successful diagnosis output loss
 
 - Operator actual DGX HEAD 497056ea265825fb2e96d31fe7ba3b16fe417919: read-only preflight 20/20 PASS and offline image build PASS. Returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU, candidate tag kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original running.

@@ -1,3 +1,10 @@
+## 2026-11-03 2차 GPU 실측 완료, Numeric Witness 무증거 → read-only 감사
+
+- DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d, focused 21/21 CPU PASS, preflight PASS, networkless image build image 8087bf38ea59 PASS, candidate HTTP_READY PASS, original same-ID HTTP restoration PASS twice. Numeric error WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. Root cause unknown, no first-token logits/logprobs witness SHA received.
+- 이 오류는 docker cp candidate private file 실패 + Docker log tail last 256 lines / max 256KiB에서 접두 이벤트 부재. 전체 로그 이벤트 부재 또는 Sampler import 안 됨이라고 확정 금지. 기존 후보는 안전 복구 과정에서 삭제됨.
+- Pinned witness static gates: env VLLM_P2_NUMERIC_WITNESS=1, request logprobs/num_logprobs non-None, raw_logprobs mode, single-row logits/logprobs and sampled, processed_logprobs None. 실제 실패 조건은 미확인.
+- 신규 독립 read-only tool scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp: 6 CPU synthetic tests, 원본 running exact ID/Image/StartedAt 보존하며 설치 sampler.py docker cp, SHA verify, exact patch transform comparison and AST guard line evidence. 새 HEAD DGX/CI_NOT_RUN, GPU_NOT_RUN; git pull 후 이 감사만 실행. 다음 3차 GPU 창 임의 승인 추정 금지.
+
 ## 2026-11-03 2차 GPU 창 승인, 기존 DGX image build PASS, 최종 diagnosis 출력 충돌 수정
 
 - Actual user DGX SHA 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 CPU PASS; P2_NUMERIC_WINDOW_PREFLIGHT_READ_ONLY confirmed source-stage/pins/original running; --build image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658 returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU and same-ID original running. No second GPU inference yet.

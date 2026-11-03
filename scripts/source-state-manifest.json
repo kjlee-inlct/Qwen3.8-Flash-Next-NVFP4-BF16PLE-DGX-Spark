@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 389,
+  "tracked_file_count": 392,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -430,7 +430,7 @@
     },
     {
       "path": "docs/BLAZUX-PHASE6-RESULTS.md",
-      "blob_sha": "ad2720d56b5455615aea4f7c30f1d95f551dab42",
+      "blob_sha": "61b23597a432d63eac3688e82a1332659a5aa6a0",
       "mode": "100644"
     },
     {
@@ -520,7 +520,7 @@
     },
     {
       "path": "docs/P2-ACTIVE-SESSION-HANDOFF-20261102.md",
-      "blob_sha": "9cbd8afff2b865681a4e71429f394201149170a5",
+      "blob_sha": "9ac7ff600aae62c4a9cf06101a42678e482779cc",
       "mode": "100644"
     },
     {
@@ -551,7 +551,7 @@
     {
       "path": "docs/P2-NUMERIC-GPU-WINDOW-20261103.md",
       "mode": "100644",
-      "blob_sha": "4ee993fbb50b179bccee63da59dfb19ee81d74e7"
+      "blob_sha": "6f7dcfee181ec03b31dfcd32072be7a50ff9724f"
     },
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
@@ -580,7 +580,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "59ef77082554ee12c8a1fc4f1a5f4e567d274674",
+      "blob_sha": "7d36cfb0660b08f6e70db4c975a13a8ee2f64b68",
       "mode": "100644"
     },
     {
@@ -897,6 +897,11 @@
       "path": "scripts/p2-numeric-first-divergence-gpu-window.sh",
       "mode": "100755",
       "blob_sha": "aabebd085d046d94a1abc9d3794c5fbabd254811"
+    },
+    {
+      "path": "scripts/p2-numeric-witness-readonly-audit-dgx.sh",
+      "mode": "100755",
+      "blob_sha": "97cf0683bb44518434c6cca68981738297999997"
     },
     {
       "path": "scripts/p2-offline-bundle-dgx.sh",
@@ -1337,6 +1342,11 @@
       "path": "src/p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "1de010499aeb1e2afcb299724d867e22d8797320"
+    },
+    {
+      "path": "src/p2_numeric_witness_readonly_audit.py",
+      "mode": "100644",
+      "blob_sha": "8c7afd53e4f46ec2efb80487db6bbf100b90da99"
     },
     {
       "path": "src/p2_token_frequency.py",
@@ -2012,6 +2022,11 @@
       "path": "tests/test_p2_numeric_sampler_witness.py",
       "mode": "100644",
       "blob_sha": "8181bb6cb16ce7ef5912c4f388d3f02b4cc7cf5a"
+    },
+    {
+      "path": "tests/test_p2_numeric_witness_readonly_audit.py",
+      "mode": "100644",
+      "blob_sha": "757cd2e6282feb4bfcdeee57b15e81652c3f0356"
     },
     {
       "path": "tests/test_p2_ple_unique_h2d.py",
