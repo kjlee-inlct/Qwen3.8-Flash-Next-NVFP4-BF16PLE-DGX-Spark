@@ -1,3 +1,9 @@
+## 2026-11-03 2차 GPU 창 승인, 기존 DGX image build PASS, 최종 diagnosis 출력 충돌 수정
+
+- Actual user DGX SHA 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 CPU PASS; P2_NUMERIC_WINDOW_PREFLIGHT_READ_ONLY confirmed source-stage/pins/original running; --build image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658 returned P2_NUMERIC_WITNESS_IMAGE_BUILT_NO_GPU and same-ID original running. No second GPU inference yet.
+- User approved the second exclusive Numeric GPU maintenance window and temporary original service interruption. A review of execute() found a second duplicate status keyword at window.notify("P2_NUMERIC_DIAGNOSIS", **result). Fixed with result_status; full mock lifecycle regression asserts output after restore and no raw token leakage, focused 21 tests authored, new SHA DGX_NOT_RUN/CI_NOT_RUN.
+- Because image tags are based on HEAD[:12], after GitHub merge operator MUST pull new SHA, run read-only --preflight then networkless --build under that SHA before previously approved --execute, and never reuse 497056 image tag. Candidate witness file and bounded stderr fallback are not live proven; next GPU probe may remain inconclusive, with same-ID original restore mandatory. Release strict 1e-4 BLOCKED, no original rm/recreate or main changes.
+
 ## 2026-11-03 최신 GPU 정비창 실측: 원본 same-ID HTTP 복구, Numeric Witness 수집 실패
 
 - 사용자 실제 DGX HEAD `39f49210347f3d571f43e07b0ea254b8c18b15af`: `--preflight` 13/13 focused unittest PASS 후 `P2_NUMERIC_WINDOW_BLOCKED_OR_INCONCLUSIVE reason=UNCLASSIFIED_FAILURE`, `--build` 동일 실패. GPU `--execute` 시 `P2_NUMERIC_WINDOW_EXCLUSIVE_STOP_PENDING` → `P2_NUMERIC_CANDIDATE_HTTP_READY` → **`P2_NUMERIC_CANDIDATE_REMOVED_ORIGINAL_SAME_ID_HTTP_PASS`**. 단, Numeric 측정 `WITNESS_FILE_ABSENT_OR_OVERSIZE`로 실패, shell trap의 추가 `--recover`에서도 같은 원본 복구 PASS. **엄격 1e-4 Numeric first-divergence INCONCLUSIVE, 원본 복구 마커 확인**, 재실행 무단 반복 금지.

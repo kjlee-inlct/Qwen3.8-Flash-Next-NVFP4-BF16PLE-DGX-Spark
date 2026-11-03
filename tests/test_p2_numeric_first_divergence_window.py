@@ -166,6 +166,62 @@ class NumericWindowTests(unittest.TestCase):
         self.assertNotIn("token_ids",json.dumps(result))
         self.assertFalse(result["release_approved"])
 
+    def test_completed_gpu_diagnosis_is_emitted_after_original_http_restore(self):
+        """Mock the whole lifecycle; keep the *real* notify to catch status collision."""
+        import io as _io
+        from contextlib import redirect_stdout
+        image_id = "sha256:" + "2"*64
+        candidate_id = "c"*64
+        result = {"status": "P2_NUMERIC_FIRST_DIVERGENCE_MEASUREMENT",
+                  "analysis": {
+                      "provenance_verified": True,
+                      "first_observed_difference": "RAW_LOGITS_OR_UPSTREAM",
+                      "first_token_api_max_abs_delta": 0.0002,
+                      "strict_api_failed": True,
+                  },
+                  "requests": 4,
+                  "strict_numeric_root_cause_resolved": False,
+                  "candidate_gpu_runtime_executed": True,
+                  "release_approved": False}
+        lifecycle = []
+        with patch.object(w, "image_preflight"), \
+             patch.object(w, "verify_image", return_value={"Id": image_id}), \
+             patch.object(w, "original_running",
+                          return_value=({"id": w.ORIGINAL_ID}, {}, {}, "running")), \
+             patch.object(w, "args_for",
+                          return_value=(["docker", "create"], "model")), \
+             patch.object(w, "absent_candidates"), \
+             patch.object(w.window, "check_original_running"), \
+             patch.object(w.window, "stop_original",
+                          side_effect=lambda *a: lifecycle.append("stop")), \
+             patch.object(w.gpu, "available_kib",
+                          return_value=w.MIN_AFTER_STOP_KIB), \
+             patch.object(w.release, "_run"), \
+             patch.object(w, "owned", return_value={
+                 "Id": candidate_id, "State": {"Status": "created"}}), \
+             patch.object(w.b, "verify_mounts"), \
+             patch.object(w.mtp_off, "inspect_original"), \
+             patch.object(w.gpu, "wait_ready"), \
+             patch.object(w, "measure", return_value=result), \
+             patch.object(w, "restore",
+                          side_effect=lambda *a: lifecycle.append("restore")):
+            output = _io.StringIO()
+            with redirect_stdout(output):
+                returned, ok = w.execute(
+                    "a"*40, Path("/tmp/unused-minimal-stage"),
+                    w.ORIGINAL_ID, w.ORIGINAL_IMAGE)
+        self.assertTrue(ok)
+        self.assertEqual(lifecycle, ["stop", "restore"])
+        records = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertEqual(records[-1]["stage"], "P2_NUMERIC_DIAGNOSIS")
+        self.assertEqual(records[-1]["result_status"],
+                         "P2_NUMERIC_FIRST_DIVERGENCE_MEASUREMENT")
+        self.assertEqual(records[-1]["analysis"]["first_observed_difference"],
+                         "RAW_LOGITS_OR_UPSTREAM")
+        self.assertTrue(records[-1]["original_same_id_http_restored"])
+        self.assertNotIn("token_ids", output.getvalue())
+        self.assertFalse(records[-1]["release_approved"])
+
     def test_preflight_and_build_status_are_not_duplicate_arguments(self):
         import io as _io
         from contextlib import redirect_stdout
