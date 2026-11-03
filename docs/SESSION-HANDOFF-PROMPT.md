@@ -1,3 +1,10 @@
+## 2026-11-03 2차 Numeric GPU 실측 결과/원본 복구/후속 정적 감사
+
+- Actual DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d: 21/21 CPU tests PASS, preflight PASS, source-only candidate image build 8087bf38ea59 PASS, approved exclusive GPU candidate HTTP_READY, same-ID original HTTP recovery PASS twice, Numeric WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. 따라서 Numeric 최초 오차 미측정, strict 1e-4 unresolved, release BLOCKED.
+- 이 오류는 candidate private file docker cp 실패, 제한된 마지막 256줄/256KiB log tail에 prefixed 이벤트가 없음을 뜻한다. 전체 Worker 이벤트 생성이 전혀 없었다고 추론 금지. Candidate cleanup 후 과거 Worker 상태 없음.
+- Source-gate hypotheses: Worker enable env, request num_logprobs non-None, raw_logprobs, single-row shape, processed_logprobs None. runtime 조건 검증 없음.
+- New GitHub read-only tool: src/p2_numeric_witness_readonly_audit.py, tests/test_p2_numeric_witness_readonly_audit.py (6 tests), scripts/p2-numeric-witness-readonly-audit-dgx.sh. Original Docker running sampler.py를 docker cp로 읽고 exact pinned sha, full patch byte-match, guard AST and StartedAt preservation 검증. No GPU, HTTP, Docker create/build/start/stop/exec, original content writes. New HEAD DGX_NOT_RUN / CI_NOT_RUN. Next operator action: git pull, --audit /tmp/p2-numeric-first-divergence-x_76hgqp만. 3차 GPU 정비창은 자동으로 승인된 상태가 아님.
+
 ## 2026-11-03 approved 2nd exclusive Numeric GPU window / final report output fix
 
 - Actual DGX SHA 497056ea265825fb2e96d31fe7ba3b16fe417919: focused 20/20 tests PASS, read-only preflight PASS, candidate networkless --build PASS image kjlee-qwen38-p2-numeric-first-divergence:497056ea2658, original same-ID running and not changed. Operator approved 2nd GPU window with temporary original outage.
