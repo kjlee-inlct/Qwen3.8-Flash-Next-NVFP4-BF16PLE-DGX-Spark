@@ -1,3 +1,10 @@
+## 2026-11-03 P2/P3 범위 재편 권고안 — 제안, 기존 릴리즈 규칙 유지
+
+- 사용자가 P1→P2와 마찬가지로 P2→P3 미완료 항목 이관 가능성을 제기함. 실제 upstream main SHA b0aa8b77604139557169387b2fa8386355d8b651, 현재 Orcarouter feature HEAD fa46304b0b3edd031be3da45d5aca7c646e08ede의 README/source/docs/기존 기능 검증 결과를 비교하고, [P2/P3 기능 우선순위 재편안](P2-P3-SCOPE-REALIGNMENT-20261103.md)을 신설함.
+- **권고:** P2 = 현재 Preview/Orcarouter 호환 통합 후보 + PLE unique-H2D 독립 opt-in 가치 검증 + 프로토콜/원본 복구; P3 = MTP reduced 65,536, vLLM 0.32 Track B, 500K/Hybrid/선택 DFlash2 및 Numeric 첫 불일치 심층 원인 규명. MTP/PLE source-stage를 완료 또는 실운영 적용으로 승격하지 않음. PLE 최적화는 실제 이득/호환성 없으면 P3로 이관하고 P2에서는 OFF 유지.
+- **출시 정책은 별도:** P1_FUNCTIONAL_VERIFIED=BOUNDED_PASS와 strict logprob 1e-4 실패를 동시에 보존한다. 원본 자체 FAIL이더라도 명시 승인된 기준 변경 또는 해결 전 P1_RELEASE_BLOCKED/DEPLOYED=FALSE 유지. P2 기능 완료≠운영 cutover. 사용자 최종 범위 확정 전 이 문서는 제안으로 취급하며 신규 GPU 정비창, 운영 서비스 변경 또는 임계값 완화를 승인하지 않는다.
+- 최신 사용자 실제 DGX static audit 7/7 PASS at 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb. 직후 AST flow 확장 HEAD fa46304b0b3edd031be3da45d5aca7c646e08ede는 DGX/CI_NOT_RUN. 앞으로 같은 증거의 단순 재감사보다 실제 Orcarouter 기능 후보 통합에 우선순위를 둔다.
+
 ## 2026-11-03 Numeric witness provenance and Orcarouter adoption status
 
 - DGX source-only safety: 7/7 focused tests PASS at HEAD 1f98a43b9dc464c4fda4f2748d54976a7a2e2fdb; original Preview Sampler SHA pinned; private 1-COPY patched Sampler SHA exact transform MATCH; original same-ID running untouched.

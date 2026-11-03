@@ -8,7 +8,7 @@
   "scope": "entire tracked file tree on feature/main only, except self-referential source-state manifest",
   "self_validation": "Git HEAD manifest blob SHA vs working-tree bytes; no exact HEAD commit pin",
   "origin_rule": "only the kjlee-inlct personal fork; never YSLAB-ai checkout",
-  "tracked_file_count": 392,
+  "tracked_file_count": 393,
   "policy_manifest_path": "scripts/deployment-manifest.json",
   "checkpoint_manifest_path": "compatibility.json",
   "legacy_deployment": {
@@ -556,7 +556,12 @@
     {
       "path": "docs/P2-ORCAROUTER-ADOPTION-ROADMAP-20261103.md",
       "mode": "100644",
-      "blob_sha": "bd26d88143baa2405f6cf6dd2aa67a5045fe319b"
+      "blob_sha": "06cb2cb41cdd995b9f4f935ba324d59e39a2a05f"
+    },
+    {
+      "path": "docs/P2-P3-SCOPE-REALIGNMENT-20261103.md",
+      "blob_sha": "14e5d172d87fc4ce0b85ffa3f4558858700c354f",
+      "mode": "100644"
     },
     {
       "path": "docs/P2-TOKEN-FREQUENCY-20261102.md",
@@ -580,7 +585,7 @@
     },
     {
       "path": "docs/SESSION-HANDOFF-PROMPT.md",
-      "blob_sha": "10ab3e661500a3b506f17a97b7c54270a66649ff",
+      "blob_sha": "1a8ff8a23e1921193f13840f44afe109dd35bf1a",
       "mode": "100644"
     },
     {
