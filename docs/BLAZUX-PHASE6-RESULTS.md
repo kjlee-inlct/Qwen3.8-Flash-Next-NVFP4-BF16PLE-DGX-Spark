@@ -1,3 +1,9 @@
+## 2026-11-03 Static witness audit DGX first run: unit fixture bug, protected original untouched
+
+- User DGX HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0: pulled feature/blazux-phase6-runtime-gates and ran scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp. 6 focused tests: 5 PASS, 1 ERROR. Failure test_no_exec_build_stop_gpu_or_http_in_audit at src/p2_numeric_witness_readonly_audit.py read_only_audit -> SAMPLER_STAGE_UNSAFE. Audit CLI was NOT REACHED because shell set -e stopped after unittest. No Docker/GPU/HTTP or service interruption executed by the command.
+- Root of test failure verified: unit test mocks Path.read_bytes but uses a nonexistent /tmp/p2-numeric-first-divergence-test/sampler.py; audit correctly rejects when Path.is_file() is false. Another StartedAt drift test had the same nonexistent file masked by finally drift error, producing an invalid PASS. Audit runtime source safety check must NOT be weakened.
+- New focused test-only fix: two tests create real private tempfile samplers with 0600 permissions, validate actual read and complete audit path and guard call counts; add symlinked sampler rejection. 7 focused tests authored, new SHA DGX_NOT_RUN / CI_NOT_RUN; actual pinned source static audit remains NOT_RUN. Re-run read-only audit after merged commit, no new maintenance/GPU approval inferred. P2 strict numeric 1e-4 remains unresolved / release BLOCKED.
+
 ## 2026-11-03 P2 Numeric 2차 독점 GPU 실측: 원본 복구 PASS, Sampler Witness 수집 실패
 
 - 실제 DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d. Focused 21/21 PASS, read-only preflight PASS, image build PASS: kjlee-qwen38-p2-numeric-first-divergence:8087bf38ea59.

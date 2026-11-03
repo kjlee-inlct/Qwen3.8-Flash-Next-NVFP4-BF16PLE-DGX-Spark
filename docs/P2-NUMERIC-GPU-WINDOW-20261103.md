@@ -1,3 +1,9 @@
+## 2026-11-03 Follow-up read-only audit first DGX attempt and synthetic fixture repair
+
+- Actual user DGX audit at HEAD 4f308c915572fa442e4e146d20b1ca0bf2f424a0: unittest result 5/6 PASS, 1 ERROR SAMPLER_STAGE_UNSAFE in test_no_exec_build_stop_gpu_or_http_in_audit. Script exited before real read-only audit CLI (set -e). This does not signal source drift or bad original container.
+- Cause is nonexistent synthetic sampler.py path. Fix only tests: real tempfile private sampler.py for successful read-only case; also fix false-positive StartedAt drift test by asserting actual audit_source reached; separate symlink rejection case. Keep fail-closed source file and identity guards unchanged. 7 focused tests authored, new HEAD DGX_NOT_RUN/CI_NOT_RUN.
+- Safe next command: git pull --ff-only and bash scripts/p2-numeric-witness-readonly-audit-dgx.sh --audit /tmp/p2-numeric-first-divergence-x_76hgqp. No GPU, HTTP or Docker start/stop/exec/build. Do not execute third GPU window. Strict numeric 1e-4 unsolved.
+
 ## 2026-11-03 2차 GPU 창 결과와 읽기 전용 Sampler 감사 절차
 
 - 사용자 DGX HEAD 8087bf38ea597ecfe93a46239b8e0dae80d06a0d: 21/21 CPU focused PASS, read-only preflight PASS, 1-COPY image build PASS 8087bf38ea59, exclusive GPU candidate HTTP_READY PASS, original SAME_ID_HTTP_PASS 두 번 확인. Numeric status BLOCKED WITNESS_NO_EVENTS_IN_BOUNDED_LOG_TAIL. Numeric 최초 차이 판별 실패, strict 1e-4 release BLOCKED.
